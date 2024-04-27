@@ -21,3 +21,19 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 
 	return response;
 }
+
+type Version = "none" | "v1";
+type ServerAPI = "" | "/login" | "/logout" | "/signup";
+
+interface FetchServerOption extends FetchOptions {
+	isNotAPI?: boolean;
+}
+
+export async function fetchServer(api: ServerAPI, version: Version, options?: FetchServerOption) {
+	return await fetch_(
+		`${import.meta.env.VITE_SERVER_URL}/${options?.isNotAPI === true ? "" : "api/"}${
+			version === "none" ? "" : version + "/"
+		}${api}`,
+		options
+	);
+}
