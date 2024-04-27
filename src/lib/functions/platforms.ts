@@ -16,6 +16,9 @@ export interface ParamsObject {
 	[key: string]: string | string[];
 }
 
+/**
+ * ! 중요** 프로덕션에서 사용하지 않습니다
+ */
 export const youtube = {
 	channels: (params: ParamsObject, options?: FetchOptions) =>
 		fetch_(`https://www.googleapis.com/youtube/v3/channels${objectToUrlParams(params)}`, options),

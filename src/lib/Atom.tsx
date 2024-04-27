@@ -5,3 +5,35 @@ export const headerOffsetState = atom({
 	key: createAtomKey("headerOffset"),
 	default: 64,
 });
+
+interface StellarState {
+	[key: string]: Stellar;
+}
+
+interface Stellar {
+	subs?: SubscriberData;
+	views?: VideoData;
+}
+
+interface SubscriberData {
+	[key: string]: number | string;
+}
+
+interface SubscriberDataDetail {}
+
+interface VideoData {
+	[key: string]: VideoDataDetail;
+}
+
+interface VideoDataDetail {
+	type: "youtube" | "chzzk";
+	id: string;
+	uuid: string;
+	name: string;
+	count: number | string;
+}
+
+export const stellarState = atom<StellarState>({
+	key: createAtomKey("stellar"),
+	default: {},
+});
