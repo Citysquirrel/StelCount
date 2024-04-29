@@ -5,18 +5,19 @@ import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, Stack, useColorMode } from "@chakra-ui/react";
+import { Button, HStack, Stack, Text, useColorMode } from "@chakra-ui/react";
+import { MdDarkMode, MdLightMode } from "react-icons/md";
 
 function App() {
 	const nav = useNavigateEvent();
-	const { toggleColorMode } = useColorMode();
+	const { colorMode, toggleColorMode } = useColorMode();
 	useStellar();
 	return (
 		<>
 			<Header>
-				<Stack alignItems={"center"} fontSize="1.15rem" marginRight="8px" height="40px">
-					유튜브 카운터
-				</Stack>
+				<Text fontSize="2xl" marginRight="8px">
+					제목이 들어갈 란
+				</Text>
 				<Button as="button" onClick={nav("/")}>
 					Home
 				</Button>
@@ -37,10 +38,13 @@ function App() {
 				<Button
 					css={css`
 						margin-inline-start: auto;
+						font-size: 1.25rem;
+						padding: 0;
+						border-radius: 99px;
 					`}
 					onClick={toggleColorMode}
 				>
-					ㅇㅅㅇ
+					{colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
 				</Button>
 			</Header>
 			<Container>

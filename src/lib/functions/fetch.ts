@@ -1,4 +1,5 @@
 export interface FetchOptions extends RequestInit {
+	method?: "POST" | "DELETE" | (string & {});
 	timeout?: number;
 }
 
@@ -23,17 +24,22 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 }
 
 type Version = "none" | "v1";
-type ServerAPI = "" | "/login" | "/logout" | "/signup" | "/subs/current"
+type ServerAPI = "" | "/login" | "/logout" | "/signup" | "/subs/current" | "/stellar" | (string & {});
 
 interface FetchServerOption extends FetchOptions {
+	body?: any;
 	isNotAPI?: boolean;
 }
 
 export async function fetchServer(api: ServerAPI, version: Version, options?: FetchServerOption) {
 	return await fetch_(
 		`${import.meta.env.VITE_SERVER_URL}/${options?.isNotAPI === true ? "" : "api/"}${
-			version === "none" ? "" : version + "/"
+			version === "none" ? "" : version + ""
 		}${api}`,
-		options
+		{
+			...options,
+			body: JSON.stringify(options?.body),
+			headers: { ...options?.headers, "Content-Type": "application/json" },
+		}
 	);
 }
