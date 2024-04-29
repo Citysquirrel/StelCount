@@ -23,7 +23,7 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 }
 
 type Version = "none" | "v1";
-type ServerAPI = "" | "/login" | "/logout" | "/signup";
+type ServerAPI = "" | "/login" | "/logout" | "/signup" | "/subs/current"
 
 interface FetchServerOption extends FetchOptions {
 	isNotAPI?: boolean;

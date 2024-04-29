@@ -2,6 +2,7 @@ import { css } from "@emotion/react";
 import { useRecoilState } from "recoil";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { headerOffsetState } from "../lib/Atom";
+import { Box, Stack } from "@chakra-ui/react";
 
 interface HeaderProps {
 	children?: React.ReactNode;
@@ -12,7 +13,9 @@ export function Header({ children }: HeaderProps) {
 	const { width } = useResponsive();
 
 	return (
-		<header
+		<Stack
+			direction="row"
+			as="header"
 			css={css`
 				position: fixed;
 				display: flex;
@@ -25,25 +28,26 @@ export function Header({ children }: HeaderProps) {
 				backdrop-filter: blur(1.5px);
 				z-index: 999;
 			`}
+			sx={{
+				position: "fixed",
+				top: 0,
+				left: 0,
+				width: "calc(100%)",
+				alignItems: "center",
+				borderBottom: "1px solid rgba(0,0,0,0.12)",
+				backgroundColor: "rgba(255,255,255,.5)",
+				backdropFilter: "blur(1.5px)",
+				zIndex: 999,
+			}}
 		>
-			<div
-				css={css`
-					width: 100%;
-					height: ${offsetY}px;
-				`}
-			>
-				<div
-					css={css`
-						display: flex;
-						max-width: ${width}px;
-						max-height: 40px;
-						padding: 12px;
-						margin-inline: auto;
-					`}
+			<Box sx={{ width: "100%", height: `${offsetY}px` }}>
+				<Stack
+					direction="row"
+					sx={{ maxWidth: `${width}px`, maxHeight: "40px", padding: "12px", marginInline: "auto" }}
 				>
 					{children}
-				</div>
-			</div>
-		</header>
+				</Stack>
+			</Box>
+		</Stack>
 	);
 }

@@ -5,7 +5,7 @@ interface ButtonProps extends HTMLAttributes<HTMLButtonElement> {
 	wrapperCss?: Interpolation<Theme>;
 }
 
-export function Button({ wrapperCss, children, ...props }: ButtonProps) {
+export function ButtonDeprecated({ wrapperCss, children, ...props }: ButtonProps) {
 	return (
 		<div css={wrapperCss}>
 			<button
