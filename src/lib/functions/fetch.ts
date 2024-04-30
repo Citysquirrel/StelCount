@@ -24,7 +24,16 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 }
 
 type Version = "none" | "v1";
-type ServerAPI = "" | "/login" | "/logout" | "/signup" | "/subs/current" | "/stellar" | "/stellars" | (string & {});
+type ServerAPI =
+	| ""
+	| "/login"
+	| "/logout"
+	| "/signup"
+	| "/subs/current"
+	| "/stellar"
+	| "/stellars"
+	| "/yid"
+	| (string & {});
 
 interface FetchServerOption extends FetchOptions {
 	body?: any;
