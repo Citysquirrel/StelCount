@@ -26,9 +26,11 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 type Version = "none" | "v1";
 type ServerAPI =
 	| ""
+	| "/user"
 	| "/login"
 	| "/logout"
 	| "/signup"
+	| "/naver"
 	| "/current"
 	| "/subs"
 	| "/views"
