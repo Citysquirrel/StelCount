@@ -11,10 +11,12 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 		signal: controller.signal,
 	});
 	clearTimeout(id);
-
 	const { headers, status, statusText } = res;
+
 	const response = {
-		data: await res.json(),
+		data: await res.json().catch((err) => {
+			return;
+		}),
 		headers,
 		status,
 		statusText,
@@ -50,9 +52,9 @@ export async function fetchServer(api: ServerAPI, version: Version, options?: Fe
 			version === "none" ? "" : version + ""
 		}${api}`,
 		{
-			...options,
-			body: JSON.stringify(options?.body),
+			body: options?.body ? JSON.stringify(options?.body) : undefined,
 			headers: { "Content-Type": "application/json", ...options?.headers },
+			...options,
 		}
 	);
 }

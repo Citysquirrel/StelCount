@@ -11,7 +11,7 @@ export function useStellar() {
 	const [data, setData] = useRecoilState(stellarState);
 
 	useEffect(() => {
-		fetchServer("/subs/current", "v1").then((res) => {
+		fetchServer("/current", "v1").then((res) => {
 			console.log(res.data);
 		});
 	}, []);
