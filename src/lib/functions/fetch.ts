@@ -50,7 +50,7 @@ export async function fetchServer(api: ServerAPI, version: Version, options?: Fe
 		{
 			...options,
 			body: JSON.stringify(options?.body),
-			headers: { ...options?.headers, "Content-Type": "application/json" },
+			headers: { "Content-Type": "application/json", ...options?.headers },
 		}
 	);
 }
