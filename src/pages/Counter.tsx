@@ -55,20 +55,19 @@ function SubscriberCount() {
 	const [count, setCount] = useState<CountState>({ youtube: 0, chzzk: 0 });
 	useEffect(() => {
 		//! 반드시 백엔드로 옮겨야함
-		youtube
-			.channels({
-				part: ["statistics", "snippet"],
-				id: "UCAHVQ44O81aehLWfy9O6Elw",
-				key: import.meta.env.VITE_YOUTUBE_API_KEY,
-			})
-			.then(async (res) => {
-				setCount((prev) => ({ ...prev, youtube: res.data.items[0].statistics.subscriberCount }));
-				setName((prev) => ({ ...prev, youtube: res.data.items[0].snippet.title }));
-			});
-
-		naver.chzzk.channels("a6c4ddb09cdb160478996007bff35296").then((res) => {
-			setCount((prev) => ({ ...prev, chzzk: res.data.content.followerCount }));
-		});
+		// youtube
+		// 	.channels({
+		// 		part: ["statistics", "snippet"],
+		// 		id: "UCAHVQ44O81aehLWfy9O6Elw",
+		// 		key: import.meta.env.VITE_YOUTUBE_API_KEY,
+		// 	})
+		// 	.then(async (res) => {
+		// 		setCount((prev) => ({ ...prev, youtube: res.data.items[0].statistics.subscriberCount }));
+		// 		setName((prev) => ({ ...prev, youtube: res.data.items[0].snippet.title }));
+		// 	});
+		// naver.chzzk.channels("a6c4ddb09cdb160478996007bff35296").then((res) => {
+		// 	setCount((prev) => ({ ...prev, chzzk: res.data.content.followerCount }));
+		// });
 	}, []);
 
 	// items[0].statistics.subscriberCount;

@@ -75,15 +75,29 @@ export function Footer() {
 								transition: "all .25s",
 								cursor: "pointer",
 								":hover": { color: "rgb(13,13,13)" },
+								">svg": {
+									width: "26px",
+									height: "26px",
+									transform: "translateY(2px)",
+								},
 							}}
 						>
-							<FaGithub width="26px" height="26px" transform="translateY(2px)" />
+							<FaGithub />
 						</Link>
 						<Link
 							href="mailto:tok1324@naver.com"
-							sx={{ transition: "all .25s", cursor: "pointer", ":hover": { color: "rgb(13,13,13)" } }}
+							sx={{
+								transition: "all .25s",
+								cursor: "pointer",
+								":hover": { color: "rgb(13,13,13)" },
+								">svg": {
+									width: "26px",
+									height: "26px",
+									transform: "translateY(2px)",
+								},
+							}}
 						>
-							<ImMail4 width="26px" height="26px" transform="translateY(2px)" />
+							<ImMail4 />
 						</Link>
 					</Box>
 				</HStack>
