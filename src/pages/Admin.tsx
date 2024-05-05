@@ -1,12 +1,29 @@
-import { Box, Button, Input, Stack } from "@chakra-ui/react";
+import {
+	Box,
+	Button,
+	IconButton,
+	Input,
+	Spacer,
+	Stack,
+	Table,
+	TableContainer,
+	Tbody,
+	Td,
+	Th,
+	Thead,
+	Tr,
+} from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
+import { MdDelete, MdEdit } from "react-icons/md";
+import { CopyText } from "../components/CopyText";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
 
 	const [inputValue, setInputValue] = useState<StellarInputValue>({ name: "", youtubeId: "", chzzkId: "", xId: "" });
 	const [inputValueY, setInputValueY] = useState<string>("");
+	const [stellarData, setStellarData] = useState<StellarData[]>([]);
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -38,7 +55,7 @@ export function Admin() {
 
 	useEffect(() => {
 		fetchServer("/stellars", "v1").then((res) => {
-			console.log(res.data);
+			setStellarData(res.data);
 		});
 		firstRef.current?.focus();
 	}, []);
@@ -52,7 +69,6 @@ export function Admin() {
 					<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
 					<Button type="submit">등록</Button>
 				</Stack>
-				<Stack></Stack>
 			</Box>
 			<Box as="section">
 				<Stack as="form" onSubmit={handleGetYoutubeId}>
@@ -60,6 +76,48 @@ export function Admin() {
 					<Button type="submit">검색</Button>
 				</Stack>
 			</Box>
+			<TableContainer>
+				<Table variant="simple" size="sm">
+					<Thead>
+						<Tr>
+							<Th isNumeric>ID</Th>
+							<Th>이름</Th>
+							<Th>치지직 ID</Th>
+							<Th>유튜브 ID</Th>
+							<Th>X ID</Th>
+							<Th>설정</Th>
+						</Tr>
+					</Thead>
+					<Tbody>
+						{stellarData.map((s, idx) => (
+							<Tr key={`${s.id}-${idx}`}>
+								<Td isNumeric>{s.id}</Td>
+								<Td>{s.name}</Td>
+								<Td>
+									<CopyText>{s.chzzkId}</CopyText>
+								</Td>
+								<Td>
+									<CopyText>{s.youtubeId}</CopyText>
+								</Td>
+								<Td>
+									<CopyText>{s.xId}</CopyText>
+								</Td>
+								<Td>
+									<IconButton
+										aria-label="edit"
+										icon={<MdEdit />}
+										isRound
+										size={"sm"}
+										fontSize={"1.125rem"}
+										marginRight={"2px"}
+									/>
+									<IconButton aria-label="delete" icon={<MdDelete />} isRound size={"sm"} fontSize={"1.125rem"} />
+								</Td>
+							</Tr>
+						))}
+					</Tbody>
+				</Table>
+			</TableContainer>
 		</>
 	);
 }
@@ -69,4 +127,8 @@ interface StellarInputValue {
 	youtubeId: string;
 	chzzkId: string;
 	xId: string;
+}
+
+interface StellarData extends StellarInputValue {
+	id: number;
 }
