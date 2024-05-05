@@ -3,7 +3,7 @@
 // 데이터 종류에는 (유튜브, 치지직)구독자수, 각 컨텐츠들의 조회수, 유튜브 재생목록 정보가 포함
 
 import { useRecoilState } from "recoil";
-import { stellarState } from "../Atom";
+import { PlatformInfosDetail, StellarInfo, StellarState, stellarState } from "../Atom";
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
 
@@ -13,25 +13,19 @@ export function useStellar() {
 	useEffect(() => {
 		fetchServer("/current", "v1").then((res) => {
 			const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
-			console.log(data, stellar);
-			setData((prev) => {
-				return data;
-			});
+			// console.log(data, stellar);
+			const integrated: StellarState[] = [];
+			for (let s of stellar) {
+				integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
+			}
+			console.log(integrated);
+			setData(integrated);
 		});
 	}, []);
-}
 
-interface StellarInfo {
-	name: string;
-	uuid: string;
+	return { data, setData };
 }
 
 interface PlatformInfos {
 	[key: string]: { youtube: PlatformInfosDetail; chzzk: PlatformInfosDetail };
-}
-interface PlatformInfosDetail {
-	viewCount?: string;
-	subscriberCount?: string;
-	videoCount?: string;
-	followerCount?: string;
 }
