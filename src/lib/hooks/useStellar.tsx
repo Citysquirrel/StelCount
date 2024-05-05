@@ -12,7 +12,26 @@ export function useStellar() {
 
 	useEffect(() => {
 		fetchServer("/current", "v1").then((res) => {
-			console.log(res.data);
+			const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
+			console.log(data, stellar);
+			setData((prev) => {
+				return data;
+			});
 		});
 	}, []);
+}
+
+interface StellarInfo {
+	name: string;
+	uuid: string;
+}
+
+interface PlatformInfos {
+	[key: string]: { youtube: PlatformInfosDetail; chzzk: PlatformInfosDetail };
+}
+interface PlatformInfosDetail {
+	viewCount?: string;
+	subscriberCount?: string;
+	videoCount?: string;
+	followerCount?: string;
 }

@@ -11,8 +11,18 @@ interface StellarState {
 }
 
 interface Stellar {
-	subs?: SubscriberData;
-	views?: VideoData;
+	chzzk: PlatformInfosDetail;
+	youtube: PlatformInfosDetail;
+	videos?: VideoDataDetail[];
+	// subs?: SubscriberData;
+	// views?: VideoData;
+}
+
+interface PlatformInfosDetail {
+	viewCount?: string;
+	subscriberCount?: string;
+	videoCount?: string;
+	followerCount?: string;
 }
 
 interface SubscriberData {
