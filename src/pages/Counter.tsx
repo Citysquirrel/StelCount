@@ -1,86 +1,51 @@
-import { useEffect, useState } from "react";
-import { naver, youtube } from "../lib/functions/platforms";
-import styled from "@emotion/styled";
 import { useRecoilState } from "recoil";
-import { stellarState } from "../lib/Atom";
+import { PlatformInfosDetail, stellarState } from "../lib/Atom";
+import { Card, CardBody, CardHeader, Image, SimpleGrid, Stack } from "@chakra-ui/react";
+import { Spacing } from "../components/Spacing";
 
 export function Counter() {
 	const [data, setData] = useRecoilState(stellarState);
+
 	return (
 		<div>
 			<section>
-				<SubscriberCount />
+				<SimpleGrid columns={[2, 3, 4]} spacing="12px">
+					{data.map((stellar) => (
+						<StellarCard
+							key={stellar.uuid}
+							name={stellar.name}
+							profileImage={stellar.profileImage}
+							chzzk={stellar.chzzk}
+							youtube={stellar.youtube}
+						/>
+					))}
+				</SimpleGrid>
 			</section>
 		</div>
 	);
 }
 
-const Card = styled.div`
-	font-family: roboto;
-	display: flex;
-	flex-direction: column;
-	font-size: 2.25rem;
-	font-weight: bold;
-	width: 400px;
-	height: 180px;
-	border: 1px solid grey;
-	border-radius: 12px;
-	overflow: hidden;
-`;
-
-const ChzzkStatus = styled.div`
-	display: flex;
-	flex: 1;
-	/* background-color: #00ffa3; */
-	justify-content: center;
-	align-items: center;
-`;
-
-const YoutubeStatus = styled.div`
-	display: flex;
-	flex: 1;
-	/* background-color: #c4302b; */
-	justify-content: center;
-	align-items: center;
-`;
-
-interface CountState {
-	youtube: number;
-	chzzk: number;
-}
-interface NameState {
-	youtube: string;
-	chzzk: string;
-}
-
-// 심볼, 오시마크, 치지직 프로필, 구독자수, 팔로워수
-
-function SubscriberCount() {
-	const [name, setName] = useState<NameState>({ youtube: "", chzzk: "" });
-	const [count, setCount] = useState<CountState>({ youtube: 0, chzzk: 0 });
-	useEffect(() => {
-		//! 반드시 백엔드로 옮겨야함
-		// youtube
-		// 	.channels({
-		// 		part: ["statistics", "snippet"],
-		// 		id: "UCAHVQ44O81aehLWfy9O6Elw",
-		// 		key: import.meta.env.VITE_YOUTUBE_API_KEY,
-		// 	})
-		// 	.then(async (res) => {
-		// 		setCount((prev) => ({ ...prev, youtube: res.data.items[0].statistics.subscriberCount }));
-		// 		setName((prev) => ({ ...prev, youtube: res.data.items[0].snippet.title }));
-		// 	});
-		// naver.chzzk.channels("a6c4ddb09cdb160478996007bff35296").then((res) => {
-		// 	setCount((prev) => ({ ...prev, chzzk: res.data.content.followerCount }));
-		// });
-	}, []);
-
-	// items[0].statistics.subscriberCount;
-
+function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
+	const { followerCount: ytfcnt, subscriberCount: ytscnt } = youtube!;
+	const { followerCount: czfcnt, subscriberCount: czscnt } = chzzk!;
 	return (
 		<Card>
-			<YoutubeStatus>{count.youtube} </YoutubeStatus>
-			<ChzzkStatus>{count.chzzk}</ChzzkStatus>
+			<CardHeader>{name}</CardHeader>
+			<CardBody>
+				<Stack>
+					<Image src={profileImage} alt={`image-${name}`} />
+					<Spacing size={4} />
+				</Stack>
+			</CardBody>
 		</Card>
 	);
 }
+
+interface StellarCardProps {
+	name: string;
+	profileImage?: string;
+	youtube?: PlatformInfosDetail;
+	chzzk?: PlatformInfosDetail;
+}
+
+// 심볼, 오시마크, 치지직 프로필, 구독자수, 팔로워수
