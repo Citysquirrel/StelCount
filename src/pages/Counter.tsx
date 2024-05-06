@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { naver, youtube } from "../lib/functions/platforms";
 import styled from "@emotion/styled";
+import { useRecoilState } from "recoil";
+import { stellarState } from "../lib/Atom";
 
 export function Counter() {
+	const [data, setData] = useRecoilState(stellarState);
 	return (
 		<div>
 			<section>
@@ -49,6 +52,8 @@ interface NameState {
 	youtube: string;
 	chzzk: string;
 }
+
+// 심볼, 오시마크, 치지직 프로필, 구독자수, 팔로워수
 
 function SubscriberCount() {
 	const [name, setName] = useState<NameState>({ youtube: "", chzzk: "" });
