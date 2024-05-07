@@ -24,6 +24,7 @@ export interface PlatformInfosDetail {
 	videoCount?: string;
 	followerCount?: string;
 	videos?: VideoDataDetail[];
+	profileImage?: string;
 }
 
 interface SubscriberData {
@@ -51,7 +52,6 @@ export interface PlatformInfos {
 export interface StellarInfo {
 	name: string;
 	uuid: string;
-	profileImage: string;
 }
 export interface StellarState extends StellarInfo {
 	youtube?: PlatformInfosDetail;

@@ -11,16 +11,24 @@ export function useStellar() {
 	const [data, setData] = useRecoilState(stellarState);
 
 	useEffect(() => {
-		fetchServer("/current", "v1").then((res) => {
-			const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
-			// console.log(data, stellar);
-			const integrated: StellarState[] = [];
-			for (let s of stellar) {
-				integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
-			}
-			console.log(integrated);
-			setData(integrated);
-		});
+		const f = () => {
+			fetchServer("/current", "v1").then((res) => {
+				const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
+				const integrated: StellarState[] = [];
+				for (let s of stellar) {
+					integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
+				}
+				console.log(integrated);
+				setData(integrated);
+			});
+		};
+		f();
+		const i = setInterval(() => {
+			f();
+		}, 60000);
+		return () => {
+			clearInterval(i);
+		};
 	}, []);
 
 	return { data, setData };
