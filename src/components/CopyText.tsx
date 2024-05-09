@@ -2,6 +2,7 @@ import { HStack, Text, useClipboard, useToast } from "@chakra-ui/react";
 import { MdContentCopy } from "react-icons/md";
 
 export function CopyText({ children }) {
+	children = children || "";
 	const { onCopy } = useClipboard(children.toString());
 	const toast = useToast();
 

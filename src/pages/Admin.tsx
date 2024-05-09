@@ -21,7 +21,13 @@ import { CopyText } from "../components/CopyText";
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
 
-	const [inputValue, setInputValue] = useState<StellarInputValue>({ name: "", youtubeId: "", chzzkId: "", xId: "" });
+	const [inputValue, setInputValue] = useState<StellarInputValue>({
+		name: "",
+		youtubeId: "",
+		chzzkId: "",
+		xId: "",
+		colorCode: "",
+	});
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
 
@@ -86,6 +92,7 @@ export function Admin() {
 					<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
 					<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
 					<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
+					<Input placeholder="컬러코드 HEX" value={inputValue.xId} onChange={handleInputValue("colorCode")} />
 					<Button type="submit">등록</Button>
 				</Stack>
 			</Box>
@@ -104,6 +111,7 @@ export function Admin() {
 							<Th>치지직 ID</Th>
 							<Th>유튜브 ID</Th>
 							<Th>X ID</Th>
+							<Th>컬러코드 HEX</Th>
 							<Th>설정</Th>
 						</Tr>
 					</Thead>
@@ -120,6 +128,9 @@ export function Admin() {
 								</Td>
 								<Td>
 									<CopyText>{s.xId}</CopyText>
+								</Td>
+								<Td>
+									<CopyText>{s.colorCode}</CopyText>
 								</Td>
 								<Td>
 									<IconButton
@@ -153,6 +164,7 @@ interface StellarInputValue {
 	youtubeId: string;
 	chzzkId: string;
 	xId: string;
+	colorCode: string;
 }
 
 interface StellarData extends StellarInputValue {
