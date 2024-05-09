@@ -52,7 +52,7 @@ export async function fetchServer(api: ServerAPI, version: Version, options?: Fe
 			version === "none" ? "" : version + ""
 		}${api}`,
 		{
-			body: options?.body ? JSON.stringify(options?.body) : undefined,
+			body: options?.body,
 			headers: { "Content-Type": "application/json", ...options?.headers },
 			...options,
 		}

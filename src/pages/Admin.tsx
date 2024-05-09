@@ -25,6 +25,12 @@ export function Admin() {
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
 
+	const getStellarData = () => {
+		fetchServer("/stellars", "v1").then((res) => {
+			setStellarData(res.data);
+		});
+	};
+
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setInputValue((prev) => ({ ...prev, [key]: value }));
@@ -37,8 +43,9 @@ export function Admin() {
 
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
 		e.preventDefault();
-		fetchServer("/stellar", "v1", { method: "POST", body: inputValue }).then((res) => {
+		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
 			console.log(res.data);
+			getStellarData();
 		});
 	};
 
@@ -49,14 +56,26 @@ export function Admin() {
 			return;
 		}
 		fetchServer(`/yid?username=${inputValueY}`, "v1").then((res) => {
-			setInputValue((prev) => ({ ...prev, youtubeId: res.data.items[0].id }));
+			if (res.data.items) {
+				if (inputValue.youtubeId.length === 0) {
+					setInputValue((prev) => ({ ...prev, youtubeId: res.data.items[0].id }));
+				} else {
+					setInputValue((prev) => ({ ...prev, youtubeId: prev.youtubeId + "," + res.data.items[0].id }));
+				}
+			} else {
+				alert("올바르지 않은 채널명입니다.");
+			}
+		});
+	};
+
+	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
+		fetchServer(`/stellar`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then((res) => {
+			getStellarData();
 		});
 	};
 
 	useEffect(() => {
-		fetchServer("/stellars", "v1").then((res) => {
-			setStellarData(res.data);
-		});
+		getStellarData();
 		firstRef.current?.focus();
 	}, []);
 	return (
@@ -111,7 +130,14 @@ export function Admin() {
 										fontSize={"1.125rem"}
 										marginRight={"2px"}
 									/>
-									<IconButton aria-label="delete" icon={<MdDelete />} isRound size={"sm"} fontSize={"1.125rem"} />
+									<IconButton
+										aria-label="delete"
+										icon={<MdDelete />}
+										isRound
+										size={"sm"}
+										fontSize={"1.125rem"}
+										onClick={handleDelete(s.id)}
+									/>
 								</Td>
 							</Tr>
 						))}
