@@ -4,6 +4,11 @@ import { Card, CardBody, CardHeader, HStack, SimpleGrid, Skeleton, Stack, Text, 
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import symbolTabi from "../assets/symbol/symbol_tabi.png";
+import symbolMashiro from "../assets/symbol/symbol_mashiro.png";
+import symbolHina from "../assets/symbol/symbol_hina.png";
+import symbolLize from "../assets/symbol/symbol_lize.png";
+import symbolKanna from "../assets/symbol/symbol_kanna.png";
+import symbolYuni from "../assets/symbol/symbol_yuni.png";
 
 export function Counter() {
 	const [data, setData] = useRecoilState(stellarState);
@@ -24,16 +29,26 @@ export function Counter() {
 }
 
 const stellarColors = {
-	"아라하시 타비": "#9ADAFF",
+	"아이리 칸나": "#373584",
+	"아야츠노 유니": "#b77de4",
+	"아라하시 타비": "#71C5E8",
+	"네네코 마시로": "#25282A",
+	"시라유키 히나": "#E4002B",
+	"아카네 리제": "#971B2F",
 };
 
 const stellarSymbols = {
+	"아이리 칸나": symbolKanna,
+	"아야츠노 유니": symbolYuni,
 	"아라하시 타비": symbolTabi,
+	"네네코 마시로": symbolMashiro,
+	"시라유키 히나": symbolHina,
+	"아카네 리제": symbolLize,
 };
 
 function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
-	const { followerCount: ytfcnt, subscriberCount: ytscnt } = youtube!;
-	const { followerCount: czfcnt, subscriberCount: czscnt } = chzzk!;
+	// const { followerCount: ytfcnt, subscriberCount: ytscnt } = youtube;
+	// const { followerCount: czfcnt, subscriberCount: czscnt } = chzzk;
 	const thisColor = stellarColors[name];
 	const thisSymbol = stellarSymbols[name];
 	return (
