@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
+import { useAuth } from "../lib/hooks/useAuth";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -30,6 +31,7 @@ export function Admin() {
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
+	const { isLoading } = useAuth();
 
 	const getStellarData = () => {
 		fetchServer("/stellars", "v1").then((res) => {

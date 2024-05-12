@@ -62,3 +62,13 @@ export const stellarState = atom<StellarState[]>({
 	key: createAtomKey("stellar"),
 	default: [],
 });
+
+export const isLoginState = atom<boolean>({
+	key: createAtomKey("isLogin"),
+	default: false,
+});
+
+export const isAdminState = atom<boolean>({
+	key: createAtomKey("isAdmin"),
+	default: false,
+});
