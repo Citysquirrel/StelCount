@@ -1,3 +1,7 @@
+# Component
+src/lib/hooks/useAuth.tsx
+Admin.tsx
+
 # Logs
 logs
 *.log
