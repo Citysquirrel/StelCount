@@ -37,7 +37,7 @@ interface VideoData {
 	[key: string]: VideoDataDetail;
 }
 
-interface VideoDataDetail {
+export interface VideoDataDetail {
 	type: "youtube" | "chzzk";
 	id: string;
 	uuid: string;
