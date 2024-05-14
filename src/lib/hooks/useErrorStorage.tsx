@@ -3,7 +3,7 @@ import { errorStorageState } from "../Atom";
 
 export function useErrorStorage() {
 	const [error, setError] = useRecoilState(errorStorageState);
-	const execute = (msg: string) => {
+	const saveErrorMsg = (msg: string) => {
 		setError(
 			(prev) =>
 				`${prev}
@@ -12,5 +12,5 @@ ${msg}`
 		);
 	};
 
-	return execute;
+	return { error, saveErrorMsg };
 }
