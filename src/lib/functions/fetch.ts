@@ -1,28 +1,36 @@
+import { useErrorStorage } from "../hooks/useErrorStorage";
+
 export interface FetchOptions extends RequestInit {
 	method?: "POST" | "DELETE" | (string & {});
 	timeout?: number;
 }
 
 export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
-	const controller = new AbortController();
-	const id = setTimeout(() => controller.abort(), options?.timeout || 5000);
-	const res = await fetch(input, {
-		...options,
-		signal: controller.signal,
-	});
-	clearTimeout(id);
-	const { headers, status, statusText } = res;
+	const { saveErrorMsg } = useErrorStorage();
 
-	const response = {
-		data: await res.json().catch((err) => {
-			return;
-		}),
-		headers,
-		status,
-		statusText,
-	};
+	try {
+		const controller = new AbortController();
+		const id = setTimeout(() => controller.abort(), options?.timeout || 5000);
+		const res = await fetch(input, {
+			...options,
+			signal: controller.signal,
+		});
+		clearTimeout(id);
+		const { headers, status, statusText } = res;
 
-	return response;
+		const response = {
+			data: await res.json().catch((err) => {
+				return;
+			}),
+			headers,
+			status,
+			statusText,
+		};
+
+		return response;
+	} catch (err: any) {
+		saveErrorMsg(err.toString());
+	}
 }
 
 type Version = "none" | "v1";

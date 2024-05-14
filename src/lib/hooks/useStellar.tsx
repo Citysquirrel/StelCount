@@ -9,10 +9,9 @@ import { fetchServer } from "../functions/fetch";
 
 export function useStellar() {
 	const [data, setData] = useRecoilState(stellarState);
-
-	useEffect(() => {
-		const f = () => {
-			fetchServer("/current", "v1").then((res) => {
+	const f = () => {
+		fetchServer("/current", "v1").then((res) => {
+			if (res) {
 				const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
 				const integrated: StellarState[] = [];
 				for (let s of stellar) {
@@ -20,8 +19,10 @@ export function useStellar() {
 				}
 				console.log(integrated);
 				setData(integrated);
-			});
-		};
+			}
+		});
+	};
+	useEffect(() => {
 		f();
 		const i = setInterval(() => {
 			f();

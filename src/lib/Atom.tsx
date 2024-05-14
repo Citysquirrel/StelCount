@@ -43,6 +43,7 @@ export interface VideoDataDetail {
 	uuid: string;
 	name: string;
 	count: number | string;
+	thumbnail: string;
 }
 
 export interface PlatformInfos {
@@ -71,4 +72,9 @@ export const isLoginState = atom<boolean>({
 export const isAdminState = atom<boolean>({
 	key: createAtomKey("isAdmin"),
 	default: false,
+});
+
+export const errorStorageState = atom<string>({
+	key: createAtomKey("errorStorage"),
+	default: "",
 });
