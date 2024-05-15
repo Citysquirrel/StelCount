@@ -6,8 +6,6 @@ export interface FetchOptions extends RequestInit {
 }
 
 export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
-	const { saveErrorMsg } = useErrorStorage();
-
 	try {
 		const controller = new AbortController();
 		const id = setTimeout(() => controller.abort(), options?.timeout || 5000);
@@ -29,7 +27,7 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 
 		return response;
 	} catch (err: any) {
-		saveErrorMsg(err.toString());
+		// 에러 관련
 	}
 }
 

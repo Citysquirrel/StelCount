@@ -35,7 +35,7 @@ export function Admin() {
 
 	const getStellarData = () => {
 		fetchServer("/stellars", "v1").then((res) => {
-			setStellarData(res.data);
+			if (res) setStellarData(res.data);
 		});
 	};
 
@@ -52,7 +52,7 @@ export function Admin() {
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
-			console.log(res.data);
+			// console.log(res.data);
 			getStellarData();
 		});
 	};
@@ -64,7 +64,7 @@ export function Admin() {
 			return;
 		}
 		fetchServer(`/yid?username=${inputValueY}`, "v1").then((res) => {
-			if (res.data.items) {
+			if (res && res.data.items) {
 				if (inputValue.youtubeId.length === 0) {
 					setInputValue((prev) => ({ ...prev, youtubeId: res.data.items[0].id }));
 				} else {
