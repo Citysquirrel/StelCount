@@ -3,8 +3,8 @@ import react from "@vitejs/plugin-react";
 import { dependencies } from "./package.json";
 
 const vendor = ["react", "react-router-dom", "react-dom"];
-const libs = ["uuid", "axios", "immutability-helper", "file-saver", "react-dnd", "react-dnd-html5-backend"];
-const excludes = [...vendor, ...libs, "aws-sdk"];
+const libs = ["uuid", "recoil"];
+const excludes = [...vendor, ...libs];
 
 function renderChunks(deps: Record<string, string>) {
 	let chunks: { [key: string]: string[] } = {};
