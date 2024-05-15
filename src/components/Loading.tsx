@@ -1,6 +1,6 @@
 import { Stack, Text } from "@chakra-ui/react";
 
-export function LoadingOverlay() {
+export function Loading({ options }: LoadingProps) {
 	return (
 		<Stack
 			sx={{
@@ -10,7 +10,7 @@ export function LoadingOverlay() {
 				width: "100vw",
 				height: "100vh",
 				alignItems: "center",
-				backgroundColor: "rgb(255,255,255,.25)",
+				backgroundColor: `rgb(255,255,255,${options?.mode === "fullscreen" ? "1" : "0.25"})`,
 				justifyContent: "center",
 				zIndex: 1001,
 			}}
@@ -18,4 +18,8 @@ export function LoadingOverlay() {
 			<Text>LOADING</Text>
 		</Stack>
 	);
+}
+
+interface LoadingProps {
+	options?: { mode?: "overlay" | "fullscreen" };
 }

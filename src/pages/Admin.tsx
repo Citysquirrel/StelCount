@@ -18,7 +18,7 @@ import { fetchServer } from "../lib/functions/fetch";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
-import { LoadingOverlay } from "../components/Loading";
+import { Loading } from "../components/Loading";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -91,7 +91,7 @@ export function Admin() {
 		firstRef.current?.focus();
 	}, []);
 
-	if (isLoading) return <LoadingOverlay />;
+	if (isLoading) return <Loading />;
 	return (
 		<>
 			<Box as="section">
