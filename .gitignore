@@ -1,7 +1,3 @@
-# Component
-/src/lib/hooks/useAuth.tsx
-/src/pages/Admin.tsx
-
 # Logs
 logs
 *.log
@@ -28,4 +24,4 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
+.env*
