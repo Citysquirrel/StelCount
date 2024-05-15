@@ -1,6 +1,6 @@
 # Component
-src/lib/hooks/useAuth.tsx
-Admin.tsx
+/src/lib/hooks/useAuth.tsx
+/src/pages/Admin.tsx
 
 # Logs
 logs
