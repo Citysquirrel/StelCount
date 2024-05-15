@@ -24,9 +24,12 @@ function App() {
 				<Button as="button" onClick={nav("/counter")}>
 					Counter
 				</Button>
-				<Button as="button" onClick={nav("/admin")}>
-					ADMIN
-				</Button>
+				{import.meta.env.DEV ? (
+					<Button as="button" onClick={nav("/admin")}>
+						ADMIN
+					</Button>
+				) : null}
+
 				{/* <Button
 					wrapperCss={css`
 						display: none;

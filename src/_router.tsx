@@ -5,6 +5,9 @@ import { Counter } from "./pages/Counter";
 import { Admin } from "./pages/Admin";
 import { OAuth } from "./pages/OAuth";
 import { Login } from "./pages/Login";
+import { NotExist } from "./pages/NotExist";
+
+const devRoutes = import.meta.env.DEV ? [{ path: "/admin", element: <Admin /> }] : [];
 
 export const routeObj: RouteObject[] = [
 	{
@@ -13,11 +16,12 @@ export const routeObj: RouteObject[] = [
 		children: [
 			{ path: "/", element: <Home /> },
 			{ path: "/counter", element: <Counter /> },
-			{ path: "/admin", element: <Admin /> },
 			{ path: "/login", element: <Login /> },
 			{ path: "/oauth", element: <OAuth /> },
+			...devRoutes,
 		],
 	},
+	{ path: "*", element: <NotExist /> },
 ];
 
 export const router = createBrowserRouter(routeObj);
