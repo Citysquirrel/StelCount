@@ -35,7 +35,9 @@ export function Admin() {
 
 	const getStellarData = () => {
 		fetchServer("/stellars", "v1").then((res) => {
-			if (res) setStellarData(res.data);
+			if (res) {
+				if (res.status === 200) setStellarData(res.data);
+			}
 		});
 	};
 
@@ -83,6 +85,7 @@ export function Admin() {
 	};
 
 	useEffect(() => {
+		// console.log(stellarData);
 		getStellarData();
 		firstRef.current?.focus();
 	}, []);

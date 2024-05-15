@@ -7,15 +7,19 @@ export function useAuth() {
 	const [isLogin, setIsLogin] = useRecoilState(isLoginState);
 	const [isAdmin, setIsAdmin] = useRecoilState(isAdminState);
 	const [isLoading, setIsLoading] = useState(true);
-	const query = fetchServer("/user/me", "v1");
+	const query = () => fetchServer("/user/me", "v1");
 
 	useEffect(() => {
-		query
+		query()
 			.then((res) => {
-				setIsLogin(true);
-				const { userInfo } = res.data;
-				if (userInfo.role === "ADMIN") {
-					setIsAdmin(true);
+				if (res) {
+					if (res.status === 200) {
+						setIsLogin(true);
+						const { userInfo } = res.data;
+						if (userInfo.role === "ADMIN") {
+							setIsAdmin(true);
+						}
+					}
 				}
 			})
 			.catch((err) => {
@@ -25,5 +29,5 @@ export function useAuth() {
 				setIsLoading(false);
 			});
 	}, []);
-	return { isLoading, isLogin, query };
+	return { isLoading, isLogin, isAdmin, query };
 }

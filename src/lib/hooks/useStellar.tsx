@@ -11,7 +11,7 @@ export function useStellar() {
 	const [data, setData] = useRecoilState(stellarState);
 	const f = () => {
 		fetchServer("/current", "v1").then((res) => {
-			if (res) {
+			if (res && res.status === 200) {
 				const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
 				const integrated: StellarState[] = [];
 				for (let s of stellar) {

@@ -20,12 +20,12 @@ import { fetch_ } from "./functions/fetch";
 
 export function MainProvider({ children }) {
 	return (
-		<React.StrictMode>
-			<ChakraProvider theme={theme}>
-				{/* <QueryClientProvider client={queryClient}> */}
-				<RecoilRoot>{children}</RecoilRoot>
-				{/* </QueryClientProvider> */}
-			</ChakraProvider>
-		</React.StrictMode>
+		// <React.StrictMode>
+		<ChakraProvider theme={theme}>
+			{/* <QueryClientProvider client={queryClient}> */}
+			<RecoilRoot>{children}</RecoilRoot>
+			{/* </QueryClientProvider> */}
+		</ChakraProvider>
+		// </React.StrictMode>
 	);
 }
