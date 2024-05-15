@@ -18,6 +18,7 @@ import { fetchServer } from "../lib/functions/fetch";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
+import { LoadingOverlay } from "../components/Loading";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -31,7 +32,7 @@ export function Admin() {
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
-	const { isLoading } = useAuth();
+	const { isLoading, isLogin, isAdmin } = useAuth();
 
 	const getStellarData = () => {
 		fetchServer("/stellars", "v1").then((res) => {
@@ -89,6 +90,8 @@ export function Admin() {
 		getStellarData();
 		firstRef.current?.focus();
 	}, []);
+
+	if (isLoading) return <LoadingOverlay />;
 	return (
 		<>
 			<Box as="section">
