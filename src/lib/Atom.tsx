@@ -23,7 +23,6 @@ export interface PlatformInfosDetail {
 	subscriberCount?: string;
 	videoCount?: string;
 	followerCount?: string;
-	videos?: VideoDataDetail[];
 	profileImage?: string;
 }
 
