@@ -11,7 +11,7 @@ export function OAuth() {
 		if (!code) {
 			const error = searchParams.get("error");
 			const errorDesc = searchParams.get("error_description");
-			console.log(error, errorDesc); //! 에러창으로 대체(모달)
+			// console.log(error, errorDesc); //! 에러창으로 대체(모달)
 		} else {
 			fetchServer(`/naver?code=${code}&state=${state}`, "v1").then((res) => console.log(res));
 		}

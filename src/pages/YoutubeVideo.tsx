@@ -8,12 +8,13 @@ export function YoutubeVideo() {
 	const [stellar, setStellar] = useRecoilState(stellarState);
 	// data[0].youtube?.videos[0].?
 	const tabi = stellar.filter((s) => s.name === NAME_TABI);
+
 	return (
 		<div>
 			<SimpleGrid as="section" columns={[2, 3, 4]} spacing="12px">
-				{tabi[0].youtube?.videos?.map((video) => (
+				{/* {tabi[0].youtube?.videos?.map((video) => (
 					<VideoCard video={video} />
-				))}
+				))} */}
 			</SimpleGrid>
 		</div>
 	);

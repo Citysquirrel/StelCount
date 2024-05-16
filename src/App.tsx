@@ -24,6 +24,9 @@ function App() {
 				<Button as="button" onClick={nav("/counter")}>
 					Counter
 				</Button>
+				<Button as="button" onClick={nav("/video-count")}>
+					Video
+				</Button>
 				{import.meta.env.DEV ? (
 					<Button as="button" onClick={nav("/admin")}>
 						ADMIN

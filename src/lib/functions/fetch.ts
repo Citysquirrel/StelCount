@@ -28,7 +28,7 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 		return response;
 	} catch (err: any) {
 		// 에러 관련
-		console.log(err);
+		return { data: undefined, status: 500, statusText: err.stack.split("\n")[0] };
 	}
 }
 

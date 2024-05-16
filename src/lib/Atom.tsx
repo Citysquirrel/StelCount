@@ -55,7 +55,7 @@ export interface StellarInfo {
 	uuid: string;
 }
 export interface StellarState extends StellarInfo {
-	youtube?: PlatformInfosDetail;
+	youtube?: PlatformInfosDetail[];
 	chzzk?: PlatformInfosDetail;
 }
 

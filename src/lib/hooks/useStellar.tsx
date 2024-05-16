@@ -11,14 +11,19 @@ export function useStellar() {
 	const [data, setData] = useRecoilState(stellarState);
 	const f = () => {
 		fetchServer("/current", "v1").then((res) => {
-			if (res && res.status === 200) {
-				const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
-				const integrated: StellarState[] = [];
-				for (let s of stellar) {
-					integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
+			if (res) {
+				if (res.status === 200) {
+					const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
+					const integrated: StellarState[] = [];
+					for (let s of stellar) {
+						integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
+					}
+					console.log(integrated);
+					setData(integrated);
 				}
-				console.log(integrated);
-				setData(integrated);
+				if (res.status === 500) {
+					alert("내부 서버 에러입니다. 지속 발생 시 개발자에게 문의하세요.");
+				}
 			}
 		});
 	};
@@ -36,5 +41,5 @@ export function useStellar() {
 }
 
 interface PlatformInfos {
-	[key: string]: { youtube: PlatformInfosDetail; chzzk: PlatformInfosDetail };
+	[key: string]: { youtube: PlatformInfosDetail[]; chzzk: PlatformInfosDetail };
 }
