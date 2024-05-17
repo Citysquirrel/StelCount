@@ -1,4 +1,4 @@
-import { Card, CardBody, SimpleGrid } from "@chakra-ui/react";
+import { Box, BoxProps, Card, CardBody, SimpleGrid, Stack } from "@chakra-ui/react";
 import { useRecoilState } from "recoil";
 import { VideoDataDetail, stellarState } from "../lib/Atom";
 import { NAME_TABI } from "../lib/constant";
@@ -7,20 +7,29 @@ import { Image } from "../components/Image";
 export function YoutubeVideo() {
 	const [stellar, setStellar] = useRecoilState(stellarState);
 	// data[0].youtube?.videos[0].?
-	const tabi = stellar.filter((s) => s.name === NAME_TABI);
+	const isVideoExist = stellar.filter((s) => s.videos);
 
 	return (
-		<div>
+		<Stack>
+			<SideList></SideList>
 			<SimpleGrid as="section" columns={[2, 3, 4]} spacing="12px">
 				{/* {tabi[0].youtube?.videos?.map((video) => (
 					<VideoCard video={video} />
 				))} */}
 			</SimpleGrid>
-		</div>
+		</Stack>
 	);
 }
 
-export function VideoCard({ video }: VideoCardProps) {
+function SideList({ children, ...props }: SideListProps) {
+	return (
+		<Box width={"240px"} {...props}>
+			{children}
+		</Box>
+	);
+}
+
+function VideoCard({ video }: VideoCardProps) {
 	return (
 		<Card overflow="hidden">
 			<Image src={video.thumbnail} objectFit={"cover"} alt="thumbnail" />
@@ -28,6 +37,8 @@ export function VideoCard({ video }: VideoCardProps) {
 		</Card>
 	);
 }
+
+interface SideListProps extends BoxProps {}
 
 interface VideoCardProps {
 	video: VideoDataDetail;

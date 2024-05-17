@@ -9,7 +9,7 @@ interface ContainerProps extends HTMLAttributes<HTMLDivElement> {}
 export function Container({ children, ...props }: ContainerProps) {
 	const [offsetY] = useRecoilState(headerOffsetState);
 	return (
-		<Stack sx={{ maxWidth: "100%", minHeight: "100dvh", padding: "0 12px" }} {...props}>
+		<Stack sx={{ position: "relative", maxWidth: "100%", minHeight: "100dvh", padding: "0 12px" }} {...props}>
 			<Box className="space" height={`${offsetY + 24}px`}></Box>
 			{children}
 		</Stack>

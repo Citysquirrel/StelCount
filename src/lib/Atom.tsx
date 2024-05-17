@@ -6,34 +6,12 @@ export const headerOffsetState = atom({
 	default: 64,
 });
 
-// interface StellarState {
-// 	[key: string]: Stellar;
-// }
-
-interface Stellar {
-	chzzk: PlatformInfosDetail;
-	youtube: PlatformInfosDetail;
-	videos?: VideoDataDetail[];
-	// subs?: SubscriberData;
-	// views?: VideoData;
-}
-
 export interface PlatformInfosDetail {
 	viewCount?: string;
 	subscriberCount?: string;
 	videoCount?: string;
 	followerCount?: string;
 	profileImage?: string;
-}
-
-interface SubscriberData {
-	[key: string]: number | string;
-}
-
-interface SubscriberDataDetail {}
-
-interface VideoData {
-	[key: string]: VideoDataDetail;
 }
 
 export interface VideoDataDetail {
@@ -46,7 +24,7 @@ export interface VideoDataDetail {
 }
 
 export interface PlatformInfos {
-	[key: string]: { youtube: PlatformInfosDetail; chzzk: PlatformInfosDetail };
+	[key: string]: { youtube: PlatformInfosDetail[]; chzzk: PlatformInfosDetail; videos?: VideoDataDetail[] };
 }
 
 export interface StellarInfo {
@@ -56,6 +34,7 @@ export interface StellarInfo {
 export interface StellarState extends StellarInfo {
 	youtube?: PlatformInfosDetail[];
 	chzzk?: PlatformInfosDetail;
+	videos?: VideoDataDetail[];
 }
 
 export const stellarState = atom<StellarState[]>({

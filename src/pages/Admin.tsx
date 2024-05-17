@@ -1,6 +1,13 @@
 import {
+	AbsoluteCenter,
+	Alert,
+	AlertIcon,
+	AlertTitle,
 	Box,
 	Button,
+	Divider,
+	HStack,
+	Heading,
 	IconButton,
 	Input,
 	Spacer,
@@ -9,6 +16,7 @@ import {
 	TableContainer,
 	Tbody,
 	Td,
+	Text,
 	Th,
 	Thead,
 	Tr,
@@ -19,9 +27,13 @@ import { MdDelete, MdEdit } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
+import { useNavigate, useParams } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { headerOffsetState, stellarState } from "../lib/Atom";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
+	const nav = useNavigate();
 
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
@@ -79,6 +91,10 @@ export function Admin() {
 		});
 	};
 
+	const handleEdit = (id: number) => () => {
+		nav(`/admin/${id}`);
+	};
+
 	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
 		fetchServer(`/stellar`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then((res) => {
 			getStellarData();
@@ -100,7 +116,7 @@ export function Admin() {
 					<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
 					<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
 					<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
-					<Input placeholder="컬러코드 HEX" value={inputValue.xId} onChange={handleInputValue("colorCode")} />
+					<Input placeholder="컬러코드 HEX" value={inputValue.colorCode} onChange={handleInputValue("colorCode")} />
 					<Button type="submit">등록</Button>
 				</Stack>
 			</Box>
@@ -148,6 +164,7 @@ export function Admin() {
 										size={"sm"}
 										fontSize={"1.125rem"}
 										marginRight={"2px"}
+										onClick={handleEdit(s.id)}
 									/>
 									<IconButton
 										aria-label="delete"
@@ -164,6 +181,154 @@ export function Admin() {
 				</Table>
 			</TableContainer>
 		</>
+	);
+}
+
+export function AdminEdit() {
+	const nav = useNavigate();
+	const { id } = useParams();
+	const [stellarData, setStellarData] = useRecoilState(stellarState);
+	const [offsetY] = useRecoilState(headerOffsetState);
+	const [isLoading, setIsLoading] = useState(true);
+	const [alertStatus, setAlertStatus] = useState<"error" | "info" | "warning" | "success" | "loading">("loading");
+	const alertText = {
+		loading: "데이터를 불러오는 중입니다.",
+		error: "데이터를 불러오는 중 에러가 발생했습니다.",
+		warning: "데이터가 변경되었습니다.",
+		success: "데이터를 불러오는데 성공했습니다.",
+	};
+	const [inputValue, setInputValue] = useState<StellarInputValue>({
+		name: "",
+		youtubeId: "",
+		chzzkId: "",
+		xId: "",
+		colorCode: "",
+	});
+
+	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setInputValue((prev) => ({ ...prev, [key]: value }));
+	};
+
+	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
+		e.preventDefault();
+		setIsLoading(true);
+		fetchServer("/stellar", "v1", { method: "PATCH", body: JSON.stringify(inputValue) })
+			.then((res) => {
+				if (res) {
+					if (res.status === 200) {
+						setAlertStatus("success");
+					}
+				}
+			})
+			.catch((err) => {
+				setAlertStatus("error");
+			})
+			.finally(() => {
+				setIsLoading(false);
+			});
+	};
+
+	useEffect(() => {
+		fetchServer(`/stellar/${id}`, "v1")
+			.then((res) => {
+				if (res) {
+					if (res.status === 200) {
+						if (!res.data) {
+							nav("/admin");
+						}
+						const { name, chzzkId, youtubeId, xId, colorCode } = res.data;
+						setInputValue((prev) => ({ ...prev, name, chzzkId, youtubeId, xId, colorCode }));
+						setAlertStatus("success");
+					} else {
+						setAlertStatus("error");
+					}
+				}
+			})
+			.catch((err) => {
+				setIsLoading(false);
+				setAlertStatus("error");
+			})
+			.finally(() => {
+				setIsLoading(false);
+			});
+	}, []);
+
+	return (
+		<>
+			<Stack
+			// position="sticky"
+			// top={`${offsetY + 24}px`}
+			// left="0"
+			// zIndex={1}
+			// backgroundColor="var(--chakra-colors-chakra-body-bg)"
+			>
+				<Heading>{inputValue.name}</Heading>
+				<Divider />
+				<Alert status={alertStatus} variant="left-accent">
+					<AlertIcon />
+					{alertText[alertStatus]}
+				</Alert>
+			</Stack>
+			<Stack as="section">
+				<HeadedDivider>채널 정보</HeadedDivider>
+				<Stack as="form" onSubmit={handleSubmit}>
+					<Input
+						placeholder="유튜브 ID"
+						value={inputValue.youtubeId}
+						onChange={handleInputValue("youtubeId")}
+						isDisabled={isLoading}
+					/>
+					<Input
+						placeholder="치지직 ID"
+						value={inputValue.chzzkId}
+						onChange={handleInputValue("chzzkId")}
+						isDisabled={isLoading}
+					/>
+					<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} isDisabled={isLoading} />
+					<Input
+						placeholder="컬러코드 HEX"
+						value={inputValue.colorCode}
+						onChange={handleInputValue("colorCode")}
+						isDisabled={isLoading}
+					/>
+					<HStack width="100%" justifyContent={"space-between"}>
+						<Button flex={1} type="submit" colorScheme="blue">
+							등록
+						</Button>
+						<Button
+							flex={1}
+							type="button"
+							onClick={() => {
+								nav("/admin");
+							}}
+						>
+							이전으로
+						</Button>
+					</HStack>
+				</Stack>
+			</Stack>
+			<Stack as="section">
+				<HeadedDivider>재생목록</HeadedDivider>
+			</Stack>
+		</>
+	);
+}
+
+function HeadedDivider({ children }) {
+	return (
+		<Box position="relative" padding="32px 16px 16px 16px">
+			<Divider />
+			<AbsoluteCenter
+				bg="var(--chakra-colors-chakra-body-bg)"
+				px="4"
+				fontSize={"1.25rem"}
+				fontWeight={"bold"}
+				paddingTop="12px"
+			>
+				{children}
+			</AbsoluteCenter>
+		</Box>
 	);
 }
 

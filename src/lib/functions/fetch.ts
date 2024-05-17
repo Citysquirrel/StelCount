@@ -1,7 +1,7 @@
 import { useErrorStorage } from "../hooks/useErrorStorage";
 
 export interface FetchOptions extends RequestInit {
-	method?: "POST" | "DELETE" | (string & {});
+	method?: "POST" | "DELETE" | "PATCH" | (string & {});
 	timeout?: number;
 }
 

@@ -10,6 +10,10 @@ import symbolLize from "../assets/symbol/symbol_lize.png";
 import symbolKanna from "../assets/symbol/symbol_kanna.png";
 import symbolYuni from "../assets/symbol/symbol_yuni.png";
 
+//TODO: 카운트 페이지로 합치고, 홈페이지도 그냥 삭제해버리기
+//TODO: 사이드바에서 멤버별로 카테고리 구분하고, 각자 페이지 상단에서 구독자수 등 표기하고
+//TODO: 나머지 커버곡 조회수 및 추출을 스크롤 페이지에 배치
+
 export function Counter() {
 	const [data, setData] = useRecoilState(stellarState);
 
@@ -96,7 +100,7 @@ function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
 interface StellarCardProps {
 	name: string;
 	profileImage?: string;
-	youtube?: PlatformInfosDetail;
+	youtube?: PlatformInfosDetail[];
 	chzzk?: PlatformInfosDetail;
 }
 
