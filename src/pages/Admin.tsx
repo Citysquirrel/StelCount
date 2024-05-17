@@ -30,6 +30,7 @@ import { Loading } from "../components/Loading";
 import { useNavigate, useParams } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { headerOffsetState, stellarState } from "../lib/Atom";
+import { checkConsonantAtLast } from "../lib/functions/consonant";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -96,13 +97,16 @@ export function Admin() {
 	};
 
 	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-		fetchServer(`/stellar`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then((res) => {
-			getStellarData();
-		});
+		// const name = checkConsonantAtLast(`${stellarData.find(s => s.id === id)?.name}`,"o")
+		if (!confirm(`${stellarData.find((s) => s.id === id)?.name} 항목을 삭제하시겠습니까?`)) {
+		} else {
+			fetchServer(`/stellar/${id}`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then((res) => {
+				getStellarData();
+			});
+		}
 	};
 
 	useEffect(() => {
-		// console.log(stellarData);
 		getStellarData();
 		firstRef.current?.focus();
 	}, []);
