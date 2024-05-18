@@ -5,15 +5,23 @@ import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, HStack, Stack, Text, useColorMode } from "@chakra-ui/react";
+import { Button, HStack, Heading, Stack, Text, useColorMode } from "@chakra-ui/react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
+import { useRecoilState } from "recoil";
+import { isLoadingState, isLoginState, isServerErrorState } from "./lib/Atom";
+import { ServerErrorPage } from "./pages/ServerError";
+import { Loading } from "./components/Loading";
 
 function App() {
 	const nav = useNavigateEvent();
 	const { colorMode, toggleColorMode } = useColorMode();
+	const [isLoading] = useRecoilState(isLoadingState);
+	const [isServerError] = useRecoilState(isServerErrorState);
 	useStellar();
+	if (isServerError) return <ServerErrorPage />;
 	return (
 		<>
+			{isLoading ? <Loading /> : null}
 			<Header>
 				<Text fontSize="2xl" marginRight="8px">
 					제목이 들어갈 란

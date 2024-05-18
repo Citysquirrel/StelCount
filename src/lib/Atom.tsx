@@ -46,6 +46,15 @@ export const isLoginState = atom<boolean>({
 	key: createAtomKey("isLogin"),
 	default: false,
 });
+export const isLoadingState = atom<boolean>({
+	key: createAtomKey("isLoading"),
+	default: true,
+});
+
+export const isStellarLoadingState = atom<boolean>({
+	key: createAtomKey("isStellarLoading"),
+	default: false,
+});
 
 export const isAdminState = atom<boolean>({
 	key: createAtomKey("isAdmin"),
@@ -55,4 +64,9 @@ export const isAdminState = atom<boolean>({
 export const errorStorageState = atom<string>({
 	key: createAtomKey("errorStorage"),
 	default: "",
+});
+
+export const isServerErrorState = atom<boolean>({
+	key: createAtomKey("isServerError"),
+	default: false,
 });

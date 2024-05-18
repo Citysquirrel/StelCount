@@ -3,34 +3,56 @@
 // 데이터 종류에는 (유튜브, 치지직)구독자수, 각 컨텐츠들의 조회수, 유튜브 재생목록 정보가 포함
 
 import { useRecoilState } from "recoil";
-import { PlatformInfos, PlatformInfosDetail, StellarInfo, StellarState, VideoDataDetail, stellarState } from "../Atom";
+import {
+	PlatformInfos,
+	PlatformInfosDetail,
+	StellarInfo,
+	StellarState,
+	VideoDataDetail,
+	isLoadingState,
+	isServerErrorState,
+	isStellarLoadingState,
+	stellarState,
+} from "../Atom";
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
 
 export function useStellar() {
 	const [data, setData] = useRecoilState(stellarState);
-	const f = () => {
-		fetchServer("/current", "v1").then((res) => {
-			if (res) {
-				if (res.status === 200) {
-					const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
-					const integrated: StellarState[] = [];
-					for (let s of stellar) {
-						integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
+	const [, setIsServerError] = useRecoilState(isServerErrorState);
+	const [, setIsLoading] = useRecoilState(isLoadingState);
+	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
+	const f = (isTimer?: boolean) => {
+		if (isTimer) {
+			setIsStellarLoading(true);
+		}
+		fetchServer("/current", "v1")
+			.then((res) => {
+				if (res) {
+					if (res.status === 200) {
+						const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
+						const integrated: StellarState[] = [];
+						for (let s of stellar) {
+							integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
+						}
+						console.log(integrated);
+						setData(integrated);
 					}
-					console.log(integrated);
-					setData(integrated);
+					if (res.status === 500) {
+						// alert("내부 서버 에러입니다. 지속 발생 시 개발자에게 문의하세요.");
+						setIsServerError(true);
+					}
 				}
-				if (res.status === 500) {
-					alert("내부 서버 에러입니다. 지속 발생 시 개발자에게 문의하세요.");
-				}
-			}
-		});
+			})
+			.finally(() => {
+				setIsLoading(false);
+				setIsStellarLoading(false);
+			});
 	};
 	useEffect(() => {
 		f();
 		const i = setInterval(() => {
-			f();
+			f(true);
 		}, 60000);
 		return () => {
 			clearInterval(i);
