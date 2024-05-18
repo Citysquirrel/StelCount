@@ -1,6 +1,18 @@
 import { useRecoilState } from "recoil";
 import { PlatformInfosDetail, stellarState } from "../lib/Atom";
-import { Card, CardBody, CardHeader, HStack, SimpleGrid, Stack, Text, theme } from "@chakra-ui/react";
+import {
+	Box,
+	BoxProps,
+	Card,
+	CardBody,
+	CardHeader,
+	HStack,
+	SimpleGrid,
+	Stack,
+	Text,
+	VStack,
+	theme,
+} from "@chakra-ui/react";
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import symbolTabi from "../assets/symbol/symbol_tabi.png";
@@ -9,28 +21,6 @@ import symbolHina from "../assets/symbol/symbol_hina.png";
 import symbolLize from "../assets/symbol/symbol_lize.png";
 import symbolKanna from "../assets/symbol/symbol_kanna.png";
 import symbolYuni from "../assets/symbol/symbol_yuni.png";
-
-//TODO: 카운트 페이지로 합치고, 홈페이지도 그냥 삭제해버리기
-//TODO: 사이드바에서 멤버별로 카테고리 구분하고, 각자 페이지 상단에서 구독자수 등 표기하고
-//TODO: 나머지 커버곡 조회수 및 추출을 스크롤 페이지에 배치
-
-export function Counter() {
-	const [data, setData] = useRecoilState(stellarState);
-
-	return (
-		<div>
-			<section>
-				<SimpleGrid columns={[2, 3, 4]} spacing="12px">
-					{data.map((stellar) => {
-						return (
-							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
-						);
-					})}
-				</SimpleGrid>
-			</section>
-		</div>
-	);
-}
 
 const stellarColors = {
 	"아이리 칸나": "#373584",
@@ -49,6 +39,37 @@ const stellarSymbols = {
 	"시라유키 히나": symbolHina,
 	"아카네 리제": symbolLize,
 };
+
+//TODO: 카운트 페이지로 합치고, 홈페이지도 그냥 삭제해버리기
+//TODO: 사이드바에서 멤버별로 카테고리 구분하고, 각자 페이지 상단에서 구독자수 등 표기하고
+//TODO: 나머지 커버곡 조회수 및 추출을 스크롤 페이지에 배치
+
+export function Counter() {
+	const [data, setData] = useRecoilState(stellarState);
+
+	return (
+		<Stack direction={"row"}>
+			<SideList>사이드</SideList>
+			<section>
+				<SimpleGrid columns={[2, 3, 4]} spacing="12px">
+					{data.map((stellar) => {
+						return (
+							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
+						);
+					})}
+				</SimpleGrid>
+			</section>
+		</Stack>
+	);
+}
+
+function SideList({ children, ...props }: SideListProps) {
+	return (
+		<Box width={"240px"} {...props}>
+			{children}
+		</Box>
+	);
+}
 
 function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
 	// const { followerCount: ytfcnt, subscriberCount: ytscnt } = youtube;
@@ -96,6 +117,8 @@ function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
 		</Card>
 	);
 }
+
+interface SideListProps extends BoxProps {}
 
 interface StellarCardProps {
 	name: string;

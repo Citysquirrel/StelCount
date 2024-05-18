@@ -4,6 +4,8 @@ import { VideoDataDetail, stellarState } from "../lib/Atom";
 import { NAME_TABI } from "../lib/constant";
 import { Image } from "../components/Image";
 
+//! DEPRECATED
+
 export function YoutubeVideo() {
 	const [stellar, setStellar] = useRecoilState(stellarState);
 	// data[0].youtube?.videos[0].?

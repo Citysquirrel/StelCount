@@ -1,14 +1,15 @@
 import { useRecoilState } from "recoil";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { headerOffsetState } from "../lib/Atom";
-import { Box, Stack, useColorMode, useColorModeValue } from "@chakra-ui/react";
+import { Box, Stack } from "@chakra-ui/react";
+import useColorModeValues from "../lib/hooks/useColorModeValues";
 
 interface HeaderProps {
 	children?: React.ReactNode;
 }
 
 export function Header({ children }: HeaderProps) {
-	const bg = useColorModeValue("#ffffffcc", "#1a202ccc");
+	const colorValues = useColorModeValues();
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const { width } = useResponsive();
 
@@ -22,7 +23,7 @@ export function Header({ children }: HeaderProps) {
 				left: 0,
 				width: "calc(100%)",
 				alignItems: "center",
-				backgroundColor: bg,
+				backgroundColor: colorValues.bgOpacity,
 				borderBottom: `1px solid var(--chakra-colors-gray-200)`,
 				backdropFilter: "blur(1.5px)",
 				zIndex: 999,
