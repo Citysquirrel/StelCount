@@ -31,6 +31,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { headerOffsetState, stellarState } from "../lib/Atom";
 import { checkConsonantAtLast } from "../lib/functions/consonant";
+import { Spacing } from "../components/Spacing";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -42,6 +43,7 @@ export function Admin() {
 		chzzkId: "",
 		xId: "",
 		colorCode: "",
+		playlistIdForMusic: "",
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
@@ -113,7 +115,8 @@ export function Admin() {
 
 	if (isLoading) return <Loading />;
 	return (
-		<>
+		<Stack padding="0 12px">
+			<Spacing size={24} />
 			<Box as="section">
 				<Stack as="form" onSubmit={handleSubmit}>
 					<Input ref={firstRef} placeholder="스텔라 이름" value={inputValue.name} onChange={handleInputValue("name")} />
@@ -121,6 +124,11 @@ export function Admin() {
 					<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
 					<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
 					<Input placeholder="컬러코드 HEX" value={inputValue.colorCode} onChange={handleInputValue("colorCode")} />
+					<Input
+						placeholder="음악 재생목록 ID"
+						value={inputValue.playlistIdForMusic}
+						onChange={handleInputValue("playlistIdForMusic")}
+					/>
 					<Button type="submit">등록</Button>
 				</Stack>
 			</Box>
@@ -184,7 +192,7 @@ export function Admin() {
 					</Tbody>
 				</Table>
 			</TableContainer>
-		</>
+		</Stack>
 	);
 }
 
@@ -207,6 +215,7 @@ export function AdminEdit() {
 		chzzkId: "",
 		xId: "",
 		colorCode: "",
+		playlistIdForMusic: "",
 	});
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,7 +268,7 @@ export function AdminEdit() {
 	}, []);
 
 	return (
-		<>
+		<Stack padding="0 12px" paddingTop={"12px"}>
 			<Stack
 			// position="sticky"
 			// top={`${offsetY + 24}px`}
@@ -296,6 +305,12 @@ export function AdminEdit() {
 						onChange={handleInputValue("colorCode")}
 						isDisabled={isLoading}
 					/>
+					<Input
+						placeholder="음악 재생목록 ID"
+						value={inputValue.playlistIdForMusic}
+						onChange={handleInputValue("playlistIdForMusic")}
+						isDisabled={isLoading}
+					/>
 					<HStack width="100%" justifyContent={"space-between"}>
 						<Button flex={1} type="submit" colorScheme="blue">
 							등록
@@ -315,7 +330,7 @@ export function AdminEdit() {
 			<Stack as="section">
 				<HeadedDivider>재생목록</HeadedDivider>
 			</Stack>
-		</>
+		</Stack>
 	);
 }
 
@@ -342,6 +357,7 @@ interface StellarInputValue {
 	chzzkId: string;
 	xId: string;
 	colorCode: string;
+	playlistIdForMusic: string;
 }
 
 interface StellarData extends StellarInputValue {
