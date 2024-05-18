@@ -10,6 +10,9 @@ import {
 	Heading,
 	IconButton,
 	Input,
+	InputGroup,
+	InputLeftAddon,
+	InputLeftElement,
 	Spacer,
 	Stack,
 	Table,
@@ -23,7 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
-import { MdDelete, MdEdit } from "react-icons/md";
+import { MdColorLens, MdDelete, MdEdit, MdPerson, MdPlaylistPlay } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
@@ -32,6 +35,8 @@ import { useRecoilState } from "recoil";
 import { headerOffsetState, stellarState } from "../lib/Atom";
 import { checkConsonantAtLast } from "../lib/functions/consonant";
 import { Spacing } from "../components/Spacing";
+import { Image } from "../components/Image";
+import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -119,16 +124,51 @@ export function Admin() {
 			<Spacing size={24} />
 			<Box as="section">
 				<Stack as="form" onSubmit={handleSubmit}>
-					<Input ref={firstRef} placeholder="스텔라 이름" value={inputValue.name} onChange={handleInputValue("name")} />
-					<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
-					<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
-					<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
-					<Input placeholder="컬러코드 HEX" value={inputValue.colorCode} onChange={handleInputValue("colorCode")} />
-					<Input
-						placeholder="음악 재생목록 ID"
-						value={inputValue.playlistIdForMusic}
-						onChange={handleInputValue("playlistIdForMusic")}
-					/>
+					<InputGroup>
+						<InputLeftElement>
+							<MdPerson />
+						</InputLeftElement>
+						<Input
+							ref={firstRef}
+							placeholder="스텔라 이름"
+							value={inputValue.name}
+							onChange={handleInputValue("name")}
+						/>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<FaYoutube />
+						</InputLeftElement>
+						<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<Image boxSize={"16px"} src="/src/assets/i_chzzk_1.png" />
+						</InputLeftElement>
+						<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<FaXTwitter />
+						</InputLeftElement>
+						<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<MdColorLens />
+						</InputLeftElement>
+						<Input placeholder="컬러코드 HEX" value={inputValue.colorCode} onChange={handleInputValue("colorCode")} />
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<MdPlaylistPlay />
+						</InputLeftElement>
+						<Input
+							placeholder="음악 재생목록 ID"
+							value={inputValue.playlistIdForMusic}
+							onChange={handleInputValue("playlistIdForMusic")}
+						/>
+					</InputGroup>
 					<Button type="submit">등록</Button>
 				</Stack>
 			</Box>
@@ -286,31 +326,62 @@ export function AdminEdit() {
 			<Stack as="section">
 				<HeadedDivider>채널 정보</HeadedDivider>
 				<Stack as="form" onSubmit={handleSubmit}>
-					<Input
-						placeholder="유튜브 ID"
-						value={inputValue.youtubeId}
-						onChange={handleInputValue("youtubeId")}
-						isDisabled={isLoading}
-					/>
-					<Input
-						placeholder="치지직 ID"
-						value={inputValue.chzzkId}
-						onChange={handleInputValue("chzzkId")}
-						isDisabled={isLoading}
-					/>
-					<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} isDisabled={isLoading} />
-					<Input
-						placeholder="컬러코드 HEX"
-						value={inputValue.colorCode}
-						onChange={handleInputValue("colorCode")}
-						isDisabled={isLoading}
-					/>
-					<Input
-						placeholder="음악 재생목록 ID"
-						value={inputValue.playlistIdForMusic}
-						onChange={handleInputValue("playlistIdForMusic")}
-						isDisabled={isLoading}
-					/>
+					<InputGroup>
+						<InputLeftElement>
+							<FaYoutube />
+						</InputLeftElement>
+						<Input
+							placeholder="유튜브 ID"
+							value={inputValue.youtubeId}
+							onChange={handleInputValue("youtubeId")}
+							isDisabled={isLoading}
+						/>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<Image boxSize={"16px"} src="/src/assets/i_chzzk_1.png" />
+						</InputLeftElement>
+						<Input
+							placeholder="치지직 ID"
+							value={inputValue.chzzkId}
+							onChange={handleInputValue("chzzkId")}
+							isDisabled={isLoading}
+						/>
+					</InputGroup>
+					<InputGroup>
+						{" "}
+						<InputLeftElement>
+							<FaXTwitter />
+						</InputLeftElement>
+						<Input
+							placeholder="X ID"
+							value={inputValue.xId}
+							onChange={handleInputValue("xId")}
+							isDisabled={isLoading}
+						/>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<MdColorLens />
+						</InputLeftElement>
+						<Input
+							placeholder="컬러코드 HEX"
+							value={inputValue.colorCode}
+							onChange={handleInputValue("colorCode")}
+							isDisabled={isLoading}
+						/>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<MdPlaylistPlay />
+						</InputLeftElement>
+						<Input
+							placeholder="음악 재생목록 ID"
+							value={inputValue.playlistIdForMusic}
+							onChange={handleInputValue("playlistIdForMusic")}
+							isDisabled={isLoading}
+						/>
+					</InputGroup>
 					<HStack width="100%" justifyContent={"space-between"}>
 						<Button flex={1} type="submit" colorScheme="blue">
 							등록
