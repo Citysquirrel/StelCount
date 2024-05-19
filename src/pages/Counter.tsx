@@ -1,18 +1,6 @@
 import { useRecoilState } from "recoil";
 import { PlatformInfosDetail, stellarState } from "../lib/Atom";
-import {
-	Box,
-	BoxProps,
-	Card,
-	CardBody,
-	CardHeader,
-	HStack,
-	SimpleGrid,
-	Stack,
-	Text,
-	VStack,
-	theme,
-} from "@chakra-ui/react";
+import { Box, BoxProps, Card, CardBody, CardHeader, HStack, SimpleGrid, Stack, Text, theme } from "@chakra-ui/react";
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import symbolTabi from "../assets/symbol/symbol_tabi.png";

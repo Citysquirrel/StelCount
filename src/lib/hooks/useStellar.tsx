@@ -5,10 +5,8 @@
 import { useRecoilState } from "recoil";
 import {
 	PlatformInfos,
-	PlatformInfosDetail,
 	StellarInfo,
 	StellarState,
-	VideoDataDetail,
 	isLoadingState,
 	isServerErrorState,
 	isStellarLoadingState,

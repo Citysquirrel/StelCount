@@ -2,7 +2,6 @@ import {
 	AbsoluteCenter,
 	Alert,
 	AlertIcon,
-	AlertTitle,
 	Box,
 	Button,
 	Divider,
@@ -11,15 +10,12 @@ import {
 	IconButton,
 	Input,
 	InputGroup,
-	InputLeftAddon,
 	InputLeftElement,
-	Spacer,
 	Stack,
 	Table,
 	TableContainer,
 	Tbody,
 	Td,
-	Text,
 	Th,
 	Thead,
 	Tr,
@@ -33,7 +29,6 @@ import { Loading } from "../components/Loading";
 import { useNavigate, useParams } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { headerOffsetState, stellarState } from "../lib/Atom";
-import { checkConsonantAtLast } from "../lib/functions/consonant";
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
