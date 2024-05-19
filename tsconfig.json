@@ -17,6 +17,7 @@
 		"noImplicitAny": false,
 		"noImplicitThis": false,
 		"noEmit": true,
+		"noUnusedLocals": true,
 		"jsx": "react-jsx"
 	},
 	"include": ["src"],

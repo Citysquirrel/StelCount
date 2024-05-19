@@ -266,10 +266,11 @@ export function AdminEdit() {
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		setIsLoading(true);
-		fetchServer("/stellar", "v1", { method: "PATCH", body: JSON.stringify(inputValue) })
+		setAlertStatus("loading");
+		fetchServer(`/stellar/${id}`, "v1", { method: "PATCH", body: JSON.stringify(inputValue) })
 			.then((res) => {
 				if (res) {
-					if (res.status === 200) {
+					if (res.status === 204) {
 						setAlertStatus("success");
 					}
 				}
@@ -290,8 +291,8 @@ export function AdminEdit() {
 						if (!res.data) {
 							nav("/admin");
 						}
-						const { name, chzzkId, youtubeId, xId, colorCode } = res.data;
-						setInputValue((prev) => ({ ...prev, name, chzzkId, youtubeId, xId, colorCode }));
+						const { name, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic } = res.data;
+						setInputValue((prev) => ({ ...prev, name, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic }));
 						setAlertStatus("success");
 					} else {
 						setAlertStatus("error");
@@ -349,7 +350,6 @@ export function AdminEdit() {
 						/>
 					</InputGroup>
 					<InputGroup>
-						{" "}
 						<InputLeftElement>
 							<FaXTwitter />
 						</InputLeftElement>
