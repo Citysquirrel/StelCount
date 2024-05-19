@@ -36,8 +36,14 @@ export function Counter() {
 	const [data, setData] = useRecoilState(stellarState);
 
 	return (
-		<Stack direction={"row"}>
-			<SideList>사이드</SideList>
+		<Stack direction={"row"} height="100%">
+			<SideListContainer>
+				<SideList>
+					{data.map((stellar) => (
+						<Text>{stellar.name}</Text>
+					))}
+				</SideList>
+			</SideListContainer>
 			<section>
 				<SimpleGrid columns={[2, 3, 4]} spacing="12px">
 					{data.map((stellar) => {
@@ -51,11 +57,19 @@ export function Counter() {
 	);
 }
 
-function SideList({ children, ...props }: SideListProps) {
+function SideListContainer({ children, ...props }: SideListContainerProps) {
 	return (
-		<Box width={"240px"} {...props}>
+		<Box width="240px" height="100%" borderRight="1px solid black" {...props}>
 			{children}
 		</Box>
+	);
+}
+
+function SideList({ children, ...props }: SideListProps) {
+	return (
+		<Stack margin="12px" {...props}>
+			{children}
+		</Stack>
 	);
 }
 
@@ -106,6 +120,7 @@ function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
 	);
 }
 
+interface SideListContainerProps extends BoxProps {}
 interface SideListProps extends BoxProps {}
 
 interface StellarCardProps {

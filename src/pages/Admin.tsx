@@ -11,6 +11,7 @@ import {
 	Input,
 	InputGroup,
 	InputLeftElement,
+	Link,
 	Stack,
 	Table,
 	TableContainer,
@@ -22,7 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
-import { MdColorLens, MdDelete, MdEdit, MdPerson, MdPlaylistPlay } from "react-icons/md";
+import { MdColorLens, MdDelete, MdEdit, MdOpenInNew, MdPerson, MdPlaylistPlay } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
@@ -69,6 +70,9 @@ export function Admin() {
 
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
 		e.preventDefault();
+		if (!inputValue.name) {
+			return alert("스텔라 이름을 입력해주세요");
+		}
 		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
 			// console.log(res.data);
 			getStellarData();
@@ -179,11 +183,12 @@ export function Admin() {
 						<Tr>
 							<Th isNumeric>ID</Th>
 							<Th>이름</Th>
+							<Th>컬러코드 HEX</Th>
+							<Th>재생목록</Th>
+							<Th>설정</Th>
 							<Th>치지직 ID</Th>
 							<Th>유튜브 ID</Th>
 							<Th>X ID</Th>
-							<Th>컬러코드 HEX</Th>
-							<Th>설정</Th>
 						</Tr>
 					</Thead>
 					<Tbody>
@@ -192,16 +197,18 @@ export function Admin() {
 								<Td isNumeric>{s.id}</Td>
 								<Td>{s.name}</Td>
 								<Td>
-									<CopyText>{s.chzzkId}</CopyText>
-								</Td>
-								<Td>
-									<CopyText>{s.youtubeId}</CopyText>
-								</Td>
-								<Td>
-									<CopyText>{s.xId}</CopyText>
-								</Td>
-								<Td>
 									<CopyText>{s.colorCode}</CopyText>
+								</Td>
+								<Td>
+									{s.playlistIdForMusic ? (
+										<Link
+											href={`https://www.youtube.com/playlist?list=${s.playlistIdForMusic}`}
+											isExternal
+											sx={{ display: "flex", justifyContent: "center" }}
+										>
+											<MdOpenInNew />
+										</Link>
+									) : null}
 								</Td>
 								<Td>
 									<IconButton
@@ -221,6 +228,15 @@ export function Admin() {
 										fontSize={"1.125rem"}
 										onClick={handleDelete(s.id)}
 									/>
+								</Td>
+								<Td>
+									<CopyText>{s.chzzkId}</CopyText>
+								</Td>
+								<Td>
+									<CopyText>{s.youtubeId}</CopyText>
+								</Td>
+								<Td>
+									<CopyText>{s.xId}</CopyText>
 								</Td>
 							</Tr>
 						))}

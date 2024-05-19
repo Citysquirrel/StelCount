@@ -24,7 +24,8 @@ function App() {
 			{isLoading ? <Loading /> : null}
 			<Header>
 				<Text fontSize="2xl" marginRight="8px">
-					제목이 들어갈 란
+					StelCount
+					{/* 삭제 요망 */}
 				</Text>
 				<Button as="button" onClick={nav("/")}>
 					Home

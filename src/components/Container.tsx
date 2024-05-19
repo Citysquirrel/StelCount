@@ -16,7 +16,7 @@ export function Container({ children, ...props }: ContainerProps) {
 				position: "relative",
 				top: `${offsetY}px`,
 				maxWidth: "100%",
-				minHeight: `calc(100dvh - ${offsetY}px)`,
+				height: `calc(100dvh - ${offsetY}px)`,
 				padding: 0,
 				backgroundColor: colorValues.background,
 				// transform: `translateY(${offsetY}px)`,
