@@ -64,7 +64,7 @@ export function useStellar() {
 		};
 	}, []);
 
-	return { data, setData };
+	return { data, setData, refetch: f };
 }
 
 // interface PlatformInfos {

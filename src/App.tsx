@@ -5,47 +5,78 @@ import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, HStack, Heading, Stack, Text, useColorMode } from "@chakra-ui/react";
-import { MdDarkMode, MdLightMode } from "react-icons/md";
+import { Button, Divider, HStack, Heading, IconButton, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
+import { MdDarkMode, MdLightMode, MdOndemandVideo, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { isLoadingState, isLoginState, isServerErrorState } from "./lib/Atom";
+import { isLoadingState, isLoginState, isServerErrorState, isStellarLoadingState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerError";
 import { Loading } from "./components/Loading";
-import { useEffect } from "react";
+import { ImListNumbered } from "react-icons/im";
+import { IoReload } from "react-icons/io5";
 
 function App() {
 	const nav = useNavigateEvent();
-	const navigate = useNavigate();
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [isLoading] = useRecoilState(isLoadingState);
+	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [isServerError] = useRecoilState(isServerErrorState);
-	useStellar();
-	useEffect(() => {
-		navigate("/counter");
-	}, []);
+	const { refetch } = useStellar();
+
+	const handleReload = () => {
+		refetch(true);
+	};
+
 	if (isServerError) return <ServerErrorPage />;
 	return (
 		<>
 			{isLoading ? <Loading /> : null}
 			<Header>
-				<Text fontSize="2xl" marginRight="8px">
-					StelCount
-					{/* 삭제 요망 */}
-				</Text>
-				{/* <Button variant={"outline"} onClick={nav("/")}>
-					Home
-				</Button> */}
-				<Button variant={"outline"} onClick={nav("/counter")}>
-					Counter
-				</Button>
-				<Button variant={"outline"} onClick={nav("/video-count")}>
-					Video
-				</Button>
+				<Tooltip label="카운터">
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						icon={<ImListNumbered />}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={nav("/counter")}
+						aria-label="counter"
+					/>
+				</Tooltip>
+				<Tooltip label="영상모음">
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						icon={<MdOndemandVideo />}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={nav("/video")}
+						aria-label="video"
+					/>
+				</Tooltip>
 				{import.meta.env.DEV ? (
-					<Button variant={"outline"} onClick={nav("/admin")}>
-						ADMIN
-					</Button>
+					<Tooltip label="관리자">
+						<IconButton
+							fontSize="1.125rem"
+							isRound
+							icon={<MdSettings />}
+							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+							onClick={nav("/admin")}
+							aria-label="admin"
+						/>
+					</Tooltip>
 				) : null}
+				<Divider orientation="vertical" height="32px" margin="4px" />
+				<Tooltip label="새로고침">
+					<Button
+						fontSize="1.125rem"
+						borderRadius={"full"}
+						padding="0"
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={handleReload}
+						aria-label="reload"
+						isLoading={isStellarLoading}
+					>
+						<IoReload />
+					</Button>
+				</Tooltip>
 
 				{/* <Button
 					wrapperCss={css`
@@ -55,17 +86,14 @@ function App() {
 				>
 					TEST
 				</Button> */}
-				<Button
-					css={css`
-						margin-inline-start: auto;
-						font-size: 1.25rem;
-						padding: 0;
-						border-radius: 99px;
-					`}
+				<IconButton
+					fontSize="1.125rem"
+					isRound
 					onClick={toggleColorMode}
-				>
-					{colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
-				</Button>
+					colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+					icon={colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
+					aria-label="color-mode"
+				/>
 			</Header>
 			<Container>
 				<Outlet />

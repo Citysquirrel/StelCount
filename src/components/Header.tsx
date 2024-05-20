@@ -32,7 +32,13 @@ export function Header({ children }: HeaderProps) {
 			<Box sx={{ width: "100%", height: `${offsetY}px` }}>
 				<Stack
 					direction="row"
-					sx={{ maxWidth: `${width}px`, maxHeight: "64px", padding: "12px", marginInline: "auto" }}
+					sx={{
+						maxWidth: `${width}px`,
+						maxHeight: "64px",
+						padding: "12px",
+						marginInline: "auto",
+						justifyContent: "center",
+					}}
 				>
 					{children}
 				</Stack>

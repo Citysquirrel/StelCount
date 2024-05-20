@@ -8,14 +8,14 @@ import { Login } from "./pages/Login";
 import { NotExist } from "./pages/NotExist";
 import { YoutubeVideo } from "./pages/YoutubeVideo";
 
-const devRoutes: RouteObject[] = import.meta.env.DEV ? [{ path: "/video-count", element: <YoutubeVideo /> }] : [];
+const devRoutes: RouteObject[] = import.meta.env.DEV ? [{ path: "/video", element: <YoutubeVideo /> }] : [];
 
 export const routeObj: RouteObject[] = [
 	{
 		path: "/",
 		element: <App />,
 		children: [
-			// { path: "/", element: <Home /> },
+			{ path: "/", element: <Home /> },
 			{ path: "/counter", element: <Counter /> },
 			{ path: "/admin", element: <Admin /> },
 			{ path: "/admin/:id", element: <AdminEdit /> },

@@ -119,7 +119,7 @@ export function Admin() {
 		firstRef.current?.focus();
 	}, []);
 
-	if (isLoading) return <Loading />;
+	if (isLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	return (
 		<Stack padding="0 12px">
 			<Spacing size={24 + offsetY} />
