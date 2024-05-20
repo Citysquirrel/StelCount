@@ -1,5 +1,5 @@
 import { useRecoilState } from "recoil";
-import { PlatformInfosDetail, headerOffsetState, stellarState } from "../lib/Atom";
+import { PlatformInfosDetail, headerOffsetState, isLoadingState, stellarState } from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -13,6 +13,8 @@ import {
 	HStack,
 	Link,
 	SimpleGrid,
+	Skeleton,
+	SkeletonCircle,
 	Stack,
 	StackDivider,
 	Text,
@@ -61,6 +63,7 @@ export function Counter() {
 	const { colorMode } = useColorMode();
 	const [data, setData] = useRecoilState(stellarState);
 	const [offsetY] = useRecoilState(headerOffsetState);
+	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
@@ -88,28 +91,36 @@ export function Counter() {
 		>
 			<SideListContainer>
 				<SideList>
-					{data.map((stellar) => (
-						<Button
-							key={stellar.uuid}
-							variant={"outline"}
-							leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
-							colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
-							backgroundColor="ButtonFace"
-							onClick={handleClickStellar(stellar.uuid)}
-							cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
-						>
-							<Text>{stellar.name}</Text>
-						</Button>
-					))}
+					{isLoading
+						? Array.from({ length: 4 }, () => true).map((_, idx) => (
+								<Skeleton key={idx} height="40px" borderRadius={"0.375rem"} />
+						  ))
+						: data.map((stellar) => (
+								<Button
+									key={stellar.uuid}
+									variant={"outline"}
+									leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
+									colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
+									backgroundColor="ButtonFace"
+									onClick={handleClickStellar(stellar.uuid)}
+									cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
+								>
+									<Text>{stellar.name}</Text>
+								</Button>
+						  ))}
 				</SideList>
 			</SideListContainer>
 			<Box width="100%">
 				<Stack margin="12px" marginTop="24px" divider={<StackDivider />} spacing={"4"}>
 					<Stack direction={"row"} alignItems={"center"} spacing={"4"}>
 						<Link href={chzzk && naver.chzzk.liveUrl(chzzk.channelId)} isExternal>
-							<Avatar boxSize="72px" src={(chzzk && chzzk.profileImage) || SQ}>
-								<AvatarBadge boxSize="28px" bg={chzzk && chzzk?.liveStatus ? "green" : "red"} />
-							</Avatar>
+							{isLoading ? (
+								<SkeletonCircle boxSize="72px" />
+							) : (
+								<Avatar boxSize="72px" src={(chzzk && chzzk.profileImage) || SQ}>
+									<AvatarBadge boxSize="28px" bg={chzzk && chzzk?.liveStatus ? "green" : "red"} />
+								</Avatar>
+							)}
 						</Link>
 						<Divider orientation="vertical" height="64px" />
 						{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (

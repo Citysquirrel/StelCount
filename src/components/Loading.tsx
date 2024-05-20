@@ -1,4 +1,4 @@
-import { Stack, Text } from "@chakra-ui/react";
+import { Image, Stack, Text } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 
 export function Loading({ options }: LoadingProps) {
@@ -12,13 +12,17 @@ export function Loading({ options }: LoadingProps) {
 				width: "100vw",
 				height: "100vh",
 				alignItems: "center",
-				backgroundColor: values.background,
-				opacity: options?.mode === "fullscreen" ? 1 : 0.25,
+				backgroundColor: options?.mode === "fullscreen" ? values.background : values.bgOpacity,
 				justifyContent: "center",
 				zIndex: 1001,
+				"> img": {
+					boxSize: "128px",
+					animation: "rotate 1s ease infinite",
+					transformOrigin: "50% 50%",
+				},
 			}}
 		>
-			<Text>LOADING</Text>
+			<Image src={"/load_donut.png"} />
 		</Stack>
 	);
 }

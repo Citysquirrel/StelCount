@@ -1,6 +1,6 @@
 import { Header } from "./components/Header";
 import { css } from "@emotion/react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
@@ -11,13 +11,18 @@ import { useRecoilState } from "recoil";
 import { isLoadingState, isLoginState, isServerErrorState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerError";
 import { Loading } from "./components/Loading";
+import { useEffect } from "react";
 
 function App() {
 	const nav = useNavigateEvent();
+	const navigate = useNavigate();
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [isServerError] = useRecoilState(isServerErrorState);
 	useStellar();
+	useEffect(() => {
+		navigate("/counter");
+	}, []);
 	if (isServerError) return <ServerErrorPage />;
 	return (
 		<>
@@ -27,9 +32,9 @@ function App() {
 					StelCount
 					{/* 삭제 요망 */}
 				</Text>
-				<Button variant={"outline"} onClick={nav("/")}>
+				{/* <Button variant={"outline"} onClick={nav("/")}>
 					Home
-				</Button>
+				</Button> */}
 				<Button variant={"outline"} onClick={nav("/counter")}>
 					Counter
 				</Button>

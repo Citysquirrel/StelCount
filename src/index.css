@@ -1,3 +1,9 @@
+@keyframes rotate {
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
 /* Font */
 @font-face {
 	font-family: "Spoqa Han Sans Neo";
