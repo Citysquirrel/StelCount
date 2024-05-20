@@ -27,17 +27,17 @@ function App() {
 					StelCount
 					{/* 삭제 요망 */}
 				</Text>
-				<Button as="button" onClick={nav("/")}>
+				<Button variant={"outline"} onClick={nav("/")}>
 					Home
 				</Button>
-				<Button as="button" onClick={nav("/counter")}>
+				<Button variant={"outline"} onClick={nav("/counter")}>
 					Counter
 				</Button>
-				<Button as="button" onClick={nav("/video-count")}>
+				<Button variant={"outline"} onClick={nav("/video-count")}>
 					Video
 				</Button>
 				{import.meta.env.DEV ? (
-					<Button as="button" onClick={nav("/admin")}>
+					<Button variant={"outline"} onClick={nav("/admin")}>
 						ADMIN
 					</Button>
 				) : null}

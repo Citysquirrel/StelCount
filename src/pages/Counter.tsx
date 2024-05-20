@@ -1,15 +1,20 @@
 import { useRecoilState } from "recoil";
 import { PlatformInfosDetail, stellarState } from "../lib/Atom";
 import {
+	Avatar,
+	AvatarBadge,
 	Box,
 	BoxProps,
 	Button,
 	Card,
 	CardBody,
 	CardHeader,
+	Divider,
 	HStack,
+	Link,
 	SimpleGrid,
 	Stack,
+	StackDivider,
 	Text,
 	theme,
 	useColorMode,
@@ -24,9 +29,11 @@ import symbolKanna from "../assets/symbol/symbol_kanna.png";
 import symbolYuni from "../assets/symbol/symbol_yuni.png";
 import chzzkIcon from "../assets/i_chzzk_1.png";
 import youtubeIcon from "../assets/i_youtube_1.png";
+import SQ from "../assets/logo.png";
 import { useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
 import { numberToLocaleString } from "../lib/functions/etc";
+import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
 
 const stellarColors = {
 	"아이리 칸나": "#373584",
@@ -53,48 +60,92 @@ const stellarSymbols = {
 export function Counter() {
 	const { colorMode } = useColorMode();
 	const [data, setData] = useRecoilState(stellarState);
-	const [currentUuid, setCurrentUuid] = useState(data.length > 0 ? data[0].uuid : "");
+	const [currentUuid, setCurrentUuid] = useState("");
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
 	const chzzk = currentStellar && currentStellar.chzzk;
 	const youtube = currentStellar && currentStellar.youtube;
+	const videos = currentStellar && currentStellar.videos;
+	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
 	};
 
+	useEffect(() => {
+		if (data.length > 0 && currentUuid === "") setCurrentUuid(data[0].uuid);
+	}, [data]);
 	useConsole(currentStellar);
 
 	return (
-		<Stack direction={"row"} height="100%" backgroundColor={`#${currentStellar?.colorCode}44`}>
+		<Stack direction={"row"} height="100%" backgroundColor={`${currentColorCode}aa`} transition=".3s background-color">
 			<SideListContainer>
 				<SideList>
 					{data.map((stellar) => (
-						<Button colorScheme="blue" onClick={handleClickStellar(stellar.uuid)}>
-							{stellar.name}
+						<Button
+							key={stellar.uuid}
+							variant={"outline"}
+							leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
+							colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
+							backgroundColor="ButtonFace"
+							onClick={handleClickStellar(stellar.uuid)}
+							cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
+						>
+							<Text>{stellar.name}</Text>
 						</Button>
 					))}
 				</SideList>
 			</SideListContainer>
 			<Box width="100%">
-				<Stack margin="12px">
-					<Stack direction={"row"}>
-						<Card width="100%">
-							{chzzk && chzzk.followerCount ? (
-								<HStack padding="4px">
-									<Image boxSize={"20px"} src={chzzkIcon} />
-									<Text fontSize={"1.25rem"}>{numberToLocaleString(chzzk.followerCount)}</Text>
-								</HStack>
-							) : null}
-							{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (
-								<HStack padding="4px">
-									<Image boxSize={"20px"} src={youtubeIcon} />
-									<Text fontSize={"1.25rem"}>{numberToLocaleString(youtube[0].subscriberCount)}</Text>
-								</HStack>
-							) : null}
-						</Card>
+				<Stack margin="12px" marginTop="24px" divider={<StackDivider />} spacing={"4"}>
+					<Stack direction={"row"} alignItems={"center"} spacing={"4"}>
+						<Link href={chzzk && naver.chzzk.liveUrl(chzzk.channelId)} isExternal>
+							<Avatar boxSize="72px" src={(chzzk && chzzk.profileImage) || SQ}>
+								<AvatarBadge boxSize="28px" bg={chzzk && chzzk?.liveStatus ? "green" : "red"} />
+							</Avatar>
+						</Link>
+						<Divider orientation="vertical" height="64px" />
+						{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (
+							<Link href={youtubeAPI.channelUrl(youtube[0].channelId)} isExternal _hover={{ textDecoration: "none" }}>
+								<Card
+									width="240px"
+									variant={"outline"}
+									cursor="pointer"
+									transition=".3s all"
+									_hover={{ borderColor: currentColorCode }}
+								>
+									<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
+										<HStack padding="4px">
+											<Image boxSize={"20px"} src={youtubeIcon} />
+											<Text fontSize={"1.25rem"}>구독자 {numberToLocaleString(youtube[0].subscriberCount)}</Text>
+										</HStack>
+									</HStack>
+								</Card>
+							</Link>
+						) : null}
+						{chzzk && chzzk.followerCount ? (
+							<Link href={naver.chzzk.channelUrl(chzzk.channelId)} isExternal _hover={{ textDecoration: "none" }}>
+								<Card
+									width="240px"
+									variant={"outline"}
+									cursor="pointer"
+									transition=".3s all"
+									_hover={{ borderColor: currentColorCode }}
+								>
+									<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
+										<HStack padding="4px">
+											<Image boxSize={"20px"} src={chzzkIcon} />
+											<Text fontSize={"1.25rem"}>팔로워 {numberToLocaleString(chzzk.followerCount)}</Text>
+										</HStack>
+									</HStack>
+								</Card>
+							</Link>
+						) : null}
 					</Stack>
 					<SimpleGrid columns={[2, 3, 4]} spacing="12px">
+						{videos?.map((video) => (
+							<>{video.id}</>
+						))}
 						{/* {data.map((stellar) => {
 						return (
 							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
@@ -109,7 +160,7 @@ export function Counter() {
 
 function SideListContainer({ children, ...props }: SideListContainerProps) {
 	return (
-		<Box width="240px" height="100%" borderRight="1px solid black" {...props}>
+		<Box width="240px" height="100%" {...props}>
 			{children}
 		</Box>
 	);
@@ -117,7 +168,7 @@ function SideListContainer({ children, ...props }: SideListContainerProps) {
 
 function SideList({ children, ...props }: SideListProps) {
 	return (
-		<Stack margin="12px" {...props}>
+		<Stack margin="12px" marginTop="36px" {...props}>
 			{children}
 		</Stack>
 	);

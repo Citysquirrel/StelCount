@@ -13,6 +13,7 @@ export interface PlatformInfosDetail {
 	followerCount?: string;
 	profileImage?: string;
 	liveStatus?: boolean;
+	channelId?: string;
 }
 
 export interface VideoDataDetail {
@@ -22,6 +23,7 @@ export interface VideoDataDetail {
 	name: string;
 	count: number | string;
 	thumbnail: string;
+	url: string;
 }
 
 export interface PlatformInfos {

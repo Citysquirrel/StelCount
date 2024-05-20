@@ -16,12 +16,10 @@ export interface ParamsObject {
 	[key: string]: string | string[];
 }
 
-/**
- * ! 중요** 프로덕션에서 사용하지 않습니다
- */
 export const youtube = {
-	channels: (params: ParamsObject, options?: FetchOptions) =>
-		fetch_(`https://www.googleapis.com/youtube/v3/channels${objectToUrlParams(params)}`, options),
+	// channels: (params: ParamsObject, options?: FetchOptions) =>
+	// 	fetch_(`https://www.googleapis.com/youtube/v3/channels${objectToUrlParams(params)}`, options),
+	channelUrl: (channelId?: string) => (channelId ? `https://www.youtube.com/${channelId}` : undefined),
 };
 
 function objectToUrlParams(object: Object) {
@@ -35,6 +33,8 @@ function objectToUrlParams(object: Object) {
 
 export const naver = {
 	chzzk: {
-		channels: (channelId: string) => fetch_(`https://api.chzzk.naver.com/service/v1/channels/${channelId}`, {}),
+		// channels: (channelId: string) => fetch_(`https://api.chzzk.naver.com/service/v1/channels/${channelId}`, {}),
+		liveUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}` : undefined),
+		channelUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/${channelId}` : undefined),
 	},
 };
