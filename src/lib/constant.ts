@@ -5,4 +5,11 @@ const NAME_MASHIRO = "네네코 마시로";
 const NAME_HINA = "시라유키 히나";
 const NAME_LIZE = "아카네 리제";
 
-export { NAME_KANNA, NAME_YUNI, NAME_TABI, NAME_MASHIRO, NAME_HINA, NAME_LIZE };
+const stellarGroupName = [
+	["", ""],
+	["미스틱", "Mystic"],
+	["유니버스", "Universe"],
+	["클리셰", "Cliché"],
+];
+
+export { NAME_KANNA, NAME_YUNI, NAME_TABI, NAME_MASHIRO, NAME_HINA, NAME_LIZE, stellarGroupName };

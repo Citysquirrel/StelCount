@@ -32,6 +32,7 @@ export interface PlatformInfos {
 
 export interface StellarInfo {
 	name: string;
+	group: number;
 	uuid: string;
 	colorCode: string;
 }

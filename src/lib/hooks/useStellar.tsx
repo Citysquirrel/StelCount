@@ -34,6 +34,7 @@ export function useStellar() {
 						for (let s of stellar) {
 							integrated.push({
 								name: s.name,
+								group: s.group,
 								uuid: s.uuid,
 								colorCode: s.colorCode,
 								youtube: data[s.uuid] ? data[s.uuid].youtube : [],

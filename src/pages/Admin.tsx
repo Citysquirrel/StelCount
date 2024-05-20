@@ -11,19 +11,21 @@ import {
 	Input,
 	InputGroup,
 	InputLeftElement,
+	InputRightElement,
 	Link,
 	Stack,
 	Table,
 	TableContainer,
 	Tbody,
 	Td,
+	Text,
 	Th,
 	Thead,
 	Tr,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
-import { MdColorLens, MdDelete, MdEdit, MdOpenInNew, MdPerson, MdPlaylistPlay } from "react-icons/md";
+import { MdColorLens, MdDelete, MdEdit, MdGroup, MdOpenInNew, MdPerson, MdPlaylistPlay } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
@@ -35,6 +37,7 @@ import { Image } from "../components/Image";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 import VALIDATION from "../lib/functions/validation";
 import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
+import { stellarGroupName } from "../lib/constant";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -42,6 +45,7 @@ export function Admin() {
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
+		group: "",
 		youtubeId: "",
 		chzzkId: "",
 		xId: "",
@@ -138,6 +142,22 @@ export function Admin() {
 					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
+							<MdGroup />
+						</InputLeftElement>
+						<InputRightElement width="72px" fontSize="0.875rem">
+							{Number(inputValue.group) > 0 && Number(inputValue.group) < stellarGroupName.length ? (
+								<Text>{stellarGroupName[inputValue.group][0]}</Text>
+							) : null}
+						</InputRightElement>
+						<Input
+							type="number"
+							placeholder="스텔라 기수"
+							value={inputValue.group}
+							onChange={handleInputValue("group")}
+						/>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
 							<FaYoutube />
 						</InputLeftElement>
 						<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
@@ -190,6 +210,7 @@ export function Admin() {
 						<Tr>
 							<Th isNumeric>ID</Th>
 							<Th>이름</Th>
+							<Th>기수</Th>
 							<Th>컬러코드 HEX</Th>
 							<Th>재생목록</Th>
 							<Th>설정</Th>
@@ -203,6 +224,11 @@ export function Admin() {
 							<Tr key={`${s.id}-${idx}`}>
 								<Td isNumeric>{s.id}</Td>
 								<Td>{s.name}</Td>
+								<Td>
+									{Number(s.group) > 0 && Number(s.group) < stellarGroupName.length
+										? `${s.group}기 - ${stellarGroupName[s.group][0]}`
+										: null}
+								</Td>
 								<Td>
 									<CopyText>{s.colorCode}</CopyText>
 								</Td>
@@ -270,6 +296,7 @@ export function AdminEdit() {
 	};
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
+		group: "",
 		youtubeId: "",
 		chzzkId: "",
 		xId: "",
@@ -310,8 +337,8 @@ export function AdminEdit() {
 						if (!res.data) {
 							nav("/admin");
 						}
-						const { name, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic } = res.data;
-						const obj = { name, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic };
+						const { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic } = res.data;
+						const obj = { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic };
 						setInputValue((prev) => ({
 							...prev,
 							...objectNullCheck(obj),
@@ -333,6 +360,7 @@ export function AdminEdit() {
 
 	return (
 		<Stack padding="0 12px" paddingTop={"12px"}>
+			<Spacing size={offsetY} />
 			<Stack
 			// position="sticky"
 			// top={`${offsetY + 24}px`}
@@ -350,6 +378,22 @@ export function AdminEdit() {
 			<Stack as="section">
 				<HeadedDivider>채널 정보</HeadedDivider>
 				<Stack as="form" onSubmit={handleSubmit}>
+					<InputGroup>
+						<InputLeftElement>
+							<MdGroup />
+						</InputLeftElement>
+						<InputRightElement width="72px" fontSize="0.875rem">
+							{Number(inputValue.group) > 0 && Number(inputValue.group) < stellarGroupName.length ? (
+								<Text>{stellarGroupName[inputValue.group][0]}</Text>
+							) : null}
+						</InputRightElement>
+						<Input
+							type="number"
+							placeholder="스텔라 기수"
+							value={inputValue.group}
+							onChange={handleInputValue("group")}
+						/>
+					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
 							<FaYoutube />
@@ -448,6 +492,7 @@ function HeadedDivider({ children }) {
 
 interface StellarInputValue {
 	name: string;
+	group: string;
 	youtubeId: string;
 	chzzkId: string;
 	xId: string;
