@@ -33,6 +33,8 @@ import { headerOffsetState, stellarState } from "../lib/Atom";
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
+import VALIDATION from "../lib/functions/validation";
+import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -156,7 +158,12 @@ export function Admin() {
 						<InputLeftElement>
 							<MdColorLens />
 						</InputLeftElement>
-						<Input placeholder="컬러코드 HEX" value={inputValue.colorCode} onChange={handleInputValue("colorCode")} />
+						<Input
+							placeholder="컬러코드 HEX"
+							value={inputValue.colorCode}
+							onChange={handleInputValue("colorCode")}
+							isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
+						/>
 					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
@@ -303,7 +310,11 @@ export function AdminEdit() {
 							nav("/admin");
 						}
 						const { name, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic } = res.data;
-						setInputValue((prev) => ({ ...prev, name, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic }));
+						const obj = { name, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic };
+						setInputValue((prev) => ({
+							...prev,
+							...objectNullCheck(obj),
+						}));
 						setAlertStatus("success");
 					} else {
 						setAlertStatus("error");
@@ -380,6 +391,7 @@ export function AdminEdit() {
 							value={inputValue.colorCode}
 							onChange={handleInputValue("colorCode")}
 							isDisabled={isLoading}
+							isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
 						/>
 					</InputGroup>
 					<InputGroup>
