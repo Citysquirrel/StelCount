@@ -90,7 +90,7 @@ export function Counter() {
 			transition=".3s background-color"
 			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
 			backgroundRepeat={"no-repeat"}
-			backgroundPosition={"center"}
+			backgroundPosition={"bottom 72px right 24px"}
 			backgroundSize={"128px"}
 		>
 			<SideListContainer>
