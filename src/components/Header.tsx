@@ -29,7 +29,7 @@ export function Header({ children }: HeaderProps) {
 				zIndex: 999,
 			}}
 		>
-			<Box sx={{ width: "100%", height: `${offsetY}px` }}>
+			<Stack sx={{ width: "100%", height: `${offsetY}px`, justifyContent: "center", alignItems: "center" }}>
 				<Stack
 					direction="row"
 					sx={{
@@ -41,7 +41,7 @@ export function Header({ children }: HeaderProps) {
 				>
 					{children}
 				</Stack>
-			</Box>
+			</Stack>
 		</Stack>
 	);
 }

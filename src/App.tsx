@@ -28,7 +28,7 @@ function App() {
 
 	if (isServerError) return <ServerErrorPage />;
 	return (
-		<>
+		<Stack>
 			{isLoading ? <Loading /> : null}
 			<Header>
 				<Tooltip label="카운터">
@@ -99,7 +99,7 @@ function App() {
 				<Outlet />
 			</Container>
 			<Footer />
-		</>
+		</Stack>
 	);
 }
 

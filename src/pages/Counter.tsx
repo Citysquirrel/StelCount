@@ -18,6 +18,7 @@ import {
 	Stack,
 	StackDivider,
 	Text,
+	Tooltip,
 	theme,
 	useColorMode,
 } from "@chakra-ui/react";
@@ -36,6 +37,7 @@ import { useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
 import { numberToLocaleString } from "../lib/functions/etc";
 import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
+import { useResponsive } from "../lib/hooks/useResponsive";
 
 const stellarColors = {
 	"아이리 칸나": "#373584",
@@ -61,6 +63,7 @@ const stellarSymbols = {
 
 export function Counter() {
 	const { colorMode } = useColorMode();
+	const { windowWidth } = useResponsive();
 	const [data, setData] = useRecoilState(stellarState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
@@ -71,6 +74,7 @@ export function Counter() {
 	const youtube = currentStellar && currentStellar.youtube;
 	const videos = currentStellar && currentStellar.videos;
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
+	const isUnder720 = windowWidth < 720;
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
@@ -85,7 +89,6 @@ export function Counter() {
 		<Stack
 			direction={"row"}
 			paddingTop={`${offsetY}px`}
-			height="100%"
 			backgroundColor={`${currentColorCode}aa`}
 			transition=".3s background-color"
 			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
@@ -93,30 +96,39 @@ export function Counter() {
 			backgroundPosition={"bottom 72px right 24px"}
 			backgroundSize={"128px"}
 		>
-			<SideListContainer>
+			<SideListContainer
+				position="sticky"
+				top={`${offsetY}px`}
+				left={0}
+				minWidth={isUnder720 ? "64px" : "200px"}
+				width={isUnder720 ? "64px" : "200px"}
+				height={`calc(100vh - ${offsetY}px - 48px)`}
+			>
 				<SideList>
 					{isLoading
 						? Array.from({ length: 4 }, () => true).map((_, idx) => (
 								<Skeleton key={idx} height="40px" borderRadius={"0.375rem"} />
 						  ))
 						: data.map((stellar) => (
-								<Button
-									key={stellar.uuid}
-									variant={"outline"}
-									leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
-									colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
-									backgroundColor="ButtonFace"
-									onClick={handleClickStellar(stellar.uuid)}
-									cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
-								>
-									<Text>{stellar.name}</Text>
-								</Button>
+								<Tooltip key={stellar.uuid} label={isUnder720 ? stellar.name : undefined} placement="right" hasArrow>
+									<Button
+										variant={"outline"}
+										leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
+										colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
+										backgroundColor="ButtonFace"
+										onClick={handleClickStellar(stellar.uuid)}
+										cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
+										iconSpacing={isUnder720 ? 0 : undefined}
+									>
+										{isUnder720 ? null : <Text>{stellar.name}</Text>}
+									</Button>
+								</Tooltip>
 						  ))}
 				</SideList>
 			</SideListContainer>
 			<Box width="100%">
 				<Stack margin="12px" marginTop="24px" divider={<StackDivider />} spacing={"4"}>
-					<Stack direction={"row"} alignItems={"center"} spacing={"4"}>
+					<Stack direction={"row"} alignItems={"center"} spacing={"4"} flexWrap={"wrap"}>
 						<Link href={chzzk && naver.chzzk.liveUrl(chzzk.channelId)} isExternal>
 							{isLoading ? (
 								<SkeletonCircle boxSize="72px" />
@@ -126,45 +138,52 @@ export function Counter() {
 								</Avatar>
 							)}
 						</Link>
-						<Divider orientation="vertical" height="64px" />
-						{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (
-							<Link href={youtubeAPI.channelUrl(youtube[0].channelId)} isExternal _hover={{ textDecoration: "none" }}>
-								<Card
-									width="240px"
-									variant={"outline"}
-									cursor="pointer"
-									transition=".3s all"
-									_hover={{ borderColor: currentColorCode }}
-								>
-									<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
-										<HStack padding="4px">
-											<Image boxSize={"20px"} src={youtubeIcon} />
-											<Text fontSize={"1.25rem"}>구독자 {numberToLocaleString(youtube[0].subscriberCount)}</Text>
+						<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
+						<Stack direction={windowWidth <= 840 ? "column" : "row"}>
+							{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (
+								<Link href={youtubeAPI.channelUrl(youtube[0].channelId)} isExternal _hover={{ textDecoration: "none" }}>
+									<Card
+										width="240px"
+										variant={"outline"}
+										cursor="pointer"
+										transition=".3s all"
+										_hover={{ borderColor: currentColorCode }}
+									>
+										<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
+											<HStack padding="4px">
+												<Image boxSize={"20px"} src={youtubeIcon} />
+												<Text fontSize={"1.25rem"}>구독자 {numberToLocaleString(youtube[0].subscriberCount)}</Text>
+											</HStack>
 										</HStack>
-									</HStack>
-								</Card>
-							</Link>
-						) : null}
-						{chzzk && chzzk.followerCount ? (
-							<Link href={naver.chzzk.channelUrl(chzzk.channelId)} isExternal _hover={{ textDecoration: "none" }}>
-								<Card
-									width="240px"
-									variant={"outline"}
-									cursor="pointer"
-									transition=".3s all"
-									_hover={{ borderColor: currentColorCode }}
-								>
-									<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
-										<HStack padding="4px">
-											<Image boxSize={"20px"} src={chzzkIcon} />
-											<Text fontSize={"1.25rem"}>팔로워 {numberToLocaleString(chzzk.followerCount)}</Text>
+									</Card>
+								</Link>
+							) : null}
+							{chzzk && chzzk.followerCount ? (
+								<Link href={naver.chzzk.channelUrl(chzzk.channelId)} isExternal _hover={{ textDecoration: "none" }}>
+									<Card
+										width="240px"
+										variant={"outline"}
+										cursor="pointer"
+										transition=".3s all"
+										_hover={{ borderColor: currentColorCode }}
+									>
+										<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
+											<HStack padding="4px">
+												<Image boxSize={"20px"} src={chzzkIcon} />
+												<Text fontSize={"1.25rem"}>팔로워 {numberToLocaleString(chzzk.followerCount)}</Text>
+											</HStack>
 										</HStack>
-									</HStack>
-								</Card>
-							</Link>
-						) : null}
+									</Card>
+								</Link>
+							) : null}
+						</Stack>
 					</Stack>
-					<SimpleGrid columns={[2, 3, 4]} spacing="12px">
+					<Stack>
+						{!isLoading
+							? Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
+									<Skeleton key={idx} height="120px" borderRadius={"0.375rem"} />
+							  ))
+							: null}
 						{videos?.map((video) => (
 							<>{video.id}</>
 						))}
@@ -173,7 +192,7 @@ export function Counter() {
 							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
 						);
 					})} */}
-					</SimpleGrid>
+					</Stack>
 				</Stack>
 			</Box>
 		</Stack>
@@ -182,7 +201,7 @@ export function Counter() {
 
 function SideListContainer({ children, ...props }: SideListContainerProps) {
 	return (
-		<Box width="240px" height="100%" {...props}>
+		<Box minWidth="200px" {...props}>
 			{children}
 		</Box>
 	);
