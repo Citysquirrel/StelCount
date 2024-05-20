@@ -36,7 +36,6 @@ export function Header({ children }: HeaderProps) {
 						maxWidth: `${width}px`,
 						maxHeight: "64px",
 						padding: "12px",
-						marginInline: "auto",
 						justifyContent: "center",
 					}}
 				>

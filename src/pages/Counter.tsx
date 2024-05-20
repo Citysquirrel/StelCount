@@ -88,6 +88,10 @@ export function Counter() {
 			height="100%"
 			backgroundColor={`${currentColorCode}aa`}
 			transition=".3s background-color"
+			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
+			backgroundRepeat={"no-repeat"}
+			backgroundPosition={"center"}
+			backgroundSize={"128px"}
 		>
 			<SideListContainer>
 				<SideList>
@@ -118,7 +122,7 @@ export function Counter() {
 								<SkeletonCircle boxSize="72px" />
 							) : (
 								<Avatar boxSize="72px" src={(chzzk && chzzk.profileImage) || SQ}>
-									<AvatarBadge boxSize="28px" bg={chzzk && chzzk?.liveStatus ? "green" : "red"} />
+									<AvatarBadge boxSize="28px" bg={chzzk && chzzk?.liveStatus ? "green.400" : "red.400"} />
 								</Avatar>
 							)}
 						</Link>
