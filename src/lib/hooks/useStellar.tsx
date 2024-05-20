@@ -30,8 +30,15 @@ export function useStellar() {
 					if (res.status === 200) {
 						const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
 						const integrated: StellarState[] = [];
+
 						for (let s of stellar) {
-							integrated.push({ name: s.name, uuid: s.uuid, youtube: data[s.uuid].youtube, chzzk: data[s.uuid].chzzk });
+							integrated.push({
+								name: s.name,
+								uuid: s.uuid,
+								colorCode: s.colorCode,
+								youtube: data[s.uuid] ? data[s.uuid].youtube : [],
+								chzzk: data[s.uuid] ? data[s.uuid].chzzk : {},
+							});
 						}
 						console.log(integrated);
 						setData(integrated);

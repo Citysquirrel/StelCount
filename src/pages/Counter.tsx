@@ -1,6 +1,19 @@
 import { useRecoilState } from "recoil";
 import { PlatformInfosDetail, stellarState } from "../lib/Atom";
-import { Box, BoxProps, Card, CardBody, CardHeader, HStack, SimpleGrid, Stack, Text, theme } from "@chakra-ui/react";
+import {
+	Box,
+	BoxProps,
+	Button,
+	Card,
+	CardBody,
+	CardHeader,
+	HStack,
+	SimpleGrid,
+	Stack,
+	Text,
+	theme,
+	useColorMode,
+} from "@chakra-ui/react";
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import symbolTabi from "../assets/symbol/symbol_tabi.png";
@@ -9,6 +22,11 @@ import symbolHina from "../assets/symbol/symbol_hina.png";
 import symbolLize from "../assets/symbol/symbol_lize.png";
 import symbolKanna from "../assets/symbol/symbol_kanna.png";
 import symbolYuni from "../assets/symbol/symbol_yuni.png";
+import chzzkIcon from "../assets/i_chzzk_1.png";
+import youtubeIcon from "../assets/i_youtube_1.png";
+import { useEffect, useState } from "react";
+import { useConsole } from "../lib/hooks/useConsole";
+import { numberToLocaleString } from "../lib/functions/etc";
 
 const stellarColors = {
 	"아이리 칸나": "#373584",
@@ -33,26 +51,58 @@ const stellarSymbols = {
 //TODO: 나머지 커버곡 조회수 및 추출을 스크롤 페이지에 배치
 
 export function Counter() {
+	const { colorMode } = useColorMode();
 	const [data, setData] = useRecoilState(stellarState);
+	const [currentUuid, setCurrentUuid] = useState(data.length > 0 ? data[0].uuid : "");
+
+	const currentStellar = data.find((s) => s.uuid === currentUuid);
+	const chzzk = currentStellar && currentStellar.chzzk;
+	const youtube = currentStellar && currentStellar.youtube;
+
+	const handleClickStellar = (uuid: string) => () => {
+		setCurrentUuid(uuid);
+	};
+
+	useConsole(currentStellar);
 
 	return (
-		<Stack direction={"row"} height="100%">
+		<Stack direction={"row"} height="100%" backgroundColor={`#${currentStellar?.colorCode}44`}>
 			<SideListContainer>
 				<SideList>
 					{data.map((stellar) => (
-						<Text>{stellar.name}</Text>
+						<Button colorScheme="blue" onClick={handleClickStellar(stellar.uuid)}>
+							{stellar.name}
+						</Button>
 					))}
 				</SideList>
 			</SideListContainer>
-			<section>
-				<SimpleGrid columns={[2, 3, 4]} spacing="12px">
-					{data.map((stellar) => {
+			<Box width="100%">
+				<Stack margin="12px">
+					<Stack direction={"row"}>
+						<Card width="100%">
+							{chzzk && chzzk.followerCount ? (
+								<HStack padding="4px">
+									<Image boxSize={"20px"} src={chzzkIcon} />
+									<Text fontSize={"1.25rem"}>{numberToLocaleString(chzzk.followerCount)}</Text>
+								</HStack>
+							) : null}
+							{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (
+								<HStack padding="4px">
+									<Image boxSize={"20px"} src={youtubeIcon} />
+									<Text fontSize={"1.25rem"}>{numberToLocaleString(youtube[0].subscriberCount)}</Text>
+								</HStack>
+							) : null}
+						</Card>
+					</Stack>
+					<SimpleGrid columns={[2, 3, 4]} spacing="12px">
+						{/* {data.map((stellar) => {
 						return (
 							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
 						);
-					})}
-				</SimpleGrid>
-			</section>
+					})} */}
+					</SimpleGrid>
+				</Stack>
+			</Box>
 		</Stack>
 	);
 }

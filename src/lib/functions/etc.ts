@@ -9,3 +9,7 @@ export function objectNullCheck(obj: Object) {
 	}
 	return result;
 }
+
+export function numberToLocaleString(num: string) {
+	return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}

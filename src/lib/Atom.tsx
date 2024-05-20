@@ -31,6 +31,7 @@ export interface PlatformInfos {
 export interface StellarInfo {
 	name: string;
 	uuid: string;
+	colorCode: string;
 }
 export interface StellarState extends StellarInfo {
 	youtube?: PlatformInfosDetail[];
