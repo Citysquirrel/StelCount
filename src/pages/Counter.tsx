@@ -1,5 +1,5 @@
 import { useRecoilState } from "recoil";
-import { PlatformInfosDetail, stellarState } from "../lib/Atom";
+import { PlatformInfosDetail, headerOffsetState, stellarState } from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -60,6 +60,7 @@ const stellarSymbols = {
 export function Counter() {
 	const { colorMode } = useColorMode();
 	const [data, setData] = useRecoilState(stellarState);
+	const [offsetY] = useRecoilState(headerOffsetState);
 	const [currentUuid, setCurrentUuid] = useState("");
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
@@ -78,7 +79,13 @@ export function Counter() {
 	useConsole(currentStellar);
 
 	return (
-		<Stack direction={"row"} height="100%" backgroundColor={`${currentColorCode}aa`} transition=".3s background-color">
+		<Stack
+			direction={"row"}
+			paddingTop={`${offsetY}px`}
+			height="100%"
+			backgroundColor={`${currentColorCode}aa`}
+			transition=".3s background-color"
+		>
 			<SideListContainer>
 				<SideList>
 					{data.map((stellar) => (

@@ -39,7 +39,7 @@ import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
 	const nav = useNavigate();
-
+	const [offsetY] = useRecoilState(headerOffsetState);
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
 		youtubeId: "",
@@ -122,7 +122,7 @@ export function Admin() {
 	if (isLoading) return <Loading />;
 	return (
 		<Stack padding="0 12px">
-			<Spacing size={24} />
+			<Spacing size={24 + offsetY} />
 			<Box as="section">
 				<Stack as="form" onSubmit={handleSubmit}>
 					<InputGroup>
@@ -250,6 +250,7 @@ export function Admin() {
 					</Tbody>
 				</Table>
 			</TableContainer>
+			<Spacing size={48} />
 		</Stack>
 	);
 }

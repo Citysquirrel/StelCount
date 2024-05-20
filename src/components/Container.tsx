@@ -14,9 +14,9 @@ export function Container({ children, ...props }: ContainerProps) {
 		<Stack
 			sx={{
 				position: "relative",
-				top: `${offsetY}px`,
+				// top: `${offsetY}px`,
 				maxWidth: "100%",
-				height: `calc(100dvh - ${offsetY}px)`,
+				height: `calc(100dvh)`,
 				padding: 0,
 				backgroundColor: colorValues.background,
 				// transform: `translateY(${offsetY}px)`,
