@@ -82,7 +82,8 @@ export function Counter() {
 	const mystic = data.filter((s) => s.group === 1);
 	const universe = data.filter((s) => s.group === 2);
 	const cliche = data.filter((s) => s.group === 3);
-	const total = [mystic, universe, cliche];
+	const unclassified = data.filter((s) => !s.group);
+	const total = [mystic, universe, cliche, unclassified];
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
@@ -101,7 +102,7 @@ export function Counter() {
 			transition=".3s background-color"
 			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
 			backgroundRepeat={"no-repeat"}
-			backgroundPosition={"bottom 72px right 24px"}
+			backgroundPosition={"bottom 32px right 24px"}
 			backgroundSize={"128px"}
 		>
 			<SideListContainer
@@ -127,7 +128,7 @@ export function Counter() {
 											fontWeight={"bold"}
 											justifyContent={"center"}
 										>
-											{isUnder720 ? idx + 1 : stellarGroupName[idx + 1][1]}
+											{isUnder720 ? idx + 1 : s[0].group ? stellarGroupName[idx + 1][1] : "Unclassified"}
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
