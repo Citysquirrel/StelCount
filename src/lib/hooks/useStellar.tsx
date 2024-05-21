@@ -14,12 +14,15 @@ import {
 } from "../Atom";
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
+import { useToast } from "@chakra-ui/react";
 
 export function useStellar() {
+	const toast = useToast();
 	const [data, setData] = useRecoilState(stellarState);
 	const [, setIsServerError] = useRecoilState(isServerErrorState);
 	const [, setIsLoading] = useRecoilState(isLoadingState);
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
+
 	const f = (isTimer?: boolean) => {
 		if (isTimer) {
 			setIsStellarLoading(true);
@@ -41,12 +44,21 @@ export function useStellar() {
 								chzzk: data[s.uuid] ? data[s.uuid].chzzk : {},
 							});
 						}
-						console.log(integrated);
+						// console.log(integrated);
 						setData(integrated);
+						isTimer &&
+							toast({ description: "데이터를 새로 불러왔습니다.", status: "info", duration: 3000, isClosable: true });
 					}
 					if (res.status === 500) {
 						// alert("내부 서버 에러입니다. 지속 발생 시 개발자에게 문의하세요.");
 						setIsServerError(true);
+						isTimer &&
+							toast({
+								description: "데이터 로드에 실패했습니다. 지속 발생 시 개발자에게 문의하세요.",
+								status: "error",
+								duration: 3000,
+								isClosable: true,
+							});
 					}
 				}
 			})
