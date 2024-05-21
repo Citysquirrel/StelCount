@@ -10,6 +10,11 @@ const stellarGroupName = [
 	["미스틱", "Mystic"],
 	["유니버스", "Universe"],
 	["클리셰", "Cliché"],
+	["미분류", "Unclassified"],
+	["미분류", "Unclassified"],
+	["미분류", "Unclassified"],
+	["미분류", "Unclassified"],
+	["미분류", "Unclassified"],
 ];
 
 export { NAME_KANNA, NAME_YUNI, NAME_TABI, NAME_MASHIRO, NAME_HINA, NAME_LIZE, stellarGroupName };

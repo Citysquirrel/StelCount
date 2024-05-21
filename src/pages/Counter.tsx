@@ -127,6 +127,7 @@ export function Counter() {
 											fontSize="md"
 											fontWeight={"bold"}
 											justifyContent={"center"}
+											marginTop="4px"
 										>
 											{isUnder720 ? idx + 1 : s[0].group ? stellarGroupName[idx + 1][1] : "Unclassified"}
 										</Tag>
