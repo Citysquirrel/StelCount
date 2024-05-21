@@ -11,12 +11,14 @@ import {
 	CardHeader,
 	Divider,
 	HStack,
+	Heading,
 	Link,
 	SimpleGrid,
 	Skeleton,
 	SkeletonCircle,
 	Stack,
 	StackDivider,
+	Tag,
 	Text,
 	Tooltip,
 	theme,
@@ -38,6 +40,7 @@ import { useConsole } from "../lib/hooks/useConsole";
 import { numberToLocaleString } from "../lib/functions/etc";
 import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
+import { stellarGroupName } from "../lib/constant";
 
 const stellarColors = {
 	"아이리 칸나": "#373584",
@@ -76,6 +79,11 @@ export function Counter() {
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
 
+	const mystic = data.filter((s) => s.group === 1);
+	const universe = data.filter((s) => s.group === 2);
+	const cliche = data.filter((s) => s.group === 3);
+	const total = [mystic, universe, cliche];
+
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
 	};
@@ -109,20 +117,42 @@ export function Counter() {
 						? Array.from({ length: 4 }, () => true).map((_, idx) => (
 								<Skeleton key={idx} height="40px" borderRadius={"0.375rem"} />
 						  ))
-						: data.map((stellar) => (
-								<Tooltip key={stellar.uuid} label={isUnder720 ? stellar.name : undefined} placement="right" hasArrow>
-									<Button
-										variant={"outline"}
-										leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
-										colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
-										backgroundColor="ButtonFace"
-										onClick={handleClickStellar(stellar.uuid)}
-										cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
-										iconSpacing={isUnder720 ? 0 : undefined}
-									>
-										{isUnder720 ? null : <Text>{stellar.name}</Text>}
-									</Button>
-								</Tooltip>
+						: total.map((s, idx) => (
+								<>
+									{s.length > 0 ? (
+										<Tag
+											colorScheme="purple"
+											fontFamily={"Montserrat"}
+											fontSize="md"
+											fontWeight={"bold"}
+											justifyContent={"center"}
+										>
+											{isUnder720 ? idx + 1 : stellarGroupName[idx + 1][1]}
+										</Tag>
+									) : null}
+									{s.map((stellar) => {
+										return (
+											<Tooltip
+												key={stellar.uuid}
+												label={isUnder720 ? stellar.name : undefined}
+												placement="right"
+												hasArrow
+											>
+												<Button
+													variant={"outline"}
+													leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
+													colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
+													backgroundColor="ButtonFace"
+													onClick={handleClickStellar(stellar.uuid)}
+													cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
+													iconSpacing={isUnder720 ? 0 : undefined}
+												>
+													{isUnder720 ? null : <Text>{stellar.name}</Text>}
+												</Button>
+											</Tooltip>
+										);
+									})}
+								</>
 						  ))}
 				</SideList>
 			</SideListContainer>
