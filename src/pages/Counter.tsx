@@ -41,6 +41,7 @@ import { numberToLocaleString } from "../lib/functions/etc";
 import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { stellarGroupName } from "../lib/constant";
+import { MdOpenInNew } from "react-icons/md";
 
 const stellarColors = {
 	"아이리 칸나": "#373584",
@@ -173,40 +174,20 @@ export function Counter() {
 						<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
 						<Stack direction={windowWidth <= 840 ? "column" : "row"}>
 							{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (
-								<Link href={youtubeAPI.channelUrl(youtube[0].channelId)} isExternal _hover={{ textDecoration: "none" }}>
-									<Card
-										width="240px"
-										variant={"outline"}
-										cursor="pointer"
-										transition=".3s all"
-										_hover={{ borderColor: currentColorCode }}
-									>
-										<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
-											<HStack padding="4px">
-												<Image boxSize={"20px"} src={youtubeIcon} />
-												<Text fontSize={"1.25rem"}>구독자 {numberToLocaleString(youtube[0].subscriberCount)}</Text>
-											</HStack>
-										</HStack>
-									</Card>
-								</Link>
+								<FollowerCard
+									href={youtubeAPI.channelUrl(youtube[0].channelId)}
+									icon={youtubeIcon}
+									text={`구독자 ${numberToLocaleString(youtube[0].subscriberCount)}`}
+									currentColorCode={currentColorCode}
+								/>
 							) : null}
 							{chzzk && chzzk.followerCount ? (
-								<Link href={naver.chzzk.channelUrl(chzzk.channelId)} isExternal _hover={{ textDecoration: "none" }}>
-									<Card
-										width="240px"
-										variant={"outline"}
-										cursor="pointer"
-										transition=".3s all"
-										_hover={{ borderColor: currentColorCode }}
-									>
-										<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
-											<HStack padding="4px">
-												<Image boxSize={"20px"} src={chzzkIcon} />
-												<Text fontSize={"1.25rem"}>팔로워 {numberToLocaleString(chzzk.followerCount)}</Text>
-											</HStack>
-										</HStack>
-									</Card>
-								</Link>
+								<FollowerCard
+									href={naver.chzzk.channelUrl(chzzk.channelId)}
+									icon={chzzkIcon}
+									text={`팔로워 ${numberToLocaleString(chzzk.followerCount)}`}
+									currentColorCode={currentColorCode}
+								/>
 							) : null}
 						</Stack>
 					</Stack>
@@ -228,6 +209,31 @@ export function Counter() {
 				</Stack>
 			</Box>
 		</Stack>
+	);
+}
+
+function FollowerCard({ href, icon, text, currentColorCode }: FollowerCardProps) {
+	return (
+		<Link href={href} isExternal _hover={{ textDecoration: "none" }}>
+			<Card
+				position="relative"
+				width="240px"
+				variant={"outline"}
+				cursor="pointer"
+				transition=".3s all"
+				_hover={{ borderColor: currentColorCode, ">div.follower-card--icon": { opacity: 1 } }}
+			>
+				<Box className="follower-card--icon" position="absolute" top={"4px"} right={"4px"} opacity={0}>
+					<MdOpenInNew />
+				</Box>
+				<HStack divider={<StackDivider />} spacing={"4"} padding="8px" justifyContent={"space-evenly"}>
+					<HStack padding="4px">
+						<Image boxSize={"20px"} src={icon} />
+						<Text fontSize={"1.25rem"}>{text}</Text>
+					</HStack>
+				</HStack>
+			</Card>
+		</Link>
 	);
 }
 
@@ -292,6 +298,13 @@ function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
 			</CardBody>
 		</Card>
 	);
+}
+
+interface FollowerCardProps {
+	href: string | undefined;
+	icon: string;
+	text: string;
+	currentColorCode: string | undefined;
 }
 
 interface SideListContainerProps extends BoxProps {}

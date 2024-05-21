@@ -44,7 +44,7 @@ export function useStellar() {
 								chzzk: data[s.uuid] ? data[s.uuid].chzzk : {},
 							});
 						}
-						// console.log(integrated);
+						console.log(integrated);
 						setData(integrated);
 						isTimer &&
 							toast({ description: "데이터를 새로 불러왔습니다.", status: "info", duration: 3000, isClosable: true });
