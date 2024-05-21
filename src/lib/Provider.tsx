@@ -18,7 +18,10 @@ import theme from "./theme";
 export function MainProvider({ children }) {
 	return (
 		// <React.StrictMode>
-		<ChakraProvider theme={theme}>
+		<ChakraProvider
+			theme={theme}
+			toastOptions={{ defaultOptions: { position: "bottom-right", variant: "left-accent" } }}
+		>
 			{/* <QueryClientProvider client={queryClient}> */}
 			<RecoilRoot>{children}</RecoilRoot>
 			{/* </QueryClientProvider> */}
