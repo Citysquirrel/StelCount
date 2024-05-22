@@ -122,8 +122,8 @@ export function Counter() {
 				top={`${offsetY}px`}
 				// paddingRight="12px"
 				left={0}
-				minWidth={isUnder720 ? "64px" : "200px"}
-				width={isUnder720 ? "64px" : "200px"}
+				minWidth={isUnder720 ? "72px" : "200px"}
+				width={isUnder720 ? "72px" : "200px"}
 				height={`calc(100vh - ${offsetY}px - 48px)`}
 				overflow="auto"
 			>
@@ -143,11 +143,7 @@ export function Counter() {
 											justifyContent={"center"}
 											marginTop="4px"
 										>
-											{isUnder720
-												? idx + 1
-												: typeof s[0].group === "number"
-												? stellarGroupName[idx][1]
-												: "Unclassified"}
+											{isUnder720 ? idx : typeof s[0].group === "number" ? stellarGroupName[idx][1] : "Unclassified"}
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
@@ -184,7 +180,23 @@ export function Counter() {
 			</SideListContainer>
 			<Box width="100%">
 				<Stack margin="12px" marginTop="24px" marginBottom="64px" divider={<StackDivider />} spacing={"4"}>
-					<Stack position="relative" direction={"row"} alignItems={"center"} spacing={"4"} flexWrap={"wrap"}>
+					<Stack
+						position="relative"
+						direction={"row"}
+						alignItems={"center"}
+						spacing={"4"}
+						flexWrap={"wrap"}
+						backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
+						backgroundRepeat={"no-repeat"}
+						backgroundPosition={"top 50% right 12px"}
+						backgroundSize={
+							currentStellar?.name === "스텔라이브"
+								? "48px"
+								: currentStellar?.name === "아라하시 타비"
+								? "70px"
+								: "72px"
+						}
+					>
 						<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
 							{isLoading ? (
 								<SkeletonCircle boxSize="72px" />
@@ -215,7 +227,13 @@ export function Counter() {
 								/>
 							) : null}
 						</Stack>
-						<Image position="absolute" width="72px" maxHeight="72px" src={stellarSymbols[currentStellar?.name || ""]} />
+						{/* <Image
+							position="absolute"
+							width="72px"
+							maxHeight="72px"
+							src={stellarSymbols[currentStellar?.name || ""]}
+							zIndex={0}
+						/> */}
 					</Stack>
 					<Stack>
 						<SimpleGrid columns={[1, 1, 2, 2, 3]} spacing={"8px"}>
@@ -291,7 +309,7 @@ function MusicCard({ data }: MusicCardProps) {
 	const { type, title, videoId, thumbnail, viewCount, likeCount, ownerId, isOriginal, isCollaborated, publishedAt } =
 		data;
 
-	const sideWidth = (windowWidth < 720 ? 64 : 200) + 4;
+	const sideWidth = (windowWidth < 720 ? 72 : 200) + 4;
 	const calcWidth = (count: number) => (windowWidth - sideWidth - 24) / count - count * 2 * 4;
 	const width = [calcWidth(1) - 8, calcWidth(1) - 12, calcWidth(2), calcWidth(2), calcWidth(3)];
 	const height = width.map((w) => w * 0.5625);
