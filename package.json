@@ -1,5 +1,5 @@
 {
-	"name": "stellive-fan_site",
+	"name": "StelCount",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
@@ -39,3 +39,4 @@
 	"author": "",
 	"license": "ISC"
 }
+
