@@ -1,30 +1,7 @@
-# React + TypeScript + Vite
+#StelCount
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+한국의 버튜버 그룹, 스텔라이브 팬사이트입니다.
 
-Currently, two official plugins are available:
+스텔라들의 치지직, 유튜브 구독자(팔로워)수 및 부른 음악들의 조회수를 추적하여 리스트업합니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+추후 신입 파스텔 분들을 위해 스텔라들의 유튜브 동영상 목록을 쉽게 접근할 수 있도록 도와주는 서비스를 제공할 예정입니다.

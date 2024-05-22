@@ -13,8 +13,12 @@ export function ServerErrorPage() {
 	};
 	return (
 		<Stack sx={{ height: "100vh", alignItems: "center", justifyContent: "center" }}>
-			<Heading>{errorMsg[serverError.statusCode].title}</Heading>
-			<Text>{errorMsg[serverError.statusCode].description}</Text>
+			<Heading>
+				{errorMsg[serverError.statusCode] ? errorMsg[serverError.statusCode].title : errorMsg[500].title}
+			</Heading>
+			<Text>
+				{errorMsg[serverError.statusCode] ? errorMsg[serverError.statusCode].description : errorMsg[429].description}
+			</Text>
 			<Link href="/">재시도</Link>
 		</Stack>
 	);

@@ -42,8 +42,11 @@ type ServerAPI =
 	| "/subs"
 	| "/views"
 	| "/stellar"
+	| "/stellar/:id"
 	| "/stellars"
 	| "/yid"
+	| "/renew"
+	| "/ypat/:videoId"
 	| (string & {});
 
 interface FetchServerOption extends FetchOptions {
