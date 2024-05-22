@@ -62,6 +62,7 @@ export async function fetchServer(api: ServerAPI, version: Version, options?: Fe
 		{
 			body: options?.body,
 			headers: { "Content-Type": "application/json", ...options?.headers },
+			credentials: "same-origin",
 			...options,
 		}
 	);

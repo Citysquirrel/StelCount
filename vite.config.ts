@@ -1,6 +1,7 @@
-import { defineConfig } from "vite";
+import { PluginOption, defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { dependencies } from "./package.json";
+import ssl from "@vitejs/plugin-basic-ssl";
 
 const vendor = ["react", "react-router-dom", "react-dom"];
 const libs = ["uuid", "recoil"];
@@ -18,7 +19,10 @@ function renderChunks(deps: Record<string, string>) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-	plugins: [react()],
+	plugins: [react(), ssl()],
+	server: {
+		https: true,
+	},
 	build: {
 		rollupOptions: {
 			output: {
