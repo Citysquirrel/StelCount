@@ -34,6 +34,7 @@ import symbolHina from "../assets/symbol/symbol_hina.png";
 import symbolLize from "../assets/symbol/symbol_lize.png";
 import symbolKanna from "../assets/symbol/symbol_kanna.png";
 import symbolYuni from "../assets/symbol/symbol_yuni.png";
+import symbolStellive from "../assets/symbol/symbol_stellive.svg";
 import chzzkIcon from "../assets/i_chzzk_1.png";
 import youtubeIcon from "../assets/i_youtube_1.png";
 import SQ from "../assets/logo.png";
@@ -45,22 +46,27 @@ import { useResponsive } from "../lib/hooks/useResponsive";
 import { stellarGroupName } from "../lib/constant";
 import { MdFilter, MdFilterList, MdOpenInNew } from "react-icons/md";
 
-const stellarColors = {
-	"아이리 칸나": "#373584",
-	"아야츠노 유니": "#b77de4",
-	"아라하시 타비": "#71C5E8",
-	"네네코 마시로": "#25282A",
-	"시라유키 히나": "#E4002B",
-	"아카네 리제": "#971B2F",
-};
+// const stellarColors = {
+// 	"아이리 칸나": "#373584",
+// 	"아야츠노 유니": "#b77de4",
+// 	"아라하시 타비": "#71C5E8",
+// 	"네네코 마시로": "#25282A",
+// 	"시라유키 히나": "#E4002B",
+// 	"아카네 리제": "#971B2F",
+// };
 
 const stellarSymbols = {
+	스텔라이브: symbolStellive,
 	"아이리 칸나": symbolKanna,
 	"아야츠노 유니": symbolYuni,
 	"아라하시 타비": symbolTabi,
 	"네네코 마시로": symbolMashiro,
 	"시라유키 히나": symbolHina,
 	"아카네 리제": symbolLize,
+	"텐코 시부키": "",
+	"하나코 나나": "",
+	"아오쿠모 린": "",
+	"유즈하 리코": "",
 };
 
 //TODO: 카운트 페이지로 합치고, 홈페이지도 그냥 삭제해버리기
@@ -96,7 +102,7 @@ export function Counter() {
 	};
 
 	useEffect(() => {
-		if (data.length > 0 && currentUuid === "") setCurrentUuid(data[0].uuid);
+		if (data.length > 0 && currentUuid === "") setCurrentUuid(stellive[0].uuid);
 	}, [data]);
 	useConsole(currentStellar);
 
@@ -154,7 +160,13 @@ export function Counter() {
 											>
 												<Button
 													variant={"outline"}
-													leftIcon={<Image boxSize="24px" src={stellar.profileImage} borderRadius={"full"} />}
+													leftIcon={
+														<Image
+															boxSize="24px"
+															src={stellar.name === "스텔라이브" ? symbolStellive : stellar.profileImage}
+															borderRadius={"full"}
+														/>
+													}
 													colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
 													backgroundColor="ButtonFace"
 													onClick={handleClickStellar(stellar.uuid)}
@@ -172,17 +184,19 @@ export function Counter() {
 			</SideListContainer>
 			<Box width="100%">
 				<Stack margin="12px" marginTop="24px" marginBottom="64px" divider={<StackDivider />} spacing={"4"}>
-					<Stack direction={"row"} alignItems={"center"} spacing={"4"} flexWrap={"wrap"}>
+					<Stack position="relative" direction={"row"} alignItems={"center"} spacing={"4"} flexWrap={"wrap"}>
 						<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
 							{isLoading ? (
 								<SkeletonCircle boxSize="72px" />
-							) : (
+							) : currentStellar?.chzzkId ? (
 								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || SQ}>
 									<AvatarBadge boxSize="28px" bg={currentStellar?.liveStatus ? "green.400" : "red.400"} />
 								</Avatar>
-							)}
+							) : null}
 						</Link>
-						<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
+						{currentStellar?.chzzkId ? (
+							<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
+						) : null}
 						<Stack direction={windowWidth <= 840 ? "column" : "row"}>
 							{currentStellar?.youtubeSubscriberCount ? (
 								<FollowerCard
@@ -201,6 +215,7 @@ export function Counter() {
 								/>
 							) : null}
 						</Stack>
+						<Image position="absolute" width="72px" maxHeight="72px" src={stellarSymbols[currentStellar?.name || ""]} />
 					</Stack>
 					<Stack>
 						<SimpleGrid columns={[1, 1, 2, 2, 3]} spacing={"8px"}>
@@ -331,52 +346,52 @@ function SideList({ children, ...props }: SideListProps) {
 	);
 }
 
-function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
-	// const { followerCount: ytfcnt, subscriberCount: ytscnt } = youtube;
-	// const { followerCount: czfcnt, subscriberCount: czscnt } = chzzk;
-	const thisColor = stellarColors[name];
-	const thisSymbol = stellarSymbols[name];
-	return (
-		<Card
-			sx={{
-				position: "relative",
-				isolation: "isolate",
-				// boxShadow: theme.shadows.md,
-				bgGradient: `linear(to-br,  ${thisColor}33,${thisColor})`,
-				transition: "all .3s",
-				":after": {
-					content: "''",
-					position: "absolute",
-					backgroundImage: thisSymbol,
-					backgroundRepeat: "no-repeat",
-					backgroundPosition: "center",
-					backgroundPositionY: "center",
-					backgroundSize: "30%",
-					zIndex: -1,
-					inset: 0,
-					opacity: 0.4,
-				},
-				":hover": {
-					boxShadow: theme.shadows.md,
-					borderRadius: 0,
-				},
-			}}
-		>
-			<CardHeader padding="12px">
-				<HStack>
-					<Image boxSize="40px" borderRadius={"full"} src={chzzk?.profileImage || undefined} alt={`image-${name}`} />
-					<Spacing size={4} />
-					<Text fontSize="1.25rem" fontWeight={"bold"}>
-						{name}
-					</Text>
-				</HStack>
-			</CardHeader>
-			<CardBody padding="12px">
-				<Stack alignItems={"center"}></Stack>
-			</CardBody>
-		</Card>
-	);
-}
+// function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
+// 	// const { followerCount: ytfcnt, subscriberCount: ytscnt } = youtube;
+// 	// const { followerCount: czfcnt, subscriberCount: czscnt } = chzzk;
+// 	const thisColor = stellarColors[name];
+// 	const thisSymbol = stellarSymbols[name];
+// 	return (
+// 		<Card
+// 			sx={{
+// 				position: "relative",
+// 				isolation: "isolate",
+// 				// boxShadow: theme.shadows.md,
+// 				bgGradient: `linear(to-br,  ${thisColor}33,${thisColor})`,
+// 				transition: "all .3s",
+// 				":after": {
+// 					content: "''",
+// 					position: "absolute",
+// 					backgroundImage: thisSymbol,
+// 					backgroundRepeat: "no-repeat",
+// 					backgroundPosition: "center",
+// 					backgroundPositionY: "center",
+// 					backgroundSize: "30%",
+// 					zIndex: -1,
+// 					inset: 0,
+// 					opacity: 0.4,
+// 				},
+// 				":hover": {
+// 					boxShadow: theme.shadows.md,
+// 					borderRadius: 0,
+// 				},
+// 			}}
+// 		>
+// 			<CardHeader padding="12px">
+// 				<HStack>
+// 					<Image boxSize="40px" borderRadius={"full"} src={chzzk?.profileImage || undefined} alt={`image-${name}`} />
+// 					<Spacing size={4} />
+// 					<Text fontSize="1.25rem" fontWeight={"bold"}>
+// 						{name}
+// 					</Text>
+// 				</HStack>
+// 			</CardHeader>
+// 			<CardBody padding="12px">
+// 				<Stack alignItems={"center"}></Stack>
+// 			</CardBody>
+// 		</Card>
+// 	);
+// }
 
 interface FollowerCardProps {
 	href: string | undefined;
