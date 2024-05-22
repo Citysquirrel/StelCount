@@ -39,6 +39,7 @@ import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 import VALIDATION from "../lib/functions/validation";
 import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
 import { stellarGroupName } from "../lib/constant";
+import { NotExist } from "./NotExist";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -137,6 +138,8 @@ export function Admin() {
 		firstRef.current?.focus();
 	}, []);
 
+	if (!isLogin) return <NotExist />;
+	if (!isAdmin) return <NotExist />;
 	if (isLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	return (
 		<Stack padding="0 12px">
@@ -317,6 +320,7 @@ export function AdminEdit() {
 		colorCode: "",
 		playlistIdForMusic: "",
 	});
+	const { isLogin, isAdmin } = useAuth();
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -372,6 +376,8 @@ export function AdminEdit() {
 			});
 	}, []);
 
+	if (!isLogin) return <NotExist />;
+	if (!isAdmin) return <NotExist />;
 	return (
 		<Stack padding="0 12px" paddingTop={"12px"}>
 			<Spacing size={offsetY} />

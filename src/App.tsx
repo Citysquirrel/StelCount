@@ -8,7 +8,7 @@ import { useStellar } from "./lib/hooks/useStellar";
 import { Button, Divider, HStack, Heading, IconButton, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdDarkMode, MdLightMode, MdOndemandVideo, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { isLoadingState, isLoginState, serverErrorState, isStellarLoadingState } from "./lib/Atom";
+import { isLoadingState, isLoginState, serverErrorState, isStellarLoadingState, isAdminState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { Loading } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
@@ -18,6 +18,7 @@ function App() {
 	const nav = useNavigateEvent();
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [isLoading] = useRecoilState(isLoadingState);
+	const [isAdmin] = useRecoilState(isAdminState);
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [serverError] = useRecoilState(serverErrorState);
 	const { refetch } = useStellar();
@@ -56,7 +57,7 @@ function App() {
 					</>
 				) : null}
 
-				{import.meta.env.DEV ? (
+				{isAdmin ? (
 					<Tooltip label="관리자">
 						<IconButton
 							fontSize="1.125rem"

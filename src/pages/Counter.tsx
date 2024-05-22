@@ -37,7 +37,7 @@ import symbolYuni from "../assets/symbol/symbol_yuni.png";
 import chzzkIcon from "../assets/i_chzzk_1.png";
 import youtubeIcon from "../assets/i_youtube_1.png";
 import SQ from "../assets/logo.png";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
 import { numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
@@ -126,7 +126,7 @@ export function Counter() {
 								<Skeleton key={idx} height="40px" borderRadius={"0.375rem"} />
 						  ))
 						: total.map((s, idx) => (
-								<>
+								<Fragment key={idx}>
 									{s.length > 0 ? (
 										<Tag
 											colorScheme="purple"
@@ -161,7 +161,7 @@ export function Counter() {
 											</Tooltip>
 										);
 									})}
-								</>
+								</Fragment>
 						  ))}
 				</SideList>
 			</SideListContainer>
@@ -207,17 +207,12 @@ export function Counter() {
 								currentMusic
 									.filter((m) => m.type === "music")
 									.sort(musicSort("default", "ASC"))
-									.map((m) => <MusicCard data={m} />)
+									.map((m) => <MusicCard key={m.videoId} data={m} />)
 							) : (
 								<Stack alignItems={"center"} justifyContent={"center"}>
 									<Text>No Data</Text>
 								</Stack>
 							)}
-							{/* {data.map((stellar) => {
-						return (
-							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
-						);
-					})} */}
 						</SimpleGrid>
 					</Stack>
 				</Stack>
