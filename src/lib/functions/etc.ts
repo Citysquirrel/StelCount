@@ -13,3 +13,7 @@ export function objectNullCheck(obj: Object) {
 export function numberToLocaleString(num: string) {
 	return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+export function remainingFromNum(num: number, unit: number, reverse?: boolean) {
+	return reverse ? num % unit : unit - (num % unit);
+}

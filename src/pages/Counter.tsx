@@ -1,5 +1,5 @@
 import { useRecoilState } from "recoil";
-import { PlatformInfosDetail, headerOffsetState, isLoadingState, stellarState } from "../lib/Atom";
+import { PlatformInfosDetail, YoutubeMusicData, headerOffsetState, isLoadingState, stellarState } from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -8,10 +8,12 @@ import {
 	Button,
 	Card,
 	CardBody,
+	CardFooter,
 	CardHeader,
 	Divider,
 	HStack,
 	Heading,
+	IconButton,
 	Link,
 	SimpleGrid,
 	Skeleton,
@@ -37,11 +39,11 @@ import youtubeIcon from "../assets/i_youtube_1.png";
 import SQ from "../assets/logo.png";
 import { useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
-import { numberToLocaleString } from "../lib/functions/etc";
+import { numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { stellarGroupName } from "../lib/constant";
-import { MdOpenInNew } from "react-icons/md";
+import { MdFilter, MdFilterList, MdOpenInNew } from "react-icons/md";
 
 const stellarColors = {
 	"아이리 칸나": "#373584",
@@ -72,11 +74,13 @@ export function Counter() {
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
+	const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
 	// const chzzk = currentStellar && currentStellar.chzzk;
 	// const youtube = currentStellar && currentStellar.youtube;
 	// const videos = currentStellar && currentStellar.videos;
+	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
 
@@ -103,7 +107,7 @@ export function Counter() {
 			transition=".3s background-color"
 			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
 			backgroundRepeat={"no-repeat"}
-			backgroundPosition={"bottom 32px right 24px"}
+			backgroundPosition={"bottom 64px right 24px"}
 			backgroundSize={"128px"}
 		>
 			<SideListContainer
@@ -160,7 +164,7 @@ export function Counter() {
 				</SideList>
 			</SideListContainer>
 			<Box width="100%">
-				<Stack margin="12px" marginTop="24px" divider={<StackDivider />} spacing={"4"}>
+				<Stack margin="12px" marginTop="24px" marginBottom="64px" divider={<StackDivider />} spacing={"4"}>
 					<Stack direction={"row"} alignItems={"center"} spacing={"4"} flexWrap={"wrap"}>
 						<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
 							{isLoading ? (
@@ -175,7 +179,7 @@ export function Counter() {
 						<Stack direction={windowWidth <= 840 ? "column" : "row"}>
 							{currentStellar?.youtubeSubscriberCount ? (
 								<FollowerCard
-									href={youtubeAPI.channelUrl(currentStellar.youtubeId)}
+									href={youtubeAPI.channelUrl(currentStellar.youtubeCustomUrl)}
 									icon={youtubeIcon}
 									text={`구독자 ${numberToLocaleString(currentStellar.youtubeSubscriberCount)}`}
 									currentColorCode={currentColorCode}
@@ -192,16 +196,27 @@ export function Counter() {
 						</Stack>
 					</Stack>
 					<Stack>
-						{isLoading
-							? Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
+						<SimpleGrid columns={[1, 1, 2, 2, 3]} spacing={"8px"}>
+							{isLoading ? (
+								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} height="120px" borderRadius={"0.375rem"} />
-							  ))
-							: null}
-						{/* {data.map((stellar) => {
+								))
+							) : currentMusic !== undefined && currentMusic.length > 0 ? (
+								currentMusic
+									.filter((m) => m.type === "music")
+									.sort(musicSort("default", "ASC"))
+									.map((m) => <MusicCard data={m} />)
+							) : (
+								<Stack alignItems={"center"} justifyContent={"center"}>
+									<Text>No Data</Text>
+								</Stack>
+							)}
+							{/* {data.map((stellar) => {
 						return (
 							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
 						);
 					})} */}
+						</SimpleGrid>
 					</Stack>
 				</Stack>
 			</Box>
@@ -231,6 +246,57 @@ function FollowerCard({ href, icon, text, currentColorCode }: FollowerCardProps)
 				</HStack>
 			</Card>
 		</Link>
+	);
+}
+
+function musicSort(type: "publishedAt" | "name" | "default", order: "ASC" | "DESC") {
+	return function (a: YoutubeMusicData, b: YoutubeMusicData) {
+		if (type === "default") {
+			const A = remainingFromNum(parseInt(a.viewCount || "0"), 10000);
+			const B = remainingFromNum(parseInt(b.viewCount || "0"), 10000);
+			return order === "ASC" ? A - B : B - A;
+		} else return order === "ASC" ? a[type] - b[type] : b[type] - a[type];
+	};
+}
+
+function MusicFilter() {
+	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
+}
+
+function MusicCard({ data }: MusicCardProps) {
+	const { windowWidth } = useResponsive();
+	const { type, title, videoId, thumbnail, viewCount, likeCount, ownerId, isOriginal, isCollaborated, publishedAt } =
+		data;
+
+	const sideWidth = (windowWidth < 720 ? 64 : 200) + 4;
+	const calcWidth = (count: number) => (windowWidth - sideWidth - 24) / count - count * 2 * 4;
+	const width = [calcWidth(1) - 8, calcWidth(1) - 12, calcWidth(2), calcWidth(2), calcWidth(3)];
+	const height = width.map((w) => w * 0.5625);
+	const thumbnailHeight = height.map((h) => h / 2);
+	const thumbnailWidth = thumbnailHeight.map((h) => h * 1.08);
+	return (
+		<Card position="relative" width={width.map((v) => `${v}px`)} height={height.map((v) => `${v}px`)}>
+			<CardBody>
+				<ThumbnailImage
+					src={thumbnail}
+					width={thumbnailWidth.map((v) => `${v}px`)}
+					height={thumbnailHeight.map((v) => `${v}px`)}
+					float="right"
+				/>
+				<Text>{title}</Text>
+				<Text position="absolute" bottom={"4px"} right={"12px"}>
+					{viewCount}
+				</Text>
+			</CardBody>
+		</Card>
+	);
+}
+
+function ThumbnailImage({ src, ...props }: ThumbnailImageProps) {
+	return (
+		<Stack overflow={"hidden"} justifyContent={"center"} alignItems={"center"} borderRadius={"0.375rem"} {...props}>
+			<Image src={src} objectFit={"cover"} transform="scale(2)" />
+		</Stack>
 	);
 }
 
@@ -302,6 +368,14 @@ interface FollowerCardProps {
 	icon: string;
 	text: string;
 	currentColorCode: string | undefined;
+}
+
+interface MusicCardProps {
+	data: YoutubeMusicData;
+}
+
+interface ThumbnailImageProps extends BoxProps {
+	src: string;
 }
 
 interface SideListContainerProps extends BoxProps {}

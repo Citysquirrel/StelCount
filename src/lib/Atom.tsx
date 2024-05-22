@@ -35,11 +35,32 @@ export interface StellarInfo {
 	group: number;
 	uuid: string;
 	colorCode: string;
+	liveStatus: boolean;
+	profileImage: string;
+	chzzkId: string;
+	youtubeId: string;
+	youtubeCustomUrl: string;
 }
 export interface StellarState extends StellarInfo {
-	youtube?: PlatformInfosDetail[];
-	chzzk?: PlatformInfosDetail;
-	videos?: VideoDataDetail[];
+	// youtube?: PlatformInfosDetail[];
+	// chzzk?: PlatformInfosDetail;
+	// videos?: VideoDataDetail[];
+	chzzkFollowerCount: string;
+	youtubeSubscriberCount: string;
+	youtubeMusic: YoutubeMusicData[];
+}
+
+export interface YoutubeMusicData {
+	type?: string; // "music", "main", "replay"
+	title: string;
+	thumbnail: string;
+	videoId: string;
+	viewCount?: string;
+	likeCount?: string;
+	ownerId?: string;
+	isOriginal?: boolean;
+	isCollaborated?: boolean;
+	publishedAt?: Date;
 }
 
 export const stellarState = atom<StellarState[]>({
