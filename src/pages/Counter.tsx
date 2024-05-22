@@ -94,7 +94,7 @@ export function Counter() {
 	const mystic = data.filter((s) => s.group === 1);
 	const universe = data.filter((s) => s.group === 2);
 	const cliche = data.filter((s) => s.group === 3);
-	const unclassified = data.filter((s) => !s.group);
+	const unclassified = data.filter((s) => !s.group && s.group !== 0);
 	const total = [stellive, mystic, universe, cliche, unclassified];
 
 	const handleClickStellar = (uuid: string) => () => {
