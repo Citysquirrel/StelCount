@@ -22,6 +22,7 @@ import {
 	Th,
 	Thead,
 	Tr,
+	useToast,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
@@ -42,6 +43,7 @@ import { stellarGroupName } from "../lib/constant";
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
 	const nav = useNavigate();
+	const toast = useToast();
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
@@ -77,11 +79,23 @@ export function Admin() {
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		if (!inputValue.name) {
-			return alert("스텔라 이름을 입력해주세요");
+			toast({ description: "스텔라 이름을 입력해주세요", status: "error" });
+			return;
 		}
 		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
 			// console.log(res.data);
 			getStellarData();
+
+			toast({ description: `새 스텔라 등록을 완료했습니다`, status: "success" });
+			setInputValue({
+				name: "",
+				group: "",
+				youtubeId: "",
+				chzzkId: "",
+				xId: "",
+				colorCode: "",
+				playlistIdForMusic: "",
+			});
 		});
 	};
 
@@ -99,7 +113,7 @@ export function Admin() {
 					setInputValue((prev) => ({ ...prev, youtubeId: prev.youtubeId + "," + res.data.items[0].id }));
 				}
 			} else {
-				alert("올바르지 않은 채널명입니다.");
+				toast({ description: "올바르지 않은 채널명입니다", status: "error" });
 			}
 		});
 	};
