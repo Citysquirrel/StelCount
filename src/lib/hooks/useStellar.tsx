@@ -31,21 +31,21 @@ export function useStellar() {
 			.then((res) => {
 				if (res) {
 					if (res.status === 200) {
-						const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
-						const integrated: StellarState[] = [];
+						// const { data, stellar } = res.data as { data: PlatformInfos; stellar: StellarInfo[] };
+						// const integrated: StellarState[] = [];
 
-						for (let s of stellar) {
-							integrated.push({
-								name: s.name,
-								group: s.group,
-								uuid: s.uuid,
-								colorCode: s.colorCode,
-								youtube: data[s.uuid] ? data[s.uuid].youtube : [],
-								chzzk: data[s.uuid] ? data[s.uuid].chzzk : {},
-							});
-						}
-						console.log(integrated);
-						setData(integrated);
+						// for (let s of stellar) {
+						// 	integrated.push({
+						// 		name: s.name,
+						// 		group: s.group,
+						// 		uuid: s.uuid,
+						// 		colorCode: s.colorCode,
+						// 		youtube: data[s.uuid] ? data[s.uuid].youtube : [],
+						// 		chzzk: data[s.uuid] ? data[s.uuid].chzzk : {},
+						// 	});
+						// }
+						// console.log(integrated);
+						setData(res.data);
 						isTimer &&
 							toast({ description: "데이터를 새로 불러왔습니다.", status: "info", duration: 3000, isClosable: true });
 					}

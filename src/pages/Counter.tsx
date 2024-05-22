@@ -74,9 +74,9 @@ export function Counter() {
 	const [currentUuid, setCurrentUuid] = useState("");
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
-	const chzzk = currentStellar && currentStellar.chzzk;
-	const youtube = currentStellar && currentStellar.youtube;
-	const videos = currentStellar && currentStellar.videos;
+	// const chzzk = currentStellar && currentStellar.chzzk;
+	// const youtube = currentStellar && currentStellar.youtube;
+	// const videos = currentStellar && currentStellar.videos;
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
 
@@ -143,7 +143,7 @@ export function Counter() {
 											>
 												<Button
 													variant={"outline"}
-													leftIcon={<Image boxSize="24px" src={stellar.chzzk?.profileImage} borderRadius={"full"} />}
+													leftIcon={<Image boxSize="24px" src={stellar.profileImage} borderRadius={"full"} />}
 													colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
 													backgroundColor="ButtonFace"
 													onClick={handleClickStellar(stellar.uuid)}
@@ -162,30 +162,30 @@ export function Counter() {
 			<Box width="100%">
 				<Stack margin="12px" marginTop="24px" divider={<StackDivider />} spacing={"4"}>
 					<Stack direction={"row"} alignItems={"center"} spacing={"4"} flexWrap={"wrap"}>
-						<Link href={chzzk && naver.chzzk.liveUrl(chzzk.channelId)} isExternal>
+						<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
 							{isLoading ? (
 								<SkeletonCircle boxSize="72px" />
 							) : (
-								<Avatar boxSize="72px" src={(chzzk && chzzk.profileImage) || SQ}>
-									<AvatarBadge boxSize="28px" bg={chzzk && chzzk?.liveStatus ? "green.400" : "red.400"} />
+								<Avatar boxSize="72px" src={currentStellar?.profileImage || SQ}>
+									<AvatarBadge boxSize="28px" bg={currentStellar?.liveStatus ? "green.400" : "red.400"} />
 								</Avatar>
 							)}
 						</Link>
 						<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
 						<Stack direction={windowWidth <= 840 ? "column" : "row"}>
-							{youtube && youtube.length > 0 && youtube[0].subscriberCount ? (
+							{currentStellar?.youtubeSubscriberCount ? (
 								<FollowerCard
-									href={youtubeAPI.channelUrl(youtube[0].channelId)}
+									href={youtubeAPI.channelUrl(currentStellar.youtubeId)}
 									icon={youtubeIcon}
-									text={`구독자 ${numberToLocaleString(youtube[0].subscriberCount)}`}
+									text={`구독자 ${numberToLocaleString(currentStellar.youtubeSubscriberCount)}`}
 									currentColorCode={currentColorCode}
 								/>
 							) : null}
-							{chzzk && chzzk.followerCount ? (
+							{currentStellar?.chzzkFollowerCount ? (
 								<FollowerCard
-									href={naver.chzzk.channelUrl(chzzk.channelId)}
+									href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
 									icon={chzzkIcon}
-									text={`팔로워 ${numberToLocaleString(chzzk.followerCount)}`}
+									text={`팔로워 ${numberToLocaleString(currentStellar.chzzkFollowerCount)}`}
 									currentColorCode={currentColorCode}
 								/>
 							) : null}
@@ -197,9 +197,6 @@ export function Counter() {
 									<Skeleton key={idx} height="120px" borderRadius={"0.375rem"} />
 							  ))
 							: null}
-						{videos?.map((video) => (
-							<>{video.id}</>
-						))}
 						{/* {data.map((stellar) => {
 						return (
 							<StellarCard key={stellar.uuid} name={stellar.name} chzzk={stellar.chzzk} youtube={stellar.youtube} />
