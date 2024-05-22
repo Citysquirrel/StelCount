@@ -13,19 +13,22 @@ import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { Loading } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
 import { IoReload } from "react-icons/io5";
+import { useConsole } from "./lib/hooks/useConsole";
+import { useAuth } from "./lib/hooks/useAuth";
 
 function App() {
 	const nav = useNavigateEvent();
 	const { colorMode, toggleColorMode } = useColorMode();
-	const [isLoading] = useRecoilState(isLoadingState);
-	const [isAdmin] = useRecoilState(isAdminState);
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [serverError] = useRecoilState(serverErrorState);
 	const { refetch } = useStellar();
+	const { isAdmin, isLoading, isLogin } = useAuth();
 
 	const handleReload = () => {
 		refetch(true);
 	};
+
+	useConsole(isAdmin, "isAdmin");
 
 	if (serverError.isError) return <ServerErrorPage />;
 	return (

@@ -15,8 +15,8 @@ export function useAuth() {
 				if (res) {
 					if (res.status === 200) {
 						setIsLogin(true);
-						const { userInfo } = res.data;
-						if (userInfo.role === "ADMIN") {
+						const { userToken } = res.data;
+						if (userToken.role === "ADMIN") {
 							setIsAdmin(true);
 						}
 					}

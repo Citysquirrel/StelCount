@@ -84,11 +84,12 @@ export function Counter() {
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
 
+	const stellive = data.filter((s) => s.group === 0);
 	const mystic = data.filter((s) => s.group === 1);
 	const universe = data.filter((s) => s.group === 2);
 	const cliche = data.filter((s) => s.group === 3);
 	const unclassified = data.filter((s) => !s.group);
-	const total = [mystic, universe, cliche, unclassified];
+	const total = [stellive, mystic, universe, cliche, unclassified];
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
@@ -136,7 +137,11 @@ export function Counter() {
 											justifyContent={"center"}
 											marginTop="4px"
 										>
-											{isUnder720 ? idx + 1 : s[0].group ? stellarGroupName[idx + 1][1] : "Unclassified"}
+											{isUnder720
+												? idx + 1
+												: typeof s[0].group === "number"
+												? stellarGroupName[idx][1]
+												: "Unclassified"}
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
@@ -209,8 +214,14 @@ export function Counter() {
 									.sort(musicSort("default", "ASC"))
 									.map((m) => <MusicCard key={m.videoId} data={m} />)
 							) : (
-								<Stack alignItems={"center"} justifyContent={"center"}>
-									<Text>No Data</Text>
+								<Stack
+									alignItems={"center"}
+									justifyContent={"center"}
+									width={["100%", "100%", "200%", "200%", "300%"]}
+									height="240px"
+									userSelect={"none"}
+								>
+									<Text fontWeight={"bold"}>No Data</Text>
 								</Stack>
 							)}
 						</SimpleGrid>

@@ -1,5 +1,5 @@
 export function stringNullCheck(str: string | null | undefined) {
-	return str || "";
+	return str === null || str === undefined || str;
 }
 
 export function objectNullCheck(obj: Object) {

@@ -138,9 +138,9 @@ export function Admin() {
 		firstRef.current?.focus();
 	}, []);
 
+	if (isLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;
 	if (!isAdmin) return <NotExist />;
-	if (isLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	return (
 		<Stack padding="0 12px">
 			<Spacing size={24 + offsetY} />
@@ -242,9 +242,7 @@ export function Admin() {
 								<Td isNumeric>{s.id}</Td>
 								<Td>{s.name}</Td>
 								<Td>
-									{Number(s.group) > 0 && Number(s.group) < stellarGroupName.length
-										? `${s.group}기 - ${stellarGroupName[s.group][0]}`
-										: null}
+									{Number(s.group) < stellarGroupName.length ? `${s.group}기 - ${stellarGroupName[s.group][0]}` : null}
 								</Td>
 								<Td>
 									<CopyText>{s.colorCode}</CopyText>
@@ -320,7 +318,7 @@ export function AdminEdit() {
 		colorCode: "",
 		playlistIdForMusic: "",
 	});
-	const { isLogin, isAdmin } = useAuth();
+	const { isLogin, isAdmin, isLoading: isAuthLoading } = useAuth();
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -376,6 +374,7 @@ export function AdminEdit() {
 			});
 	}, []);
 
+	if (isAuthLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;
 	if (!isAdmin) return <NotExist />;
 	return (
