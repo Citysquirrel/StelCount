@@ -6,7 +6,7 @@ const NAME_HINA = "시라유키 히나";
 const NAME_LIZE = "아카네 리제";
 
 const stellarGroupName = [
-	["", ""],
+	["스텔라이브", "StelLive"],
 	["미스틱", "Mystic"],
 	["유니버스", "Universe"],
 	["클리셰", "Cliché"],
