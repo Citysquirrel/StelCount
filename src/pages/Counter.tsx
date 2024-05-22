@@ -113,10 +113,12 @@ export function Counter() {
 			<SideListContainer
 				position="sticky"
 				top={`${offsetY}px`}
+				// paddingRight="12px"
 				left={0}
 				minWidth={isUnder720 ? "64px" : "200px"}
 				width={isUnder720 ? "64px" : "200px"}
 				height={`calc(100vh - ${offsetY}px - 48px)`}
+				overflow="auto"
 			>
 				<SideList>
 					{isLoading

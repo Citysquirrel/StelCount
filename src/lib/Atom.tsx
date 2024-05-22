@@ -92,7 +92,7 @@ export const errorStorageState = atom<string>({
 	default: "",
 });
 
-export const isServerErrorState = atom<boolean>({
-	key: createAtomKey("isServerError"),
-	default: false,
+export const serverErrorState = atom<{ isError: boolean; statusCode: number }>({
+	key: createAtomKey("serverError"),
+	default: { isError: false, statusCode: 500 },
 });

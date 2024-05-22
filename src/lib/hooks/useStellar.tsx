@@ -8,7 +8,7 @@ import {
 	StellarInfo,
 	StellarState,
 	isLoadingState,
-	isServerErrorState,
+	serverErrorState,
 	isStellarLoadingState,
 	stellarState,
 } from "../Atom";
@@ -19,7 +19,7 @@ import { useToast } from "@chakra-ui/react";
 export function useStellar() {
 	const toast = useToast();
 	const [data, setData] = useRecoilState(stellarState);
-	const [, setIsServerError] = useRecoilState(isServerErrorState);
+	const [, setServerError] = useRecoilState(serverErrorState);
 	const [, setIsLoading] = useRecoilState(isLoadingState);
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
 
@@ -49,9 +49,13 @@ export function useStellar() {
 						isTimer &&
 							toast({ description: "데이터를 새로 불러왔습니다.", status: "info", duration: 3000, isClosable: true });
 					}
+					if (res.status === 429) {
+						setServerError({ isError: true, statusCode: res.status });
+						toast({ description: "분당 요청 횟수를 초과했습니다.", status: "warning" });
+					}
 					if (res.status === 500) {
 						// alert("내부 서버 에러입니다. 지속 발생 시 개발자에게 문의하세요.");
-						setIsServerError(true);
+						setServerError({ isError: true, statusCode: res.status });
 						isTimer &&
 							toast({
 								description: "데이터 로드에 실패했습니다. 지속 발생 시 개발자에게 문의하세요.",
@@ -70,8 +74,9 @@ export function useStellar() {
 	useEffect(() => {
 		f();
 		const i = setInterval(() => {
-			f(true);
-		}, 60000);
+			let second = new Date().getSeconds();
+			if (second === 0) f(true);
+		}, 1000);
 		return () => {
 			clearInterval(i);
 		};

@@ -8,8 +8,8 @@ import { useStellar } from "./lib/hooks/useStellar";
 import { Button, Divider, HStack, Heading, IconButton, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdDarkMode, MdLightMode, MdOndemandVideo, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { isLoadingState, isLoginState, isServerErrorState, isStellarLoadingState } from "./lib/Atom";
-import { ServerErrorPage } from "./pages/ServerError";
+import { isLoadingState, isLoginState, serverErrorState, isStellarLoadingState } from "./lib/Atom";
+import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { Loading } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
 import { IoReload } from "react-icons/io5";
@@ -19,38 +19,43 @@ function App() {
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
-	const [isServerError] = useRecoilState(isServerErrorState);
+	const [serverError] = useRecoilState(serverErrorState);
 	const { refetch } = useStellar();
 
 	const handleReload = () => {
 		refetch(true);
 	};
 
-	if (isServerError) return <ServerErrorPage />;
+	if (serverError.isError) return <ServerErrorPage />;
 	return (
 		<Stack>
 			{isLoading ? <Loading /> : null}
 			<Header>
-				<Tooltip label="카운터">
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						icon={<ImListNumbered />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={nav("/counter")}
-						aria-label="counter"
-					/>
-				</Tooltip>
-				<Tooltip label="영상모음">
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						icon={<MdOndemandVideo />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={nav("/video")}
-						aria-label="video"
-					/>
-				</Tooltip>
+				{import.meta.env.DEV ? (
+					<>
+						<Tooltip label="카운터">
+							<IconButton
+								fontSize="1.125rem"
+								isRound
+								icon={<ImListNumbered />}
+								colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+								onClick={nav("/counter")}
+								aria-label="counter"
+							/>
+						</Tooltip>
+						<Tooltip label="영상모음">
+							<IconButton
+								fontSize="1.125rem"
+								isRound
+								icon={<MdOndemandVideo />}
+								colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+								onClick={nav("/video")}
+								aria-label="video"
+							/>
+						</Tooltip>
+					</>
+				) : null}
+
 				{import.meta.env.DEV ? (
 					<Tooltip label="관리자">
 						<IconButton
