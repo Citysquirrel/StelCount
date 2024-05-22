@@ -133,6 +133,17 @@ export function Admin() {
 		}
 	};
 
+	const handleYoutubeData = () => {
+		fetchServer("/renew", "v1")
+			.then((res) => {
+				if (res.status === 200) toast({ description: "데이터 갱신에 성공했습니다", status: "success" });
+				else toast({ description: "데이터 갱신 중 오류가 발생했습니다", status: "error" });
+			})
+			.catch(() => {
+				toast({ description: "데이터 갱신 중 오류가 발생했습니다", status: "error" });
+			});
+	};
+
 	useEffect(() => {
 		getStellarData();
 		firstRef.current?.focus();
@@ -144,6 +155,7 @@ export function Admin() {
 	return (
 		<Stack padding="0 12px">
 			<Spacing size={24 + offsetY} />
+			<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
 			<Box as="section">
 				<Stack as="form" onSubmit={handleSubmit}>
 					<InputGroup>
@@ -380,6 +392,7 @@ export function AdminEdit() {
 	return (
 		<Stack padding="0 12px" paddingTop={"12px"}>
 			<Spacing size={offsetY} />
+
 			<Stack
 			// position="sticky"
 			// top={`${offsetY + 24}px`}
