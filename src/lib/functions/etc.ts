@@ -10,8 +10,8 @@ export function objectNullCheck(obj: Object) {
 	return result;
 }
 
-export function numberToLocaleString(num: string) {
-	return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+export function numberToLocaleString(num: string | undefined) {
+	return num ? num.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
 }
 
 export function remainingFromNum(num: number, unit: number, reverse?: boolean) {

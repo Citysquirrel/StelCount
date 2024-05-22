@@ -172,7 +172,7 @@ export function Counter() {
 							{isLoading ? (
 								<SkeletonCircle boxSize="72px" />
 							) : (
-								<Avatar boxSize="72px" src={currentStellar?.profileImage || SQ}>
+								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || SQ}>
 									<AvatarBadge boxSize="28px" bg={currentStellar?.liveStatus ? "green.400" : "red.400"} />
 								</Avatar>
 							)}
@@ -281,8 +281,8 @@ function MusicCard({ data }: MusicCardProps) {
 					float="right"
 				/>
 				<Text>{title}</Text>
-				<Text position="absolute" bottom={"4px"} right={"12px"}>
-					{viewCount}
+				<Text position="absolute" bottom={"4px"} right={"12px"} fontWeight={"bold"}>
+					{numberToLocaleString(viewCount)}
 				</Text>
 			</CardBody>
 		</Card>
@@ -291,7 +291,14 @@ function MusicCard({ data }: MusicCardProps) {
 
 function ThumbnailImage({ src, ...props }: ThumbnailImageProps) {
 	return (
-		<Stack overflow={"hidden"} justifyContent={"center"} alignItems={"center"} borderRadius={"0.375rem"} {...props}>
+		<Stack
+			marginLeft={"4px"}
+			overflow={"hidden"}
+			justifyContent={"center"}
+			alignItems={"center"}
+			borderRadius={"0.375rem"}
+			{...props}
+		>
 			<Image src={src} objectFit={"cover"} transform="scale(2)" />
 		</Stack>
 	);
