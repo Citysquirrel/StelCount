@@ -5,6 +5,8 @@ const NAME_MASHIRO = "네네코 마시로";
 const NAME_HINA = "시라유키 히나";
 const NAME_LIZE = "아카네 리제";
 
+const CAFE_WRITE_URL = "https://cafe.naver.com/ca-fe/cafes/29424353/menus/195/articles/write?boardType=L";
+
 const stellarGroupName = [
 	["스텔라이브", "StelLive"],
 	["미스틱", "Mystic"],
@@ -17,4 +19,4 @@ const stellarGroupName = [
 	["미분류", "Unclassified"],
 ];
 
-export { NAME_KANNA, NAME_YUNI, NAME_TABI, NAME_MASHIRO, NAME_HINA, NAME_LIZE, stellarGroupName };
+export { NAME_KANNA, NAME_YUNI, NAME_TABI, NAME_MASHIRO, NAME_HINA, NAME_LIZE, CAFE_WRITE_URL, stellarGroupName };
