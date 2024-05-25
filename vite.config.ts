@@ -18,21 +18,39 @@ function renderChunks(deps: Record<string, string>) {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
-	plugins: [react(), ssl()],
-	server: {
-		https: true,
-	},
-	build: {
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					vendor,
-					libs,
-					...renderChunks(dependencies),
+export default defineConfig(({ mode }) => {
+	if (mode === "production")
+		return {
+			plugins: [react()],
+			build: {
+				rollupOptions: {
+					output: {
+						manualChunks: {
+							vendor,
+							libs,
+							...renderChunks(dependencies),
+						},
+					},
 				},
 			},
-		},
-	},
+		};
+	else
+		return {
+			plugins: [react(), ssl()],
+			server: {
+				https: true,
+			},
+			build: {
+				rollupOptions: {
+					output: {
+						manualChunks: {
+							vendor,
+							libs,
+							...renderChunks(dependencies),
+						},
+					},
+				},
+			},
+		};
 });
 
