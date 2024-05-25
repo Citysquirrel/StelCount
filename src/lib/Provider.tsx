@@ -20,7 +20,7 @@ export function MainProvider({ children }) {
 		// <React.StrictMode>
 		<ChakraProvider
 			theme={theme}
-			toastOptions={{ defaultOptions: { position: "bottom-left", duration: 3, isClosable: true } }}
+			toastOptions={{ defaultOptions: { position: "bottom-left", duration: 3000, isClosable: true } }}
 		>
 			{/* <QueryClientProvider client={queryClient}> */}
 			<RecoilRoot>{children}</RecoilRoot>

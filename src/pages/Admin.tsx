@@ -594,6 +594,8 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 }
 
 function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: MusicDrawerProps) {
+	const toast = useToast();
+
 	const [tags, setTags] = useState<{ id: number; name: string }[]>([]);
 
 	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
@@ -609,15 +611,35 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 		setTagName("");
 	};
 
+	const handleSaveTag = () => {
+		fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName }) })
+			.then((res) => {
+				if (res.status === 200) {
+					onTagClose();
+					setTags((prev) => [...prev, res.data]);
+				} else if (res.status === 409) {
+					toast({ description: "중복된 태그 이름입니다", status: "warning" });
+				}
+			})
+			.catch((err) => {
+				toast({ description: "태그 생성 중 에러가 발생했습니다", status: "error" });
+			});
+	};
+
 	const handleChangeTag = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const value = e.target.value;
 		e.target.value = "";
 		if (value === "") {
 			return;
 		} else if (value === "new") {
-			// fetchServer("/tag","v1",{method:"POST"})
 			onTagOpen();
 		} else {
+			setInputValue((prev) => {
+				//TODO: 이거 string[] 말고 태그 객체 형태로 변경 interface도 통합
+				let tags = prev.tags;
+				tags += `,${e.target.textContent}`;
+				return { ...prev, tags };
+			});
 		}
 	};
 
@@ -647,7 +669,9 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 						</InputGroup>
 					</ModalBody>
 					<ModalFooter gap="4px">
-						<Button colorScheme="blue">저장</Button>
+						<Button colorScheme="blue" onClick={handleSaveTag}>
+							저장
+						</Button>
 						<Button onClick={handleCloseTagModal}>취소</Button>
 					</ModalFooter>
 				</ModalContent>
@@ -667,7 +691,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 							</InputGroup>
 							<InputGroup>
 								<Select placeholder="태그" onChange={handleChangeTag}>
-									<option value="new">새 태그 만들기</option>
+									<option value="new">+ 새 태그 만들기</option>
 									{tags.map((t) => (
 										<option key={t.id} value={t.id}>
 											{t.name}
