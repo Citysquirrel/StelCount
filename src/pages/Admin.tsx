@@ -40,6 +40,7 @@ import VALIDATION from "../lib/functions/validation";
 import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
 import { stellarGroupName } from "../lib/constant";
 import { NotExist } from "./NotExist";
+import { useConsole } from "../lib/hooks/useConsole";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -415,8 +416,10 @@ export function AdminEdit() {
 							<MdGroup />
 						</InputLeftElement>
 						<InputRightElement width="72px" fontSize="0.875rem">
-							{Number(inputValue.group) > 0 && Number(inputValue.group) < stellarGroupName.length ? (
-								<Text>{stellarGroupName[inputValue.group][0]}</Text>
+							{typeof inputValue.group === "string" &&
+							Number(inputValue.group) > 0 &&
+							Number(inputValue.group) < stellarGroupName.length ? (
+								<Text>{stellarGroupName[inputValue.group] ? stellarGroupName[inputValue.group][0] : ""}</Text>
 							) : null}
 						</InputRightElement>
 						<Input
@@ -499,7 +502,7 @@ export function AdminEdit() {
 				</Stack>
 			</Stack>
 			<Stack as="section">
-				<HeadedDivider>재생목록</HeadedDivider>
+				<HeadedDivider>음악 재생목록</HeadedDivider>
 			</Stack>
 		</Stack>
 	);
