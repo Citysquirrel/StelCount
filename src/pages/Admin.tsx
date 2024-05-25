@@ -4,7 +4,14 @@ import {
 	AlertIcon,
 	Box,
 	Button,
+	Card,
+	CardBody,
 	Divider,
+	Drawer,
+	DrawerBody,
+	DrawerCloseButton,
+	DrawerContent,
+	DrawerOverlay,
 	HStack,
 	Heading,
 	IconButton,
@@ -22,6 +29,7 @@ import {
 	Th,
 	Thead,
 	Tr,
+	useDisclosure,
 	useToast,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
@@ -41,6 +49,8 @@ import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
 import { stellarGroupName } from "../lib/constant";
 import { NotExist } from "./NotExist";
 import { useConsole } from "../lib/hooks/useConsole";
+import useColorModeValues from "../lib/hooks/useColorModeValues";
+import { useResponsive } from "../lib/hooks/useResponsive";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -312,7 +322,6 @@ export function Admin() {
 export function AdminEdit() {
 	const nav = useNavigate();
 	const { id } = useParams();
-	const [stellarData, setStellarData] = useRecoilState(stellarState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading, setIsLoading] = useState(true);
 	const [alertStatus, setAlertStatus] = useState<"error" | "info" | "warning" | "success" | "loading">("loading");
@@ -331,6 +340,7 @@ export function AdminEdit() {
 		colorCode: "",
 		playlistIdForMusic: "",
 	});
+	const [videoData, setVideoData] = useState<VideoData[]>([]);
 	const { isLogin, isAdmin, isLoading: isAuthLoading } = useAuth();
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,12 +376,13 @@ export function AdminEdit() {
 						if (!res.data) {
 							nav("/admin");
 						}
-						const { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic } = res.data;
-						const obj = { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic };
+						const { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video } = res.data;
+						const obj = { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video };
 						setInputValue((prev) => ({
 							...prev,
 							...objectNullCheck(obj),
 						}));
+						setVideoData(video);
 						setAlertStatus("success");
 					} else {
 						setAlertStatus("error");
@@ -503,8 +514,83 @@ export function AdminEdit() {
 			</Stack>
 			<Stack as="section">
 				<HeadedDivider>음악 재생목록</HeadedDivider>
+				<MusicPlaylist data={videoData} />
 			</Stack>
+			<Spacing size={64} />
 		</Stack>
+	);
+}
+
+function MusicPlaylist({ data }: MusicPlaylistProps) {
+	const values = useColorModeValues();
+	const { windowWidth } = useResponsive();
+
+	const { isOpen, onOpen, onClose } = useDisclosure();
+	const [inputValue, setInputValue] = useState({});
+	const [currentId, setCurrentId] = useState(-1);
+
+	const handleClickCard = (id: number) => () => {
+		setCurrentId(id);
+		onOpen();
+	};
+
+	const handleClose = () => {
+		setCurrentId(-1);
+		onClose();
+	};
+
+	return (
+		<>
+			<MusicDrawer
+				placement={windowWidth <= 720 ? "bottom" : "right"}
+				isOpen={isOpen}
+				onOpen={onOpen}
+				onClose={handleClose}
+				inputValue={inputValue}
+				setInputValue={setInputValue}
+			/>
+			<Stack height="360px" overflowY={"scroll"}>
+				{data.map((v) => {
+					const musicType = v.isCollaborated ? "콜라보" : v.isOriginal ? "오리지널" : "커버곡";
+					return (
+						<Card
+							key={v.id}
+							cursor="pointer"
+							transition={"all .3s"}
+							_hover={{ backgroundColor: values.bgHover }}
+							backgroundColor={currentId === v.id ? values.bgSelected : undefined}
+							onClick={handleClickCard(v.id)}
+						>
+							<CardBody
+								display={"flex"}
+								padding="12px"
+								alignItems={"center"}
+								justifyContent={"space-between"}
+								gap="8px"
+							>
+								<Text fontSize="0.75rem">{v.id}</Text>
+								<Text flex="1" textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow="hidden">
+									{v.title}
+								</Text>
+								<Text fontWeight={"bold"}>{musicType}</Text>
+							</CardBody>
+						</Card>
+					);
+				})}
+			</Stack>
+		</>
+	);
+}
+
+function MusicDrawer({ inputValue, placement, isOpen, onOpen, onClose }: MusicDrawerProps) {
+	return (
+		<Drawer isOpen={isOpen} onClose={onClose} placement={placement}>
+			<DrawerOverlay />
+			<DrawerContent>
+				<DrawerCloseButton />
+				<DrawerBody>dd</DrawerBody>
+			</DrawerContent>
+		</Drawer>
 	);
 }
 
@@ -525,6 +611,19 @@ function HeadedDivider({ children }) {
 	);
 }
 
+interface VideoData {
+	id: number;
+	type: "music";
+	title: string;
+	thumbnail: string;
+	videoId: string;
+	channelId: string;
+	viewCount: string;
+	likeCount: string;
+	isOriginal: boolean | null;
+	isCollaborated: boolean | null;
+}
+
 interface StellarInputValue {
 	name: string;
 	group: string;
@@ -537,4 +636,17 @@ interface StellarInputValue {
 
 interface StellarData extends StellarInputValue {
 	id: number;
+}
+
+interface MusicPlaylistProps {
+	data: VideoData[];
+}
+
+interface MusicDrawerProps {
+	inputValue: any;
+	setInputValue: any;
+	placement?: "top" | "left" | "bottom" | "right";
+	isOpen: boolean;
+	onOpen: () => void;
+	onClose: () => void;
 }
