@@ -11,6 +11,8 @@ import {
 	DrawerBody,
 	DrawerCloseButton,
 	DrawerContent,
+	DrawerFooter,
+	DrawerHeader,
 	DrawerOverlay,
 	HStack,
 	Heading,
@@ -20,6 +22,13 @@ import {
 	InputLeftElement,
 	InputRightElement,
 	Link,
+	Modal,
+	ModalBody,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+	ModalOverlay,
+	Select,
 	Stack,
 	Table,
 	TableContainer,
@@ -32,9 +41,9 @@ import {
 	useDisclosure,
 	useToast,
 } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
-import { MdColorLens, MdDelete, MdEdit, MdGroup, MdOpenInNew, MdPerson, MdPlaylistPlay } from "react-icons/md";
+import { MdColorLens, MdDelete, MdEdit, MdGroup, MdOpenInNew, MdPerson, MdPlaylistPlay, MdTitle } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
@@ -524,18 +533,21 @@ export function AdminEdit() {
 function MusicPlaylist({ data }: MusicPlaylistProps) {
 	const values = useColorModeValues();
 	const { windowWidth } = useResponsive();
-
 	const { isOpen, onOpen, onClose } = useDisclosure();
-	const [inputValue, setInputValue] = useState({});
+	const [inputValue, setInputValue] = useState<MPLInputValue>({ id: "", title: "", tags: "" });
 	const [currentId, setCurrentId] = useState(-1);
 
-	const handleClickCard = (id: number) => () => {
-		setCurrentId(id);
+	const handleClickCard = (givenId: number) => () => {
+		setCurrentId(givenId);
+		const idx = data.findIndex((m) => m.id === givenId);
+		const { id, title, Tags } = data[idx];
+		setInputValue({ id: id.toString(), title, tags: "" });
 		onOpen();
 	};
 
 	const handleClose = () => {
 		setCurrentId(-1);
+		setInputValue({ id: "", title: "", tags: "" });
 		onClose();
 	};
 
@@ -544,12 +556,11 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 			<MusicDrawer
 				placement={windowWidth <= 720 ? "bottom" : "right"}
 				isOpen={isOpen}
-				onOpen={onOpen}
 				onClose={handleClose}
 				inputValue={inputValue}
 				setInputValue={setInputValue}
 			/>
-			<Stack height="360px" overflowY={"scroll"}>
+			<Stack height="360px" overflowY={"scroll"} paddingRight="4px">
 				{data.map((v) => {
 					const musicType = v.isCollaborated ? "콜라보" : v.isOriginal ? "오리지널" : "커버곡";
 					return (
@@ -582,15 +593,97 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 	);
 }
 
-function MusicDrawer({ inputValue, placement, isOpen, onOpen, onClose }: MusicDrawerProps) {
+function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: MusicDrawerProps) {
+	const [tags, setTags] = useState<{ id: number; name: string }[]>([]);
+
+	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
+	const [tagName, setTagName] = useState<string>("");
+
+	const handleInputValue = (key: keyof MPLInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setInputValue((prev) => ({ ...prev, [key]: value }));
+	};
+
+	const handleCloseTagModal = () => {
+		onTagClose();
+		setTagName("");
+	};
+
+	const handleChangeTag = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = e.target.value;
+		e.target.value = "";
+		if (value === "") {
+			return;
+		} else if (value === "new") {
+			// fetchServer("/tag","v1",{method:"POST"})
+			onTagOpen();
+		} else {
+		}
+	};
+
+	useEffect(() => {
+		fetchServer("/tags", "v1").then((res) => {
+			if (res.status === 200) setTags(res.data);
+		});
+	}, []);
+
 	return (
-		<Drawer isOpen={isOpen} onClose={onClose} placement={placement}>
-			<DrawerOverlay />
-			<DrawerContent>
-				<DrawerCloseButton />
-				<DrawerBody>dd</DrawerBody>
-			</DrawerContent>
-		</Drawer>
+		<>
+			<Modal isOpen={isTagOpen} onClose={handleCloseTagModal} isCentered>
+				<ModalOverlay />
+				<ModalContent>
+					<ModalHeader>새 태그 만들기</ModalHeader>
+					<ModalBody>
+						<InputGroup>
+							<InputLeftElement>
+								<MdTitle />
+							</InputLeftElement>
+							<Input
+								value={tagName}
+								onChange={(e) => {
+									setTagName(e.target.value);
+								}}
+							/>
+						</InputGroup>
+					</ModalBody>
+					<ModalFooter gap="4px">
+						<Button colorScheme="blue">저장</Button>
+						<Button onClick={handleCloseTagModal}>취소</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
+			<Drawer isOpen={isOpen} onClose={onClose} placement={placement}>
+				<DrawerOverlay />
+				<DrawerContent>
+					<DrawerCloseButton />
+					<DrawerHeader>{inputValue.id ? `${inputValue.id}번 항목` : "..."}</DrawerHeader>
+					<DrawerBody>
+						<Stack gap="4px">
+							<InputGroup>
+								<InputLeftElement>
+									<MdTitle />
+								</InputLeftElement>
+								<Input value={inputValue.title} onChange={handleInputValue("title")} />
+							</InputGroup>
+							<InputGroup>
+								<Select placeholder="태그" onChange={handleChangeTag}>
+									<option value="new">새 태그 만들기</option>
+									{tags.map((t) => (
+										<option key={t.id} value={t.id}>
+											{t.name}
+										</option>
+									))}
+								</Select>
+							</InputGroup>
+						</Stack>
+					</DrawerBody>
+					<DrawerFooter gap="4px">
+						<Button colorScheme="blue">변경사항 저장</Button>
+						<Button onClick={onClose}>취소</Button>
+					</DrawerFooter>
+				</DrawerContent>
+			</Drawer>
+		</>
 	);
 }
 
@@ -622,6 +715,7 @@ interface VideoData {
 	likeCount: string;
 	isOriginal: boolean | null;
 	isCollaborated: boolean | null;
+	Tags: any[];
 }
 
 interface StellarInputValue {
@@ -638,15 +732,20 @@ interface StellarData extends StellarInputValue {
 	id: number;
 }
 
+interface MPLInputValue {
+	id: string;
+	title: string;
+	tags: string;
+}
+
 interface MusicPlaylistProps {
 	data: VideoData[];
 }
 
 interface MusicDrawerProps {
-	inputValue: any;
-	setInputValue: any;
+	inputValue: MPLInputValue;
+	setInputValue: Dispatch<SetStateAction<MPLInputValue>>;
 	placement?: "top" | "left" | "bottom" | "right";
 	isOpen: boolean;
-	onOpen: () => void;
 	onClose: () => void;
 }
