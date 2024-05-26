@@ -534,20 +534,20 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 	const values = useColorModeValues();
 	const { windowWidth } = useResponsive();
 	const { isOpen, onOpen, onClose } = useDisclosure();
-	const [inputValue, setInputValue] = useState<MPLInputValue>({ id: "", title: "", tags: "" });
+	const [inputValue, setInputValue] = useState<MPLInputValue>({ id: "", title: "", tags: [] });
 	const [currentId, setCurrentId] = useState(-1);
 
 	const handleClickCard = (givenId: number) => () => {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
 		const { id, title, Tags } = data[idx];
-		setInputValue({ id: id.toString(), title, tags: "" });
+		setInputValue({ id: id.toString(), title, tags: Tags });
 		onOpen();
 	};
 
 	const handleClose = () => {
 		setCurrentId(-1);
-		setInputValue({ id: "", title: "", tags: "" });
+		setInputValue({ id: "", title: "", tags: [] });
 		onClose();
 	};
 
@@ -611,18 +611,32 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 		setTagName("");
 	};
 
-	const handleSaveTag = () => {
-		fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName }) })
-			.then((res) => {
-				if (res.status === 200) {
-					onTagClose();
-					setTags((prev) => [...prev, res.data]);
-				} else if (res.status === 409) {
-					toast({ description: "중복된 태그 이름입니다", status: "warning" });
-				}
-			})
-			.catch((err) => {
-				toast({ description: "태그 생성 중 에러가 발생했습니다", status: "error" });
+	const handleSaveTag = (e: React.FormEvent<HTMLElement>) => {
+		e.preventDefault();
+		if (tagName === "") {
+			toast({ description: "태그 이름을 입력해주세요", status: "warning" });
+		} else
+			fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName }) })
+				.then((res) => {
+					if (res.status === 200) {
+						onTagClose();
+						setTags((prev) => [...prev, res.data]);
+					} else if (res.status === 409) {
+						toast({ description: "중복된 태그 이름입니다", status: "warning" });
+					}
+				})
+				.catch((err) => {
+					toast({ description: "태그 생성 중 에러가 발생했습니다", status: "error" });
+				});
+	};
+
+	const handleSaveMusic = (e: React.FormEvent<HTMLElement>) => {
+		e.preventDefault();
+		if (inputValue.title === "") {
+			toast({ description: "제목을 입력해 주세요", status: "warning" });
+		} else
+			fetchServer(`/y/${inputValue.id}`, "v1", {
+				body: JSON.stringify({ title: inputValue.title, tags: inputValue.tags }),
 			});
 	};
 
@@ -636,9 +650,9 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 		} else {
 			setInputValue((prev) => {
 				//TODO: 이거 string[] 말고 태그 객체 형태로 변경 interface도 통합
-				let tags = prev.tags;
-				tags += `,${e.target.textContent}`;
-				return { ...prev, tags };
+				const newTags = [...prev.tags];
+				newTags.push({ id: parseInt(value), name: e.target.textContent || "" });
+				return { ...prev, tags: newTags };
 			});
 		}
 	};
@@ -653,7 +667,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 		<>
 			<Modal isOpen={isTagOpen} onClose={handleCloseTagModal} isCentered>
 				<ModalOverlay />
-				<ModalContent>
+				<ModalContent as="form" onSubmit={handleSaveTag}>
 					<ModalHeader>새 태그 만들기</ModalHeader>
 					<ModalBody>
 						<InputGroup>
@@ -669,10 +683,12 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 						</InputGroup>
 					</ModalBody>
 					<ModalFooter gap="4px">
-						<Button colorScheme="blue" onClick={handleSaveTag}>
+						<Button type="submit" colorScheme="blue">
 							저장
 						</Button>
-						<Button onClick={handleCloseTagModal}>취소</Button>
+						<Button type="button" onClick={handleCloseTagModal}>
+							취소
+						</Button>
 					</ModalFooter>
 				</ModalContent>
 			</Modal>
@@ -681,30 +697,36 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 				<DrawerContent>
 					<DrawerCloseButton />
 					<DrawerHeader>{inputValue.id ? `${inputValue.id}번 항목` : "..."}</DrawerHeader>
-					<DrawerBody>
-						<Stack gap="4px">
-							<InputGroup>
-								<InputLeftElement>
-									<MdTitle />
-								</InputLeftElement>
-								<Input value={inputValue.title} onChange={handleInputValue("title")} />
-							</InputGroup>
-							<InputGroup>
-								<Select placeholder="태그" onChange={handleChangeTag}>
-									<option value="new">+ 새 태그 만들기</option>
-									{tags.map((t) => (
-										<option key={t.id} value={t.id}>
-											{t.name}
-										</option>
-									))}
-								</Select>
-							</InputGroup>
-						</Stack>
-					</DrawerBody>
-					<DrawerFooter gap="4px">
-						<Button colorScheme="blue">변경사항 저장</Button>
-						<Button onClick={onClose}>취소</Button>
-					</DrawerFooter>
+					<Box as="form" onSubmit={handleSaveMusic}>
+						<DrawerBody>
+							<Stack gap="4px">
+								<InputGroup>
+									<InputLeftElement>
+										<MdTitle />
+									</InputLeftElement>
+									<Input value={inputValue.title} onChange={handleInputValue("title")} />
+								</InputGroup>
+								<InputGroup>
+									<Select placeholder="태그" onChange={handleChangeTag}>
+										<option value="new">+ 새 태그 만들기</option>
+										{tags.map((t) => (
+											<option key={t.id} value={t.id}>
+												{t.name}
+											</option>
+										))}
+									</Select>
+								</InputGroup>
+							</Stack>
+						</DrawerBody>
+						<DrawerFooter gap="4px">
+							<Button type="submit" colorScheme="blue">
+								변경사항 저장
+							</Button>
+							<Button type="button" onClick={onClose}>
+								취소
+							</Button>
+						</DrawerFooter>
+					</Box>
 				</DrawerContent>
 			</Drawer>
 		</>
@@ -756,10 +778,14 @@ interface StellarData extends StellarInputValue {
 	id: number;
 }
 
+interface Tag {
+	id: number;
+	name: string;
+}
 interface MPLInputValue {
 	id: string;
 	title: string;
-	tags: string;
+	tags: Tag[];
 }
 
 interface MusicPlaylistProps {
