@@ -14,7 +14,7 @@ import { Loading } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
 import { IoReload } from "react-icons/io5";
 import { useConsole } from "./lib/hooks/useConsole";
-import { useAuth } from "./lib/hooks/useAuth.ts";
+import { useAuth } from "./lib/hooks/useAuth";
 
 function App() {
 	const nav = useNavigateEvent();
