@@ -47,10 +47,12 @@ import { useConsole } from "../lib/hooks/useConsole";
 import { numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { stellarGroupName } from "../lib/constant";
+import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
 import { MdFilter, MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
 import { VscKebabVertical } from "react-icons/vsc";
 import { GoKebabHorizontal } from "react-icons/go";
+import { useLocalStorage } from "usehooks-ts";
+import { UserSettingStorage } from "../lib/types";
 
 // const stellarColors = {
 // 	"아이리 칸나": "#373584",
@@ -82,6 +84,10 @@ const stellarSymbols = {
 export function Counter() {
 	const { colorMode } = useColorMode();
 	const { windowWidth } = useResponsive();
+	const [userSetting, setUserSetting, removeUserSetting] = useLocalStorage<UserSettingStorage>(
+		USER_SETTING_STORAGE,
+		{}
+	);
 	const [data, setData] = useRecoilState(stellarState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
@@ -107,8 +113,16 @@ export function Counter() {
 		setCurrentUuid(uuid);
 	};
 
+	const handleSetHome = () => {
+		setUserSetting((prev) => ({ ...prev, homeStellar: currentUuid }));
+	};
+
 	useEffect(() => {
-		if (data.length > 0 && currentUuid === "") setCurrentUuid(stellive[0].uuid);
+		if (userSetting.homeStellar) {
+			setCurrentUuid(userSetting.homeStellar);
+		} else {
+			if (data.length > 0 && currentUuid === "") setCurrentUuid(stellive[0].uuid);
+		}
 	}, [data]);
 	useConsole(currentStellar);
 
@@ -200,8 +214,10 @@ export function Counter() {
 						_hover={{ backgroundColor: "#ffffff33" }}
 						zIndex={1}
 					/>
-					<MenuList>
-						<MenuItem icon={<MdHome />}>방문시 첫화면으로</MenuItem>
+					<MenuList minWidth={"4xs"} paddingBlock={"4px"}>
+						<MenuItem height="28px" fontSize="0.875rem" icon={<MdHome size="1.125rem" />} onClick={handleSetHome}>
+							방문시 첫화면으로
+						</MenuItem>
 					</MenuList>
 				</Menu>
 
