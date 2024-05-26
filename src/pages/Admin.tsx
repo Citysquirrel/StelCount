@@ -639,6 +639,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 			toast({ description: "제목을 입력해 주세요", status: "warning" });
 		} else
 			fetchServer(`/y/${inputValue.id}`, "v1", {
+				method: "POST",
 				body: JSON.stringify({ title: inputValue.title, tags: inputValue.tags }),
 			});
 	};
