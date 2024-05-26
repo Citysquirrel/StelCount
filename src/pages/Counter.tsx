@@ -25,6 +25,7 @@ import {
 	Stack,
 	StackDivider,
 	Tag,
+	TagLabel,
 	Text,
 	Tooltip,
 	theme,
@@ -118,11 +119,12 @@ export function Counter() {
 	};
 
 	useEffect(() => {
-		if (userSetting.homeStellar) {
-			setCurrentUuid(userSetting.homeStellar);
-		} else {
-			if (data.length > 0 && currentUuid === "") setCurrentUuid(stellive[0].uuid);
-		}
+		if (currentUuid === "")
+			if (userSetting.homeStellar) {
+				setCurrentUuid(userSetting.homeStellar);
+			} else {
+				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
+			}
 	}, [data]);
 	useConsole(currentStellar);
 
@@ -278,7 +280,7 @@ export function Counter() {
 						/> */}
 					</Stack>
 					<Stack>
-						<SimpleGrid columns={[1, 1, 2, 2, 3]} spacing={"8px"}>
+						<SimpleGrid minChildWidth={"380px"} spacing={"8px"}>
 							{isLoading ? (
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} height="120px" borderRadius={"0.375rem"} />
@@ -347,29 +349,33 @@ function MusicFilter() {
 }
 
 function MusicCard({ data }: MusicCardProps) {
-	const { windowWidth } = useResponsive();
 	const { type, title, videoId, thumbnail, viewCount, likeCount, ownerId, isOriginal, isCollaborated, publishedAt } =
 		data;
 
-	const sideWidth = (windowWidth < 720 ? 72 : 200) + 4;
-	const calcWidth = (count: number) => (windowWidth - sideWidth - 24) / count - count * 2 * 4;
-	const width = [calcWidth(1) - 8, calcWidth(1) - 12, calcWidth(2), calcWidth(2), calcWidth(3)];
-	const height = width.map((w) => w * 0.5625);
-	const thumbnailHeight = height.map((h) => h / 2);
-	const thumbnailWidth = thumbnailHeight.map((h) => h * 1.08);
+	// const tagBoxHeight = height.map((h) => h / 12);
 	return (
-		<Card position="relative" width={width.map((v) => `${v}px`)} height={height.map((v) => `${v}px`)}>
-			<CardBody>
-				<ThumbnailImage
-					src={thumbnail}
-					width={thumbnailWidth.map((v) => `${v}px`)}
-					height={thumbnailHeight.map((v) => `${v}px`)}
-					float="right"
-				/>
-				<Text>{title}</Text>
-				<Text position="absolute" bottom={"4px"} right={"12px"} fontWeight={"bold"}>
-					{numberToLocaleString(viewCount)}
-				</Text>
+		<Card position="relative" width={"380px"} height={"212px"}>
+			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
+				<HStack>
+					<Stack flex={1} alignItems={"center"} justifyContent={"center"}>
+						<Text fontSize={"2.25rem"} fontWeight={"bold"}>
+							{numberToLocaleString(viewCount)}
+						</Text>
+					</Stack>
+					<ThumbnailImage src={thumbnail} width={"116px"} height={"108px"} />
+				</HStack>
+				<Stack position="relative" gap="auto" flexWrap={"nowrap"} flex={1}>
+					<Text title={title} fontSize={"1.125rem"} whiteSpace={"nowrap"} textOverflow={"ellipsis"} overflow="hidden">
+						{title}
+					</Text>
+					<Box position="absolute" right="2px" bottom={"-4px"} textAlign={"right"}>
+						{data.tags?.map((tag) => (
+							<Tag key={tag.id}>
+								<TagLabel>{tag.name}</TagLabel>
+							</Tag>
+						))}
+					</Box>
+				</Stack>
 			</CardBody>
 		</Card>
 	);

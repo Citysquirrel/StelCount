@@ -63,6 +63,7 @@ import { NotExist } from "./NotExist";
 import { useConsole } from "../lib/hooks/useConsole";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 import { useResponsive } from "../lib/hooks/useResponsive";
+import { Tag as TagType } from "../lib/types";
 
 export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
@@ -599,7 +600,7 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: MusicDrawerProps) {
 	const toast = useToast();
 
-	const [tags, setTags] = useState<Tag[]>([]);
+	const [tags, setTags] = useState<TagType[]>([]);
 
 	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
 	const [tagName, setTagName] = useState<string>("");
@@ -786,7 +787,7 @@ interface VideoData {
 	likeCount: string;
 	isOriginal: boolean | null;
 	isCollaborated: boolean | null;
-	tags: Tag[];
+	tags: TagType[];
 }
 
 interface StellarInputValue {
@@ -803,14 +804,10 @@ interface StellarData extends StellarInputValue {
 	id: number;
 }
 
-interface Tag {
-	id: number;
-	name: string;
-}
 interface MPLInputValue {
 	id: string;
 	title: string;
-	tags: Tag[];
+	tags: TagType[];
 }
 
 interface MusicPlaylistProps {
