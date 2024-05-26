@@ -45,7 +45,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
 import { MdColorLens, MdDelete, MdEdit, MdGroup, MdOpenInNew, MdPerson, MdPlaylistPlay, MdTitle } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
-import { useAuth } from "../lib/hooks/useAuth";
+import { useAuth } from "../lib/hooks/useAuth.ts";
 import { Loading } from "../components/Loading";
 import { useNavigate, useParams } from "react-router-dom";
 import { useRecoilState } from "recoil";

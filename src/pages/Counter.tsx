@@ -15,6 +15,10 @@ import {
 	Heading,
 	IconButton,
 	Link,
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuList,
 	SimpleGrid,
 	Skeleton,
 	SkeletonCircle,
@@ -44,7 +48,9 @@ import { numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { stellarGroupName } from "../lib/constant";
-import { MdFilter, MdFilterList, MdOpenInNew } from "react-icons/md";
+import { MdFilter, MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
+import { VscKebabVertical } from "react-icons/vsc";
+import { GoKebabHorizontal } from "react-icons/go";
 
 // const stellarColors = {
 // 	"아이리 칸나": "#373584",
@@ -178,7 +184,27 @@ export function Counter() {
 						  ))}
 				</SideList>
 			</SideListContainer>
-			<Box width="100%">
+			<Box position="relative" width="100%">
+				<Menu>
+					<MenuButton
+						as={IconButton}
+						position="absolute"
+						top={1}
+						left={-1}
+						boxSize="32px"
+						size="sm"
+						variant={"ghost"}
+						icon={<GoKebabHorizontal />}
+						aria-label="kebab-menu"
+						isRound
+						_hover={{ backgroundColor: "#ffffff33" }}
+						zIndex={1}
+					/>
+					<MenuList>
+						<MenuItem icon={<MdHome />}>방문시 첫화면으로</MenuItem>
+					</MenuList>
+				</Menu>
+
 				<Stack margin="12px" marginTop="24px" marginBottom="64px" divider={<StackDivider />} spacing={"4"}>
 					<Stack
 						position="relative"
