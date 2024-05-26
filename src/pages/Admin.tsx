@@ -32,6 +32,9 @@ import {
 	Stack,
 	Table,
 	TableContainer,
+	Tag,
+	TagCloseButton,
+	TagLabel,
 	Tbody,
 	Td,
 	Text,
@@ -540,8 +543,8 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 	const handleClickCard = (givenId: number) => () => {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
-		const { id, title, Tags } = data[idx];
-		setInputValue({ id: id.toString(), title, tags: Tags });
+		const { id, title, tags } = data[idx];
+		setInputValue({ id: id.toString(), title, tags });
 		onOpen();
 	};
 
@@ -596,7 +599,7 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: MusicDrawerProps) {
 	const toast = useToast();
 
-	const [tags, setTags] = useState<{ id: number; name: string }[]>([]);
+	const [tags, setTags] = useState<Tag[]>([]);
 
 	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
 	const [tagName, setTagName] = useState<string>("");
@@ -642,6 +645,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 
 	const handleChangeTag = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const value = e.target.value;
+		const numVal = parseInt(value);
 		e.target.value = "";
 		if (value === "") {
 			return;
@@ -649,9 +653,11 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 			onTagOpen();
 		} else {
 			setInputValue((prev) => {
-				//TODO: 이거 string[] 말고 태그 객체 형태로 변경 interface도 통합
 				const newTags = [...prev.tags];
-				newTags.push({ id: parseInt(value), name: e.target.textContent || "" });
+				if (newTags.find((t) => t.id === numVal)) {
+					return prev;
+				}
+				newTags.push({ id: numVal, name: tags.find((t) => t.id === numVal)?.name || "" });
 				return { ...prev, tags: newTags };
 			});
 		}
@@ -708,14 +714,32 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 								</InputGroup>
 								<InputGroup>
 									<Select placeholder="태그" onChange={handleChangeTag}>
-										<option value="new">+ 새 태그 만들기</option>
 										{tags.map((t) => (
 											<option key={t.id} value={t.id}>
 												{t.name}
 											</option>
 										))}
+										<option value="new">+ 새 태그 만들기</option>
 									</Select>
 								</InputGroup>
+								<Box>
+									{inputValue.tags.map((tag) => (
+										<Tag key={tag.id} colorScheme="blue" marginRight="2px">
+											<TagLabel>{tag.name}</TagLabel>
+											<TagCloseButton
+												onClick={() => {
+													const numVal = tag.id;
+													setInputValue((prev) => {
+														const newTags = [...prev.tags];
+														const idx = prev.tags.findIndex((t) => t.id === numVal);
+														newTags.splice(idx, 1);
+														return { ...prev, tags: newTags };
+													});
+												}}
+											/>
+										</Tag>
+									))}
+								</Box>
 							</Stack>
 						</DrawerBody>
 						<DrawerFooter gap="4px">
@@ -761,7 +785,7 @@ interface VideoData {
 	likeCount: string;
 	isOriginal: boolean | null;
 	isCollaborated: boolean | null;
-	Tags: any[];
+	tags: Tag[];
 }
 
 interface StellarInputValue {

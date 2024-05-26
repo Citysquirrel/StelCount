@@ -1,9 +1,11 @@
 import { Heading, Link, Stack, Text } from "@chakra-ui/react";
 import { useRecoilState } from "recoil";
 import { serverErrorState } from "../lib/Atom";
+import { useLocation } from "react-router-dom";
 
 export function ServerErrorPage() {
 	const [serverError] = useRecoilState(serverErrorState);
+	const { pathname } = useLocation();
 	const errorMsg = {
 		429: { title: "Too Many Requests", description: "분당 요청 횟수를 초과했습니다. 잠시 후 다시 시도해주세요." },
 		500: {
@@ -19,7 +21,7 @@ export function ServerErrorPage() {
 			<Text>
 				{errorMsg[serverError.statusCode] ? errorMsg[serverError.statusCode].description : errorMsg[429].description}
 			</Text>
-			<Link href="/">재시도</Link>
+			<Link href={`.${pathname}`}>재시도</Link>
 		</Stack>
 	);
 }
