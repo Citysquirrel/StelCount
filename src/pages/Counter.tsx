@@ -352,6 +352,13 @@ function MusicCard({ data }: MusicCardProps) {
 	const { type, title, videoId, thumbnail, viewCount, likeCount, ownerId, isOriginal, isCollaborated, publishedAt } =
 		data;
 
+	const customTagColorScheme = {
+		Cover: "teal",
+		Original: "red",
+		Gift: "orange",
+		other: "blue",
+	};
+
 	// const tagBoxHeight = height.map((h) => h / 12);
 	return (
 		<Card position="relative" width={"380px"} height={"212px"}>
@@ -370,7 +377,7 @@ function MusicCard({ data }: MusicCardProps) {
 					</Text>
 					<Box position="absolute" right="2px" bottom={"-4px"} textAlign={"right"}>
 						{data.tags?.map((tag) => (
-							<Tag key={tag.id}>
+							<Tag key={tag.id} colorScheme={customTagColorScheme[tag.name] || customTagColorScheme.other}>
 								<TagLabel>{tag.name}</TagLabel>
 							</Tag>
 						))}
