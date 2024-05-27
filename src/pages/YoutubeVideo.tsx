@@ -9,7 +9,7 @@ import { Image } from "../components/Image";
 export function YoutubeVideo() {
 	const [stellar, setStellar] = useRecoilState(stellarState);
 	// data[0].youtube?.videos[0].?
-	const isVideoExist = stellar.filter((s) => s.videos);
+	// const isVideoExist = stellar.filter((s) => s.videos);
 
 	return (
 		<Stack>
