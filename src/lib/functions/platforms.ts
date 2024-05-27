@@ -20,6 +20,7 @@ export const youtube = {
 	// channels: (params: ParamsObject, options?: FetchOptions) =>
 	// 	fetch_(`https://www.googleapis.com/youtube/v3/channels${objectToUrlParams(params)}`, options),
 	channelUrl: (channelId?: string) => (channelId ? `https://www.youtube.com/${channelId}` : undefined),
+	videoUrl: (videoId?: string) => (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
 };
 
 function objectToUrlParams(object: Object) {

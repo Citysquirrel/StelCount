@@ -46,7 +46,7 @@ import SQ from "../assets/logo.png";
 import { Fragment, useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
 import { numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
-import { naver, youtube as youtubeAPI } from "../lib/functions/platforms";
+import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
 import { MdFilter, MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
@@ -372,9 +372,11 @@ function MusicCard({ data }: MusicCardProps) {
 					<ThumbnailImage src={thumbnail} width={"116px"} height={"108px"} />
 				</HStack>
 				<Stack position="relative" gap="auto" flexWrap={"nowrap"} flex={1}>
-					<Text title={title} fontSize={"1.125rem"} whiteSpace={"nowrap"} textOverflow={"ellipsis"} overflow="hidden">
-						{title}
-					</Text>
+					<Link href={youtube.videoUrl(videoId)} isExternal>
+						<Text title={title} fontSize={"1.125rem"} whiteSpace={"nowrap"} textOverflow={"ellipsis"} overflow="hidden">
+							{title}
+						</Text>
+					</Link>
 					<Box position="absolute" right="2px" bottom={"-4px"} textAlign={"right"}>
 						{data.tags?.map((tag) => (
 							<Tag key={tag.id} colorScheme={customTagColorScheme[tag.name] || customTagColorScheme.other}>
