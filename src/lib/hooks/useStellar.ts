@@ -45,7 +45,7 @@ export function useStellar() {
 						// 	});
 						// }
 						// console.log(integrated);
-						setData(res.data);
+						setData(res.data || []);
 						isTimer &&
 							toast({ description: "데이터를 새로 불러왔습니다.", status: "info", duration: 3000, isClosable: true });
 					}
