@@ -1,4 +1,4 @@
-import { Image, Stack, Text } from "@chakra-ui/react";
+import { Image, Stack } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 
 export function Loading({ options }: LoadingProps) {
@@ -22,7 +22,7 @@ export function Loading({ options }: LoadingProps) {
 				},
 			}}
 		>
-			<Image src={"/load_donut.png"} />
+			<Image src={"/images/load_donut.png"} />
 		</Stack>
 	);
 }

@@ -1,7 +1,6 @@
 import { Box, BoxProps, Card, CardBody, SimpleGrid, Stack } from "@chakra-ui/react";
 import { useRecoilState } from "recoil";
 import { VideoDataDetail, stellarState } from "../lib/Atom";
-import { NAME_TABI } from "../lib/constant";
 import { Image } from "../components/Image";
 
 //! DEPRECATED

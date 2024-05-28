@@ -17,15 +17,11 @@ import theme from "./theme";
 
 export function MainProvider({ children }) {
 	return (
-		// <React.StrictMode>
 		<ChakraProvider
 			theme={theme}
 			toastOptions={{ defaultOptions: { position: "bottom-left", duration: 3000, isClosable: true } }}
 		>
-			{/* <QueryClientProvider client={queryClient}> */}
 			<RecoilRoot>{children}</RecoilRoot>
-			{/* </QueryClientProvider> */}
 		</ChakraProvider>
-		// </React.StrictMode>
 	);
 }

@@ -8,11 +8,8 @@ import {
 	Button,
 	Card,
 	CardBody,
-	CardFooter,
-	CardHeader,
 	Divider,
 	HStack,
-	Heading,
 	IconButton,
 	Link,
 	Menu,
@@ -28,77 +25,43 @@ import {
 	TagLabel,
 	Text,
 	Tooltip,
-	theme,
-	useColorMode,
 } from "@chakra-ui/react";
-import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
-import symbolTabi from "../assets/symbol/symbol_tabi.png";
-import symbolMashiro from "../assets/symbol/symbol_mashiro.png";
-import symbolHina from "../assets/symbol/symbol_hina.png";
-import symbolLize from "../assets/symbol/symbol_lize.png";
-import symbolKanna from "../assets/symbol/symbol_kanna.png";
-import symbolYuni from "../assets/symbol/symbol_yuni.png";
-import symbolStellive from "../assets/symbol/symbol_stellive.svg";
-import chzzkIcon from "../assets/i_chzzk_1.png";
-import youtubeIcon from "../assets/i_youtube_1.png";
-import SQ from "../assets/logo.png";
 import { Fragment, useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
 import { numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdFilter, MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
-import { VscKebabVertical } from "react-icons/vsc";
+import { MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
 import { UserSettingStorage } from "../lib/types";
 
-// const stellarColors = {
-// 	"아이리 칸나": "#373584",
-// 	"아야츠노 유니": "#b77de4",
-// 	"아라하시 타비": "#71C5E8",
-// 	"네네코 마시로": "#25282A",
-// 	"시라유키 히나": "#E4002B",
-// 	"아카네 리제": "#971B2F",
-// };
-
 const stellarSymbols = {
-	스텔라이브: symbolStellive,
-	"아이리 칸나": symbolKanna,
-	"아야츠노 유니": symbolYuni,
-	"아라하시 타비": symbolTabi,
-	"네네코 마시로": symbolMashiro,
-	"시라유키 히나": symbolHina,
-	"아카네 리제": symbolLize,
+	스텔라이브: "/images/symbol/symbol_stellive.svg",
+	"아이리 칸나": "/images/symbol/symbol_kanna.png",
+	"아야츠노 유니": "/images/symbol/symbol_yuni.png",
+	"아라하시 타비": "/images/symbol/symbol_tabi.png",
+	"네네코 마시로": "/images/symbol/symbol_mashiro.png",
+	"시라유키 히나": "/images/symbol/symbol_hina.png",
+	"아카네 리제": "/images/symbol/symbol_lize.png",
 	"텐코 시부키": "",
 	"하나코 나나": "",
 	"아오쿠모 린": "",
 	"유즈하 리코": "",
 };
 
-//TODO: 카운트 페이지로 합치고, 홈페이지도 그냥 삭제해버리기
-//TODO: 사이드바에서 멤버별로 카테고리 구분하고, 각자 페이지 상단에서 구독자수 등 표기하고
-//TODO: 나머지 커버곡 조회수 및 추출을 스크롤 페이지에 배치
-
 export function Counter() {
-	const { colorMode } = useColorMode();
 	const { windowWidth } = useResponsive();
-	const [userSetting, setUserSetting, removeUserSetting] = useLocalStorage<UserSettingStorage>(
-		USER_SETTING_STORAGE,
-		{}
-	);
-	const [data, setData] = useRecoilState(stellarState);
+	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
+	const [data] = useRecoilState(stellarState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
-	const [isFilterOn, setIsFilterOn] = useState(false);
+	// const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
-	// const chzzk = currentStellar && currentStellar.chzzk;
-	// const youtube = currentStellar && currentStellar.youtube;
-	// const videos = currentStellar && currentStellar.videos;
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
@@ -181,7 +144,7 @@ export function Counter() {
 													leftIcon={
 														<Image
 															boxSize="24px"
-															src={stellar.name === "스텔라이브" ? symbolStellive : stellar.profileImage}
+															src={stellar.name === "스텔라이브" ? stellarSymbols.스텔라이브 : stellar.profileImage}
 															borderRadius={"full"}
 														/>
 													}
@@ -245,7 +208,7 @@ export function Counter() {
 							{isLoading ? (
 								<SkeletonCircle boxSize="72px" />
 							) : currentStellar?.chzzkId ? (
-								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || SQ}>
+								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || "/images/logo.png"}>
 									<AvatarBadge boxSize="28px" bg={currentStellar?.liveStatus ? "green.400" : "red.400"} />
 								</Avatar>
 							) : null}
@@ -257,7 +220,7 @@ export function Counter() {
 							{currentStellar?.youtubeSubscriberCount ? (
 								<FollowerCard
 									href={youtubeAPI.channelUrl(currentStellar.youtubeCustomUrl)}
-									icon={youtubeIcon}
+									icon={"/images/i_youtube_1.png"}
 									text={`구독자 ${numberToLocaleString(currentStellar.youtubeSubscriberCount)}`}
 									currentColorCode={currentColorCode}
 								/>
@@ -265,7 +228,7 @@ export function Counter() {
 							{currentStellar?.chzzkFollowerCount ? (
 								<FollowerCard
 									href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
-									icon={chzzkIcon}
+									icon={"/images/i_chzzk_1.png"}
 									text={`팔로워 ${numberToLocaleString(currentStellar.chzzkFollowerCount)}`}
 									currentColorCode={currentColorCode}
 								/>

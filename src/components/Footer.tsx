@@ -1,5 +1,3 @@
-import { css } from "@emotion/react";
-import Logo from "../assets/logo.png";
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa6";
 import { ImMail4 } from "react-icons/im";
@@ -97,7 +95,7 @@ export function FooterAnimation() {
 				<Image
 					title="도시다람쥐"
 					boxSize={"32px"}
-					src={Logo}
+					src={"/images/logo.png"}
 					alt="도시다람쥐"
 					sx={{
 						borderRadius: "99px",

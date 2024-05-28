@@ -1,14 +1,13 @@
 import { Header } from "./components/Header";
-import { css } from "@emotion/react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, Divider, HStack, Heading, IconButton, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
+import { Button, Divider, IconButton, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdDarkMode, MdLightMode, MdOndemandVideo, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { isLoadingState, isLoginState, serverErrorState, isStellarLoadingState, isAdminState } from "./lib/Atom";
+import { serverErrorState, isStellarLoadingState, isAdminState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { Loading } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
@@ -22,7 +21,7 @@ function App() {
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [serverError] = useRecoilState(serverErrorState);
 	const { refetch } = useStellar();
-	const { isAdmin, isLoading, isLogin } = useAuth();
+	const { isAdmin, isLoading } = useAuth();
 
 	const handleReload = () => {
 		refetch(true);
@@ -35,18 +34,18 @@ function App() {
 		<Stack>
 			{isLoading ? <Loading /> : null}
 			<Header>
+				<Tooltip label="카운터">
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						icon={<ImListNumbered />}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={nav("/counter")}
+						aria-label="counter"
+					/>
+				</Tooltip>
 				{import.meta.env.DEV ? (
 					<>
-						<Tooltip label="카운터">
-							<IconButton
-								fontSize="1.125rem"
-								isRound
-								icon={<ImListNumbered />}
-								colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-								onClick={nav("/counter")}
-								aria-label="counter"
-							/>
-						</Tooltip>
 						<Tooltip label="영상모음">
 							<IconButton
 								fontSize="1.125rem"
@@ -86,15 +85,6 @@ function App() {
 						<IoReload />
 					</Button>
 				</Tooltip>
-
-				{/* <Button
-					wrapperCss={css`
-						display: none;
-						margin-inline-start: auto;
-					`}
-				>
-					TEST
-				</Button> */}
 				<IconButton
 					fontSize="1.125rem"
 					isRound

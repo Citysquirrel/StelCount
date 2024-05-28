@@ -1,5 +1,3 @@
-import { FetchOptions, fetch_ } from "./fetch";
-
 export interface ParamsObject {
 	part: (
 		| "auditDetails"
@@ -17,13 +15,11 @@ export interface ParamsObject {
 }
 
 export const youtube = {
-	// channels: (params: ParamsObject, options?: FetchOptions) =>
-	// 	fetch_(`https://www.googleapis.com/youtube/v3/channels${objectToUrlParams(params)}`, options),
 	channelUrl: (channelId?: string) => (channelId ? `https://www.youtube.com/${channelId}` : undefined),
 	videoUrl: (videoId?: string) => (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
 };
 
-function objectToUrlParams(object: Object) {
+export function objectToUrlParams(object: Object) {
 	let params = "";
 	Object.entries(object).forEach(([key, value], idx) => {
 		let prefix = idx === 0 ? "?" : "&";

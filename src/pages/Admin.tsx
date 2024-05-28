@@ -217,7 +217,7 @@ export function Admin() {
 					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
-							<Image boxSize={"16px"} src="/src/assets/i_chzzk_1.png" />
+							<Image boxSize={"16px"} src="/images/i_chzzk_1.png" />
 						</InputLeftElement>
 						<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
 					</InputGroup>
@@ -466,7 +466,7 @@ export function AdminEdit() {
 					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
-							<Image boxSize={"16px"} src="/src/assets/i_chzzk_1.png" />
+							<Image boxSize={"16px"} src="/images/i_chzzk_1.png" />
 						</InputLeftElement>
 						<Input
 							placeholder="치지직 ID"

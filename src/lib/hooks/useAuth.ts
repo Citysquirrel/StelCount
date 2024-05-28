@@ -1,7 +1,7 @@
 import { useRecoilState } from "recoil";
 import { isAdminState, isLoginState } from "../Atom";
 import { useEffect, useState } from "react";
-import { fetchServer, fetch_ } from "../functions/fetch";
+import { fetchServer } from "../functions/fetch";
 
 export function useAuth() {
 	const [isLogin, setIsLogin] = useRecoilState(isLoginState);

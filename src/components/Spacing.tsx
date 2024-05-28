@@ -1,4 +1,4 @@
-import { Flex, FlexProps } from "@chakra-ui/react";
+import { Flex } from "@chakra-ui/react";
 import { HTMLAttributes, memo } from "react";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {

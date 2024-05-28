@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchServer } from "../lib/functions/fetch";
+import { useToast } from "@chakra-ui/react";
 
 export function OAuth() {
+	const toast = useToast();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	useEffect(() => {
@@ -11,7 +13,7 @@ export function OAuth() {
 		if (!code) {
 			const error = searchParams.get("error");
 			const errorDesc = searchParams.get("error_description");
-			// console.log(error, errorDesc); //! 에러창으로 대체(모달)
+			toast({ title: `${error}`, description: `${errorDesc}`, status: "error" });
 		} else {
 			fetchServer(`/naver?code=${code}&state=${state}`, "v1").then((res) => {
 				navigate("/");

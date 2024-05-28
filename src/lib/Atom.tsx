@@ -43,9 +43,6 @@ export interface StellarInfo {
 	youtubeCustomUrl: string;
 }
 export interface StellarState extends StellarInfo {
-	// youtube?: PlatformInfosDetail[];
-	// chzzk?: PlatformInfosDetail;
-	// videos?: VideoDataDetail[];
 	chzzkFollowerCount: string;
 	youtubeSubscriberCount: string;
 	youtubeMusic: YoutubeMusicData[];
