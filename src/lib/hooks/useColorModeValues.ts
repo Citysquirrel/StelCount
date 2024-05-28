@@ -5,14 +5,14 @@ export default function useColorModeValues() {
 		{
 			background: "#ffffff",
 			bgOpacity: "#ffffffcc",
-			bgFooter: "#949fe6cc",
+			bgFooter: "#949fe6",
 			bgHover: "gray.200",
 			bgSelected: "gray.100",
 		},
 		{
 			background: "#1a202c",
 			bgOpacity: "#1a202ccc",
-			bgFooter: "#616cb3cc",
+			bgFooter: "#616cb3",
 			bgHover: "gray.500",
 			bgSelected: "gray.600",
 		}

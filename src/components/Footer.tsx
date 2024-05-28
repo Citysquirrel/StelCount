@@ -35,7 +35,6 @@ export function Footer() {
 					">svg": {
 						width: "26px",
 						height: "26px",
-						// transform: "translateY(2px)",
 					},
 				}}
 			>
