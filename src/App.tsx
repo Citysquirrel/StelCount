@@ -5,7 +5,7 @@ import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
 import { Button, Divider, IconButton, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
-import { MdDarkMode, MdLightMode, MdOndemandVideo, MdSettings } from "react-icons/md";
+import { MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
 import { serverErrorState, isStellarLoadingState, isAdminState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
@@ -34,6 +34,16 @@ function App() {
 		<Stack>
 			{isLoading ? <Loading /> : null}
 			<Header>
+			<Tooltip label="메인화면">
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						icon={<MdHome />}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={nav("/home")}
+						aria-label="home"
+					/>
+				</Tooltip>
 				<Tooltip label="카운터">
 					<IconButton
 						fontSize="1.125rem"
@@ -42,6 +52,16 @@ function App() {
 						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
 						onClick={nav("/counter")}
 						aria-label="counter"
+					/>
+				</Tooltip>
+				<Tooltip label="사이트 설명">
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						icon={<MdQuestionMark />}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={nav("/about")}
+						aria-label="about"
 					/>
 				</Tooltip>
 				{import.meta.env.DEV ? (

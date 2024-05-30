@@ -1,10 +1,11 @@
 import { RouteObject, createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import { Home } from "./pages/Home";
+import { About } from "./pages/About";
 import { Counter } from "./pages/Counter";
-import { Admin, AdminEdit } from "./pages/Admin";
+import { Home } from "./pages/Home";
 import { OAuth } from "./pages/OAuth";
 import { Login } from "./pages/Login";
+import { Admin, AdminEdit } from "./pages/Admin";
 import { NotExist } from "./pages/NotExist";
 import { YoutubeVideo } from "./pages/YoutubeVideo";
 
@@ -16,6 +17,7 @@ export const routeObj: RouteObject[] = [
 		element: <App />,
 		children: [
 			{ path: "/", element: <Home /> },
+			{ path: "/about", element: <About /> },
 			{ path: "/counter", element: <Counter /> },
 			{ path: "/admin", element: <Admin /> },
 			{ path: "/admin/:id", element: <AdminEdit /> },
