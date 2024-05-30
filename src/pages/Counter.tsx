@@ -243,7 +243,7 @@ export function Counter() {
 						/> */}
 					</Stack>
 					<Stack>
-						<SimpleGrid minChildWidth={"380px"} spacing={"8px"}>
+						<SimpleGrid minChildWidth={"380px"} spacing={"8px"} placeItems={"center"}>
 							{isLoading ? (
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} height="120px" borderRadius={"0.375rem"} />

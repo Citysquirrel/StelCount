@@ -527,31 +527,31 @@ export function AdminEdit() {
 			</Stack>
 			<Stack as="section">
 				<HeadedDivider>음악 재생목록</HeadedDivider>
-				<MusicPlaylist data={videoData} />
+				<MusicPlaylist data={videoData} setData={setVideoData} />
 			</Stack>
 			<Spacing size={64} />
 		</Stack>
 	);
 }
 
-function MusicPlaylist({ data }: MusicPlaylistProps) {
+function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 	const values = useColorModeValues();
 	const { windowWidth } = useResponsive();
 	const { isOpen, onOpen, onClose } = useDisclosure();
-	const [inputValue, setInputValue] = useState<MPLInputValue>({ id: "", title: "", tags: [] });
+	const [inputValue, setInputValue] = useState<MPLInputValue>({ id: "", title: "", titleAlias: "", tags: [] });
 	const [currentId, setCurrentId] = useState(-1);
 
 	const handleClickCard = (givenId: number) => () => {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
-		const { id, title, tags } = data[idx];
-		setInputValue({ id: id.toString(), title, tags });
+		const { id, title, titleAlias, tags } = data[idx];
+		setInputValue({ id: id.toString(), title, titleAlias, tags });
 		onOpen();
 	};
 
 	const handleClose = () => {
 		setCurrentId(-1);
-		setInputValue({ id: "", title: "", tags: [] });
+		setInputValue({ id: "", title: "", titleAlias: "", tags: [] });
 		onClose();
 	};
 
@@ -563,6 +563,7 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 				onClose={handleClose}
 				inputValue={inputValue}
 				setInputValue={setInputValue}
+				setData={setData}
 			/>
 			<Stack height="360px" overflowY={"scroll"} paddingRight="4px">
 				{data.map((v) => {
@@ -597,7 +598,7 @@ function MusicPlaylist({ data }: MusicPlaylistProps) {
 	);
 }
 
-function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: MusicDrawerProps) {
+function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, setData }: MusicDrawerProps) {
 	const toast = useToast();
 
 	const [tags, setTags] = useState<TagType[]>([]);
@@ -624,6 +625,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 				.then((res) => {
 					if (res.status === 200) {
 						onTagClose();
+						setTagName("");
 						setTags((prev) => [...prev, res.data]);
 					} else if (res.status === 409) {
 						toast({ description: "중복된 태그 이름입니다", status: "warning" });
@@ -636,12 +638,20 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 
 	const handleSaveMusic = (e: React.FormEvent<HTMLElement>) => {
 		e.preventDefault();
-		if (inputValue.title === "") {
-			toast({ description: "제목을 입력해 주세요", status: "warning" });
-		} else
-			fetchServer(`/y/${inputValue.id}`, "v1", {
-				method: "POST",
-				body: JSON.stringify({ title: inputValue.title, tags: inputValue.tags }),
+		// if (inputValue.title === "") {
+		// 	toast({ description: "제목을 입력해 주세요", status: "warning" });
+		// } else
+		fetchServer(`/y/${inputValue.id}`, "v1", {
+			method: "POST",
+			body: JSON.stringify({ titleAlias: inputValue.titleAlias, tags: inputValue.tags }),
+		})
+			.then((res) => {
+				if (res.status === 200) {
+					onClose();
+				}
+			})
+			.catch((err) => {
+				toast({ description: "음악 수정 중 에러가 발생했습니다", status: "error" });
 			});
 	};
 
@@ -712,7 +722,13 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose }: 
 									<InputLeftElement>
 										<MdTitle />
 									</InputLeftElement>
-									<Input value={inputValue.title} onChange={handleInputValue("title")} />
+									<Input value={inputValue.title} isDisabled />
+								</InputGroup>
+								<InputGroup>
+									<InputLeftElement>
+										<MdTitle />
+									</InputLeftElement>
+									<Input value={inputValue.titleAlias} onChange={handleInputValue("titleAlias")} />
 								</InputGroup>
 								<InputGroup>
 									<Select placeholder="태그" onChange={handleChangeTag}>
@@ -780,6 +796,7 @@ interface VideoData {
 	id: number;
 	type: "music";
 	title: string;
+	titleAlias: string;
 	thumbnail: string;
 	videoId: string;
 	channelId: string;
@@ -807,11 +824,13 @@ interface StellarData extends StellarInputValue {
 interface MPLInputValue {
 	id: string;
 	title: string;
+	titleAlias: string;
 	tags: TagType[];
 }
 
 interface MusicPlaylistProps {
 	data: VideoData[];
+	setData: Dispatch<SetStateAction<VideoData[]>>;
 }
 
 interface MusicDrawerProps {
@@ -820,4 +839,5 @@ interface MusicDrawerProps {
 	placement?: "top" | "left" | "bottom" | "right";
 	isOpen: boolean;
 	onClose: () => void;
+	setData: Dispatch<SetStateAction<VideoData[]>>;
 }

@@ -26,7 +26,7 @@ export function Footer() {
 			</Text>
 			<Text>─</Text>
 			<Link
-				href="#"
+				href="https://github.com/citysquirrel"
 				isExternal
 				sx={{
 					transition: "all .25s",
