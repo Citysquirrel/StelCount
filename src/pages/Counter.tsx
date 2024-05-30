@@ -29,7 +29,7 @@ import {
 import { Image } from "../components/Image";
 import { Fragment, useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
-import { numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
+import { musicDefaultSortValue, numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
@@ -300,8 +300,10 @@ function FollowerCard({ href, icon, text, currentColorCode }: FollowerCardProps)
 function musicSort(type: "publishedAt" | "name" | "default", order: "ASC" | "DESC") {
 	return function (a: YoutubeMusicData, b: YoutubeMusicData) {
 		if (type === "default") {
-			const A = remainingFromNum(parseInt(a.viewCount || "0"), 10000);
-			const B = remainingFromNum(parseInt(b.viewCount || "0"), 10000);
+			const aInt = parseInt(a.viewCount || "0");
+			const bInt = parseInt(b.viewCount || "0");
+			const A = musicDefaultSortValue(aInt);
+			const B = musicDefaultSortValue(bInt);
 			return order === "ASC" ? A - B : B - A;
 		} else return order === "ASC" ? a[type] - b[type] : b[type] - a[type];
 	};
