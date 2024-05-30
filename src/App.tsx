@@ -34,7 +34,7 @@ function App() {
 		<Stack>
 			{isLoading ? <Loading /> : null}
 			<Header>
-			<Tooltip label="메인화면">
+				<Tooltip label="메인화면">
 					<IconButton
 						fontSize="1.125rem"
 						isRound
@@ -105,14 +105,16 @@ function App() {
 						<IoReload />
 					</Button>
 				</Tooltip>
-				<IconButton
-					fontSize="1.125rem"
-					isRound
-					onClick={toggleColorMode}
-					colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-					icon={colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
-					aria-label="color-mode"
-				/>
+				{import.meta.env.DEV ? (
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						onClick={toggleColorMode}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						icon={colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
+						aria-label="color-mode"
+					/>
+				) : null}
 			</Header>
 			<Container>
 				<Outlet />
