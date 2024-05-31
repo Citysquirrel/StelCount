@@ -1,6 +1,4 @@
-import { Box, Heading, Stack, Text, Link } from "@chakra-ui/react";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Box, Heading, Stack, Text } from "@chakra-ui/react";
 
 export function About() {
 	return (
