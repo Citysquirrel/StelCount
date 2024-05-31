@@ -29,7 +29,7 @@ import {
 import { Image } from "../components/Image";
 import { Fragment, useEffect, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
-import { musicDefaultSortValue, numberToLocaleString, remainingFromNum } from "../lib/functions/etc";
+import { musicDefaultSortValue, numberToLocaleString, remainingCount, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
@@ -37,6 +37,7 @@ import { MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
 import { UserSettingStorage } from "../lib/types";
+import { ColorText } from "../components/Text";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -336,16 +337,27 @@ function MusicCard({ data }: MusicCardProps) {
 	};
 
 	const titleText = titleAlias || title;
+	const viewCountNum = parseInt(viewCount || "0");
+	const [calc, dir] = remainingCount(viewCountNum);
 
 	// const tagBoxHeight = height.map((h) => h / 12);
 	return (
 		<Card position="relative" width={"380px"} height={"212px"}>
 			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
 				<HStack>
-					<Stack flex={1} alignItems={"center"} justifyContent={"center"}>
-						<Text fontSize={"2.25rem"} fontWeight={"bold"}>
+					<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
+						<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
 							{numberToLocaleString(viewCount)}
 						</Text>
+						{calc ? (
+							<Text fontSize={"0.875rem"}>
+								(
+								<ColorText as="span" value={dir === 1 ? "orange.500" : "green.500"}>
+									{calc}
+								</ColorText>
+								회 {dir === 1 ? "남음" : "지남"})
+							</Text>
+						) : null}
 					</Stack>
 					<ThumbnailImage src={thumbnail} width={"116px"} height={"108px"} />
 				</HStack>

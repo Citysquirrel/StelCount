@@ -51,6 +51,7 @@ export interface StellarState extends StellarInfo {
 export interface YoutubeMusicData {
 	type?: string; // "music", "main", "replay"
 	title: string;
+	titleAlias?: string;
 	thumbnail: string;
 	videoId: string;
 	viewCount?: string;
