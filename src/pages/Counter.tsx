@@ -314,8 +314,19 @@ function MusicFilter() {
 }
 
 function MusicCard({ data }: MusicCardProps) {
-	const { type, title, videoId, thumbnail, viewCount, likeCount, ownerId, isOriginal, isCollaborated, publishedAt } =
-		data;
+	const {
+		type,
+		title,
+		titleAlias,
+		videoId,
+		thumbnail,
+		viewCount,
+		likeCount,
+		ownerId,
+		isOriginal,
+		isCollaborated,
+		publishedAt,
+	} = data;
 
 	const customTagColorScheme = {
 		Cover: "teal",
@@ -323,6 +334,8 @@ function MusicCard({ data }: MusicCardProps) {
 		Gift: "orange",
 		other: "blue",
 	};
+
+	const titleText = titleAlias || title;
 
 	// const tagBoxHeight = height.map((h) => h / 12);
 	return (
@@ -338,8 +351,14 @@ function MusicCard({ data }: MusicCardProps) {
 				</HStack>
 				<Stack position="relative" gap="auto" flexWrap={"nowrap"} flex={1}>
 					<Link href={youtube.videoUrl(videoId)} isExternal>
-						<Text title={title} fontSize={"1.125rem"} whiteSpace={"nowrap"} textOverflow={"ellipsis"} overflow="hidden">
-							{title}
+						<Text
+							title={titleText}
+							fontSize={"1.125rem"}
+							whiteSpace={"nowrap"}
+							textOverflow={"ellipsis"}
+							overflow="hidden"
+						>
+							{titleText}
 						</Text>
 					</Link>
 					<Box position="absolute" right="2px" bottom={"-4px"} textAlign={"right"}>
