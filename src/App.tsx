@@ -34,7 +34,7 @@ function App() {
 		<Stack>
 			{isLoading ? <Loading /> : null}
 			<Header>
-				<Tooltip label="메인화면">
+				{/* <Tooltip label="메인화면">
 					<IconButton
 						fontSize="1.125rem"
 						isRound
@@ -43,7 +43,7 @@ function App() {
 						onClick={nav("/home")}
 						aria-label="home"
 					/>
-				</Tooltip>
+				</Tooltip> */}
 				<Tooltip label="카운터">
 					<IconButton
 						fontSize="1.125rem"
@@ -54,16 +54,7 @@ function App() {
 						aria-label="counter"
 					/>
 				</Tooltip>
-				<Tooltip label="사이트 설명">
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						icon={<MdQuestionMark />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={nav("/about")}
-						aria-label="about"
-					/>
-				</Tooltip>
+
 				{import.meta.env.DEV ? (
 					<>
 						<Tooltip label="영상모음">
@@ -78,7 +69,16 @@ function App() {
 						</Tooltip>
 					</>
 				) : null}
-
+				<Tooltip label="사이트 설명">
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						icon={<MdQuestionMark />}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={nav("/about")}
+						aria-label="about"
+					/>
+				</Tooltip>
 				{isAdmin ? (
 					<Tooltip label="관리자">
 						<IconButton

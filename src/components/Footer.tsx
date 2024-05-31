@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa6";
 import { ImMail4 } from "react-icons/im";
-import { Box, HStack, Image, Link, Stack, Text } from "@chakra-ui/react";
+import { Box, HStack, Image, Link, Stack, Text, Tooltip } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
+import { CopyLink, CopyText } from "./CopyText";
 
 export function Footer() {
 	const values = useColorModeValues();
@@ -56,7 +57,11 @@ export function Footer() {
 				<ImMail4 />
 			</Link>
 			<Text>─</Text>
-			<Text fontSize={"0.75rem"}>(tok1324@naver.com)</Text>
+			<Tooltip label="복사">
+				<Text fontSize={"0.75rem"}>
+					(<CopyLink copy={"tok1324@naver.com"}>tok1324@naver.com</CopyLink>)
+				</Text>
+			</Tooltip>
 		</HStack>
 	);
 }
