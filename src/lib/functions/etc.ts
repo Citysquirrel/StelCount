@@ -17,3 +17,11 @@ export function numberToLocaleString(num: string | undefined) {
 export function remainingFromNum(num: number, unit: number, reverse?: boolean) {
 	return reverse ? num % unit : unit - (num % unit);
 }
+
+export function musicDefaultSortValue(num: number): number {
+	if (num >= 10000000) {
+		return remainingFromNum(num, 1000000);
+	} else if (num >= 1000000) {
+		return remainingFromNum(num, 100000);
+	} else return remainingFromNum(num, 10000);
+}
