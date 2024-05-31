@@ -63,6 +63,11 @@ export function Counter() {
 	// const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
+	const currentYoutubeData = modYoutubeData(
+		currentStellar?.youtubeId || "",
+		currentStellar?.youtubeSubscriberCount || "",
+		currentStellar?.youtubeCustomUrl || ""
+	);
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
@@ -217,15 +222,42 @@ export function Counter() {
 						{currentStellar?.chzzkId ? (
 							<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
 						) : null}
-						<Stack direction={windowWidth <= 840 ? "column" : "row"}>
-							{currentStellar?.youtubeSubscriberCount ? (
+						<Stack
+							direction={windowWidth <= 840 ? "column" : "row"}
+							maxWidth={windowWidth <= 840 ? undefined : `${windowWidth - 240 - 72 - 80}px`}
+							maxHeight="120px"
+							overflow="auto"
+						>
+							{currentYoutubeData.map((y, idx) =>
+								y.subscriberCount ? (
+									<FollowerCard
+										key={y.id}
+										href={youtubeAPI.channelUrl(y.customUrl)}
+										icon={"/images/i_youtube_1.png"}
+										text={`구독자 ${numberToLocaleString(y.subscriberCount)}`}
+										currentColorCode={currentColorCode}
+										subText={idx === 1 ? "Music Channel" : undefined}
+									/>
+								) : null
+							)}
+							{/* {hasComma(currentStellar?.youtubeId || "") ? (
+								divideCommaData(currentStellar?.youtubeSubscriberCount || "")
+							) : currentStellar?.youtubeSubscriberCount ? (
 								<FollowerCard
 									href={youtubeAPI.channelUrl(currentStellar.youtubeCustomUrl)}
 									icon={"/images/i_youtube_1.png"}
 									text={`구독자 ${numberToLocaleString(currentStellar.youtubeSubscriberCount)}`}
 									currentColorCode={currentColorCode}
 								/>
-							) : null}
+							) : null} */}
+							{/* {currentStellar?.youtubeSubscriberCount ? (
+								<FollowerCard
+									href={youtubeAPI.channelUrl(currentStellar.youtubeCustomUrl)}
+									icon={"/images/i_youtube_1.png"}
+									text={`구독자 ${numberToLocaleString(currentStellar.youtubeSubscriberCount)}`}
+									currentColorCode={currentColorCode}
+								/>
+							) : null} */}
 							{currentStellar?.chzzkFollowerCount ? (
 								<FollowerCard
 									href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
@@ -273,7 +305,7 @@ export function Counter() {
 	);
 }
 
-function FollowerCard({ href, icon, text, currentColorCode }: FollowerCardProps) {
+function FollowerCard({ href, icon, text, currentColorCode, subText }: FollowerCardProps) {
 	return (
 		<Link href={href} isExternal _hover={{ textDecoration: "none" }}>
 			<Card
@@ -282,6 +314,7 @@ function FollowerCard({ href, icon, text, currentColorCode }: FollowerCardProps)
 				variant={"outline"}
 				cursor="pointer"
 				transition=".3s all"
+				backgroundColor="rgba(255,255,255,.9)"
 				_hover={{ borderColor: currentColorCode, ">div.follower-card--icon": { opacity: 1 } }}
 			>
 				<Box className="follower-card--icon" position="absolute" top={"4px"} right={"4px"} opacity={0}>
@@ -293,6 +326,9 @@ function FollowerCard({ href, icon, text, currentColorCode }: FollowerCardProps)
 						<Text fontSize={"1.25rem"}>{text}</Text>
 					</HStack>
 				</HStack>
+				<Text position="absolute" bottom={0} right="8px" fontSize="0.5rem">
+					<i>{subText}</i>
+				</Text>
 			</Card>
 		</Link>
 	);
@@ -340,9 +376,8 @@ function MusicCard({ data }: MusicCardProps) {
 	const viewCountNum = parseInt(viewCount || "0");
 	const [calc, dir] = remainingCount(viewCountNum);
 
-	// const tagBoxHeight = height.map((h) => h / 12);
 	return (
-		<Card position="relative" width={"380px"} height={"212px"}>
+		<Card position="relative" width={"380px"} height={"212px"} backgroundColor="rgba(255,255,255,.9)">
 			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
 				<HStack>
 					<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
@@ -469,6 +504,7 @@ interface FollowerCardProps {
 	icon: string;
 	text: string;
 	currentColorCode: string | undefined;
+	subText?: string;
 }
 
 interface MusicCardProps {
@@ -489,4 +525,29 @@ interface StellarCardProps {
 	chzzk?: PlatformInfosDetail;
 }
 
-// 심볼, 오시마크, 치지직 프로필, 구독자수, 팔로워수
+function hasComma(record: string) {
+	return record.includes(",");
+}
+
+function divideCommaData(record: string) {
+	const isCommaExist = record.includes(",");
+	return isCommaExist ? record.split(",") : record;
+}
+
+function modYoutubeData(id: string, subCnt: string, url: string) {
+	const storage: moddedYoutubeData[] = [];
+	const idSplit = id.split(",");
+	const subSplit = subCnt.split(",");
+	const urlSplit = url.split(",");
+	for (let idx in idSplit) {
+		const temp: moddedYoutubeData = { id: idSplit[idx], subscriberCount: subSplit[idx], customUrl: urlSplit[idx] };
+		storage[idx] = temp;
+	}
+	return storage;
+}
+
+interface moddedYoutubeData {
+	id: string;
+	subscriberCount: string;
+	customUrl: string;
+}
