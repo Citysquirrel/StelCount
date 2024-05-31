@@ -285,7 +285,7 @@ export function Counter() {
 								currentMusic
 									.filter((m) => m.type === "music")
 									.sort(musicSort("default", "ASC"))
-									.map((m) => <MusicCard key={m.videoId} data={m} />)
+									.map((m) => <MusicCard key={m.videoId} data={m} currentColorCode={currentColorCode} />)
 							) : (
 								<Stack
 									alignItems={"center"}
@@ -350,7 +350,7 @@ function MusicFilter() {
 	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
 }
 
-function MusicCard({ data }: MusicCardProps) {
+function MusicCard({ data, currentColorCode }: MusicCardProps) {
 	const {
 		type,
 		title,
@@ -377,7 +377,15 @@ function MusicCard({ data }: MusicCardProps) {
 	const [calc, dir] = remainingCount(viewCountNum);
 
 	return (
-		<Card position="relative" width={"380px"} height={"212px"} backgroundColor="rgba(255,255,255,.9)">
+		<Card
+			position="relative"
+			width={"380px"}
+			height={"212px"}
+			backgroundColor="rgba(255,255,255,.9)"
+			border="1px solid transparent"
+			transition="all .3s"
+			_hover={{ borderColor: currentColorCode }}
+		>
 			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
 				<HStack>
 					<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
@@ -509,6 +517,7 @@ interface FollowerCardProps {
 
 interface MusicCardProps {
 	data: YoutubeMusicData;
+	currentColorCode?: string;
 }
 
 interface ThumbnailImageProps extends BoxProps {
