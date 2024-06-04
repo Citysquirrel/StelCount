@@ -27,7 +27,7 @@ import {
 	Tooltip,
 } from "@chakra-ui/react";
 import { Image } from "../components/Image";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
 import { musicDefaultSortValue, numberToLocaleString, remainingCount, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
@@ -55,6 +55,7 @@ const stellarSymbols = {
 };
 
 export function Counter() {
+	const gridRef = useRef<HTMLDivElement>(null);
 	const { windowWidth } = useResponsive();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [data] = useRecoilState(stellarState);
@@ -79,6 +80,8 @@ export function Counter() {
 	const cliche = data.filter((s) => s.group === 3);
 	const unclassified = data.filter((s) => !s.group && s.group !== 0);
 	const total = [stellive, mystic, universe, cliche, unclassified];
+
+	const gridWidth = gridRef.current?.clientWidth || 0;
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
@@ -242,24 +245,6 @@ export function Counter() {
 									/>
 								) : null
 							)}
-							{/* {hasComma(currentStellar?.youtubeId || "") ? (
-								divideCommaData(currentStellar?.youtubeSubscriberCount || "")
-							) : currentStellar?.youtubeSubscriberCount ? (
-								<FollowerCard
-									href={youtubeAPI.channelUrl(currentStellar.youtubeCustomUrl)}
-									icon={"/images/i_youtube_1.png"}
-									text={`구독자 ${numberToLocaleString(currentStellar.youtubeSubscriberCount)}`}
-									currentColorCode={currentColorCode}
-								/>
-							) : null} */}
-							{/* {currentStellar?.youtubeSubscriberCount ? (
-								<FollowerCard
-									href={youtubeAPI.channelUrl(currentStellar.youtubeCustomUrl)}
-									icon={"/images/i_youtube_1.png"}
-									text={`구독자 ${numberToLocaleString(currentStellar.youtubeSubscriberCount)}`}
-									currentColorCode={currentColorCode}
-								/>
-							) : null} */}
 							{currentStellar?.chzzkFollowerCount ? (
 								<FollowerCard
 									href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
@@ -269,25 +254,20 @@ export function Counter() {
 								/>
 							) : null}
 						</Stack>
-						{/* <Image
-							position="absolute"
-							width="72px"
-							maxHeight="72px"
-							src={stellarSymbols[currentStellar?.name || ""]}
-							zIndex={0}
-						/> */}
 					</Stack>
 					<Stack>
-						<SimpleGrid minChildWidth={"380px"} spacing={"8px"} placeItems={"center"}>
+						<SimpleGrid ref={gridRef} columns={[1, 1, 2, 2, 3]} spacing={"8px"} placeItems={"center"}>
 							{isLoading ? (
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
-									<Skeleton key={idx} height="120px" borderRadius={"0.375rem"} />
+									<Skeleton key={idx} width="auto" height="120px" borderRadius={"0.375rem"} />
 								))
 							) : currentMusic !== undefined && currentMusic.length > 0 ? (
 								currentMusic
 									.filter((m) => m.type === "music")
 									.sort(musicSort("default", "ASC"))
-									.map((m) => <MusicCard key={m.videoId} data={m} currentColorCode={currentColorCode} />)
+									.map((m) => (
+										<MusicCard key={m.videoId} data={m} currentColorCode={currentColorCode} gridWidth={gridWidth} />
+									))
 							) : (
 								<Stack
 									alignItems={"center"}
@@ -352,7 +332,7 @@ function MusicFilter() {
 	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
 }
 
-function MusicCard({ data, currentColorCode }: MusicCardProps) {
+function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
 	const {
 		type,
 		title,
@@ -381,11 +361,18 @@ function MusicCard({ data, currentColorCode }: MusicCardProps) {
 	return (
 		<Card
 			position="relative"
-			width={"380px"}
-			height={"212px"}
+			width={[
+				`${gridWidth}px`,
+				`${gridWidth}px`,
+				`${gridWidth / 2 - 8}px`,
+				`${gridWidth / 2 - 8}px`,
+				`${gridWidth / 3 - 16}px`,
+			]}
+			maxWidth={"420px"}
+			minHeight={"212px"}
 			backgroundColor="rgba(255,255,255,.9)"
 			border="1px solid transparent"
-			transition="all .3s"
+			transition="border-color .3s"
 			_hover={{ borderColor: currentColorCode }}
 		>
 			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
@@ -473,6 +460,7 @@ interface FollowerCardProps {
 interface MusicCardProps {
 	data: YoutubeMusicData;
 	currentColorCode?: string;
+	gridWidth: number;
 }
 
 interface ThumbnailImageProps extends BoxProps {
