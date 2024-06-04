@@ -39,6 +39,8 @@ import { useLocalStorage } from "usehooks-ts";
 import { UserSettingStorage } from "../lib/types";
 import { ColorText } from "../components/Text";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
+import isMobile from "is-mobile";
+import { Spacing } from "../components/Spacing";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -104,7 +106,7 @@ export function Counter() {
 
 	return (
 		<Stack
-			direction={"row"}
+			direction={isMobile() ? "column" : "row"}
 			// paddingTop={`${offsetY}px`}
 			// backgroundColor={`${currentColorCode}aa`}
 			transition=".3s background-color"
@@ -115,15 +117,15 @@ export function Counter() {
 		>
 			<SideListContainer
 				position="sticky"
-				top={`${offsetY}px`}
-				// paddingRight="12px"
+				top={isMobile() ? undefined : `${offsetY}px`}
+				bottom={isMobile() ? 0 : undefined}
 				left={0}
-				minWidth={isUnder720 ? "72px" : "200px"}
-				width={isUnder720 ? "72px" : "200px"}
-				height={`calc(100vh - ${offsetY}px)`}
+				minWidth={isMobile() ? "100%" : isUnder720 ? "72px" : "200px"}
+				width={isMobile() ? "100%" : isUnder720 ? "72px" : "200px"}
+				height={isMobile() ? "72px" : `calc(100vh - ${offsetY}px)`}
 				overflow="auto"
 			>
-				<SideList>
+				<SideList flexDirection={isMobile() ? "row" : "column"}>
 					{isLoading
 						? Array.from({ length: 4 }, () => true).map((_, idx) => (
 								<Skeleton key={idx} height="40px" borderRadius={"0.375rem"} />
@@ -145,7 +147,7 @@ export function Counter() {
 										return (
 											<Tooltip
 												key={stellar.uuid}
-												label={isUnder720 ? stellar.name : undefined}
+												label={isMobile() ? undefined : isUnder720 ? stellar.name : undefined}
 												placement="right"
 												hasArrow
 											>
@@ -171,6 +173,7 @@ export function Counter() {
 									})}
 								</Fragment>
 						  ))}
+					{isMobile() ? <Spacing size={8} direction="horizontal" /> : null}
 				</SideList>
 			</SideListContainer>
 			<Box position="relative" width="100%">
@@ -442,7 +445,7 @@ function SideListContainer({ children, ...props }: SideListContainerProps) {
 
 function SideList({ children, ...props }: SideListProps) {
 	return (
-		<Stack margin="12px" marginTop="36px" {...props}>
+		<Stack margin="12px" marginTop={isMobile() ? undefined : "36px"} {...props}>
 			{children}
 		</Stack>
 	);
