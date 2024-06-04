@@ -102,11 +102,11 @@ export function Counter() {
 			}
 	}, [data]);
 	useConsole(currentStellar);
-	useBackgroundColor(`${currentColorCode}aa`);
+	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
 	return (
 		<Stack
-			direction={isMobile() ? "column" : "row"}
+			direction={isMobile() ? "column-reverse" : "row"}
 			// paddingTop={`${offsetY}px`}
 			// backgroundColor={`${currentColorCode}aa`}
 			transition=".3s background-color"
@@ -124,6 +124,8 @@ export function Counter() {
 				width={isMobile() ? "100%" : isUnder720 ? "72px" : "200px"}
 				height={isMobile() ? "72px" : `calc(100vh - ${offsetY}px)`}
 				overflow="auto"
+				backgroundColor={backgroundColor}
+				zIndex={97}
 			>
 				<SideList flexDirection={isMobile() ? "row" : "column"}>
 					{isLoading
