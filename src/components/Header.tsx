@@ -18,7 +18,7 @@ export function Header({ children }: HeaderProps) {
 			direction="row"
 			as="header"
 			sx={{
-				position: "fixed",
+				position: "sticky",
 				top: 0,
 				left: 0,
 				width: "calc(100%)",

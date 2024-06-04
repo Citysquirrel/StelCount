@@ -1,13 +1,11 @@
 import { Box, BoxProps, Heading, Stack, Text } from "@chakra-ui/react";
-import { useRecoilState } from "recoil";
-import { headerOffsetState } from "../lib/Atom";
 import { Spacing } from "../components/Spacing";
+import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 
 export function About() {
-	const [offsetY] = useRecoilState(headerOffsetState);
+	useBackgroundColor();
 	return (
-		<Stack padding="12px" paddingTop={`${offsetY}px`} minHeight="100%" backgroundColor="blue.50">
-			<Spacing size={48} />
+		<Stack padding="12px" minHeight="100%" backgroundColor="blue.50">
 			<Section heading="ABOUT" fontSize="large" fontWeight={"500"}>
 				<Text>우리들의 별들을 위해 조회수 달성을 축하해주세요!</Text>
 				<br />

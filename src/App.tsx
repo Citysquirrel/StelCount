@@ -7,7 +7,7 @@ import { useStellar } from "./lib/hooks/useStellar";
 import { Button, Divider, IconButton, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { serverErrorState, isStellarLoadingState, isAdminState } from "./lib/Atom";
+import { serverErrorState, isStellarLoadingState, isAdminState, backgroundColorState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { Loading } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
@@ -20,6 +20,7 @@ function App() {
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [serverError] = useRecoilState(serverErrorState);
+	const [backgroundColor] = useRecoilState(backgroundColorState);
 	const { refetch } = useStellar();
 	const { isAdmin, isLoading } = useAuth();
 
@@ -31,7 +32,7 @@ function App() {
 
 	if (serverError.isError) return <ServerErrorPage />;
 	return (
-		<Stack>
+		<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">
 			{isLoading ? <Loading /> : null}
 			<Header>
 				{/* <Tooltip label="메인화면">

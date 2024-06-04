@@ -10,11 +10,11 @@ export function Footer() {
 	return (
 		<HStack
 			sx={{
-				position: "fixed",
-				bottom: 0,
-				left: 0,
+				// position: "sticky",
+				// bottom: 0,
+				// left: 0,
 				width: "100%",
-				height: "48px",
+				height: "60px",
 				backgroundColor: values.bgFooter,
 				backdropFilter: "blur(1.5px)",
 				alignItems: "center",

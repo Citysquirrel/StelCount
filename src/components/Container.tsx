@@ -11,9 +11,9 @@ export function Container({ children, ...props }: ContainerProps) {
 			sx={{
 				position: "relative",
 				maxWidth: "100%",
-				height: `calc(100dvh)`,
+				// height: `calc(100dvh)`,
 				padding: 0,
-				backgroundColor: colorValues.background,
+				// backgroundColor: colorValues.background,
 			}}
 			{...props}
 		>

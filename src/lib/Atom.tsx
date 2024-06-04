@@ -7,6 +7,11 @@ export const headerOffsetState = atom({
 	default: 64,
 });
 
+export const backgroundColorState = atom({
+	key: createAtomKey("backgroundColor"),
+	default: "blue.50",
+});
+
 export interface PlatformInfosDetail {
 	viewCount?: string;
 	subscriberCount?: string;

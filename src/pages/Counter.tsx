@@ -38,6 +38,7 @@ import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
 import { UserSettingStorage } from "../lib/types";
 import { ColorText } from "../components/Text";
+import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -96,12 +97,13 @@ export function Counter() {
 			}
 	}, [data]);
 	useConsole(currentStellar);
+	useBackgroundColor(`${currentColorCode}aa`);
 
 	return (
 		<Stack
 			direction={"row"}
-			paddingTop={`${offsetY}px`}
-			backgroundColor={`${currentColorCode}aa`}
+			// paddingTop={`${offsetY}px`}
+			// backgroundColor={`${currentColorCode}aa`}
 			transition=".3s background-color"
 			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
 			backgroundRepeat={"no-repeat"}
@@ -115,7 +117,7 @@ export function Counter() {
 				left={0}
 				minWidth={isUnder720 ? "72px" : "200px"}
 				width={isUnder720 ? "72px" : "200px"}
-				height={`calc(100vh - ${offsetY}px - 48px)`}
+				height={`calc(100vh - ${offsetY}px)`}
 				overflow="auto"
 			>
 				<SideList>
@@ -459,53 +461,6 @@ function SideList({ children, ...props }: SideListProps) {
 		</Stack>
 	);
 }
-
-// function StellarCard({ name, profileImage, youtube, chzzk }: StellarCardProps) {
-// 	// const { followerCount: ytfcnt, subscriberCount: ytscnt } = youtube;
-// 	// const { followerCount: czfcnt, subscriberCount: czscnt } = chzzk;
-// 	const thisColor = stellarColors[name];
-// 	const thisSymbol = stellarSymbols[name];
-// 	return (
-// 		<Card
-// 			sx={{
-// 				position: "relative",
-// 				isolation: "isolate",
-// 				// boxShadow: theme.shadows.md,
-// 				bgGradient: `linear(to-br,  ${thisColor}33,${thisColor})`,
-// 				transition: "all .3s",
-// 				":after": {
-// 					content: "''",
-// 					position: "absolute",
-// 					backgroundImage: thisSymbol,
-// 					backgroundRepeat: "no-repeat",
-// 					backgroundPosition: "center",
-// 					backgroundPositionY: "center",
-// 					backgroundSize: "30%",
-// 					zIndex: -1,
-// 					inset: 0,
-// 					opacity: 0.4,
-// 				},
-// 				":hover": {
-// 					boxShadow: theme.shadows.md,
-// 					borderRadius: 0,
-// 				},
-// 			}}
-// 		>
-// 			<CardHeader padding="12px">
-// 				<HStack>
-// 					<Image boxSize="40px" borderRadius={"full"} src={chzzk?.profileImage || undefined} alt={`image-${name}`} />
-// 					<Spacing size={4} />
-// 					<Text fontSize="1.25rem" fontWeight={"bold"}>
-// 						{name}
-// 					</Text>
-// 				</HStack>
-// 			</CardHeader>
-// 			<CardBody padding="12px">
-// 				<Stack alignItems={"center"}></Stack>
-// 			</CardBody>
-// 		</Card>
-// 	);
-// }
 
 interface FollowerCardProps {
 	href: string | undefined;

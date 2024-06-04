@@ -178,7 +178,7 @@ export function Admin() {
 	if (!isAdmin) return <NotExist />;
 	return (
 		<Stack padding="0 12px">
-			<Spacing size={24 + offsetY} />
+			{/* <Spacing size={24 + offsetY} /> */}
 			<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
 			<Box as="section">
 				<Stack as="form" onSubmit={handleSubmit}>
@@ -416,7 +416,7 @@ export function AdminEdit() {
 	if (!isAdmin) return <NotExist />;
 	return (
 		<Stack padding="0 12px" paddingTop={"12px"}>
-			<Spacing size={offsetY} />
+			{/* <Spacing size={offsetY} /> */}
 
 			<Stack
 			// position="sticky"
