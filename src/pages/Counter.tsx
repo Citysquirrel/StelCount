@@ -335,6 +335,7 @@ function MusicFilter() {
 }
 
 function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
+	const imageRef = useRef<HTMLDivElement>(null);
 	const {
 		type,
 		title,
@@ -360,6 +361,8 @@ function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
 	const viewCountNum = parseInt(viewCount || "0");
 	const [calc, dir] = remainingCount(viewCountNum);
 
+	const imageHeightOffset = 4;
+
 	return (
 		<Card
 			position="relative"
@@ -378,7 +381,7 @@ function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
 			_hover={{ borderColor: currentColorCode }}
 		>
 			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
-				<HStack>
+				<HStack flex={1} flexBasis={"117px"}>
 					<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
 						<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
 							{numberToLocaleString(viewCount)}
@@ -393,7 +396,12 @@ function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
 							</Text>
 						) : null}
 					</Stack>
-					<ThumbnailImage src={thumbnail} width={"116px"} height={"108px"} />
+					<ThumbnailImage
+						src={thumbnail}
+						width={"116px"}
+						height={["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"]}
+						maxHeight="108px"
+					/>
 				</HStack>
 				<Stack position="relative" gap="auto" flexWrap={"nowrap"} flex={1}>
 					<Link href={youtube.videoUrl(videoId)} isExternal>
@@ -407,7 +415,7 @@ function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
 							{titleText}
 						</Text>
 					</Link>
-					<Box position="absolute" right="2px" bottom={"-4px"} textAlign={"right"}>
+					<Box textAlign={"right"}>
 						{data.tags?.map((tag) => (
 							<Tag key={tag.id} colorScheme={customTagColorScheme[tag.name] || customTagColorScheme.other}>
 								<TagLabel>{tag.name}</TagLabel>
