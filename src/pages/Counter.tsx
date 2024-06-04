@@ -133,8 +133,7 @@ export function Counter() {
 									{s.length > 0 ? (
 										<Tag
 											colorScheme="purple"
-											fontFamily={"Montserrat"}
-											fontSize="md"
+											fontSize="sm"
 											fontWeight={"bold"}
 											justifyContent={"center"}
 											marginTop="4px"
