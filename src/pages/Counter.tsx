@@ -84,6 +84,15 @@ export function Counter() {
 	const total = [stellive, mystic, universe, cliche, unclassified];
 
 	const gridWidth = gridRef.current?.clientWidth || 0;
+	const imageHeightOffset = 4;
+	const cardWidth = [
+		`${gridWidth}px`,
+		`${gridWidth}px`,
+		`${gridWidth / 2 - 8}px`,
+		`${gridWidth / 2 - 8}px`,
+		`${gridWidth / 3 - 16}px`,
+	];
+	const thumbWidth = ["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"];
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
@@ -237,40 +246,54 @@ export function Counter() {
 							maxHeight="120px"
 							overflow="auto"
 						>
-							{currentYoutubeData.map((y, idx) =>
-								y.subscriberCount ? (
-									<FollowerCard
-										key={y.id}
-										href={youtubeAPI.channelUrl(y.customUrl)}
-										icon={"/images/i_youtube_1.png"}
-										text={`구독자 ${numberToLocaleString(y.subscriberCount)}`}
-										currentColorCode={currentColorCode}
-										subText={idx === 1 ? "Music Channel" : undefined}
-									/>
-								) : null
+							{isLoading ? (
+								Array.from({ length: 2 }, (_) => 1).map((_, idx) => (
+									<Skeleton key={idx} width={"240px"} height="54px" borderRadius={"0.375rem"} />
+								))
+							) : (
+								<>
+									{currentYoutubeData.map((y, idx) =>
+										y.subscriberCount ? (
+											<FollowerCard
+												key={y.id}
+												href={youtubeAPI.channelUrl(y.customUrl)}
+												icon={"/images/i_youtube_1.png"}
+												text={`구독자 ${numberToLocaleString(y.subscriberCount)}`}
+												currentColorCode={currentColorCode}
+												subText={idx === 1 ? "Music Channel" : undefined}
+											/>
+										) : null
+									)}
+									{currentStellar?.chzzkFollowerCount ? (
+										<FollowerCard
+											href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
+											icon={"/images/i_chzzk_1.png"}
+											text={`팔로워 ${numberToLocaleString(currentStellar.chzzkFollowerCount)}`}
+											currentColorCode={currentColorCode}
+										/>
+									) : null}
+								</>
 							)}
-							{currentStellar?.chzzkFollowerCount ? (
-								<FollowerCard
-									href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
-									icon={"/images/i_chzzk_1.png"}
-									text={`팔로워 ${numberToLocaleString(currentStellar.chzzkFollowerCount)}`}
-									currentColorCode={currentColorCode}
-								/>
-							) : null}
 						</Stack>
 					</Stack>
 					<Stack>
 						<SimpleGrid ref={gridRef} columns={[1, 1, 2, 2, 3]} spacing={"8px"} placeItems={"center"}>
 							{isLoading ? (
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
-									<Skeleton key={idx} width="auto" height="120px" borderRadius={"0.375rem"} />
+									<Skeleton key={idx} width={cardWidth} height="212px" borderRadius={"0.375rem"} />
 								))
 							) : currentMusic !== undefined && currentMusic.length > 0 ? (
 								currentMusic
 									.filter((m) => m.type === "music")
 									.sort(musicSort("default", "ASC"))
 									.map((m) => (
-										<MusicCard key={m.videoId} data={m} currentColorCode={currentColorCode} gridWidth={gridWidth} />
+										<MusicCard
+											key={m.videoId}
+											data={m}
+											currentColorCode={currentColorCode}
+											width={cardWidth}
+											thumbWidth={thumbWidth}
+										/>
 									))
 							) : (
 								<Stack
@@ -336,7 +359,7 @@ function MusicFilter() {
 	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
 }
 
-function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
+function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps) {
 	const imageRef = useRef<HTMLDivElement>(null);
 	const {
 		type,
@@ -363,18 +386,10 @@ function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
 	const viewCountNum = parseInt(viewCount || "0");
 	const [calc, dir] = remainingCount(viewCountNum);
 
-	const imageHeightOffset = 4;
-
 	return (
 		<Card
 			position="relative"
-			width={[
-				`${gridWidth}px`,
-				`${gridWidth}px`,
-				`${gridWidth / 2 - 8}px`,
-				`${gridWidth / 2 - 8}px`,
-				`${gridWidth / 3 - 16}px`,
-			]}
+			width={width}
 			maxWidth={"420px"}
 			minHeight={"212px"}
 			backgroundColor="rgba(255,255,255,.9)"
@@ -398,12 +413,7 @@ function MusicCard({ data, currentColorCode, gridWidth }: MusicCardProps) {
 							</Text>
 						) : null}
 					</Stack>
-					<ThumbnailImage
-						src={thumbnail}
-						width={"116px"}
-						height={["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"]}
-						maxHeight="108px"
-					/>
+					<ThumbnailImage src={thumbnail} width={"116px"} height={thumbWidth} maxHeight="108px" />
 				</HStack>
 				<Stack position="relative" gap="auto" flexWrap={"nowrap"} flex={1}>
 					<Link href={youtube.videoUrl(videoId)} isExternal>
@@ -472,7 +482,8 @@ interface FollowerCardProps {
 interface MusicCardProps {
 	data: YoutubeMusicData;
 	currentColorCode?: string;
-	gridWidth: number;
+	width: string[];
+	thumbWidth: string[];
 }
 
 interface ThumbnailImageProps extends BoxProps {
