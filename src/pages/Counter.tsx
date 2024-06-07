@@ -135,6 +135,7 @@ export function Counter() {
 				overflow="auto"
 				backgroundColor={backgroundColor}
 				zIndex={97}
+				transition={"background-color .3s"}
 			>
 				<SideList flexDirection={isMobile() ? "row" : "column"}>
 					{isLoading
