@@ -64,8 +64,10 @@ import { useConsole } from "../lib/hooks/useConsole";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Tag as TagType } from "../lib/types";
+import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 
 export function Admin() {
+	useBackgroundColor(`white`);
 	const firstRef = useRef<HTMLInputElement | null>(null);
 	const nav = useNavigate();
 	const toast = useToast();
@@ -333,6 +335,7 @@ export function Admin() {
 }
 
 export function AdminEdit() {
+	useBackgroundColor(`white`);
 	const nav = useNavigate();
 	const { id } = useParams();
 	const [offsetY] = useRecoilState(headerOffsetState);
