@@ -16,6 +16,8 @@ export interface ParamsObject {
 
 export const youtube = {
 	channelUrl: (channelId?: string) => (channelId ? `https://www.youtube.com/${channelId}` : undefined),
+	channelUrlByYoutubeId: (youtubeId?: string) =>
+		youtubeId ? `https://www.youtube.com/channel/${youtubeId}` : undefined,
 	videoUrl: (videoId?: string) => (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
 };
 
