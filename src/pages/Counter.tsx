@@ -258,7 +258,7 @@ export function Counter() {
 										y.subscriberCount ? (
 											<FollowerCard
 												key={y.id}
-												href={youtubeAPI.channelUrl(y.customUrl)}
+												href={youtubeAPI.channelUrl(y.customUrl) || youtubeAPI.channelUrlByYoutubeId(y.id)}
 												icon={"/images/i_youtube_1.png"}
 												text={`구독자 ${numberToLocaleString(y.subscriberCount)}`}
 												currentColorCode={currentColorCode}
