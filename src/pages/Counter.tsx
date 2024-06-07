@@ -10,6 +10,7 @@ import {
 	CardBody,
 	Divider,
 	HStack,
+	Icon,
 	IconButton,
 	Link,
 	Menu,
@@ -32,7 +33,7 @@ import { useConsole } from "../lib/hooks/useConsole";
 import { musicDefaultSortValue, numberToLocaleString, remainingCount, remainingFromNum } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
+import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
 import { MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
@@ -393,11 +394,27 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 			width={width}
 			maxWidth={"420px"}
 			minHeight={"212px"}
-			backgroundColor="rgba(255,255,255,.9)"
+			backgroundColor={dir === 1 ? "rgba(255,255,255,.9)" : "rgba(235,255,235,.9)"}
 			border="1px solid transparent"
 			transition="border-color .3s"
 			_hover={{ borderColor: currentColorCode }}
 		>
+			{dir !== 1 ? (
+				<Button
+					as={Link}
+					variant={"ghost"}
+					size="xs"
+					position="absolute"
+					left={1}
+					top={1}
+					href={CAFE_WRITE_URL}
+					isExternal
+				>
+					축하 글쓰기
+					<MdOpenInNew />
+				</Button>
+			) : null}
+
 			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
 				<HStack flex={1} flexBasis={"117px"}>
 					<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">

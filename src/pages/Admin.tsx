@@ -179,7 +179,7 @@ export function Admin() {
 	if (!isLogin) return <NotExist />;
 	if (!isAdmin) return <NotExist />;
 	return (
-		<Stack padding="0 12px">
+		<Stack padding="12px">
 			{/* <Spacing size={24 + offsetY} /> */}
 			<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
 			<Box as="section">
