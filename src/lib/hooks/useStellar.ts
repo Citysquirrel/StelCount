@@ -48,7 +48,7 @@ export function useStellar() {
 		f();
 		const i = setInterval(() => {
 			let second = new Date().getSeconds();
-			if (second === 0) f(true);
+			if (second === 0 && import.meta.env.PROD) f(true);
 		}, 1000);
 		return () => {
 			clearInterval(i);

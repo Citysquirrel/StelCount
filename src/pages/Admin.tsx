@@ -548,7 +548,7 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
 		const { id, title, titleAlias, tags } = data[idx];
-		setInputValue({ id: id.toString(), title, titleAlias, tags });
+		setInputValue({ id: id.toString(), title: title || "", titleAlias: titleAlias || "", tags });
 		onOpen();
 	};
 
@@ -605,6 +605,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 	const toast = useToast();
 
 	const [tags, setTags] = useState<TagType[]>([]);
+	const [isSaveLoading, setIsSaveLoading] = useState(false);
 
 	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
 	const [tagName, setTagName] = useState<string>("");
@@ -623,7 +624,8 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 		e.preventDefault();
 		if (tagName === "") {
 			toast({ description: "태그 이름을 입력해주세요", status: "warning" });
-		} else
+		} else {
+			setIsSaveLoading(true);
 			fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName }) })
 				.then((res) => {
 					if (res.status === 200) {
@@ -636,7 +638,11 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 				})
 				.catch((err) => {
 					toast({ description: "태그 생성 중 에러가 발생했습니다", status: "error" });
+				})
+				.finally(() => {
+					setIsSaveLoading(false);
 				});
+		}
 	};
 
 	const handleSaveMusic = (e: React.FormEvent<HTMLElement>) => {
@@ -651,6 +657,8 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 			.then((res) => {
 				if (res.status === 200) {
 					onClose();
+				} else if (res.status === 500) {
+					toast({ description: "음악 수정 중 에러가 발생했습니다", status: "error" });
 				}
 			})
 			.catch((err) => {
@@ -764,7 +772,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 							</Stack>
 						</DrawerBody>
 						<DrawerFooter gap="4px">
-							<Button type="submit" colorScheme="blue">
+							<Button type="submit" colorScheme="blue" isLoading={isSaveLoading}>
 								변경사항 저장
 							</Button>
 							<Button type="button" onClick={onClose}>

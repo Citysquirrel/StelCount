@@ -447,7 +447,11 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 					</Link>
 					<Box textAlign={"right"}>
 						{data.tags?.map((tag) => (
-							<Tag key={tag.id} colorScheme={customTagColorScheme[tag.name] || customTagColorScheme.other}>
+							<Tag
+								key={tag.id}
+								colorScheme={customTagColorScheme[tag.name] || customTagColorScheme.other}
+								marginLeft="2px"
+							>
 								<TagLabel>{tag.name}</TagLabel>
 							</Tag>
 						))}
