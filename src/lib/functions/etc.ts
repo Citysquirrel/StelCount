@@ -1,8 +1,10 @@
 export function stringNullCheck(str: string | null | undefined) {
-	return str === null || str === undefined || str;
+	if (str === null || str === undefined) {
+		return "";
+	} else return str;
 }
 
-export function objectNullCheck(obj: Object) {
+export function objectNullCheck(obj: Object): any {
 	const result = {};
 	for (let [key, value] of Object.entries(obj)) {
 		result[key] = stringNullCheck(value);

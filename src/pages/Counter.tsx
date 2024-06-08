@@ -153,7 +153,11 @@ export function Counter() {
 											justifyContent={"center"}
 											marginTop="4px"
 										>
-											{isUnder720 ? idx : typeof s[0].group === "number" ? stellarGroupName[idx][1] : "Unclassified"}
+											{isUnder720 || isMobile()
+												? idx
+												: typeof s[0].group === "number"
+												? stellarGroupName[idx][1]
+												: "Unclassified"}
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
@@ -177,7 +181,8 @@ export function Counter() {
 													backgroundColor="ButtonFace"
 													onClick={handleClickStellar(stellar.uuid)}
 													cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
-													iconSpacing={isUnder720 ? 0 : undefined}
+													iconSpacing={isUnder720 || isMobile() ? 0 : undefined}
+													boxSize={isMobile() ? "40px" : undefined}
 												>
 													{isUnder720 || isMobile() ? null : <Text>{stellar.name}</Text>}
 												</Button>

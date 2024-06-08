@@ -81,10 +81,9 @@ export function Admin() {
 		playlistIdForMusic: "",
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
-
+	const [tagInputValue, setTagInputValue] = useState<TagData>({ id: -1, name: "", colorCode: "" });
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
 	const [tagData, setTagData] = useState<TagData[]>([]);
-	const [currentTagId, setCurrentTagId] = useState<number>(-1);
 	const { isLoading, isLogin, isAdmin } = useAuth();
 	const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
 
@@ -99,7 +98,9 @@ export function Admin() {
 	const getTagData = () => {
 		fetchServer("/tags", "v1").then((res) => {
 			if (res) {
-				if (res.status === 200) setTagData(res.data);
+				if (res.status === 200) {
+					setTagData(res.data.map((t) => objectNullCheck(t)));
+				}
 			}
 		});
 	};
@@ -180,7 +181,8 @@ export function Admin() {
 	};
 
 	const handleClickTag = (id: number) => () => {
-		setCurrentTagId(id);
+		const t: TagData = tagData.find((t) => t.id === id) || { id: -1, name: "", colorCode: "" };
+		setTagInputValue({ ...t });
 		onModalOpen();
 	};
 
@@ -195,7 +197,13 @@ export function Admin() {
 	if (!isAdmin) return <NotExist />;
 	return (
 		<>
-			<TagModal isOpen={isModalOpen} onClose={onModalClose} currentTagId={currentTagId} />
+			<TagModal
+				isOpen={isModalOpen}
+				onClose={onModalClose}
+				inputValue={tagInputValue}
+				setInputValue={setTagInputValue}
+				refetch={getTagData}
+			/>
 			<Stack padding="12px">
 				<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
 				<Box as="section">
@@ -835,9 +843,8 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 	);
 }
 
-function TagModal({ isOpen, onClose, currentTagId }: TagModalProps) {
+function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagModalProps) {
 	const toast = useToast();
-	const [inputValue, setInputValue] = useState<TagData>({ id: -1, name: "", colorCode: "" });
 	const handleInputValue = (key: keyof TagData) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setInputValue((prev) => ({ ...prev, [key]: value }));
@@ -849,19 +856,26 @@ function TagModal({ isOpen, onClose, currentTagId }: TagModalProps) {
 			return;
 		}
 
-		fetchServer(`/tag/${currentTagId}`, "v1", { method: "PATCH" })
+		fetchServer(`/tag/${inputValue.id}`, "v1", { method: "PATCH", body: JSON.stringify(inputValue) })
 			.then((res) => {
-				toast({ description: TOAST_MESSAGE.edit("태그"), status: "success" });
+				if (res.status === 200) {
+					toast({ description: TOAST_MESSAGE.edit("태그"), status: "success" });
+					onClose();
+					refetch();
+				} else if (res.status === 500) {
+					toast({ status: "error", description: "예기치 못한 문제가 발생했습니다" });
+				}
 			})
 			.catch((err: any) => {
 				toast({ status: "error", description: err.stack });
 			});
 	};
+
 	return (
-		<Modal isOpen={isOpen} onClose={onClose}>
-			<ModalOverlay />
-			<ModalHeader>{currentTagId}번 항목</ModalHeader>
-			<Box as="form" onSubmit={handleSubmit}>
+		<Modal isOpen={isOpen} onClose={onClose} isCentered>
+			<ModalOverlay onClick={onClose} />
+			<ModalContent as="form" onSubmit={handleSubmit}>
+				<ModalHeader>{inputValue.id}번 항목</ModalHeader>
 				<ModalBody>
 					<Stack gap={"4px"}>
 						<InputGroup>
@@ -882,7 +896,7 @@ function TagModal({ isOpen, onClose, currentTagId }: TagModalProps) {
 						</InputGroup>
 					</Stack>
 				</ModalBody>
-				<ModalFooter>
+				<ModalFooter gap="4px">
 					<Button type="submit">등록</Button>
 					<Button
 						type="button"
@@ -893,7 +907,7 @@ function TagModal({ isOpen, onClose, currentTagId }: TagModalProps) {
 						취소
 					</Button>
 				</ModalFooter>
-			</Box>
+			</ModalContent>
 		</Modal>
 	);
 }
@@ -968,7 +982,9 @@ interface MusicDrawerProps {
 interface TagModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	currentTagId: number;
+	inputValue: TagData;
+	setInputValue: Dispatch<SetStateAction<TagData>>;
+	refetch: () => void;
 }
 
 interface TagData {
