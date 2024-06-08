@@ -179,7 +179,7 @@ export function Counter() {
 													cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
 													iconSpacing={isUnder720 ? 0 : undefined}
 												>
-													{isUnder720 ? null : <Text>{stellar.name}</Text>}
+													{isUnder720 || isMobile() ? null : <Text>{stellar.name}</Text>}
 												</Button>
 											</Tooltip>
 										);

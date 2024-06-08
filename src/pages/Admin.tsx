@@ -570,7 +570,7 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 			/>
 			<Stack height="360px" overflowY={"scroll"} paddingRight="4px">
 				{data.map((v) => {
-					const musicType = v.isCollaborated ? "콜라보" : v.isOriginal ? "오리지널" : "커버곡";
+					// const musicType = v.isCollaborated ? "콜라보" : v.isOriginal ? "오리지널" : "커버곡";
 					return (
 						<Card
 							key={v.id}
@@ -591,7 +591,13 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 								<Text flex="1" textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow="hidden">
 									{v.title}
 								</Text>
-								<Text fontWeight={"bold"}>{musicType}</Text>
+								<Box>
+									{v.tags.map((t) => (
+										<Tag key={t.id} marginLeft="2px">
+											{t.name}
+										</Tag>
+									))}
+								</Box>
 							</CardBody>
 						</Card>
 					);

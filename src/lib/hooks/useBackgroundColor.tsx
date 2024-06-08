@@ -7,7 +7,7 @@ export default function useBackgroundColor(color?: string) {
 	useLayoutEffect(() => {
 		if (color) setBackgroundColor(color);
 		return () => {
-			setBackgroundColor("blue.50");
+			setBackgroundColor("white");
 		};
 	}, [color]);
 	return { backgroundColor, setBackgroundColor };
