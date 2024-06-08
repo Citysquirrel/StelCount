@@ -47,6 +47,8 @@ type ServerAPI =
 	| "/yid"
 	| "/renew"
 	| "/ypat/:videoId"
+	| "/tag/:id"
+	| "/tags"
 	| (string & {});
 
 interface FetchServerOption extends FetchOptions {

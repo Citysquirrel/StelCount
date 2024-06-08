@@ -58,7 +58,7 @@ import { Image } from "../components/Image";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 import VALIDATION from "../lib/functions/validation";
 import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
-import { stellarGroupName } from "../lib/constant";
+import { TOAST_MESSAGE, stellarGroupName } from "../lib/constant";
 import { NotExist } from "./NotExist";
 import { useConsole } from "../lib/hooks/useConsole";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
@@ -71,7 +71,6 @@ export function Admin() {
 	const firstRef = useRef<HTMLInputElement | null>(null);
 	const nav = useNavigate();
 	const toast = useToast();
-	const [offsetY] = useRecoilState(headerOffsetState);
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
 		group: "",
@@ -82,13 +81,25 @@ export function Admin() {
 		playlistIdForMusic: "",
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
+
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
+	const [tagData, setTagData] = useState<TagData[]>([]);
+	const [currentTagId, setCurrentTagId] = useState<number>(-1);
 	const { isLoading, isLogin, isAdmin } = useAuth();
+	const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
 
 	const getStellarData = () => {
 		fetchServer("/stellars", "v1").then((res) => {
 			if (res) {
 				if (res.status === 200) setStellarData(res.data);
+			}
+		});
+	};
+
+	const getTagData = () => {
+		fetchServer("/tags", "v1").then((res) => {
+			if (res) {
+				if (res.status === 200) setTagData(res.data);
 			}
 		});
 	};
@@ -110,7 +121,6 @@ export function Admin() {
 			return;
 		}
 		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
-			// console.log(res.data);
 			getStellarData();
 
 			toast({ description: `새 스텔라 등록을 완료했습니다`, status: "success" });
@@ -150,7 +160,6 @@ export function Admin() {
 	};
 
 	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-		// const name = checkConsonantAtLast(`${stellarData.find(s => s.id === id)?.name}`,"o")
 		if (!confirm(`${stellarData.find((s) => s.id === id)?.name} 항목을 삭제하시겠습니까?`)) {
 		} else {
 			fetchServer(`/stellar/${id}`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then((res) => {
@@ -170,8 +179,14 @@ export function Admin() {
 			});
 	};
 
+	const handleClickTag = (id: number) => () => {
+		setCurrentTagId(id);
+		onModalOpen();
+	};
+
 	useEffect(() => {
 		getStellarData();
+		getTagData();
 		firstRef.current?.focus();
 	}, []);
 
@@ -179,158 +194,194 @@ export function Admin() {
 	if (!isLogin) return <NotExist />;
 	if (!isAdmin) return <NotExist />;
 	return (
-		<Stack padding="12px">
-			{/* <Spacing size={24 + offsetY} /> */}
-			<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
-			<Box as="section">
-				<Stack as="form" onSubmit={handleSubmit}>
-					<InputGroup>
-						<InputLeftElement>
-							<MdPerson />
-						</InputLeftElement>
-						<Input
-							ref={firstRef}
-							placeholder="스텔라 이름"
-							value={inputValue.name}
-							onChange={handleInputValue("name")}
-						/>
-					</InputGroup>
-					<InputGroup>
-						<InputLeftElement>
-							<MdGroup />
-						</InputLeftElement>
-						<InputRightElement width="72px" fontSize="0.875rem">
-							{Number(inputValue.group) > 0 && Number(inputValue.group) < stellarGroupName.length ? (
-								<Text>{stellarGroupName[inputValue.group][0]}</Text>
-							) : null}
-						</InputRightElement>
-						<Input
-							type="number"
-							placeholder="스텔라 기수"
-							value={inputValue.group}
-							onChange={handleInputValue("group")}
-						/>
-					</InputGroup>
-					<InputGroup>
-						<InputLeftElement>
-							<FaYoutube />
-						</InputLeftElement>
-						<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
-					</InputGroup>
-					<InputGroup>
-						<InputLeftElement>
-							<Image boxSize={"16px"} src="/images/i_chzzk_1.png" />
-						</InputLeftElement>
-						<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
-					</InputGroup>
-					<InputGroup>
-						<InputLeftElement>
-							<FaXTwitter />
-						</InputLeftElement>
-						<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
-					</InputGroup>
-					<InputGroup>
-						<InputLeftElement>
-							<MdColorLens />
-						</InputLeftElement>
-						<Input
-							placeholder="컬러코드 HEX"
-							value={inputValue.colorCode}
-							onChange={handleInputValue("colorCode")}
-							isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
-						/>
-					</InputGroup>
-					<InputGroup>
-						<InputLeftElement>
-							<MdPlaylistPlay />
-						</InputLeftElement>
-						<Input
-							placeholder="음악 재생목록 ID"
-							value={inputValue.playlistIdForMusic}
-							onChange={handleInputValue("playlistIdForMusic")}
-						/>
-					</InputGroup>
-					<Button type="submit">등록</Button>
-				</Stack>
-			</Box>
-			<Box as="section">
-				<Stack as="form" onSubmit={handleGetYoutubeId}>
-					<Input placeholder="채널명 검색" value={inputValueY} onChange={handleInputValueY} />
-					<Button type="submit">검색</Button>
-				</Stack>
-			</Box>
-			<TableContainer>
-				<Table variant="simple" size="sm">
-					<Thead>
-						<Tr>
-							<Th isNumeric>ID</Th>
-							<Th>이름</Th>
-							<Th>기수</Th>
-							<Th>컬러코드 HEX</Th>
-							<Th>재생목록</Th>
-							<Th>설정</Th>
-							<Th>치지직 ID</Th>
-							<Th>유튜브 ID</Th>
-							<Th>X ID</Th>
-						</Tr>
-					</Thead>
-					<Tbody>
-						{stellarData.map((s, idx) => (
-							<Tr key={`${s.id}-${idx}`}>
-								<Td isNumeric>{s.id}</Td>
-								<Td>{s.name}</Td>
-								<Td>
-									{Number(s.group) < stellarGroupName.length ? `${s.group}기 - ${stellarGroupName[s.group][0]}` : null}
-								</Td>
-								<Td>
-									<CopyText>{s.colorCode}</CopyText>
-								</Td>
-								<Td>
-									{s.playlistIdForMusic ? (
-										<Link
-											href={`https://www.youtube.com/playlist?list=${s.playlistIdForMusic}`}
-											isExternal
-											sx={{ display: "flex", justifyContent: "center" }}
-										>
-											<MdOpenInNew />
-										</Link>
-									) : null}
-								</Td>
-								<Td>
-									<IconButton
-										aria-label="edit"
-										icon={<MdEdit />}
-										isRound
-										size={"sm"}
-										fontSize={"1.125rem"}
-										marginRight={"2px"}
-										onClick={handleEdit(s.id)}
-									/>
-									<IconButton
-										aria-label="delete"
-										icon={<MdDelete />}
-										isRound
-										size={"sm"}
-										fontSize={"1.125rem"}
-										onClick={handleDelete(s.id)}
-									/>
-								</Td>
-								<Td>
-									<CopyText>{s.chzzkId}</CopyText>
-								</Td>
-								<Td>
-									<CopyText>{s.youtubeId}</CopyText>
-								</Td>
-								<Td>
-									<CopyText>{s.xId}</CopyText>
-								</Td>
+		<>
+			<TagModal isOpen={isModalOpen} onClose={onModalClose} currentTagId={currentTagId} />
+			<Stack padding="12px">
+				<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
+				<Box as="section">
+					<Stack as="form" onSubmit={handleSubmit}>
+						<InputGroup>
+							<InputLeftElement>
+								<MdPerson />
+							</InputLeftElement>
+							<Input
+								ref={firstRef}
+								placeholder="스텔라 이름"
+								value={inputValue.name}
+								onChange={handleInputValue("name")}
+							/>
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdGroup />
+							</InputLeftElement>
+							<InputRightElement width="72px" fontSize="0.875rem">
+								{Number(inputValue.group) > 0 && Number(inputValue.group) < stellarGroupName.length ? (
+									<Text>{stellarGroupName[inputValue.group][0]}</Text>
+								) : null}
+							</InputRightElement>
+							<Input
+								type="number"
+								placeholder="스텔라 기수"
+								value={inputValue.group}
+								onChange={handleInputValue("group")}
+							/>
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<FaYoutube />
+							</InputLeftElement>
+							<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<Image boxSize={"16px"} src="/images/i_chzzk_1.png" />
+							</InputLeftElement>
+							<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<FaXTwitter />
+							</InputLeftElement>
+							<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdColorLens />
+							</InputLeftElement>
+							<Input
+								placeholder="컬러코드 HEX"
+								value={inputValue.colorCode}
+								onChange={handleInputValue("colorCode")}
+								isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
+							/>
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdPlaylistPlay />
+							</InputLeftElement>
+							<Input
+								placeholder="음악 재생목록 ID"
+								value={inputValue.playlistIdForMusic}
+								onChange={handleInputValue("playlistIdForMusic")}
+							/>
+						</InputGroup>
+						<Button type="submit">등록</Button>
+					</Stack>
+				</Box>
+				<Box as="section">
+					<Stack as="form" onSubmit={handleGetYoutubeId}>
+						<Input placeholder="채널명 검색" value={inputValueY} onChange={handleInputValueY} />
+						<Button type="submit">검색</Button>
+					</Stack>
+				</Box>
+				<TableContainer>
+					<Table variant="simple" size="sm">
+						<Thead>
+							<Tr>
+								<Th isNumeric>ID</Th>
+								<Th>이름</Th>
+								<Th>기수</Th>
+								<Th>컬러코드 HEX</Th>
+								<Th>재생목록</Th>
+								<Th>설정</Th>
+								<Th>치지직 ID</Th>
+								<Th>유튜브 ID</Th>
+								<Th>X ID</Th>
 							</Tr>
-						))}
-					</Tbody>
-				</Table>
-			</TableContainer>
-			<Spacing size={48} />
-		</Stack>
+						</Thead>
+						<Tbody>
+							{stellarData.map((s, idx) => (
+								<Tr key={`${s.id}-${idx}`}>
+									<Td isNumeric>{s.id}</Td>
+									<Td>{s.name}</Td>
+									<Td>
+										{Number(s.group) < stellarGroupName.length
+											? `${s.group}기 - ${stellarGroupName[s.group][0]}`
+											: null}
+									</Td>
+									<Td>
+										<CopyText>{s.colorCode}</CopyText>
+									</Td>
+									<Td>
+										{s.playlistIdForMusic ? (
+											<Link
+												href={`https://www.youtube.com/playlist?list=${s.playlistIdForMusic}`}
+												isExternal
+												sx={{ display: "flex", justifyContent: "center" }}
+											>
+												<MdOpenInNew />
+											</Link>
+										) : null}
+									</Td>
+									<Td>
+										<IconButton
+											aria-label="edit"
+											icon={<MdEdit />}
+											isRound
+											size={"sm"}
+											fontSize={"1.125rem"}
+											marginRight={"2px"}
+											onClick={handleEdit(s.id)}
+										/>
+										<IconButton
+											aria-label="delete"
+											icon={<MdDelete />}
+											isRound
+											size={"sm"}
+											fontSize={"1.125rem"}
+											onClick={handleDelete(s.id)}
+										/>
+									</Td>
+									<Td>
+										<CopyText>{s.chzzkId}</CopyText>
+									</Td>
+									<Td>
+										<CopyText>{s.youtubeId}</CopyText>
+									</Td>
+									<Td>
+										<CopyText>{s.xId}</CopyText>
+									</Td>
+								</Tr>
+							))}
+						</Tbody>
+					</Table>
+				</TableContainer>
+				<HeadedDivider>태그</HeadedDivider>
+				<TableContainer>
+					<Table variant="simple" size="sm">
+						<Thead>
+							<Tr>
+								<Th isNumeric width="80px">
+									ID
+								</Th>
+								<Th width="240px">이름</Th>
+								<Th width="240px">색상코드</Th>
+								<Th></Th>
+							</Tr>
+						</Thead>
+						<Tbody>
+							{tagData.length === 0 ? (
+								<Tr>
+									<Td colSpan={4} textAlign={"center"} fontWeight={"bold"} height="120px">
+										No Data
+									</Td>
+								</Tr>
+							) : (
+								tagData.map((t) => (
+									<Tr key={t.id} _hover={{ backgroundColor: "gray.100" }} onClick={handleClickTag(t.id)}>
+										<Td isNumeric>{t.id}</Td>
+										<Td>{t.name}</Td>
+										<Td>{t.colorCode}</Td>
+										<Td></Td>
+									</Tr>
+								))
+							)}
+						</Tbody>
+					</Table>
+				</TableContainer>
+			</Stack>
+		</>
 	);
 }
 
@@ -419,15 +470,7 @@ export function AdminEdit() {
 	if (!isAdmin) return <NotExist />;
 	return (
 		<Stack padding="0 12px" paddingTop={"12px"}>
-			{/* <Spacing size={offsetY} /> */}
-
-			<Stack
-			// position="sticky"
-			// top={`${offsetY + 24}px`}
-			// left="0"
-			// zIndex={1}
-			// backgroundColor="var(--chakra-colors-chakra-body-bg)"
-			>
+			<Stack>
 				<Heading>{inputValue.name}</Heading>
 				<Divider />
 				<Alert status={alertStatus} variant="left-accent">
@@ -792,6 +835,69 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 	);
 }
 
+function TagModal({ isOpen, onClose, currentTagId }: TagModalProps) {
+	const toast = useToast();
+	const [inputValue, setInputValue] = useState<TagData>({ id: -1, name: "", colorCode: "" });
+	const handleInputValue = (key: keyof TagData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setInputValue((prev) => ({ ...prev, [key]: value }));
+	};
+	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
+		e.preventDefault();
+		if (inputValue.name.trim() === "") {
+			toast({ status: "error", description: "이름 값이 비었습니다." });
+			return;
+		}
+
+		fetchServer(`/tag/${currentTagId}`, "v1", { method: "PATCH" })
+			.then((res) => {
+				toast({ description: TOAST_MESSAGE.edit("태그"), status: "success" });
+			})
+			.catch((err: any) => {
+				toast({ status: "error", description: err.stack });
+			});
+	};
+	return (
+		<Modal isOpen={isOpen} onClose={onClose}>
+			<ModalOverlay />
+			<ModalHeader>{currentTagId}번 항목</ModalHeader>
+			<Box as="form" onSubmit={handleSubmit}>
+				<ModalBody>
+					<Stack gap={"4px"}>
+						<InputGroup>
+							<InputLeftElement>
+								<MdTitle />
+							</InputLeftElement>
+							<Input value={inputValue.name} onChange={handleInputValue("name")} />
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdColorLens />
+							</InputLeftElement>
+							<Input
+								value={inputValue.colorCode}
+								onChange={handleInputValue("colorCode")}
+								isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
+							/>
+						</InputGroup>
+					</Stack>
+				</ModalBody>
+				<ModalFooter>
+					<Button type="submit">등록</Button>
+					<Button
+						type="button"
+						onClick={() => {
+							onClose();
+						}}
+					>
+						취소
+					</Button>
+				</ModalFooter>
+			</Box>
+		</Modal>
+	);
+}
+
 function HeadedDivider({ children }) {
 	return (
 		<Box position="relative" padding="32px 16px 16px 16px">
@@ -857,4 +963,16 @@ interface MusicDrawerProps {
 	isOpen: boolean;
 	onClose: () => void;
 	setData: Dispatch<SetStateAction<VideoData[]>>;
+}
+
+interface TagModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	currentTagId: number;
+}
+
+interface TagData {
+	id: number;
+	name: string;
+	colorCode: string;
 }

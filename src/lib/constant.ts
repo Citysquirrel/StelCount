@@ -7,6 +7,14 @@ const NAME_LIZE = "아카네 리제";
 
 const USER_SETTING_STORAGE = "user-setting";
 const CAFE_WRITE_URL = "https://cafe.naver.com/ca-fe/cafes/29424353/menus/195/articles/write?boardType=L";
+const TOAST_MESSAGE = {
+	create: (target: string) => `새 ${target} 등록을 완료했습니다`,
+	update: (target: string) => `${target} 수정을 완료했습니다`,
+	edit: (target: string) => `${target} 수정을 완료했습니다`,
+	delete: (target: string) => `${target} 삭제를 완료했습니다`,
+	read: (target: string) => `${target} 데이터를 새로 불러왔습니다`,
+	get: (target: string) => `${target} 데이터를 새로 불러왔습니다`,
+};
 
 const stellarGroupName = [
 	["스텔라이브", "StelLive"],
@@ -30,4 +38,5 @@ export {
 	USER_SETTING_STORAGE,
 	CAFE_WRITE_URL,
 	stellarGroupName,
+	TOAST_MESSAGE,
 };
