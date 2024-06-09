@@ -499,7 +499,14 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 				</Button>
 			) : null}
 
-			<CardBody as={Stack} divider={<StackDivider />} display="flex" flexDirection={"column"} flexWrap={"nowrap"}>
+			<CardBody
+				as={Stack}
+				divider={<StackDivider />}
+				display="flex"
+				flexDirection={"column"}
+				flexWrap={"nowrap"}
+				paddingBottom={"12px"}
+			>
 				<HStack flex={1} flexBasis={"117px"}>
 					<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
 						<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
