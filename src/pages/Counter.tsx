@@ -24,6 +24,8 @@ import {
 	StackDivider,
 	Tag,
 	TagLabel,
+	TagProps,
+	TagRightIcon,
 	Text,
 	Tooltip,
 } from "@chakra-ui/react";
@@ -34,10 +36,10 @@ import { musicDefaultSortValue, numberToLocaleString, remainingCount, remainingF
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdFilterList, MdHome, MdOpenInNew } from "react-icons/md";
+import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdTag } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
-import { UserSettingStorage } from "../lib/types";
+import { Tag as TagType, UserSettingStorage } from "../lib/types";
 import { ColorText } from "../components/Text";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import isMobile from "is-mobile";
@@ -57,6 +59,13 @@ const stellarSymbols = {
 	"유즈하 리코": "",
 };
 
+const customTagColorScheme = {
+	Cover: "teal",
+	Original: "red",
+	Gift: "orange",
+	other: "blue",
+};
+
 export function Counter() {
 	const gridRef = useRef<HTMLDivElement>(null);
 	const { windowWidth } = useResponsive();
@@ -65,6 +74,7 @@ export function Counter() {
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
+	const [tagExcludeFilter, setTagExcludeFilter] = useState<TagType[]>([]);
 	// const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
@@ -74,6 +84,8 @@ export function Counter() {
 		currentStellar?.youtubeCustomUrl || ""
 	);
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
+	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat());
+
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
 
@@ -111,7 +123,7 @@ export function Counter() {
 				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
 			}
 	}, [data]);
-	useConsole(currentStellar);
+	// useConsole(currentStellar);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
 	return (
@@ -284,6 +296,15 @@ export function Counter() {
 						</Stack>
 					</Stack>
 					<Stack>
+						<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="4px">
+							<MdTag />
+							<Spacing direction="horizontal" size={4} />
+							{currentExistTags.map((t) => (
+								<FilterTag key={t.id} name={t.name} color={t.colorCode} tagExcludeFilter={tagExcludeFilter}>
+									{t.name}
+								</FilterTag>
+							))}
+						</HStack>
 						<SimpleGrid ref={gridRef} columns={[1, 1, 2, 2, 3]} spacing={"8px"} placeItems={"center"}>
 							{isLoading ? (
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
@@ -362,6 +383,18 @@ function musicSort(type: "publishedAt" | "name" | "default", order: "ASC" | "DES
 	};
 }
 
+function FilterTag({ name, color, tagExcludeFilter, children, ...props }: FilterTagProps) {
+	const defaultColorScheme = customTagColorScheme[name] || customTagColorScheme.other;
+	return (
+		// outline
+		<Tag variant={"solid"} colorScheme={defaultColorScheme} cursor="pointer" {...props}>
+			{children}
+			<TagRightIcon as={MdCheck} color="green.300" />
+			{/* <TagRightIcon as={MdClear} color="red.400" /> */}
+		</Tag>
+	);
+}
+
 function MusicFilter() {
 	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
 }
@@ -381,13 +414,6 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		isCollaborated,
 		publishedAt,
 	} = data;
-
-	const customTagColorScheme = {
-		Cover: "teal",
-		Original: "red",
-		Gift: "orange",
-		other: "blue",
-	};
 
 	const titleText = titleAlias || title;
 	const viewCountNum = parseInt(viewCount || "0");
@@ -548,8 +574,27 @@ function modYoutubeData(id: string, subCnt: string, url: string) {
 	return storage;
 }
 
+function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
+	if (!tags) {
+		return [];
+	}
+	return tags.reduce((acc, cur) => {
+		if (cur === undefined) return acc;
+		if (acc.findIndex(({ id }) => id === cur.id) === -1) {
+			acc.push(cur);
+		}
+		return acc;
+	}, [] as TagType[]);
+}
+
 interface moddedYoutubeData {
 	id: string;
 	subscriberCount: string;
 	customUrl: string;
+}
+
+interface FilterTagProps extends TagProps {
+	name: string;
+	color?: string;
+	tagExcludeFilter: TagType[];
 }
