@@ -1,5 +1,6 @@
 export interface UserSettingStorage {
 	homeStellar?: string;
+	isFilterOn?: string;
 }
 
 export interface Tag {
