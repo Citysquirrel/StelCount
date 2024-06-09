@@ -68,7 +68,6 @@ const customTagColorScheme = {
 
 export function Counter() {
 	const gridRef = useRef<HTMLDivElement>(null);
-	const tagFilterRef = useRef<HTMLDivElement>(null);
 	const { windowWidth } = useResponsive();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [data] = useRecoilState(stellarState);
@@ -107,7 +106,6 @@ export function Counter() {
 		`${gridWidth / 3 - 16}px`,
 	];
 	const thumbWidth = ["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"];
-	const filterContainerHeight = (tagFilterRef.current?.clientHeight || 0) + 26;
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
@@ -310,9 +308,8 @@ export function Counter() {
 							bg="rgba(245,245,245)"
 							borderRadius={"0.375rem"}
 							width={isFilterOn ? "100%" : "24px"}
-							height={isFilterOn ? `${filterContainerHeight}px` : "24px"}
+							height={isFilterOn ? `auto` : "24px"}
 							overflow="hidden"
-							transition="all .3s"
 							gap="2px"
 						>
 							<IconButton
@@ -328,14 +325,7 @@ export function Counter() {
 								icon={isFilterOn ? <MdClear /> : <MdFilterList />}
 								aria-label="filterButton"
 							/>
-							<HStack
-								ref={tagFilterRef}
-								bg="rgba(245,245,245)"
-								padding="4px"
-								borderRadius={"0.375rem"}
-								gap="4px"
-								flexWrap={"wrap"}
-							>
+							<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="4px" flexWrap={"wrap"}>
 								<MdTag />
 								<Spacing direction="horizontal" size={4} />
 								{currentExistTags.map((t) => (
