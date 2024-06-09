@@ -36,7 +36,7 @@ import { musicDefaultSortValue, numberToLocaleString, remainingCount, remainingF
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdTag } from "react-icons/md";
+import { MdCheck, MdClear, MdFilter, MdFilterList, MdHome, MdOpenInNew, MdTag } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
 import { Tag as TagType, UserSettingStorage } from "../lib/types";
@@ -68,6 +68,7 @@ const customTagColorScheme = {
 
 export function Counter() {
 	const gridRef = useRef<HTMLDivElement>(null);
+	const tagFilterRef = useRef<HTMLDivElement>(null);
 	const { windowWidth } = useResponsive();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [data] = useRecoilState(stellarState);
@@ -75,7 +76,7 @@ export function Counter() {
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
 	const [tagExcludeFilter, setTagExcludeFilter] = useState<TagType[]>([]);
-	// const [isFilterOn, setIsFilterOn] = useState(false);
+	const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
 	const currentYoutubeData = modYoutubeData(
@@ -106,6 +107,7 @@ export function Counter() {
 		`${gridWidth / 3 - 16}px`,
 	];
 	const thumbWidth = ["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"];
+	const filterContainerHeight = (tagFilterRef.current?.clientHeight || 0) + 26;
 
 	const handleClickStellar = (uuid: string) => () => {
 		setCurrentUuid(uuid);
@@ -115,7 +117,14 @@ export function Counter() {
 		setUserSetting((prev) => ({ ...prev, homeStellar: currentUuid }));
 	};
 
+	const handleTagFilter = (tagId: number) => () => {};
+
 	useEffect(() => {
+		if (userSetting.isFilterOn) {
+			if (userSetting.isFilterOn === "true") setIsFilterOn(true);
+			else setIsFilterOn(false);
+		}
+
 		if (currentUuid === "")
 			if (userSetting.homeStellar) {
 				setCurrentUuid(userSetting.homeStellar);
@@ -296,15 +305,55 @@ export function Counter() {
 						</Stack>
 					</Stack>
 					<Stack>
-						<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="4px">
-							<MdTag />
-							<Spacing direction="horizontal" size={4} />
-							{currentExistTags.map((t) => (
-								<FilterTag key={t.id} name={t.name} color={t.colorCode} tagExcludeFilter={tagExcludeFilter}>
-									{t.name}
-								</FilterTag>
-							))}
-						</HStack>
+						{/* 필터링 컴포넌트 시작 */}
+						<Stack
+							bg="rgba(245,245,245)"
+							borderRadius={"0.375rem"}
+							width={isFilterOn ? "100%" : "24px"}
+							height={isFilterOn ? `${filterContainerHeight}px` : "24px"}
+							overflow="hidden"
+							transition="all .3s"
+							gap="2px"
+						>
+							<IconButton
+								onClick={() => {
+									setIsFilterOn((prev) => {
+										setUserSetting((prevSetting) => ({ ...prevSetting, isFilterOn: String(!prev) }));
+										return !prev;
+									});
+								}}
+								boxSize="24px"
+								minHeight="24px"
+								minW={0}
+								icon={isFilterOn ? <MdClear /> : <MdFilterList />}
+								aria-label="filterButton"
+							/>
+							<HStack
+								ref={tagFilterRef}
+								bg="rgba(245,245,245)"
+								padding="4px"
+								borderRadius={"0.375rem"}
+								gap="4px"
+								flexWrap={"wrap"}
+							>
+								<MdTag />
+								<Spacing direction="horizontal" size={4} />
+								{currentExistTags.map((t) => (
+									<FilterTag
+										key={t.id}
+										name={t.name}
+										color={t.colorCode}
+										tagExcludeFilter={tagExcludeFilter}
+										onClick={handleTagFilter(t.id)}
+										minWidth="76px"
+										height="24px"
+										wordBreak={"keep-all"}
+									>
+										{t.name}
+									</FilterTag>
+								))}
+							</HStack>
+						</Stack>
 						<SimpleGrid ref={gridRef} columns={[1, 1, 2, 2, 3]} spacing={"8px"} placeItems={"center"}>
 							{isLoading ? (
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
