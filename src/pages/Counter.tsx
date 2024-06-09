@@ -74,7 +74,7 @@ export function Counter() {
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
-	const [tagExcludeFilter, setTagExcludeFilter] = useState<TagType[]>([]);
+	const [tagExcludeIds, setTagExcludeIds] = useState<number[]>([]);
 	const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
@@ -85,6 +85,7 @@ export function Counter() {
 	);
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat());
+	const currentExistTagIds = currentExistTags.map((t) => t.id);
 
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
@@ -108,6 +109,7 @@ export function Counter() {
 	const thumbWidth = ["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"];
 
 	const handleClickStellar = (uuid: string) => () => {
+		setTagExcludeIds([]);
 		setCurrentUuid(uuid);
 	};
 
@@ -115,7 +117,17 @@ export function Counter() {
 		setUserSetting((prev) => ({ ...prev, homeStellar: currentUuid }));
 	};
 
-	const handleTagFilter = (tagId: number) => () => {};
+	const handleTagFilter = (tagId: number) => () => {
+		setTagExcludeIds((prev) => {
+			const arr = [...prev];
+			if (arr.includes(tagId)) {
+				arr.splice(arr.indexOf(tagId), 1);
+			} else {
+				arr.push(tagId);
+			}
+			return arr;
+		});
+	};
 
 	useEffect(() => {
 		if (userSetting.isFilterOn) {
@@ -130,7 +142,7 @@ export function Counter() {
 				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
 			}
 	}, [data]);
-	// useConsole(currentStellar);
+	useConsole(tagExcludeIds);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
 	return (
@@ -328,12 +340,13 @@ export function Counter() {
 							<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="4px" flexWrap={"wrap"}>
 								<MdTag />
 								<Spacing direction="horizontal" size={4} />
-								{currentExistTags.map((t) => (
+								{currentExistTags.map((t, idx) => (
 									<FilterTag
-										key={t.id}
+										key={`${t.id}-${idx}`}
+										tagId={t.id}
 										name={t.name}
 										color={t.colorCode}
-										tagExcludeFilter={tagExcludeFilter}
+										tagExcludeIds={tagExcludeIds}
 										onClick={handleTagFilter(t.id)}
 										minWidth="76px"
 										height="24px"
@@ -353,6 +366,7 @@ export function Counter() {
 								currentMusic
 									.filter((m) => m.type === "music")
 									.sort(musicSort("default", "ASC"))
+									.filter(tagFilter)
 									.map((m) => (
 										<MusicCard
 											key={m.videoId}
@@ -422,14 +436,14 @@ function musicSort(type: "publishedAt" | "name" | "default", order: "ASC" | "DES
 	};
 }
 
-function FilterTag({ name, color, tagExcludeFilter, children, ...props }: FilterTagProps) {
+function FilterTag({ tagId, name, color, tagExcludeIds, children, ...props }: FilterTagProps) {
 	const defaultColorScheme = customTagColorScheme[name] || customTagColorScheme.other;
+	const isExcluded = tagExcludeIds.includes(tagId);
 	return (
 		// outline
-		<Tag variant={"solid"} colorScheme={defaultColorScheme} cursor="pointer" {...props}>
+		<Tag variant={isExcluded ? "outline" : "solid"} colorScheme={defaultColorScheme} cursor="pointer" {...props}>
 			{children}
-			<TagRightIcon as={MdCheck} color="green.300" />
-			{/* <TagRightIcon as={MdClear} color="red.400" /> */}
+			{isExcluded ? <TagRightIcon as={MdClear} color="red.400" /> : <TagRightIcon as={MdCheck} color="green.300" />}
 		</Tag>
 	);
 }
@@ -563,35 +577,6 @@ function SideList({ children, ...props }: SideListProps) {
 	);
 }
 
-interface FollowerCardProps {
-	href: string | undefined;
-	icon: string;
-	text: string;
-	currentColorCode: string | undefined;
-	subText?: string;
-}
-
-interface MusicCardProps {
-	data: YoutubeMusicData;
-	currentColorCode?: string;
-	width: string[];
-	thumbWidth: string[];
-}
-
-interface ThumbnailImageProps extends BoxProps {
-	src: string;
-}
-
-interface SideListContainerProps extends BoxProps {}
-interface SideListProps extends BoxProps {}
-
-interface StellarCardProps {
-	name: string;
-	profileImage?: string;
-	youtube?: PlatformInfosDetail[];
-	chzzk?: PlatformInfosDetail;
-}
-
 function hasComma(record: string) {
 	return record.includes(",");
 }
@@ -626,6 +611,10 @@ function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
 	}, [] as TagType[]);
 }
 
+function tagFilter(value: YoutubeMusicData, index: number, array: YoutubeMusicData[]): YoutubeMusicData[] {
+	return array;
+}
+
 interface moddedYoutubeData {
 	id: string;
 	subscriberCount: string;
@@ -633,7 +622,30 @@ interface moddedYoutubeData {
 }
 
 interface FilterTagProps extends TagProps {
+	tagId: number;
 	name: string;
 	color?: string;
-	tagExcludeFilter: TagType[];
+	tagExcludeIds: number[];
 }
+
+interface FollowerCardProps {
+	href: string | undefined;
+	icon: string;
+	text: string;
+	currentColorCode: string | undefined;
+	subText?: string;
+}
+
+interface MusicCardProps {
+	data: YoutubeMusicData;
+	currentColorCode?: string;
+	width: string[];
+	thumbWidth: string[];
+}
+
+interface ThumbnailImageProps extends BoxProps {
+	src: string;
+}
+
+interface SideListContainerProps extends BoxProps {}
+interface SideListProps extends BoxProps {}
