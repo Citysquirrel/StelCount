@@ -145,6 +145,12 @@ export function Counter() {
 	useConsole(tagExcludeIds);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
+	const musics =
+		currentMusic
+			?.filter((m) => m.type === "music")
+			.sort(musicSort("default", "ASC"))
+			.filter(tagFilter(currentExistTagIds, tagExcludeIds)) || [];
+
 	return (
 		<Stack
 			direction={isMobile() ? "column-reverse" : "row"}
@@ -362,20 +368,16 @@ export function Counter() {
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} width={cardWidth} height="212px" borderRadius={"0.375rem"} />
 								))
-							) : currentMusic !== undefined && currentMusic.length > 0 ? (
-								currentMusic
-									.filter((m) => m.type === "music")
-									.sort(musicSort("default", "ASC"))
-									.filter(tagFilter)
-									.map((m) => (
-										<MusicCard
-											key={m.videoId}
-											data={m}
-											currentColorCode={currentColorCode}
-											width={cardWidth}
-											thumbWidth={thumbWidth}
-										/>
-									))
+							) : currentMusic !== undefined && musics.length > 0 ? (
+								musics.map((m) => (
+									<MusicCard
+										key={m.videoId}
+										data={m}
+										currentColorCode={currentColorCode}
+										width={cardWidth}
+										thumbWidth={thumbWidth}
+									/>
+								))
 							) : (
 								<Stack
 									alignItems={"center"}
@@ -618,8 +620,23 @@ function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
 	}, [] as TagType[]);
 }
 
-function tagFilter(value: YoutubeMusicData, index: number, array: YoutubeMusicData[]): YoutubeMusicData[] {
-	return array;
+function tagFilter(existTagIds: number[], excludedTagIds: number[]) {
+	const includedTagIds = existTagIds.filter((id) => !excludedTagIds.includes(id));
+	// const result: YoutubeMusicData[] = [];
+	console.log("includedTagIds:", includedTagIds);
+	return function (value: YoutubeMusicData, index: number, array: YoutubeMusicData[]): boolean {
+		const tagIds = value.tags?.map((t) => t.id) || [];
+		console.log("tagIds:", tagIds);
+		let isExist = false;
+		for (let i = 0; i < tagIds.length; i++) {
+			if (includedTagIds.includes(i)) {
+				console.log("test");
+				isExist = true;
+				break;
+			}
+		}
+		return isExist;
+	};
 }
 
 interface moddedYoutubeData {
