@@ -145,11 +145,8 @@ export function Counter() {
 	useConsole(tagExcludeIds);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
-	const musics =
-		currentMusic
-			?.filter((m) => m.type === "music")
-			.sort(musicSort("default", "ASC"))
-			.filter(tagFilter(currentExistTagIds, tagExcludeIds)) || [];
+	const musics = currentMusic?.filter((m) => m.type === "music").sort(musicSort("default", "ASC"));
+	// .filter(tagFilter(currentExistTagIds, tagExcludeIds)) || [];
 
 	return (
 		<Stack
@@ -322,53 +319,56 @@ export function Counter() {
 					</Stack>
 					<Stack>
 						{/* 필터링 컴포넌트 시작 */}
-						<Stack
-							bg="rgba(245,245,245)"
-							borderRadius={"0.375rem"}
-							width={isFilterOn ? "100%" : "24px"}
-							height={isFilterOn ? `auto` : "24px"}
-							overflow="hidden"
-							gap="2px"
-						>
-							<IconButton
-								onClick={() => {
-									setIsFilterOn((prev) => {
-										setUserSetting((prevSetting) => ({ ...prevSetting, isFilterOn: String(!prev) }));
-										return !prev;
-									});
-								}}
-								boxSize="24px"
-								minHeight="24px"
-								minW={0}
-								icon={isFilterOn ? <MdClear /> : <MdFilterList />}
-								aria-label="filterButton"
-							/>
-							<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="4px" flexWrap={"wrap"}>
-								<MdTag />
-								<Spacing direction="horizontal" size={4} />
-								{currentExistTags.map((t, idx) => (
-									<FilterTag
-										key={`${t.id}-${idx}`}
-										tagId={t.id}
-										name={t.name}
-										color={t.colorCode}
-										tagExcludeIds={tagExcludeIds}
-										onClick={handleTagFilter(t.id)}
-										minWidth="76px"
-										height="24px"
-										wordBreak={"keep-all"}
-									>
-										{t.name}
-									</FilterTag>
-								))}
-							</HStack>
-						</Stack>
+						{import.meta.env.DEV ? (
+							<Stack
+								bg="rgba(245,245,245)"
+								borderRadius={"0.375rem"}
+								width={isFilterOn ? "100%" : "24px"}
+								height={isFilterOn ? `auto` : "24px"}
+								overflow="hidden"
+								gap="2px"
+							>
+								<IconButton
+									onClick={() => {
+										setIsFilterOn((prev) => {
+											setUserSetting((prevSetting) => ({ ...prevSetting, isFilterOn: String(!prev) }));
+											return !prev;
+										});
+									}}
+									boxSize="24px"
+									minHeight="24px"
+									minW={0}
+									icon={isFilterOn ? <MdClear /> : <MdFilterList />}
+									aria-label="filterButton"
+								/>
+								<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="4px" flexWrap={"wrap"}>
+									<MdTag />
+									<Spacing direction="horizontal" size={4} />
+									{currentExistTags.map((t, idx) => (
+										<FilterTag
+											key={`${t.id}-${idx}`}
+											tagId={t.id}
+											name={t.name}
+											color={t.colorCode}
+											tagExcludeIds={tagExcludeIds}
+											onClick={handleTagFilter(t.id)}
+											minWidth="76px"
+											height="24px"
+											wordBreak={"keep-all"}
+										>
+											{t.name}
+										</FilterTag>
+									))}
+								</HStack>
+							</Stack>
+						) : null}
+
 						<SimpleGrid ref={gridRef} columns={[1, 1, 2, 2, 3]} spacing={"8px"} placeItems={"center"}>
 							{isLoading ? (
 								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} width={cardWidth} height="212px" borderRadius={"0.375rem"} />
 								))
-							) : currentMusic !== undefined && musics.length > 0 ? (
+							) : musics !== undefined && musics.length > 0 ? (
 								musics.map((m) => (
 									<MusicCard
 										key={m.videoId}
