@@ -6,6 +6,7 @@ import {
 	Button,
 	Card,
 	CardBody,
+	CloseButton,
 	Divider,
 	Drawer,
 	DrawerBody,
@@ -46,7 +47,18 @@ import {
 } from "@chakra-ui/react";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
-import { MdColorLens, MdDelete, MdEdit, MdGroup, MdOpenInNew, MdPerson, MdPlaylistPlay, MdTitle } from "react-icons/md";
+import {
+	MdAdd,
+	MdColorLens,
+	MdDelete,
+	MdEdit,
+	MdGroup,
+	MdOpenInNew,
+	MdOutlineVideocam,
+	MdPerson,
+	MdPlaylistPlay,
+	MdTitle,
+} from "react-icons/md";
 import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
@@ -65,6 +77,7 @@ import useColorModeValues from "../lib/hooks/useColorModeValues";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Tag as TagType } from "../lib/types";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
+import Wrapper from "../components/Wrapper";
 
 export function Admin() {
 	useBackgroundColor(`white`);
@@ -592,20 +605,26 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 	const values = useColorModeValues();
 	const { windowWidth } = useResponsive();
 	const { isOpen, onOpen, onClose } = useDisclosure();
-	const [inputValue, setInputValue] = useState<MPLInputValue>({ id: "", title: "", titleAlias: "", tags: [] });
+	const [inputValue, setInputValue] = useState<MPLInputValue>({
+		id: "",
+		title: "",
+		titleAlias: "",
+		tags: [],
+		publishedAt: "",
+	});
 	const [currentId, setCurrentId] = useState(-1);
 
 	const handleClickCard = (givenId: number) => () => {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
-		const { id, title, titleAlias, tags } = data[idx];
-		setInputValue({ id: id.toString(), title: title || "", titleAlias: titleAlias || "", tags });
+		const { id, title, titleAlias, tags, publishedAt } = data[idx];
+		setInputValue({ id: id.toString(), title: title || "", titleAlias: titleAlias || "", tags, publishedAt });
 		onOpen();
 	};
 
 	const handleClose = () => {
 		setCurrentId(-1);
-		setInputValue({ id: "", title: "", titleAlias: "", tags: [] });
+		setInputValue({ id: "", title: "", titleAlias: "", tags: [], publishedAt: "" });
 		onClose();
 	};
 
@@ -621,7 +640,6 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 			/>
 			<Stack height="360px" overflowY={"scroll"} paddingRight="4px">
 				{data.map((v) => {
-					// const musicType = v.isCollaborated ? "콜라보" : v.isOriginal ? "오리지널" : "커버곡";
 					return (
 						<Card
 							key={v.id}
@@ -640,7 +658,7 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 							>
 								<Text fontSize="0.75rem">{v.id}</Text>
 								<Text flex="1" textOverflow={"ellipsis"} whiteSpace={"nowrap"} overflow="hidden">
-									{v.title}
+									{v.titleAlias || v.title}
 								</Text>
 								<Box>
 									{v.tags.map((t) => (
@@ -666,6 +684,10 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 
 	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
 	const [tagName, setTagName] = useState<string>("");
+	const [colorCode, setColorCode] = useState<string>("");
+	const [additionalInputValue, setAdditionalInputValue] = useState<AdditionalInputValue[]>([
+		{ id: -1, type: "", videoId: "" },
+	]);
 
 	const handleInputValue = (key: keyof MPLInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -683,11 +705,12 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 			toast({ description: "태그 이름을 입력해주세요", status: "warning" });
 		} else {
 			setIsSaveLoading(true);
-			fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName }) })
+			fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName, colorCode }) })
 				.then((res) => {
 					if (res.status === 200) {
 						onTagClose();
 						setTagName("");
+						setColorCode("");
 						setTags((prev) => [...prev, res.data]);
 					} else if (res.status === 409) {
 						toast({ description: "중복된 태그 이름입니다", status: "warning" });
@@ -709,7 +732,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 		// } else
 		fetchServer(`/y/${inputValue.id}`, "v1", {
 			method: "POST",
-			body: JSON.stringify({ titleAlias: inputValue.titleAlias, tags: inputValue.tags }),
+			body: JSON.stringify({ titleAlias: inputValue.titleAlias, tags: inputValue.tags, details: additionalInputValue }),
 		})
 			.then((res) => {
 				if (res.status === 200) {
@@ -743,11 +766,39 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 		}
 	};
 
+	const handleAdditionalInputValue =
+		(key: keyof Omit<AdditionalInputValue, "id">, idx: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+			const value = e.target.value;
+			setAdditionalInputValue((prev) => {
+				const arr = [...prev];
+				arr[idx][key] = value;
+				return arr;
+			});
+		};
+
+	const handleCreateAdditionalInput = () => {
+		setAdditionalInputValue((prev) => {
+			const arr = [...prev];
+			arr.push({ id: -1, type: "", videoId: "" });
+			return arr;
+		});
+	};
+
+	const handleDeleteAdditionalInput = (idx: number) => () => {
+		setAdditionalInputValue((prev) => {
+			const arr = [...prev];
+			arr.splice(idx, 1);
+			return arr;
+		});
+	};
+
 	useEffect(() => {
 		fetchServer("/tags", "v1").then((res) => {
 			if (res.status === 200) setTags(res.data);
 		});
 	}, []);
+
+	useConsole(additionalInputValue);
 
 	return (
 		<>
@@ -756,7 +807,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 				<ModalContent as="form" onSubmit={handleSaveTag}>
 					<ModalHeader>새 태그 만들기</ModalHeader>
 					<ModalBody>
-						<InputGroup>
+						<InputGroup marginBottom={"4px"}>
 							<InputLeftElement>
 								<MdTitle />
 							</InputLeftElement>
@@ -764,6 +815,17 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 								value={tagName}
 								onChange={(e) => {
 									setTagName(e.target.value);
+								}}
+							/>
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdColorLens />
+							</InputLeftElement>
+							<Input
+								value={colorCode}
+								onChange={(e) => {
+									setColorCode(e.target.value);
 								}}
 							/>
 						</InputGroup>
@@ -778,12 +840,12 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 					</ModalFooter>
 				</ModalContent>
 			</Modal>
-			<Drawer isOpen={isOpen} onClose={onClose} placement={placement}>
+			<Drawer isOpen={isOpen} onClose={onClose} placement={placement} size="sm">
 				<DrawerOverlay />
 				<DrawerContent>
 					<DrawerCloseButton />
 					<DrawerHeader>{inputValue.id ? `${inputValue.id}번 항목` : "..."}</DrawerHeader>
-					<Box as="form" onSubmit={handleSaveMusic}>
+					<Box as="form" onSubmit={handleSaveMusic} overflow={"auto"}>
 						<DrawerBody>
 							<Stack gap="4px">
 								<InputGroup>
@@ -808,6 +870,35 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 										<option value="new">+ 새 태그 만들기</option>
 									</Select>
 								</InputGroup>
+								<Wrapper marginTop="8px">
+									<Heading size="md">부가 영상</Heading>
+									{/* 이 리스트는 길이가 1 이상 */}
+									{additionalInputValue.map((add, idx) => {
+										const { type, videoId } = add;
+										return (
+											<Wrapper key={`${add.id}-${idx}`} position="relative">
+												<InputGroup>
+													<InputLeftElement>
+														<MdTitle />
+													</InputLeftElement>
+													<Input value={type} onChange={handleAdditionalInputValue("type", idx)} />
+													{idx !== 0 ? (
+														<CloseButton transform={"translateX(5px)"} onClick={handleDeleteAdditionalInput(idx)} />
+													) : null}
+												</InputGroup>
+												<InputGroup>
+													<InputLeftElement>
+														<MdOutlineVideocam />
+													</InputLeftElement>
+													<Input value={videoId} onChange={handleAdditionalInputValue("videoId", idx)} />
+												</InputGroup>
+											</Wrapper>
+										);
+									})}
+									<Button leftIcon={<MdAdd />} size="sm" onClick={handleCreateAdditionalInput}>
+										영상 추가하기
+									</Button>
+								</Wrapper>
 								<Box>
 									{inputValue.tags.map((tag) => (
 										<Tag key={tag.id} colorScheme="blue" marginRight="2px">
@@ -828,7 +919,7 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 								</Box>
 							</Stack>
 						</DrawerBody>
-						<DrawerFooter gap="4px">
+						<DrawerFooter gap="4px" position="sticky" bottom={0} right={0} bg="white">
 							<Button type="submit" colorScheme="blue" isLoading={isSaveLoading}>
 								변경사항 저장
 							</Button>
@@ -942,6 +1033,7 @@ interface VideoData {
 	isOriginal: boolean | null;
 	isCollaborated: boolean | null;
 	tags: TagType[];
+	publishedAt: string;
 }
 
 interface StellarInputValue {
@@ -963,6 +1055,7 @@ interface MPLInputValue {
 	title: string;
 	titleAlias: string;
 	tags: TagType[];
+	publishedAt: string;
 }
 
 interface MusicPlaylistProps {
@@ -991,4 +1084,10 @@ interface TagData {
 	id: number;
 	name: string;
 	colorCode: string;
+}
+
+interface AdditionalInputValue {
+	id: number;
+	type: string;
+	videoId: string;
 }
