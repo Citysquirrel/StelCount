@@ -6,6 +6,7 @@ import {
 	Button,
 	Card,
 	CardBody,
+	Checkbox,
 	CloseButton,
 	Divider,
 	Drawer,
@@ -49,6 +50,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { fetchServer } from "../lib/functions/fetch";
 import {
 	MdAdd,
+	MdCalendarMonth,
 	MdColorLens,
 	MdDelete,
 	MdEdit,
@@ -611,20 +613,30 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 		titleAlias: "",
 		tags: [],
 		publishedAt: "",
+		isActive: true,
 	});
 	const [currentId, setCurrentId] = useState(-1);
 
 	const handleClickCard = (givenId: number) => () => {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
-		const { id, title, titleAlias, tags, publishedAt } = data[idx];
-		setInputValue({ id: id.toString(), title: title || "", titleAlias: titleAlias || "", tags, publishedAt });
+		const { id, title, titleAlias, tags, publishedAt, isActive } = data[idx];
+
+		//2024-04-10T08:30:39.000Z"  "yyyy-MM-ddThh:mm
+		setInputValue({
+			id: id.toString(),
+			title: title || "",
+			titleAlias: titleAlias || "",
+			tags,
+			publishedAt: publishedAt.slice(0, -1),
+			isActive,
+		});
 		onOpen();
 	};
 
 	const handleClose = () => {
 		setCurrentId(-1);
-		setInputValue({ id: "", title: "", titleAlias: "", tags: [], publishedAt: "" });
+		setInputValue({ id: "", title: "", titleAlias: "", tags: [], publishedAt: "", isActive: true });
 		onClose();
 	};
 
@@ -691,7 +703,11 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 
 	const handleInputValue = (key: keyof MPLInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
-		setInputValue((prev) => ({ ...prev, [key]: value }));
+		const type = e.target.type;
+		if (type === "checkbox") {
+			const checked = e.target.checked;
+			setInputValue((prev) => ({ ...prev, [key]: checked }));
+		} else setInputValue((prev) => ({ ...prev, [key]: value }));
 	};
 
 	const handleCloseTagModal = () => {
@@ -732,7 +748,12 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 		// } else
 		fetchServer(`/y/${inputValue.id}`, "v1", {
 			method: "POST",
-			body: JSON.stringify({ titleAlias: inputValue.titleAlias, tags: inputValue.tags, details: additionalInputValue }),
+			body: JSON.stringify({
+				titleAlias: inputValue.titleAlias,
+				tags: inputValue.tags,
+				details: additionalInputValue,
+				isActive: inputValue.isActive,
+			}),
 		})
 			.then((res) => {
 				if (res.status === 200) {
@@ -858,7 +879,11 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 									<InputLeftElement>
 										<MdTitle />
 									</InputLeftElement>
-									<Input value={inputValue.titleAlias} onChange={handleInputValue("titleAlias")} />
+									<Input
+										value={inputValue.titleAlias}
+										placeholder="대체 타이틀"
+										onChange={handleInputValue("titleAlias")}
+									/>
 								</InputGroup>
 								<InputGroup>
 									<Select placeholder="태그" onChange={handleChangeTag}>
@@ -870,35 +895,6 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 										<option value="new">+ 새 태그 만들기</option>
 									</Select>
 								</InputGroup>
-								<Wrapper marginTop="8px">
-									<Heading size="md">부가 영상</Heading>
-									{/* 이 리스트는 길이가 1 이상 */}
-									{additionalInputValue.map((add, idx) => {
-										const { type, videoId } = add;
-										return (
-											<Wrapper key={`${add.id}-${idx}`} position="relative">
-												<InputGroup>
-													<InputLeftElement>
-														<MdTitle />
-													</InputLeftElement>
-													<Input value={type} onChange={handleAdditionalInputValue("type", idx)} />
-													{idx !== 0 ? (
-														<CloseButton transform={"translateX(5px)"} onClick={handleDeleteAdditionalInput(idx)} />
-													) : null}
-												</InputGroup>
-												<InputGroup>
-													<InputLeftElement>
-														<MdOutlineVideocam />
-													</InputLeftElement>
-													<Input value={videoId} onChange={handleAdditionalInputValue("videoId", idx)} />
-												</InputGroup>
-											</Wrapper>
-										);
-									})}
-									<Button leftIcon={<MdAdd />} size="sm" onClick={handleCreateAdditionalInput}>
-										영상 추가하기
-									</Button>
-								</Wrapper>
 								<Box>
 									{inputValue.tags.map((tag) => (
 										<Tag key={tag.id} colorScheme="blue" marginRight="2px">
@@ -917,6 +913,59 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 										</Tag>
 									))}
 								</Box>
+								<InputGroup>
+									<InputLeftElement>
+										<MdCalendarMonth />
+									</InputLeftElement>
+									<Input
+										type="datetime-local"
+										value={inputValue.publishedAt}
+										onChange={handleInputValue("publishedAt")}
+										isDisabled
+									/>
+								</InputGroup>
+								<InputGroup paddingLeft="12px">
+									<Checkbox isChecked={inputValue.isActive} onChange={handleInputValue("isActive")}>
+										활성화
+									</Checkbox>
+								</InputGroup>
+								<Wrapper marginTop="8px">
+									<Heading size="md">부가 영상</Heading>
+									{/* 이 리스트는 길이가 1 이상 */}
+									{additionalInputValue.map((add, idx) => {
+										const { type, videoId } = add;
+										return (
+											<Wrapper key={`${add.id}-${idx}`} position="relative">
+												<InputGroup>
+													<InputLeftElement>
+														<MdTitle />
+													</InputLeftElement>
+													<Input
+														value={type}
+														placeholder="표시될 타입"
+														onChange={handleAdditionalInputValue("type", idx)}
+													/>
+													{idx !== 0 ? (
+														<CloseButton transform={"translateX(5px)"} onClick={handleDeleteAdditionalInput(idx)} />
+													) : null}
+												</InputGroup>
+												<InputGroup>
+													<InputLeftElement>
+														<MdOutlineVideocam />
+													</InputLeftElement>
+													<Input
+														value={videoId}
+														placeholder="유튜브 영상 ID"
+														onChange={handleAdditionalInputValue("videoId", idx)}
+													/>
+												</InputGroup>
+											</Wrapper>
+										);
+									})}
+									<Button leftIcon={<MdAdd />} size="sm" onClick={handleCreateAdditionalInput}>
+										영상 추가하기
+									</Button>
+								</Wrapper>
 							</Stack>
 						</DrawerBody>
 						<DrawerFooter gap="4px" position="sticky" bottom={0} right={0} bg="white">
@@ -1034,6 +1083,7 @@ interface VideoData {
 	isCollaborated: boolean | null;
 	tags: TagType[];
 	publishedAt: string;
+	isActive: boolean;
 }
 
 interface StellarInputValue {
@@ -1056,6 +1106,7 @@ interface MPLInputValue {
 	titleAlias: string;
 	tags: TagType[];
 	publishedAt: string;
+	isActive: boolean;
 }
 
 interface MusicPlaylistProps {
