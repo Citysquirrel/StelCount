@@ -8,6 +8,7 @@ import {
 	Button,
 	Card,
 	CardBody,
+	CloseButton,
 	Divider,
 	HStack,
 	Icon,
@@ -75,6 +76,7 @@ export function Counter() {
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
 	const [tagExcludeIds, setTagExcludeIds] = useState<number[]>([]);
+	const [filter, setFilter] = useState<Filter>({ tag: [] });
 	const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
@@ -118,14 +120,34 @@ export function Counter() {
 	};
 
 	const handleTagFilter = (tagId: number) => () => {
-		setTagExcludeIds((prev) => {
-			const arr = [...prev];
-			if (arr.includes(tagId)) {
-				arr.splice(arr.indexOf(tagId), 1);
+		// setTagExcludeIds((prev) => {
+		// 	const arr = [...prev];
+		// 	if (arr.includes(tagId)) {
+		// 		arr.splice(arr.indexOf(tagId), 1);
+		// 	} else {
+		// 		arr.push(tagId);
+		// 	}
+		// 	return arr;
+		// });
+
+		setFilter((prev) => {
+			const obj = { ...prev };
+			const tags = [...obj.tag];
+			if (tags.includes(tagId)) {
+				tags.splice(tags.indexOf(tagId), 1);
 			} else {
-				arr.push(tagId);
+				tags.push(tagId);
 			}
-			return arr;
+			obj.tag = tags;
+			return obj;
+		});
+	};
+
+	const handleResetFilter = (key: keyof Filter) => () => {
+		setFilter((prev) => {
+			const obj = { ...prev };
+			obj[key] = [];
+			return obj;
 		});
 	};
 
@@ -142,7 +164,7 @@ export function Counter() {
 				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
 			}
 	}, [data]);
-	useConsole(tagExcludeIds);
+	useConsole(filter);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
 	const musics = currentMusic?.filter((m) => m.type === "music").sort(musicSort("default", "ASC"));
@@ -319,7 +341,7 @@ export function Counter() {
 					</Stack>
 					<Stack>
 						{/* 필터링 컴포넌트 시작 */}
-						{import.meta.env.DEV ? (
+						{import.meta.env.DEV && currentExistTags.length > 0 ? (
 							<Stack
 								bg="rgba(245,245,245)"
 								borderRadius={"0.375rem"}
@@ -341,8 +363,18 @@ export function Counter() {
 									icon={isFilterOn ? <MdClear /> : <MdFilterList />}
 									aria-label="filterButton"
 								/>
-								<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="4px" flexWrap={"wrap"}>
-									<MdTag />
+								<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="2px" flexWrap={"wrap"}>
+									<IconButton
+										colorScheme="blackAlpha"
+										variant={filter.tag.length > 0 ? "solid" : "ghost"}
+										boxSize="24px"
+										minHeight={"24px"}
+										icon={filter.tag.length > 0 ? <MdClear /> : <MdTag />}
+										minW={0}
+										aria-label="clear-tag-filter"
+										onClick={handleResetFilter("tag")}
+									/>
+
 									<Spacing direction="horizontal" size={4} />
 									{currentExistTags.map((t, idx) => (
 										<FilterTag
@@ -350,7 +382,7 @@ export function Counter() {
 											tagId={t.id}
 											name={t.name}
 											color={t.colorCode}
-											tagExcludeIds={tagExcludeIds}
+											tagFilter={filter.tag}
 											onClick={handleTagFilter(t.id)}
 											minWidth="76px"
 											height="24px"
@@ -363,9 +395,14 @@ export function Counter() {
 							</Stack>
 						) : null}
 
-						<SimpleGrid ref={gridRef} columns={[1, 1, 2, 2, 3]} spacing={"8px"} placeItems={"center"}>
+						<SimpleGrid
+							ref={gridRef}
+							columns={(musics !== undefined && musics.length > 0) || isLoading ? [1, 1, 2, 2, 3] : 1}
+							spacing={"8px"}
+							placeItems={"center"}
+						>
 							{isLoading ? (
-								Array.from({ length: 8 }, (_) => 1).map((_, idx) => (
+								Array.from({ length: 3 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} width={cardWidth} height="212px" borderRadius={"0.375rem"} />
 								))
 							) : musics !== undefined && musics.length > 0 ? (
@@ -385,8 +422,12 @@ export function Counter() {
 									width={["100%", "100%", "200%", "200%", "300%"]}
 									height="240px"
 									userSelect={"none"}
+									gap={0}
 								>
-									<Text fontWeight={"bold"}>No Data</Text>
+									<NoDataImage color="#444" />
+									<Text fontSize="1.25rem" fontWeight={"bold"} color="#444">
+										데이터가 없습니다
+									</Text>
 								</Stack>
 							)}
 						</SimpleGrid>
@@ -438,14 +479,15 @@ function musicSort(type: "publishedAt" | "name" | "default", order: "ASC" | "DES
 	};
 }
 
-function FilterTag({ tagId, name, color, tagExcludeIds, children, ...props }: FilterTagProps) {
+function FilterTag({ tagId, name, color, tagFilter, children, ...props }: FilterTagProps) {
 	const defaultColorScheme = customTagColorScheme[name] || customTagColorScheme.other;
-	const isExcluded = tagExcludeIds.includes(tagId);
+	const isIncluded = tagFilter.includes(tagId);
+
 	return (
 		// outline
-		<Tag variant={isExcluded ? "outline" : "solid"} colorScheme={defaultColorScheme} cursor="pointer" {...props}>
+		<Tag variant={!isIncluded ? "outline" : "solid"} colorScheme={defaultColorScheme} cursor="pointer" {...props}>
 			{children}
-			{isExcluded ? <TagRightIcon as={MdClear} color="red.400" /> : <TagRightIcon as={MdCheck} color="green.300" />}
+			{!isIncluded ? <TagRightIcon as={MdClear} color="red.400" /> : <TagRightIcon as={MdCheck} color="green.300" />}
 		</Tag>
 	);
 }
@@ -620,16 +662,15 @@ function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
 	}, [] as TagType[]);
 }
 
-function tagFilter(existTagIds: number[], excludedTagIds: number[]) {
-	const includedTagIds = existTagIds.filter((id) => !excludedTagIds.includes(id));
+function tagFilterFunc(existTagIds: number[], tagIds: number[]) {
 	// const result: YoutubeMusicData[] = [];
-	console.log("includedTagIds:", includedTagIds);
+	console.log("includedTagIds:", tagIds);
 	return function (value: YoutubeMusicData, index: number, array: YoutubeMusicData[]): boolean {
 		const tagIds = value.tags?.map((t) => t.id) || [];
 		console.log("tagIds:", tagIds);
 		let isExist = false;
 		for (let i = 0; i < tagIds.length; i++) {
-			if (includedTagIds.includes(i)) {
+			if (tagIds.includes(i)) {
 				console.log("test");
 				isExist = true;
 				break;
@@ -637,6 +678,21 @@ function tagFilter(existTagIds: number[], excludedTagIds: number[]) {
 		}
 		return isExist;
 	};
+}
+
+function NoDataImage({ ...props }) {
+	return (
+		<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+			<rect x="31" y="52" width="138" height="96" rx="10" stroke="currentColor" strokeWidth="4" />
+			<path
+				d="M74 74L126 126M126 74L74 126"
+				stroke="currentColor"
+				strokeWidth="8"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+		</svg>
+	);
 }
 
 interface moddedYoutubeData {
@@ -649,7 +705,7 @@ interface FilterTagProps extends TagProps {
 	tagId: number;
 	name: string;
 	color?: string;
-	tagExcludeIds: number[];
+	tagFilter: number[];
 }
 
 interface FollowerCardProps {
@@ -673,3 +729,7 @@ interface ThumbnailImageProps extends BoxProps {
 
 interface SideListContainerProps extends BoxProps {}
 interface SideListProps extends BoxProps {}
+
+interface Filter {
+	tag: number[];
+}
