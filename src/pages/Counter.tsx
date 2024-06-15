@@ -111,7 +111,11 @@ export function Counter() {
 	const thumbWidth = ["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"];
 
 	const handleClickStellar = (uuid: string) => () => {
-		setTagExcludeIds([]);
+		setFilter((prev) => {
+			const obj = { ...prev };
+			obj.tag = [];
+			return obj;
+		});
 		setCurrentUuid(uuid);
 	};
 
@@ -167,8 +171,11 @@ export function Counter() {
 	useConsole(filter);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
-	const musics = currentMusic?.filter((m) => m.type === "music").sort(musicSort("default", "ASC"));
-	// .filter(tagFilter(currentExistTagIds, tagExcludeIds)) || [];
+	const musics =
+		currentMusic
+			?.filter((m) => m.type === "music")
+			.sort(musicSort("default", "ASC"))
+			.filter(tagFilterFunc(currentExistTagIds, filter.tag)) || [];
 
 	return (
 		<Stack
@@ -628,6 +635,8 @@ function SideList({ children, ...props }: SideListProps) {
 	);
 }
 
+//? local functions
+
 function hasComma(record: string) {
 	return record.includes(",");
 }
@@ -662,21 +671,11 @@ function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
 	}, [] as TagType[]);
 }
 
-function tagFilterFunc(existTagIds: number[], tagIds: number[]) {
+function tagFilterFunc(existTagIds: number[], includedTagIds: number[]) {
 	// const result: YoutubeMusicData[] = [];
-	console.log("includedTagIds:", tagIds);
 	return function (value: YoutubeMusicData, index: number, array: YoutubeMusicData[]): boolean {
 		const tagIds = value.tags?.map((t) => t.id) || [];
-		console.log("tagIds:", tagIds);
-		let isExist = false;
-		for (let i = 0; i < tagIds.length; i++) {
-			if (tagIds.includes(i)) {
-				console.log("test");
-				isExist = true;
-				break;
-			}
-		}
-		return isExist;
+		return includedTagIds.length === 0 ? true : tagIds.some((id) => includedTagIds.includes(id));
 	};
 }
 
