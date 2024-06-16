@@ -782,21 +782,9 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 					</Stack>
 				))}
 			</Stack>
-			{/* {carouselRef.current && carouselRef.current.scrollTop < carouselHeight * data.length - 10}
-			<Stack position="absolute" bottom={0} left={0} width="100%" alignItems={"center"}>
-				<IconButton
-					onClick={() => {
-						carouselScroll("down");
-					}}
-					icon={<MdKeyboardDoubleArrowDown />}
-					boxSize="32px"
-					minWidth="0"
-					aria-label="carousel-down"
-				/>
-			</Stack> */}
 		</Stack>
 	) : (
-		<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
+		<Stack flex={1} alignItems={"center"} justifyContent={"center"} height="125.8px" gap="0">
 			<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
 				{viewCount ? numberToLocaleString(viewCount) : FETCHING_TEXT}
 			</Text>
