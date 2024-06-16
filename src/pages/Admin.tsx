@@ -77,7 +77,7 @@ import { NotExist } from "./NotExist";
 import { useConsole } from "../lib/hooks/useConsole";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { Tag as TagType } from "../lib/types";
+import { Tag as TagType, VideoDetail } from "../lib/types";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import Wrapper from "../components/Wrapper";
 
@@ -615,12 +615,15 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 		publishedAt: "",
 		isActive: true,
 	});
+	const [additionalInputValue, setAdditionalInputValue] = useState<AdditionalInputValue[]>([
+		{ id: -1, type: "", videoId: "" },
+	]);
 	const [currentId, setCurrentId] = useState(-1);
 
 	const handleClickCard = (givenId: number) => () => {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
-		const { id, title, titleAlias, tags, publishedAt, isActive } = data[idx];
+		const { id, title, titleAlias, tags, publishedAt, isActive, details } = data[idx];
 
 		//2024-04-10T08:30:39.000Z"  "yyyy-MM-ddThh:mm
 		setInputValue({
@@ -631,6 +634,17 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 			publishedAt: publishedAt.slice(0, -1),
 			isActive,
 		});
+
+		setAdditionalInputValue(
+			details.map(({ id, type, videoId, viewCount, likeCount, countUpdatedAt }) => ({
+				id,
+				type,
+				videoId,
+				viewCount,
+				likeCount,
+				countUpdatedAt,
+			}))
+		);
 		onOpen();
 	};
 
@@ -649,6 +663,8 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 				inputValue={inputValue}
 				setInputValue={setInputValue}
 				setData={setData}
+				additionalInputValue={additionalInputValue}
+				setAdditionalInputValue={setAdditionalInputValue}
 			/>
 			<Stack height="360px" overflowY={"scroll"} paddingRight="4px">
 				{data.map((v) => {
@@ -688,7 +704,16 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 	);
 }
 
-function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, setData }: MusicDrawerProps) {
+function MusicDrawer({
+	inputValue,
+	setInputValue,
+	additionalInputValue,
+	setAdditionalInputValue,
+	placement,
+	isOpen,
+	onClose,
+	setData,
+}: MusicDrawerProps) {
 	const toast = useToast();
 
 	const [tags, setTags] = useState<TagType[]>([]);
@@ -697,9 +722,6 @@ function MusicDrawer({ inputValue, setInputValue, placement, isOpen, onClose, se
 	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
 	const [tagName, setTagName] = useState<string>("");
 	const [colorCode, setColorCode] = useState<string>("");
-	const [additionalInputValue, setAdditionalInputValue] = useState<AdditionalInputValue[]>([
-		{ id: -1, type: "", videoId: "" },
-	]);
 
 	const handleInputValue = (key: keyof MPLInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -1084,6 +1106,7 @@ interface VideoData {
 	tags: TagType[];
 	publishedAt: string;
 	isActive: boolean;
+	details: VideoDetail[];
 }
 
 interface StellarInputValue {
@@ -1121,6 +1144,8 @@ interface MusicDrawerProps {
 	isOpen: boolean;
 	onClose: () => void;
 	setData: Dispatch<SetStateAction<VideoData[]>>;
+	additionalInputValue: AdditionalInputValue[];
+	setAdditionalInputValue: Dispatch<SetStateAction<AdditionalInputValue[]>>;
 }
 
 interface TagModalProps {
