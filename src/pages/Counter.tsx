@@ -750,7 +750,7 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 				))}
 			</Stack>
 
-			<Stack ref={carouselRef} overflowY={"hidden"} minHeight="100%" minWidth="100%" gap={0}>
+			<Stack ref={carouselRef} overflowY={"hidden"} height="125.8px" minWidth="100%" gap={0}>
 				{data.map((c, i) => (
 					<Stack key={i} alignItems={"center"} justifyContent={"center"} gap="0" minHeight="100%" minWidth="100%">
 						<Text fontSize={"0.75rem"} color="gray.600">
