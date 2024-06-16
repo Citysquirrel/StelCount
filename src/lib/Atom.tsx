@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 import { createAtomKey } from "./functions/createAtomKey";
-import { Tag } from "./types";
+import { Tag, VideoDetail } from "./types";
 
 export const headerOffsetState = atom({
 	key: createAtomKey("headerOffset"),
@@ -66,6 +66,7 @@ export interface YoutubeMusicData {
 	isCollaborated?: boolean;
 	publishedAt?: Date;
 	tags?: Tag[];
+	details: VideoDetail[];
 }
 
 export const stellarState = atom<StellarState[]>({

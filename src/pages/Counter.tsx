@@ -37,10 +37,20 @@ import { musicDefaultSortValue, numberToLocaleString, remainingCount, remainingF
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdCheck, MdClear, MdFilter, MdFilterList, MdHome, MdOpenInNew, MdTag } from "react-icons/md";
+import {
+	MdCheck,
+	MdClear,
+	MdFilter,
+	MdFilterList,
+	MdHome,
+	MdKeyboardDoubleArrowDown,
+	MdKeyboardDoubleArrowUp,
+	MdOpenInNew,
+	MdTag,
+} from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
-import { Tag as TagType, UserSettingStorage } from "../lib/types";
+import { Tag as TagType, UserSettingStorage, VideoDetail } from "../lib/types";
 import { ColorText } from "../components/Text";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import isMobile from "is-mobile";
@@ -75,8 +85,13 @@ export function Counter() {
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
-	const [tagExcludeIds, setTagExcludeIds] = useState<number[]>([]);
 	const [filter, setFilter] = useState<Filter>({ tag: [] });
+	const [sort, setSort] = useState<Sort>({
+		current: [0, 0],
+		sortBy: ["default", "viewCount", "publishedAt"],
+		sortName: ["기본값", "조회수", "게시일"],
+		direction: ["ASC", "DESC"],
+	});
 	const [isFilterOn, setIsFilterOn] = useState(false);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
@@ -155,11 +170,43 @@ export function Counter() {
 		});
 	};
 
+	const handleSort = (key: "sortBy" | "direction") => () => {
+		if (key === "sortBy") {
+			setSort((prev) => {
+				const obj = { ...prev };
+				const cur = obj.current;
+				cur[0] = cur[0] + 1 === obj.sortBy.length ? 0 : cur[0] + 1;
+				setUserSetting((prevUS) => {
+					const objUS = { ...prevUS, sortBy: cur[0] };
+					return objUS;
+				});
+				return obj;
+			});
+		} else if (key === "direction") {
+			setSort((prev) => {
+				const obj = { ...prev };
+				const cur = obj.current;
+				cur[1] = cur[1] + 1 === obj.direction.length ? 0 : cur[1] + 1;
+				setUserSetting((prevUS) => {
+					const objUS = { ...prevUS, sortDirection: cur[1] };
+					return objUS;
+				});
+				return obj;
+			});
+		}
+	};
+
 	useEffect(() => {
 		if (userSetting.isFilterOn) {
 			if (userSetting.isFilterOn === "true") setIsFilterOn(true);
 			else setIsFilterOn(false);
 		}
+
+		setSort((prev) => {
+			const obj = { ...prev };
+			obj.current = [userSetting.sortBy || 0, userSetting.sortDirection || 0];
+			return obj;
+		});
 
 		if (currentUuid === "")
 			if (userSetting.homeStellar) {
@@ -168,13 +215,13 @@ export function Counter() {
 				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
 			}
 	}, [data]);
-	useConsole(filter);
+	useConsole(data);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
 	const musics =
 		currentMusic
 			?.filter((m) => m.type === "music")
-			.sort(musicSort("default", "ASC"))
+			.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
 			.filter(tagFilterFunc(currentExistTagIds, filter.tag)) || [];
 
 	return (
@@ -347,61 +394,79 @@ export function Counter() {
 						</Stack>
 					</Stack>
 					<Stack>
-						{/* 필터링 컴포넌트 시작 */}
-						{import.meta.env.DEV && currentExistTags.length > 0 ? (
-							<Stack
-								bg="rgba(245,245,245)"
-								borderRadius={"0.375rem"}
-								width={isFilterOn ? "100%" : "24px"}
-								height={isFilterOn ? `auto` : "24px"}
-								overflow="hidden"
-								gap="2px"
-							>
-								<IconButton
-									onClick={() => {
-										setIsFilterOn((prev) => {
-											setUserSetting((prevSetting) => ({ ...prevSetting, isFilterOn: String(!prev) }));
-											return !prev;
-										});
-									}}
-									boxSize="24px"
-									minHeight="24px"
-									minW={0}
-									icon={isFilterOn ? <MdClear /> : <MdFilterList />}
-									aria-label="filterButton"
-								/>
-								<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="2px" flexWrap={"wrap"}>
+						<HStack alignItems={"flex-start"}>
+							{/* 솔팅 컴포넌트 시작 */}
+							<HStack>
+								{isLoading ? null : (
+									<>
+										<Tooltip label="정렬 기준">
+											<Button onClick={handleSort("sortBy")} height="24px" fontSize={"sm"} padding="0 8px">
+												{sort.sortName[sort.current[0]]}
+											</Button>
+										</Tooltip>
+										<Tooltip label="정렬 방향">
+											<Button onClick={handleSort("direction")} height="24px" fontSize={"sm"} padding="0 8px">
+												{sort.current[1] === 0 ? "오름" : "내림"}
+											</Button>
+										</Tooltip>
+									</>
+								)}
+							</HStack>
+							{/* 필터링 컴포넌트 시작 */}
+							{currentExistTags.length > 0 ? (
+								<Stack
+									bg="rgba(245,245,245)"
+									borderRadius={"0.375rem"}
+									width={isFilterOn ? "100%" : "24px"}
+									height={isFilterOn ? `auto` : "24px"}
+									overflow="hidden"
+									gap="2px"
+								>
 									<IconButton
-										colorScheme="blackAlpha"
-										variant={filter.tag.length > 0 ? "solid" : "ghost"}
+										onClick={() => {
+											setIsFilterOn((prev) => {
+												setUserSetting((prevSetting) => ({ ...prevSetting, isFilterOn: String(!prev) }));
+												return !prev;
+											});
+										}}
 										boxSize="24px"
-										minHeight={"24px"}
-										icon={filter.tag.length > 0 ? <MdClear /> : <MdTag />}
+										minHeight="24px"
 										minW={0}
-										aria-label="clear-tag-filter"
-										onClick={handleResetFilter("tag")}
+										icon={isFilterOn ? <MdClear /> : <MdFilterList />}
+										aria-label="filterButton"
 									/>
+									<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="2px" flexWrap={"wrap"}>
+										<IconButton
+											colorScheme="blackAlpha"
+											variant={filter.tag.length > 0 ? "solid" : "ghost"}
+											boxSize="24px"
+											minHeight={"24px"}
+											icon={filter.tag.length > 0 ? <MdClear /> : <MdTag />}
+											minW={0}
+											aria-label="clear-tag-filter"
+											onClick={handleResetFilter("tag")}
+										/>
 
-									<Spacing direction="horizontal" size={4} />
-									{currentExistTags.map((t, idx) => (
-										<FilterTag
-											key={`${t.id}-${idx}`}
-											tagId={t.id}
-											name={t.name}
-											color={t.colorCode}
-											tagFilter={filter.tag}
-											onClick={handleTagFilter(t.id)}
-											minWidth="76px"
-											height="24px"
-											wordBreak={"keep-all"}
-										>
-											{t.name}
-										</FilterTag>
-									))}
-								</HStack>
-							</Stack>
-						) : null}
-
+										<Spacing direction="horizontal" size={4} />
+										{currentExistTags.map((t, idx) => (
+											<FilterTag
+												key={`${t.id}-${idx}`}
+												tagId={t.id}
+												name={t.name}
+												color={t.colorCode}
+												tagFilter={filter.tag}
+												onClick={handleTagFilter(t.id)}
+												minWidth="76px"
+												height="24px"
+												wordBreak={"keep-all"}
+											>
+												{t.name}
+											</FilterTag>
+										))}
+									</HStack>
+								</Stack>
+							) : null}
+						</HStack>
 						<SimpleGrid
 							ref={gridRef}
 							columns={(musics !== undefined && musics.length > 0) || isLoading ? [1, 1, 2, 2, 3] : 1}
@@ -474,7 +539,7 @@ function FollowerCard({ href, icon, text, currentColorCode, subText }: FollowerC
 	);
 }
 
-function musicSort(type: "publishedAt" | "name" | "default", order: "ASC" | "DESC") {
+function musicSort(type: "publishedAt" | "viewCount" | "default", order: "ASC" | "DESC") {
 	return function (a: YoutubeMusicData, b: YoutubeMusicData) {
 		if (type === "default") {
 			const aInt = parseInt(a.viewCount || "0");
@@ -482,7 +547,15 @@ function musicSort(type: "publishedAt" | "name" | "default", order: "ASC" | "DES
 			const A = musicDefaultSortValue(aInt);
 			const B = musicDefaultSortValue(bInt);
 			return order === "ASC" ? A - B : B - A;
-		} else return order === "ASC" ? a[type] - b[type] : b[type] - a[type];
+		} else if (type === "publishedAt") {
+			const aDate = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+			const bDate = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+			return order === "ASC" ? aDate - bDate : bDate - aDate;
+		} else if (type === "viewCount") {
+			const aCnt = a.viewCount ? parseInt(a.viewCount) : 0;
+			const bCnt = b.viewCount ? parseInt(b.viewCount) : 0;
+			return order === "ASC" ? aCnt - bCnt : bCnt - aCnt;
+		} else return 0;
 	};
 }
 
@@ -504,7 +577,6 @@ function MusicFilter() {
 }
 
 function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps) {
-	const imageRef = useRef<HTMLDivElement>(null);
 	const {
 		type,
 		title,
@@ -517,6 +589,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		isOriginal,
 		isCollaborated,
 		publishedAt,
+		details,
 	} = data;
 
 	const titleText = titleAlias || title;
@@ -559,21 +632,14 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 				paddingBottom={"12px"}
 			>
 				<HStack flex={1} flexBasis={"117px"}>
-					<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
-						<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
-							{numberToLocaleString(viewCount)}
-						</Text>
-						{calc ? (
-							<Text fontSize={"0.875rem"}>
-								(
-								<ColorText as="span" value={dir === 1 ? "orange.500" : "green.500"}>
-									{calc}
-								</ColorText>
-								회 {dir === 1 ? "남음" : "지남"})
-							</Text>
-						) : null}
-					</Stack>
-					<ThumbnailImage src={thumbnail} width={"116px"} height={thumbWidth} maxHeight="108px" />
+					<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} />
+					<ThumbnailImage
+						src={thumbnail}
+						width={"116px"}
+						height={thumbWidth}
+						maxHeight="108px"
+						display={width.map((w) => (parseInt(w) < 292 ? "none" : "flex"))}
+					/>
 				</HStack>
 				<Stack position="relative" gap="auto" flexWrap={"nowrap"} flex={1}>
 					<Link href={youtube.videoUrl(videoId)} isExternal>
@@ -601,6 +667,149 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 				</Stack>
 			</CardBody>
 		</Card>
+	);
+}
+
+function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
+	const carouselRef = useRef<HTMLDivElement>(null);
+	const [currentPage, setCurrentPage] = useState(1);
+	const isDetailExist = details.length > 0;
+	const data = [
+		{
+			viewCount,
+			calc,
+			dir,
+			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
+			type: undefined,
+		},
+		...details.map((v, i) => {
+			const viewCountNum = parseInt(v.viewCount || "0");
+			const [calc, dir] = remainingCount(viewCountNum);
+			return {
+				viewCount: v.viewCount,
+				calc,
+				dir,
+				totalCount: undefined,
+				type: v.type,
+			};
+		}),
+	];
+	const FETCHING_TEXT = "정보 수집중";
+	const carouselTop = (carouselRef.current && carouselRef.current.scrollTop) || 0;
+	const carouselHeight = (carouselRef.current && carouselRef.current.clientHeight) || 125.8;
+	const carouselScrollByPage = (page: number) => {
+		setCurrentPage(page);
+		carouselRef.current && carouselRef.current.scrollTo({ behavior: "smooth", top: carouselHeight * (page - 1) });
+	};
+	const carouselScroll = (dir: "up" | "down") => {
+		const top = dir === "down" ? carouselTop + carouselHeight : carouselTop - carouselHeight;
+		carouselRef.current && carouselRef.current.scrollTo({ behavior: "smooth", top });
+	};
+
+	const handlePage = (page: number) => () => {
+		carouselScrollByPage(page);
+	};
+
+	useEffect(() => {
+		if (isDetailExist) carouselScrollByPage(1);
+	}, []);
+
+	return isDetailExist ? (
+		<Stack position="relative" flex="1" alignItems={"center"} gap="0" minHeight="100%" height="100%">
+			{/* {carouselRef.current && carouselRef.current.scrollTop > 10 ? (
+				<Stack position="absolute" top={0} left={0} width="100%" alignItems={"center"}>
+					<IconButton
+						onClick={() => {
+							carouselScroll("up");
+						}}
+						icon={<MdKeyboardDoubleArrowUp />}
+						boxSize="32px"
+						minWidth="0"
+						aria-label="carousel-up"
+					/>
+				</Stack>
+			) : null} */}
+			<Stack position="absolute" top={"35%"} left={"-8px"} gap="2px">
+				{data.map((c, i) => (
+					<Stack
+						key={i}
+						boxSize="16px"
+						alignItems={"center"}
+						justifyContent={"center"}
+						cursor={"pointer"}
+						onClick={handlePage(i + 1)}
+					>
+						<Box
+							boxSize="8px"
+							borderRadius={"100%"}
+							backgroundColor={currentPage === i + 1 ? "blue.700" : "blue.300"}
+							cursor={"pointer"}
+							transition="background-color .3s"
+						/>
+					</Stack>
+				))}
+			</Stack>
+
+			<Stack ref={carouselRef} overflowY={"hidden"} minHeight="100%" minWidth="100%" gap={0}>
+				{data.map((c, i) => (
+					<Stack key={i} alignItems={"center"} justifyContent={"center"} gap="0" minHeight="100%" minWidth="100%">
+						<Text fontSize={"0.75rem"} color="gray.600">
+							<ColorText as="span" value={"blue.600"}>
+								{c.type || "Main"}
+							</ColorText>
+						</Text>
+						<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1} color={!c.viewCount ? "gray.600" : undefined}>
+							{numberToLocaleString(c.viewCount) || FETCHING_TEXT}
+						</Text>
+						{c.calc ? (
+							<Text fontSize={"0.875rem"}>
+								(
+								<ColorText as="span" value={c.dir === 1 ? "orange.500" : "green.500"}>
+									{c.calc}
+								</ColorText>
+								회 {c.dir === 1 ? "남음" : "지남"})
+							</Text>
+						) : null}
+						{c.totalCount && c.totalCount !== parseInt(c.viewCount || "0") ? (
+							<Text fontSize={"0.75rem"} color="gray.600">
+								총합&nbsp;
+								<ColorText as="span" value={"blue.600"}>
+									{numberToLocaleString(String(c.totalCount))}
+								</ColorText>
+								&nbsp; 회
+							</Text>
+						) : null}
+					</Stack>
+				))}
+			</Stack>
+			{/* {carouselRef.current && carouselRef.current.scrollTop < carouselHeight * data.length - 10}
+			<Stack position="absolute" bottom={0} left={0} width="100%" alignItems={"center"}>
+				<IconButton
+					onClick={() => {
+						carouselScroll("down");
+					}}
+					icon={<MdKeyboardDoubleArrowDown />}
+					boxSize="32px"
+					minWidth="0"
+					aria-label="carousel-down"
+				/>
+			</Stack> */}
+		</Stack>
+	) : (
+		<Stack flex={1} alignItems={"center"} justifyContent={"center"} gap="0">
+			<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
+				{viewCount ? numberToLocaleString(viewCount) : FETCHING_TEXT}
+			</Text>
+			{calc ? (
+				<Text fontSize={"0.875rem"}>
+					(
+					<ColorText as="span" value={dir === 1 ? "orange.500" : "green.500"}>
+						{calc}
+					</ColorText>
+					회 {dir === 1 ? "남음" : "지남"})
+				</Text>
+			) : null}
+		</Stack>
 	);
 }
 
@@ -722,6 +931,13 @@ interface MusicCardProps {
 	thumbWidth: string[];
 }
 
+interface ViewCountProps {
+	viewCount?: string;
+	calc: number;
+	dir: number;
+	details: VideoDetail[];
+}
+
 interface ThumbnailImageProps extends BoxProps {
 	src: string;
 }
@@ -731,4 +947,11 @@ interface SideListProps extends BoxProps {}
 
 interface Filter {
 	tag: number[];
+}
+
+interface Sort {
+	current: number[];
+	sortBy: ("default" | "viewCount" | "publishedAt")[];
+	sortName: string[];
+	direction: ("ASC" | "DESC")[];
 }
