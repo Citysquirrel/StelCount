@@ -64,7 +64,7 @@ export interface YoutubeMusicData {
 	ownerId?: string;
 	isOriginal?: boolean;
 	isCollaborated?: boolean;
-	publishedAt?: Date;
+	publishedAt?: string;
 	tags?: Tag[];
 	details: VideoDetail[];
 }
