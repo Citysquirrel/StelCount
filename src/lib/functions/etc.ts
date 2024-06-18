@@ -21,12 +21,12 @@ export function remainingFromNum(num: number, unit: number, reverse?: boolean) {
 }
 
 export function remainingCount(num: number) {
-	const condition = { a: 10000000, b: 1000000, c: 100000, d: 10000 };
-	if (num >= condition.a) {
-		return assistCount(remainingFromNum(num, condition.b), condition.b);
-	} else if (num >= condition.b) {
-		return assistCount(remainingFromNum(num, condition.c), condition.c);
-	} else return assistCount(remainingFromNum(num, condition.d), condition.d);
+	const con = [10_000_000, 1_000_000, 100_000, 10_000];
+	if (num >= con[0]) {
+		return assistCount(remainingFromNum(num, con[1]), con[1]);
+	} else if (num >= con[1]) {
+		return assistCount(remainingFromNum(num, con[2]), con[2]);
+	} else return assistCount(remainingFromNum(num, con[3]), con[3]);
 }
 
 function assistCount(num: number, unit: number) {
