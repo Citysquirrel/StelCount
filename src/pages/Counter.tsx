@@ -630,6 +630,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 				flexDirection={"column"}
 				flexWrap={"nowrap"}
 				paddingBottom={"12px"}
+				minHeight="225.6px"
 			>
 				<HStack flex={1} flexBasis={"117px"}>
 					<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} />
