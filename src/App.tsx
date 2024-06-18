@@ -4,8 +4,8 @@ import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, Divider, IconButton, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
-import { MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
+import { Button, Divider, IconButton, Link, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
+import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
 import { serverErrorState, isStellarLoadingState, isAdminState, backgroundColorState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
@@ -14,6 +14,7 @@ import { ImListNumbered } from "react-icons/im";
 import { IoReload } from "react-icons/io5";
 import { useConsole } from "./lib/hooks/useConsole";
 import { useAuth } from "./lib/hooks/useAuth";
+import { CAFE_WRITE_URL } from "./lib/constant";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -104,6 +105,21 @@ function App() {
 						isLoading={isStellarLoading}
 					>
 						<IoReload />
+					</Button>
+				</Tooltip>
+				<Tooltip label="축하 글쓰러 가기">
+					<Button
+						as={Link}
+						fontSize="1.125rem"
+						borderRadius={"full"}
+						padding="0"
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={handleReload}
+						aria-label="reload"
+						href={CAFE_WRITE_URL}
+						isExternal
+					>
+						<MdCreate />
 					</Button>
 				</Tooltip>
 				{import.meta.env.DEV ? (

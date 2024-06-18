@@ -3,6 +3,7 @@ import { isLoadingState, serverErrorState, isStellarLoadingState, stellarState }
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
 import { useToast } from "@chakra-ui/react";
+import isMobile from "is-mobile";
 
 export function useStellar() {
 	const toast = useToast();
@@ -21,7 +22,12 @@ export function useStellar() {
 					if (res.status === 200) {
 						setData(res.data || []);
 						isTimer &&
-							toast({ description: "데이터를 새로 불러왔습니다.", status: "info", duration: 3000, isClosable: true });
+							toast({
+								description: "데이터를 새로 불러왔습니다.",
+								status: "info",
+								duration: isMobile() ? 1500 : 3000,
+								isClosable: true,
+							});
 					}
 					if (res.status === 429) {
 						setServerError({ isError: true, statusCode: res.status });

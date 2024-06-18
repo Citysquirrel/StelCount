@@ -879,7 +879,7 @@ function SideListContainer({ children, ...props }: SideListContainerProps) {
 
 function SideList({ children, ...props }: SideListProps) {
 	return (
-		<Stack margin="12px" marginTop={isMobile() ? undefined : "36px"} {...props}>
+		<Stack margin="12px" marginTop={isMobile() ? undefined : "16px"} {...props}>
 			{children}
 		</Stack>
 	);

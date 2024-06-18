@@ -19,7 +19,7 @@ export function MainProvider({ children }) {
 	return (
 		<ChakraProvider
 			theme={theme}
-			toastOptions={{ defaultOptions: { position: "bottom-left", duration: 3000, isClosable: true } }}
+			toastOptions={{ defaultOptions: { position: "bottom", duration: 3000, isClosable: true } }}
 		>
 			<RecoilRoot>{children}</RecoilRoot>
 		</ChakraProvider>
