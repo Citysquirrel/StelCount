@@ -49,3 +49,17 @@ function assistSort(num: number, unit: number) {
 	const s = num * 0.2;
 	return a > s ? num : a;
 }
+
+export function elapsedTimeText(date: Date, now: Date) {
+	const gap = (now.getTime() - date.getTime()) / 1000;
+	let text = "";
+	if (gap < 60) {
+		text = "1분 미만";
+	} else if (gap < 3600) {
+		text = `${Math.floor(gap / 60)}분 전`;
+	} else if (gap < 86400) {
+		text = `${Math.floor(gap / 3600)}시간 전`;
+	} else text = `${Math.floor(gap / 86400)}일 전`;
+
+	return [gap, text];
+}

@@ -33,7 +33,13 @@ import {
 import { Image } from "../components/Image";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useConsole } from "../lib/hooks/useConsole";
-import { musicDefaultSortValue, numberToLocaleString, remainingCount, remainingFromNum } from "../lib/functions/etc";
+import {
+	musicDefaultSortValue,
+	numberToLocaleString,
+	remainingCount,
+	remainingFromNum,
+	elapsedTimeText,
+} from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
@@ -577,6 +583,8 @@ function MusicFilter() {
 }
 
 function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps) {
+	const [now, setNow] = useState(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
+	const [dateHover, setDateHover] = useState(false);
 	const {
 		type,
 		title,
@@ -592,9 +600,29 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		details,
 	} = data;
 
+	const publishedDate = new Date(publishedAt || "2000-01-01T09:00:00.000Z");
+	const [dateGap, remainingDateText] = elapsedTimeText(publishedDate, now);
+	const isPlzInterest = Math.floor(dateGap / 86400) <= 14;
+
 	const titleText = titleAlias || title;
 	const viewCountNum = parseInt(viewCount || "0");
 	const [calc, dir] = remainingCount(viewCountNum);
+
+	const handleMouseEnter = () => {};
+
+	const handleMouseLeave = () => {};
+
+	const handleMouseMove = () => {};
+
+	useEffect(() => {
+		const i = setInterval(() => {
+			setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
+		}, 30000);
+
+		return () => {
+			clearInterval(i);
+		};
+	}, []);
 
 	return (
 		<Card
@@ -602,12 +630,17 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 			width={width}
 			maxWidth={"420px"}
 			minHeight={"212px"}
-			backgroundColor={dir === 1 ? "rgba(255,255,255,.9)" : "rgba(235,255,235,.9)"}
+			backgroundColor={
+				isPlzInterest ? "rgba(255,235,235,.9)" : dir === 1 ? "rgba(255,255,255,.9)" : "rgba(235,255,235,.9)"
+			}
 			border="1px solid transparent"
 			transition="border-color .3s"
 			_hover={{ borderColor: currentColorCode }}
+			onMouseEnter={handleMouseEnter}
+			onMouseLeave={handleMouseLeave}
+			onMouseMove={handleMouseMove}
 		>
-			{dir !== 1 ? (
+			{false ? (
 				<Button
 					as={Link}
 					variant={"ghost"}
@@ -622,7 +655,26 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 					<MdOpenInNew />
 				</Button>
 			) : null}
-
+			<HStack position="absolute" top={"4px"} left={"4px"} gap={"4px"} userSelect={"none"}>
+				<Tag
+					colorScheme="blackAlpha"
+					backgroundColor={dateHover ? "gray.300" : undefined}
+					transition="all .3s"
+					onMouseEnter={() => {
+						setDateHover(true);
+					}}
+					onMouseLeave={() => {
+						setDateHover(false);
+					}}
+				>
+					{dateHover ? publishedDate.toLocaleString() : remainingDateText}
+				</Tag>
+				{isPlzInterest ? (
+					<Tag colorScheme="red" outline="1px solid red">
+						많관부!🥰
+					</Tag>
+				) : null}
+			</HStack>
 			<CardBody
 				as={Stack}
 				divider={<StackDivider />}
