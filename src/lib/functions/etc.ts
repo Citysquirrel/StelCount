@@ -50,7 +50,7 @@ function assistSort(num: number, unit: number) {
 	return a > s ? num : a;
 }
 
-export function elapsedTimeText(date: Date, now: Date) {
+export function elapsedTimeText(date: Date, now: Date): [number, string] {
 	const gap = (now.getTime() - date.getTime()) / 1000;
 	let text = "";
 	if (gap < 60) {
