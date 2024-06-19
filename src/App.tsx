@@ -36,16 +36,19 @@ function App() {
 		<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">
 			{isLoading ? <Loading /> : null}
 			<Header>
-				{/* <Tooltip label="메인화면">
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						icon={<MdHome />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={nav("/home")}
-						aria-label="home"
-					/>
-				</Tooltip> */}
+				{import.meta.env.DEV ? (
+					<Tooltip label="메인화면">
+						<IconButton
+							fontSize="1.375rem"
+							isRound
+							icon={<MdHome />}
+							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+							onClick={nav("/home")}
+							aria-label="home"
+						/>
+					</Tooltip>
+				) : null}
+
 				<Tooltip label="카운터">
 					<IconButton
 						fontSize="1.125rem"

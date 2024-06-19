@@ -239,7 +239,7 @@ export function Counter() {
 		currentMusic
 			?.filter((m) => m.type === "music")
 			.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
-			.filter(tagFilterFunc(currentExistTagIds, filter.tag)) || [];
+			.filter(tagFilterFunc(filter.tag)) || [];
 
 	return (
 		<Stack
@@ -795,7 +795,7 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
 			type: undefined,
 		},
-		...details.map((v, i) => {
+		...details.map((v) => {
 			const viewCountNum = parseInt(v.viewCount || "0");
 			const [calc, dir] = remainingCount(viewCountNum);
 			return {
@@ -843,7 +843,7 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 				</Stack>
 			) : null} */}
 			<Stack position="absolute" top={"35%"} left={"-8px"} gap="2px">
-				{data.map((c, i) => (
+				{data.map((_, i) => (
 					<Stack
 						key={i}
 						boxSize="16px"
@@ -981,9 +981,9 @@ function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
 	}, [] as TagType[]);
 }
 
-function tagFilterFunc(existTagIds: number[], includedTagIds: number[]) {
+function tagFilterFunc(includedTagIds: number[]) {
 	// const result: YoutubeMusicData[] = [];
-	return function (value: YoutubeMusicData, index: number, array: YoutubeMusicData[]): boolean {
+	return function (value: YoutubeMusicData): boolean {
 		const tagIds = value.tags?.map((t) => t.id) || [];
 		return includedTagIds.length === 0 ? true : tagIds.some((id) => includedTagIds.includes(id));
 	};
