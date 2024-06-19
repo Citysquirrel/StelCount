@@ -1,3 +1,4 @@
+import { Stack } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 export function Home() {
 	const navigate = useNavigate();
 	useEffect(() => {
-		navigate("/counter");
+		// navigate("/counter");
 	}, []);
-	return <></>;
+	return <Stack minHeight="calc(100vh - 64px)"></Stack>;
 }

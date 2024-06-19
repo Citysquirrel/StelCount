@@ -136,16 +136,6 @@ export function Counter() {
 	};
 
 	const handleTagFilter = (tagId: number) => () => {
-		// setTagExcludeIds((prev) => {
-		// 	const arr = [...prev];
-		// 	if (arr.includes(tagId)) {
-		// 		arr.splice(arr.indexOf(tagId), 1);
-		// 	} else {
-		// 		arr.push(tagId);
-		// 	}
-		// 	return arr;
-		// });
-
 		setFilter((prev) => {
 			const obj = { ...prev };
 			const tags = [...obj.tag];
@@ -224,8 +214,6 @@ export function Counter() {
 	return (
 		<Stack
 			direction={isMobile() ? "column-reverse" : "row"}
-			// paddingTop={`${offsetY}px`}
-			// backgroundColor={`${currentColorCode}aa`}
 			transition=".3s background-color"
 			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
 			backgroundRepeat={"no-repeat"}
