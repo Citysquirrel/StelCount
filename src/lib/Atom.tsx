@@ -65,6 +65,8 @@ export interface YoutubeMusicData {
 	isOriginal?: boolean;
 	isCollaborated?: boolean;
 	publishedAt?: string;
+	liveBroadcastContent?: string;
+	scheduledStartTime?: string;
 	tags?: Tag[];
 	details: VideoDetail[];
 }
