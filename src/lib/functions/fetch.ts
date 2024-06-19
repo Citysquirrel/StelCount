@@ -49,6 +49,7 @@ type ServerAPI =
 	| "/ypat/:videoId"
 	| "/tag/:id"
 	| "/tags"
+	| "/live-status"
 	| (string & {});
 
 interface FetchServerOption extends FetchOptions {

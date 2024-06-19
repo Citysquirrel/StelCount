@@ -41,7 +41,7 @@ export interface StellarInfo {
 	group: number;
 	uuid: string;
 	colorCode: string;
-	liveStatus: boolean;
+	liveStatus: boolean | undefined;
 	profileImage: string;
 	chzzkId: string;
 	youtubeId: string;

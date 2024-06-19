@@ -12,6 +12,25 @@ export function useStellar() {
 	const [, setIsLoading] = useRecoilState(isLoadingState);
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
 
+	const getLiveStatus = () => {
+		fetchServer("/live-status", "v1").then((res) => {
+			if (res.status === 200) {
+				const data = res.data as { chzzkId: string; liveStatus: boolean; uuid: string }[];
+				setData((prev) => {
+					const arr = [...prev];
+					for (let i = 0; i < arr.length; i++) {
+						const obj = { ...arr[i] };
+						const liveStatus = data.find(({ uuid }) => uuid === arr[i].uuid)?.liveStatus;
+						obj.liveStatus = liveStatus;
+						arr[i] = obj;
+					}
+
+					return arr;
+				});
+			}
+		});
+	};
+
 	const f = (isTimer?: boolean) => {
 		if (isTimer) {
 			setIsStellarLoading(true);
@@ -28,6 +47,7 @@ export function useStellar() {
 								duration: isMobile() ? 1500 : 3000,
 								isClosable: true,
 							});
+						getLiveStatus();
 					}
 					if (res.status === 429) {
 						setServerError({ isError: true, statusCode: res.status });
@@ -50,6 +70,7 @@ export function useStellar() {
 				setIsStellarLoading(false);
 			});
 	};
+
 	useEffect(() => {
 		f();
 		const i = setInterval(() => {
