@@ -7,7 +7,7 @@ import { useStellar } from "./lib/hooks/useStellar";
 import { Button, Divider, IconButton, Link, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { serverErrorState, isStellarLoadingState, isAdminState, backgroundColorState } from "./lib/Atom";
+import { serverErrorState, isStellarLoadingState, backgroundColorState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { Loading } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";

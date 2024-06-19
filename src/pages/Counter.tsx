@@ -1,12 +1,5 @@
 import { useRecoilState } from "recoil";
-import {
-	PlatformInfosDetail,
-	YoutubeMusicData,
-	headerOffsetState,
-	isLoadingState,
-	liveStatusState,
-	stellarState,
-} from "../lib/Atom";
+import { YoutubeMusicData, headerOffsetState, isLoadingState, liveStatusState, stellarState } from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -15,10 +8,8 @@ import {
 	Button,
 	Card,
 	CardBody,
-	CloseButton,
 	Divider,
 	HStack,
-	Icon,
 	IconButton,
 	Link,
 	Menu,
@@ -44,24 +35,13 @@ import {
 	musicDefaultSortValue,
 	numberToLocaleString,
 	remainingCount,
-	remainingFromNum,
 	elapsedTimeText,
 	remainingTimeText,
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import {
-	MdCheck,
-	MdClear,
-	MdFilter,
-	MdFilterList,
-	MdHome,
-	MdKeyboardDoubleArrowDown,
-	MdKeyboardDoubleArrowUp,
-	MdOpenInNew,
-	MdTag,
-} from "react-icons/md";
+import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdTag } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
 import { Tag as TagType, UserSettingStorage, VideoDetail } from "../lib/types";
@@ -117,7 +97,7 @@ export function Counter() {
 	);
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat());
-	const currentExistTagIds = currentExistTags.map((t) => t.id);
+	// const currentExistTagIds = currentExistTags.map((t) => t.id);
 
 	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uuid)?.liveStatus || false;
 
@@ -590,9 +570,9 @@ function FilterTag({ tagId, name, color, tagFilter, children, ...props }: Filter
 	);
 }
 
-function MusicFilter() {
-	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
-}
+// function MusicFilter() {
+// 	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
+// }
 
 function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps) {
 	const [now, setNow] = useState(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
@@ -808,16 +788,16 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 		}),
 	];
 	const FETCHING_TEXT = "정보 수집중";
-	const carouselTop = (carouselRef.current && carouselRef.current.scrollTop) || 0;
+	// const carouselTop = (carouselRef.current && carouselRef.current.scrollTop) || 0;
 	const carouselHeight = (carouselRef.current && carouselRef.current.clientHeight) || 125.8;
 	const carouselScrollByPage = (page: number) => {
 		setCurrentPage(page);
 		carouselRef.current && carouselRef.current.scrollTo({ behavior: "smooth", top: carouselHeight * (page - 1) });
 	};
-	const carouselScroll = (dir: "up" | "down") => {
-		const top = dir === "down" ? carouselTop + carouselHeight : carouselTop - carouselHeight;
-		carouselRef.current && carouselRef.current.scrollTo({ behavior: "smooth", top });
-	};
+	// const carouselScroll = (dir: "up" | "down") => {
+	// 	const top = dir === "down" ? carouselTop + carouselHeight : carouselTop - carouselHeight;
+	// 	carouselRef.current && carouselRef.current.scrollTo({ behavior: "smooth", top });
+	// };
 
 	const handlePage = (page: number) => () => {
 		carouselScrollByPage(page);
@@ -947,14 +927,14 @@ function SideList({ children, ...props }: SideListProps) {
 
 //? local functions
 
-function hasComma(record: string) {
-	return record.includes(",");
-}
+// function hasComma(record: string) {
+// 	return record.includes(",");
+// }
 
-function divideCommaData(record: string) {
-	const isCommaExist = record.includes(",");
-	return isCommaExist ? record.split(",") : record;
-}
+// function divideCommaData(record: string) {
+// 	const isCommaExist = record.includes(",");
+// 	return isCommaExist ? record.split(",") : record;
+// }
 
 function modYoutubeData(id: string, subCnt: string, url: string) {
 	const storage: moddedYoutubeData[] = [];
