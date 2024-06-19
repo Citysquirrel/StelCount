@@ -53,6 +53,12 @@ export interface StellarState extends StellarInfo {
 	youtubeMusic: YoutubeMusicData[];
 }
 
+export interface LiveStatusState {
+	chzzkId: string;
+	liveStatus: boolean;
+	uuid: string;
+}
+
 export interface YoutubeMusicData {
 	type?: string; // "music", "main", "replay"
 	title: string;
@@ -73,6 +79,11 @@ export interface YoutubeMusicData {
 
 export const stellarState = atom<StellarState[]>({
 	key: createAtomKey("stellar"),
+	default: [],
+});
+
+export const liveStatusState = atom<LiveStatusState[]>({
+	key: createAtomKey("liveStatus"),
 	default: [],
 });
 

@@ -1,5 +1,12 @@
 import { useRecoilState } from "recoil";
-import { isLoadingState, serverErrorState, isStellarLoadingState, stellarState } from "../Atom";
+import {
+	isLoadingState,
+	serverErrorState,
+	isStellarLoadingState,
+	stellarState,
+	LiveStatusState,
+	liveStatusState,
+} from "../Atom";
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
 import { useToast } from "@chakra-ui/react";
@@ -8,6 +15,7 @@ import isMobile from "is-mobile";
 export function useStellar() {
 	const toast = useToast();
 	const [data, setData] = useRecoilState(stellarState);
+	const [_, setLiveStatus] = useRecoilState(liveStatusState);
 	const [, setServerError] = useRecoilState(serverErrorState);
 	const [, setIsLoading] = useRecoilState(isLoadingState);
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
@@ -15,18 +23,8 @@ export function useStellar() {
 	const getLiveStatus = () => {
 		fetchServer("/live-status", "v1").then((res) => {
 			if (res.status === 200) {
-				const data = res.data as { chzzkId: string; liveStatus: boolean; uuid: string }[];
-				setData((prev) => {
-					const arr = [...prev];
-					for (let i = 0; i < arr.length; i++) {
-						const obj = { ...arr[i] };
-						const liveStatus = data.find(({ uuid }) => uuid === arr[i].uuid)?.liveStatus;
-						obj.liveStatus = liveStatus;
-						arr[i] = obj;
-					}
-
-					return arr;
-				});
+				const data = res.data as LiveStatusState[];
+				setLiveStatus(data);
 			}
 		});
 	};

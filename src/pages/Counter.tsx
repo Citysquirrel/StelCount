@@ -1,5 +1,12 @@
 import { useRecoilState } from "recoil";
-import { PlatformInfosDetail, YoutubeMusicData, headerOffsetState, isLoadingState, stellarState } from "../lib/Atom";
+import {
+	PlatformInfosDetail,
+	YoutubeMusicData,
+	headerOffsetState,
+	isLoadingState,
+	liveStatusState,
+	stellarState,
+} from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -89,6 +96,7 @@ export function Counter() {
 	const { windowWidth } = useResponsive();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [data] = useRecoilState(stellarState);
+	const [liveStatus] = useRecoilState(liveStatusState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
@@ -110,6 +118,8 @@ export function Counter() {
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat());
 	const currentExistTagIds = currentExistTags.map((t) => t.id);
+
+	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uuid)?.liveStatus || false;
 
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
 	const isUnder720 = windowWidth < 720;
@@ -357,7 +367,7 @@ export function Counter() {
 								<SkeletonCircle boxSize="72px" />
 							) : currentStellar?.chzzkId ? (
 								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || "/images/logo.png"}>
-									<AvatarBadge boxSize="28px" bg={currentStellar?.liveStatus ? "green.400" : "red.400"} />
+									<AvatarBadge boxSize="28px" bg={currentLiveStatus ? "green.400" : "red.400"} />
 								</Avatar>
 							) : null}
 						</Link>
@@ -604,6 +614,8 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		details,
 	} = data;
 
+	const isLive = liveBroadcastContent === "live";
+
 	const isUpcoming = liveBroadcastContent === "upcoming";
 	const scheduledStartTimeDate = new Date(scheduledStartTime || "1000-01-01T09:00:00.000Z");
 	const [startTimeGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
@@ -708,14 +720,25 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 				minHeight="225.6px"
 			>
 				<HStack flex={1} flexBasis={"117px"}>
-					{isUpcoming ? (
+					{isLive ? (
 						<Stack position="relative" flex="1" alignItems={"center"} gap="0" minHeight="100%" height="100%">
 							<Stack flex={1} alignItems={"center"} justifyContent={"center"} height="125.8px" gap="0">
-								<ColorText as="span" value={"blue.600"} fontSize="0.925rem" fontWeight={500}>
+								<ColorText as="span" value={"cyan.400"} fontSize="0.925rem" fontWeight={500}>
 									최초공개
 								</ColorText>
 								<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
-									{dateHover ? scheduledStartTimeDate.toLocaleString() : remainingDateText}
+									{parseInt(remainingDateText) < 0 ? "진행중" : remainingDateText}
+								</Text>
+							</Stack>
+						</Stack>
+					) : isUpcoming ? (
+						<Stack position="relative" flex="1" alignItems={"center"} gap="0" minHeight="100%" height="100%">
+							<Stack flex={1} alignItems={"center"} justifyContent={"center"} height="125.8px" gap="0">
+								<ColorText as="span" value={"cyan.400"} fontSize="0.925rem" fontWeight={500}>
+									최초공개
+								</ColorText>
+								<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
+									{parseInt(remainingDateText) <= 0 ? "곧 시작" : remainingDateText}
 								</Text>
 							</Stack>
 						</Stack>
