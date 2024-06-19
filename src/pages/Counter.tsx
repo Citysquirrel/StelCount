@@ -39,6 +39,7 @@ import {
 	remainingCount,
 	remainingFromNum,
 	elapsedTimeText,
+	remainingTimeText,
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
@@ -547,6 +548,7 @@ function FollowerCard({ href, icon, text, currentColorCode, subText }: FollowerC
 
 function musicSort(type: "publishedAt" | "viewCount" | "default", order: "ASC" | "DESC") {
 	return function (a: YoutubeMusicData, b: YoutubeMusicData) {
+		if (a.liveBroadcastContent === "upcoming") return -1;
 		if (type === "default") {
 			const aInt = parseInt(a.viewCount || "0");
 			const bInt = parseInt(b.viewCount || "0");
@@ -597,12 +599,21 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		isOriginal,
 		isCollaborated,
 		publishedAt,
+		liveBroadcastContent,
+		scheduledStartTime,
 		details,
 	} = data;
 
-	const publishedDate = new Date(publishedAt || "2000-01-01T09:00:00.000Z");
-	const [dateGap, remainingDateText] = elapsedTimeText(publishedDate, now);
-	const isPlzInterest = Math.floor(dateGap / 86400) <= 14;
+	const isUpcoming = liveBroadcastContent === "upcoming";
+	const scheduledStartTimeDate = new Date(scheduledStartTime || "1000-01-01T09:00:00.000Z");
+	const [startTimeGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
+	const upcomingCardBg = `linear-gradient(217deg, rgba(93, 57, 255, 0.8), rgba(255,0,0,0) 70.71%),
+            linear-gradient(127deg, rgba(209, 57, 255, 0.8), rgba(0,255,0,0) 70.71%),
+            linear-gradient(336deg, rgba(155, 142, 255, 0.8), rgba(0,0,255,0) 70.71%)`;
+
+	const publishedDate = new Date(publishedAt || "1000-01-01T09:00:00.000Z");
+	const [dateGap, elapsedDateText] = elapsedTimeText(publishedDate, now);
+	const isPlzInterest = !isUpcoming && Math.floor(dateGap / 86400) <= 14;
 
 	const titleText = titleAlias || title;
 	const viewCountNum = parseInt(viewCount || "0");
@@ -616,8 +627,9 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 
 	useEffect(() => {
 		const i = setInterval(() => {
-			setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
-		}, 30000);
+			let ms = new Date().getMilliseconds();
+			if (ms) setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
+		}, 1000);
 
 		return () => {
 			clearInterval(i);
@@ -631,8 +643,15 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 			maxWidth={"420px"}
 			minHeight={"212px"}
 			backgroundColor={
-				isPlzInterest ? "rgba(255,235,235,.9)" : dir === 1 ? "rgba(255,255,255,.9)" : "rgba(235,255,235,.9)"
+				isUpcoming
+					? undefined
+					: isPlzInterest
+					? "rgba(255,235,235,.9)"
+					: dir === 1
+					? "rgba(255,255,255,.9)"
+					: "rgba(235,255,235,.9)"
 			}
+			background={isUpcoming ? upcomingCardBg : undefined}
 			border="1px solid transparent"
 			transition="border-color .3s"
 			_hover={{ borderColor: currentColorCode }}
@@ -656,20 +675,24 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 				</Button>
 			) : null}
 			<HStack position="absolute" top={"4px"} left={"4px"} gap={"4px"} userSelect={"none"}>
-				<Tag
-					colorScheme="blackAlpha"
-					backgroundColor={dateHover ? "gray.300" : undefined}
-					transition="all .3s"
-					onMouseEnter={() => {
-						setDateHover(true);
-					}}
-					onMouseLeave={() => {
-						setDateHover(false);
-					}}
-				>
-					{dateHover ? publishedDate.toLocaleString() : remainingDateText}
-				</Tag>
-				{isPlzInterest ? (
+				{isUpcoming ? null : (
+					<Tag
+						display={elapsedDateText === "" ? "none" : "inline-flex"}
+						colorScheme="blackAlpha"
+						backgroundColor={dateHover ? "gray.300" : undefined}
+						transition="all .3s"
+						onMouseEnter={() => {
+							setDateHover(true);
+						}}
+						onMouseLeave={() => {
+							setDateHover(false);
+						}}
+					>
+						{dateHover ? publishedDate.toLocaleString() : elapsedDateText}
+					</Tag>
+				)}
+
+				{isPlzInterest || isUpcoming ? (
 					<Tag colorScheme="red" outline="1px solid red">
 						많관부!🥰
 					</Tag>
@@ -685,7 +708,21 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 				minHeight="225.6px"
 			>
 				<HStack flex={1} flexBasis={"117px"}>
-					<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} />
+					{isUpcoming ? (
+						<Stack position="relative" flex="1" alignItems={"center"} gap="0" minHeight="100%" height="100%">
+							<Stack flex={1} alignItems={"center"} justifyContent={"center"} height="125.8px" gap="0">
+								<ColorText as="span" value={"blue.600"} fontSize="0.925rem" fontWeight={500}>
+									최초공개
+								</ColorText>
+								<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
+									{dateHover ? scheduledStartTimeDate.toLocaleString() : remainingDateText}
+								</Text>
+							</Stack>
+						</Stack>
+					) : (
+						<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} />
+					)}
+
 					<ThumbnailImage
 						src={thumbnail}
 						width={"116px"}

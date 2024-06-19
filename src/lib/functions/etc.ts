@@ -53,12 +53,37 @@ function assistSort(num: number, unit: number) {
 export function elapsedTimeText(date: Date, now: Date): [number, string] {
 	const gap = (now.getTime() - date.getTime()) / 1000;
 	let text = "";
+	if (gap > 31536000000) return [gap, ""];
 	if (gap < 60) {
 		text = "1분 미만";
 	} else if (gap < 3600) {
 		text = `${Math.floor(gap / 60)}분 전`;
 	} else if (gap < 86400) {
 		text = `${Math.floor(gap / 3600)}시간 전`;
+	} else text = `${Math.floor(gap / 86400)}일 전`;
+
+	return [gap, text];
+}
+
+export function remainingTimeText(date: Date, now: Date): [number, string] {
+	const gap = (date.getTime() - now.getTime()) / 1000;
+	let text = "";
+	let s = Math.floor(gap % 60)
+		.toString()
+		.padStart(2, "0");
+	let m = Math.floor((gap / 60) % 60)
+		.toString()
+		.padStart(2, "0");
+	let h = Math.floor(gap / 3600)
+		.toString()
+		.padStart(2, "0");
+	if (gap > 31536000000) return [gap, ""];
+	if (gap < 60) {
+		text = `${s}`;
+	} else if (gap < 3600) {
+		text = `${m}:${s}`;
+	} else if (gap < 86400) {
+		text = `${h}:${m}:${s}`;
 	} else text = `${Math.floor(gap / 86400)}일 전`;
 
 	return [gap, text];
