@@ -654,7 +654,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 					<MdOpenInNew />
 				</Button>
 			) : null}
-			<HStack position="absolute" top={"4px"} left={"4px"} gap={"4px"} userSelect={"none"}>
+			<HStack position="absolute" top={"4px"} left={"4px"} gap={"4px"} userSelect={"none"} zIndex={1}>
 				{isUpcoming ? null : (
 					<Tag
 						display={elapsedDateText === "" ? "none" : "inline-flex"}
