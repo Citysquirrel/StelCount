@@ -11,6 +11,9 @@ export default function Home() {
 	useLayoutEffect(() => {
 		import.meta.env.PROD && nav("/counter");
 	}, []);
+	useEffect(() => {
+		import.meta.env.PROD && nav("/counter");
+	});
 	return (
 		<Stack minHeight="calc(100vh - 124px)" alignItems={"center"}>
 			<Stack
