@@ -841,8 +841,6 @@ function MusicDrawer({
 		});
 	}, []);
 
-	useConsole(additionalInputValue);
-
 	return (
 		<>
 			<Modal isOpen={isTagOpen} onClose={handleCloseTagModal} isCentered>

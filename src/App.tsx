@@ -9,7 +9,7 @@ import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionM
 import { useRecoilState } from "recoil";
 import { serverErrorState, isStellarLoadingState, backgroundColorState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
-import { Loading } from "./components/Loading";
+import { LoadingAtCorner } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
 import { IoReload } from "react-icons/io5";
 import { useConsole } from "./lib/hooks/useConsole";
@@ -29,12 +29,10 @@ function App() {
 		refetch(true);
 	};
 
-	useConsole(isAdmin, "isAdmin");
-
 	if (serverError.isError) return <ServerErrorPage />;
 	return (
 		<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">
-			{isLoading ? <Loading /> : null}
+			{isLoading ? <LoadingAtCorner /> : null}
 			<Header>
 				{import.meta.env.DEV ? (
 					<Tooltip label="메인화면">

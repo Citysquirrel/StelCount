@@ -88,6 +88,7 @@ export function Counter() {
 		direction: ["ASC", "DESC"],
 	});
 	const [isFilterOn, setIsFilterOn] = useState(false);
+	const [isFuncLoading, setIsFuncLoading] = useState(true);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
 	const currentYoutubeData = modYoutubeData(
@@ -202,7 +203,6 @@ export function Counter() {
 				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
 			}
 	}, [data]);
-	useConsole(data);
 	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
 	const musics =
@@ -210,6 +210,12 @@ export function Counter() {
 			?.filter((m) => m.type === "music")
 			.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
 			.filter(tagFilterFunc(filter.tag)) || [];
+
+	useConsole(data);
+
+	useEffect(() => {
+		setIsFuncLoading(false);
+	}, [musics]);
 
 	return (
 		<Stack
@@ -331,7 +337,7 @@ export function Counter() {
 						}
 					>
 						<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
-							{isLoading ? (
+							{isLoading || isFuncLoading ? (
 								<SkeletonCircle boxSize="72px" />
 							) : currentStellar?.chzzkId ? (
 								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || "/images/logo.png"}>
@@ -348,7 +354,7 @@ export function Counter() {
 							maxHeight="120px"
 							overflow="auto"
 						>
-							{isLoading ? (
+							{isLoading || isFuncLoading ? (
 								Array.from({ length: 2 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} width={"240px"} height="54px" borderRadius={"0.375rem"} />
 								))
@@ -391,7 +397,13 @@ export function Counter() {
 										</Tooltip>
 										<Tooltip label="정렬 방향">
 											<Button onClick={handleSort("direction")} height="24px" fontSize={"sm"} padding="0 8px">
-												{sort.current[1] === 0 ? "오름" : "내림"}
+												{sort.current[1] === 0
+													? sort.current[0] === 2
+														? "과거"
+														: "오름"
+													: sort.current[0] === 2
+													? "최신"
+													: "내림"}
 											</Button>
 										</Tooltip>
 									</>
@@ -454,11 +466,11 @@ export function Counter() {
 						</HStack>
 						<SimpleGrid
 							ref={gridRef}
-							columns={(musics !== undefined && musics.length > 0) || isLoading ? [1, 1, 2, 2, 3] : 1}
+							columns={(musics !== undefined && musics.length > 0) || isLoading || isFuncLoading ? [1, 1, 2, 2, 3] : 1}
 							spacing={"8px"}
 							placeItems={"center"}
 						>
-							{isLoading ? (
+							{isLoading || isFuncLoading ? (
 								Array.from({ length: 3 }, (_) => 1).map((_, idx) => (
 									<Skeleton key={idx} width={cardWidth} height="212px" borderRadius={"0.375rem"} />
 								))

@@ -27,6 +27,30 @@ export function Loading({ options }: LoadingProps) {
 	);
 }
 
+export function LoadingAtCorner() {
+	return (
+		<Stack
+			sx={{
+				position: "fixed",
+				right: "8px",
+				top: "8px",
+				width: "32px",
+				height: "32px",
+				alignItems: "center",
+				justifyContent: "center",
+				zIndex: 1001,
+				"> img": {
+					boxSize: "32px",
+					animation: "rotate 1s ease infinite",
+					transformOrigin: "50% 50%",
+				},
+			}}
+		>
+			<Image src={"/images/load_donut.png"} />
+		</Stack>
+	);
+}
+
 interface LoadingProps {
 	options?: { mode?: "overlay" | "fullscreen" };
 }
