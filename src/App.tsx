@@ -29,6 +29,8 @@ function App() {
 		refetch(true);
 	};
 
+	useConsole(backgroundColor);
+
 	if (serverError.isError) return <ServerErrorPage />;
 	return (
 		<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">

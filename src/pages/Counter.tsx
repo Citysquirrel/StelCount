@@ -103,6 +103,7 @@ export function Counter() {
 	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uuid)?.liveStatus || false;
 
 	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
+	const { backgroundColor } = useBackgroundColor(!currentColorCode ? "white" : `${currentColorCode}aa`);
 	const isUnder720 = windowWidth < 720;
 
 	const stellive = data.filter((s) => s.group === 0);
@@ -203,7 +204,6 @@ export function Counter() {
 				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
 			}
 	}, [data]);
-	const { backgroundColor } = useBackgroundColor(`${currentColorCode}aa`);
 
 	const musics =
 		currentMusic

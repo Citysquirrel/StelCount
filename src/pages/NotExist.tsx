@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export function NotExist() {
 	const nav = useNavigate();
 	useEffect(() => {
-		nav("/");
+		nav("/home");
 	}, []);
 	return <></>;
 }
