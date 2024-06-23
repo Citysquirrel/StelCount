@@ -23,7 +23,6 @@ export function useStellar() {
 	const [, setIsLiveLoading] = useRecoilState(isLiveLoadingState);
 
 	const getLiveStatus = () => {
-		setIsLiveLoading(true);
 		fetchServer("/live-status", "v1")
 			.then((res) => {
 				if (res.status === 200) {
@@ -44,7 +43,7 @@ export function useStellar() {
 			.then((res) => {
 				if (res) {
 					if (res.status === 200) {
-						setData(res.data || []);
+						setData(res.data.current || []);
 						isTimer &&
 							toast({
 								description: "데이터를 새로 불러왔습니다.",
