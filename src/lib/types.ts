@@ -55,6 +55,6 @@ export interface VideoDetail extends DefaultDateFields {
 }
 
 export interface DefaultDateFields {
-	createdAt: string;
-	updatedAt: string;
+	createdAt?: string;
+	updatedAt?: string;
 }
