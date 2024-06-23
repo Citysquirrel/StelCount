@@ -48,7 +48,7 @@ import {
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdTag } from "react-icons/md";
+import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
 import { Tag as TagType, UserSettingStorage, VideoDetail } from "../lib/types";
@@ -313,7 +313,7 @@ export function Counter() {
 						boxSize="32px"
 						size="sm"
 						variant={"ghost"}
-						icon={<GoKebabHorizontal />}
+						icon={<MdSettings />}
 						aria-label="kebab-menu"
 						isRound
 						_hover={{ backgroundColor: "#ffffff33" }}
