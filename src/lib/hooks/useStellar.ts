@@ -46,7 +46,9 @@ export function useStellar() {
 				if (res) {
 					if (res.status === 200) {
 						setData(res.data.current || []);
-						setMostPopular(res.data.mostPopular || {});
+						const mpvalue =
+							typeof res.data.mostPopular === "string" ? JSON.parse(res.data.mostPopular) : res.data.mostPopular;
+						setMostPopular(mpvalue || {});
 						isTimer &&
 							toast({
 								description: "데이터를 새로 불러왔습니다.",
