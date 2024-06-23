@@ -31,7 +31,7 @@ export interface YoutubeMusicData {
 	isActive?: boolean;
 	tags?: Tag[];
 	details: VideoDetail[];
-	statistics: any[];
+	statistics: Statistics[];
 }
 
 export interface Statistics {
