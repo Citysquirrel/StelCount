@@ -6,8 +6,9 @@ import {
 	stellarState,
 	LiveStatusState,
 	liveStatusState,
+	isLiveLoadingState,
 } from "../Atom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { fetchServer } from "../functions/fetch";
 import { useToast } from "@chakra-ui/react";
 import isMobile from "is-mobile";
@@ -19,14 +20,20 @@ export function useStellar() {
 	const [, setServerError] = useRecoilState(serverErrorState);
 	const [, setIsLoading] = useRecoilState(isLoadingState);
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
+	const [, setIsLiveLoading] = useRecoilState(isLiveLoadingState);
 
 	const getLiveStatus = () => {
-		fetchServer("/live-status", "v1").then((res) => {
-			if (res.status === 200) {
-				const data = res.data as LiveStatusState[];
-				setLiveStatus(data);
-			}
-		});
+		setIsLiveLoading(true);
+		fetchServer("/live-status", "v1")
+			.then((res) => {
+				if (res.status === 200) {
+					const data = res.data as LiveStatusState[];
+					setLiveStatus(data);
+				}
+			})
+			.finally(() => {
+				setIsLiveLoading(false);
+			});
 	};
 
 	const f = (isTimer?: boolean) => {

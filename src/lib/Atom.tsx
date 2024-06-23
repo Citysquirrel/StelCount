@@ -101,6 +101,11 @@ export const isStellarLoadingState = atom<boolean>({
 	default: false,
 });
 
+export const isLiveLoadingState = atom<boolean>({
+	key: createAtomKey("isLiveLoading"),
+	default: true,
+});
+
 export const isAdminState = atom<boolean>({
 	key: createAtomKey("isAdmin"),
 	default: false,

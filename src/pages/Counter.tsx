@@ -1,5 +1,12 @@
 import { useRecoilState } from "recoil";
-import { YoutubeMusicData, headerOffsetState, isLoadingState, liveStatusState, stellarState } from "../lib/Atom";
+import {
+	YoutubeMusicData,
+	headerOffsetState,
+	isLiveLoadingState,
+	isLoadingState,
+	liveStatusState,
+	stellarState,
+} from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -79,6 +86,7 @@ export function Counter() {
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
+	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [currentUuid, setCurrentUuid] = useState("");
 	const [filter, setFilter] = useState<Filter>({ tag: [] });
 	const [sort, setSort] = useState<Sort>({
@@ -341,7 +349,10 @@ export function Counter() {
 								<SkeletonCircle boxSize="72px" />
 							) : currentStellar?.chzzkId ? (
 								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || "/images/logo.png"}>
-									<AvatarBadge boxSize="28px" bg={currentLiveStatus ? "green.400" : "red.400"} />
+									<AvatarBadge
+										boxSize="28px"
+										bg={isLiveLoading ? "orange.400" : currentLiveStatus ? "green.400" : "red.400"}
+									/>
 								</Avatar>
 							) : null}
 						</Link>
