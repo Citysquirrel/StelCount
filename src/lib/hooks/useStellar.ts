@@ -7,6 +7,7 @@ import {
 	LiveStatusState,
 	liveStatusState,
 	isLiveLoadingState,
+	mostPopularState,
 } from "../Atom";
 import { useEffect, useState } from "react";
 import { fetchServer } from "../functions/fetch";
@@ -16,7 +17,8 @@ import isMobile from "is-mobile";
 export function useStellar() {
 	const toast = useToast();
 	const [data, setData] = useRecoilState(stellarState);
-	const [_, setLiveStatus] = useRecoilState(liveStatusState);
+	const [, setMostPopular] = useRecoilState(mostPopularState);
+	const [, setLiveStatus] = useRecoilState(liveStatusState);
 	const [, setServerError] = useRecoilState(serverErrorState);
 	const [, setIsLoading] = useRecoilState(isLoadingState);
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
@@ -44,6 +46,7 @@ export function useStellar() {
 				if (res) {
 					if (res.status === 200) {
 						setData(res.data.current || []);
+						setMostPopular(res.data.mostPopular || {});
 						isTimer &&
 							toast({
 								description: "데이터를 새로 불러왔습니다.",

@@ -430,7 +430,7 @@ export function AdminEdit() {
 		colorCode: "",
 		playlistIdForMusic: "",
 	});
-	const [videoData, setVideoData] = useState<VideoData[]>([]);
+	const [videoData, setVideoData] = useState<VideoAdminData[]>([]);
 	const { isLogin, isAdmin, isLoading: isAuthLoading } = useAuth();
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1089,7 +1089,7 @@ function HeadedDivider({ children }) {
 	);
 }
 
-interface VideoData {
+interface VideoAdminData {
 	id: number;
 	type: "music";
 	title: string;
@@ -1131,8 +1131,8 @@ interface MPLInputValue {
 }
 
 interface MusicPlaylistProps {
-	data: VideoData[];
-	setData: Dispatch<SetStateAction<VideoData[]>>;
+	data: VideoAdminData[];
+	setData: Dispatch<SetStateAction<VideoAdminData[]>>;
 }
 
 interface MusicDrawerProps {
@@ -1141,7 +1141,7 @@ interface MusicDrawerProps {
 	placement?: "top" | "left" | "bottom" | "right";
 	isOpen: boolean;
 	onClose: () => void;
-	setData: Dispatch<SetStateAction<VideoData[]>>;
+	setData: Dispatch<SetStateAction<VideoAdminData[]>>;
 	additionalInputValue: AdditionalInputValue[];
 	setAdditionalInputValue: Dispatch<SetStateAction<AdditionalInputValue[]>>;
 }

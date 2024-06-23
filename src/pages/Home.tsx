@@ -1,13 +1,25 @@
 import { Card, CardBody, HStack, Heading, Stack } from "@chakra-ui/react";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
+import { useRecoilState } from "recoil";
+import { MostPopularState, mostPopularState, stellarState } from "../lib/Atom";
+import { YoutubeMusicData } from "../lib/types";
 
 // TODO: 여기서는 현재 활성중이거나 곧 다가오는 기념일 목록을 보여줍니다.
 // Card or List 형태?
 export default function Home() {
-	const nav = useNavigate();
 	useBackgroundColor("blue.50");
+	const nav = useNavigate();
+	const [isLoading, setIsLoading] = useState(true);
+	const [stellar] = useRecoilState(stellarState);
+	const [mostPopular] = useRecoilState(mostPopularState);
+	const [data, setData] = useState<Data>({ mostPopular: [], recent: [], approach: [], mostViews: [] });
+
+	useEffect(() => {
+		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
+	}, []);
+
 	useLayoutEffect(() => {
 		import.meta.env.PROD && nav("/counter");
 	}, []);
@@ -22,7 +34,7 @@ export default function Home() {
 				gap={"8px"}
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
-				<RecentNews />
+				<RecentNews mostPopular={mostPopular} />
 				<CarouselList heading={"주목할 음악 영상"} contents={[]} />
 				<CarouselList heading={"주목할 음악 영상"} contents={[]} />
 				<CarouselList heading={"치지직 라이브 현황"} contents={[]} />
@@ -31,7 +43,9 @@ export default function Home() {
 	);
 }
 
-function RecentNews() {
+function RecentNews({ mostPopular }: RecentNewsProps) {
+	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
+
 	return (
 		<Card>
 			<CardBody></CardBody>
@@ -51,12 +65,16 @@ function CarouselList({ heading, contents }: CarouselListProps) {
 		</Stack>
 	);
 }
+// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
+interface Data {
+	mostPopular: YoutubeMusicData[];
+	recent: YoutubeMusicData[];
+	approach: YoutubeMusicData[];
+	mostViews: YoutubeMusicData[];
+}
 
-interface HomeDictionary {
-	id: number;
-	key: string;
-	heading: string;
-	contents: unknown[];
+interface RecentNewsProps {
+	mostPopular: MostPopularState;
 }
 
 interface CarouselListProps {

@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 import { createAtomKey } from "./functions/createAtomKey";
-import { Tag, VideoDetail } from "./types";
+import { Tag, VideoDetail, YoutubeMusicData } from "./types";
 
 export const headerOffsetState = atom({
 	key: createAtomKey("headerOffset"),
@@ -59,23 +59,8 @@ export interface LiveStatusState {
 	uuid: string;
 }
 
-export interface YoutubeMusicData {
-	type?: string; // "music", "main", "replay"
-	title: string;
-	titleAlias?: string;
-	thumbnail: string;
-	videoId: string;
-	viewCount?: string;
-	likeCount?: string;
-	ownerId?: string;
-	isOriginal?: boolean;
-	isCollaborated?: boolean;
-	publishedAt?: string;
-	liveBroadcastContent?: string;
-	scheduledStartTime?: string;
-	tags?: Tag[];
-	details: VideoDetail[];
-	mostPopular: number;
+export interface MostPopularState {
+	[videoId: string]: number;
 }
 
 export const stellarState = atom<StellarState[]>({
@@ -86,6 +71,11 @@ export const stellarState = atom<StellarState[]>({
 export const liveStatusState = atom<LiveStatusState[]>({
 	key: createAtomKey("liveStatus"),
 	default: [],
+});
+
+export const mostPopularState = atom<MostPopularState>({
+	key: createAtomKey("mostPopular"),
+	default: {},
 });
 
 export const isLoginState = atom<boolean>({
