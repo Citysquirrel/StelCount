@@ -15,7 +15,7 @@ export default function Home() {
 		import.meta.env.PROD && nav("/counter");
 	});
 	return (
-		<Stack minHeight="calc(100vh - 124px)" alignItems={"center"}>
+		<Stack minHeight="calc(100vh - 125px)" alignItems={"center"}>
 			<Stack
 				width={["100%", "100%", "100%", "768px", "1024px"]}
 				padding={["12px", "12px", "12px", null, null]}
