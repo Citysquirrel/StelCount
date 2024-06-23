@@ -40,6 +40,9 @@ export interface Statistics {
 	unit: string;
 	value: string;
 	annie_at: string;
+
+	youtube_video_id: number | null;
+	youtube_video_detail_id: number | null;
 }
 
 export interface VideoDetail extends DefaultDateFields {
@@ -49,6 +52,7 @@ export interface VideoDetail extends DefaultDateFields {
 	viewCount: string;
 	likeCount: string;
 	countUpdatedAt: string;
+	statistics: Statistics[];
 
 	youtube_video_detail_id: number | null;
 	youtube_video_id: number | null;

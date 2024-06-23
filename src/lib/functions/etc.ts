@@ -88,3 +88,7 @@ export function remainingTimeText(date: Date, now: Date): [number, string] {
 
 	return [gap, text];
 }
+
+export function getLocale() {
+	return new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+}

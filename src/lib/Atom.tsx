@@ -59,9 +59,9 @@ export interface LiveStatusState {
 	uuid: string;
 }
 
-export interface MostPopularState {
-	[videoId: string]: number;
-}
+// export interface MostPopularState {
+// 	[videoId: string]: number;
+// }
 
 export const stellarState = atom<StellarState[]>({
 	key: createAtomKey("stellar"),
@@ -73,10 +73,10 @@ export const liveStatusState = atom<LiveStatusState[]>({
 	default: [],
 });
 
-export const mostPopularState = atom<MostPopularState>({
-	key: createAtomKey("mostPopular"),
-	default: {},
-});
+// export const mostPopularState = atom<MostPopularState>({
+// 	key: createAtomKey("mostPopular"),
+// 	default: {},
+// });
 
 export const isLoginState = atom<boolean>({
 	key: createAtomKey("isLogin"),
