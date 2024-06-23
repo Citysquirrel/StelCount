@@ -5,7 +5,7 @@ export interface UserSettingStorage {
 	sortDirection?: number;
 }
 
-export interface Tag {
+export interface Tag extends DefaultDateFields {
 	id: number;
 	name: string;
 	colorCode?: string;
@@ -42,7 +42,7 @@ export interface Statistics {
 	annie_at: string;
 }
 
-export interface VideoDetail extends DefaultTimeFields {
+export interface VideoDetail extends DefaultDateFields {
 	id: number;
 	type: string;
 	videoId: string;
@@ -54,7 +54,7 @@ export interface VideoDetail extends DefaultTimeFields {
 	youtube_video_id: number | null;
 }
 
-export interface DefaultTimeFields {
+export interface DefaultDateFields {
 	createdAt: string;
 	updatedAt: string;
 }
