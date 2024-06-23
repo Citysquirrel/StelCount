@@ -75,6 +75,7 @@ export interface YoutubeMusicData {
 	scheduledStartTime?: string;
 	tags?: Tag[];
 	details: VideoDetail[];
+	mostPopular: number;
 }
 
 export const stellarState = atom<StellarState[]>({

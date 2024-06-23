@@ -603,6 +603,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		liveBroadcastContent,
 		scheduledStartTime,
 		details,
+		mostPopular,
 	} = data;
 
 	const isLive = liveBroadcastContent === "live";
@@ -701,6 +702,11 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 					</Tag>
 				) : null}
 			</HStack>
+			{mostPopular !== -1 ? (
+				<Text position="absolute" color="gray.600" fontSize="xs" right={"8px"} top={"2px"}>
+					인기 급상승 음악 #{mostPopular}
+				</Text>
+			) : null}
 			<CardBody
 				as={Stack}
 				divider={<StackDivider />}
