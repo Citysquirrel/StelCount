@@ -1,3 +1,5 @@
+import { Thumbnails } from "../types";
+
 export function stringNullCheck(str: string | null | undefined) {
 	if (str === null || str === undefined) {
 		return "";
@@ -92,4 +94,12 @@ export function remainingTimeText(date: Date, now: Date): [number, string] {
 
 export function getLocale() {
 	return new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
+}
+
+export function getThumbnails(thumbnails: string): Thumbnails {
+	try {
+		return JSON.parse(thumbnails);
+	} catch (err) {
+		return { maxres: {}, standard: {}, high: {}, medium: {}, default: {} };
+	}
 }

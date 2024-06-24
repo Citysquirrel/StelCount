@@ -17,6 +17,7 @@ export interface YoutubeMusicData {
 	titleAlias?: string;
 	channelId: string;
 	thumbnail: string;
+	thumbnails: string;
 	videoId: string;
 	viewCount?: string;
 	likeCount?: string;
@@ -61,4 +62,18 @@ export interface VideoDetail extends DefaultDateFields {
 export interface DefaultDateFields {
 	createdAt?: string;
 	updatedAt?: string;
+}
+
+export interface Thumbnails {
+	maxres: ThumbnailScheme;
+	standard: ThumbnailScheme;
+	high: ThumbnailScheme;
+	medium: ThumbnailScheme;
+	default: ThumbnailScheme;
+}
+
+interface ThumbnailScheme {
+	height?: number | null;
+	url?: string | null;
+	width?: number | null;
 }

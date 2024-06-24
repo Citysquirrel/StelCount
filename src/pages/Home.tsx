@@ -1,4 +1,4 @@
-import { Box, Card, CardBody, HStack, Heading, Link, Skeleton, Stack, Text } from "@chakra-ui/react";
+import { Checkbox, HStack, Heading, Link, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
@@ -8,13 +8,13 @@ import { YoutubeMusicData } from "../lib/types";
 import { useConsole } from "../lib/hooks/useConsole";
 import { useAuth } from "../lib/hooks/useAuth";
 import { NotExist } from "./NotExist";
-import { Loading, LoadingCircle } from "../components/Loading";
-import { elapsedTimeText, getLocale, numberToLocaleString } from "../lib/functions/etc";
+import { Loading } from "../components/Loading";
+import { elapsedTimeText, getLocale, getThumbnails, numberToLocaleString } from "../lib/functions/etc";
 import { Image } from "../components/Image";
-import { youtube } from "../lib/functions/platforms";
-import { useResponsive } from "../lib/hooks/useResponsive";
+import { naver, youtube } from "../lib/functions/platforms";
 import { FaEye } from "react-icons/fa6";
-import { MdDateRange } from "react-icons/md";
+import isMobile from "is-mobile";
+import { MdOpenInNew } from "react-icons/md";
 
 // TODO: 여기서는 현재 활성중이거나 곧 다가오는 기념일 목록을 보여줍니다.
 // Card or List 형태?
@@ -56,6 +56,7 @@ export default function Home() {
 				titleAlias: "",
 				channelId: "",
 				thumbnail: "",
+				thumbnails: "",
 				videoId: "",
 				mostPopular: -1,
 				details: [],
@@ -74,12 +75,16 @@ export default function Home() {
 			const obj = { ...prev };
 			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1).sort((a, b) => a.mostPopular - b.mostPopular);
 			obj.recent = videos
+				.filter(
+					(v) =>
+						new Date(getLocale()).getTime() - new Date(v.publishedAt || "1000-01-01T09:00:00.000Z").getTime() <
+						5184000000 // 2 months
+				)
 				.sort(
 					(a, b) =>
 						(b.publishedAt ? new Date(b.publishedAt).getTime() : 0) -
 						(a.publishedAt ? new Date(a.publishedAt).getTime() : 0)
-				)
-				.slice(0, 10);
+				);
 			obj.mostViews = videos
 				.sort((a, b) => {
 					const A =
@@ -90,11 +95,11 @@ export default function Home() {
 						b.statistics.reduce((a, c) => (a + c.type === "viewCount" ? parseInt(c.value) : 0), 0);
 					return B - A;
 				})
-				.slice(0, 10);
+				.slice(0, 30);
 			obj.approach = videos
 				.filter(
 					(v) =>
-						v.statistics.filter((s) => new Date(getLocale()).getTime() - new Date(s.annie_at).getTime() < 259200000)
+						v.statistics.filter((s) => new Date(getLocale()).getTime() - new Date(s.annie_at).getTime() < 259200000) // 3 days
 							.length > 0
 				)
 				.sort((a, b) => {
@@ -103,7 +108,7 @@ export default function Home() {
 						new Date(a.statistics.at(-1)?.annie_at || new Date(getLocale())).getTime()
 					);
 				})
-				.slice(0, 10);
+				.slice(0, 30);
 			obj.isUpdated = true;
 			return obj;
 		});
@@ -111,11 +116,13 @@ export default function Home() {
 
 	useEffect(() => {
 		setLiveData(
-			liveStatus.map((l) => ({
-				...l,
-				profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
-				name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
-			}))
+			liveStatus
+				.map((l) => ({
+					...l,
+					profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
+					name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
+				}))
+				.sort((a) => (a.liveStatus ? -1 : 1))
 		);
 	}, [liveStatus]);
 
@@ -126,6 +133,7 @@ export default function Home() {
 				v.profileImage = stellar.find((s) => s.uuid === v.uuid)?.profileImage || "";
 				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
 			}
+			arr.sort((a) => (a.liveStatus ? -1 : 1));
 			return arr;
 		});
 	}, [stellar]);
@@ -153,9 +161,13 @@ export default function Home() {
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
 				<RecentNews data={firstMusic} isLoading={isNewsLoading} condition={condition} />
-				{data.recent.length > 0 ? <CarouselList heading={"최근 게시된 영상"} musics={data.recent} /> : null}
-				{data.approach.length > 0 ? <CarouselList heading={"최근 조회수 달성"} musics={data.approach} /> : null}
-				<CarouselList heading={"치지직 라이브 현황"} lives={[]} />
+				{data.recent.length > 0 ? (
+					<CarouselList heading={"최근 게시된 영상"} musics={data.recent} type="recent" />
+				) : null}
+				{data.approach.length > 0 ? (
+					<CarouselList heading={"최근 조회수 달성"} musics={data.approach} type={"approach"} />
+				) : null}
+				<CarouselList heading={"치지직 라이브 현황"} lives={liveData} />
 			</Stack>
 		</Stack>
 	);
@@ -163,10 +175,8 @@ export default function Home() {
 
 function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
-	const { windowWidth } = useResponsive();
 
 	const headingText = createHeadingText(data, condition);
-	const isUnder720 = windowWidth < 720;
 	return (
 		<Stack
 			direction={["column", "column", "row", "row", "row"]}
@@ -201,7 +211,7 @@ function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 					outlineColor="blue.50"
 				/>
 			</Link>
-			<Stack gap="4px">
+			<Stack gap="4px" width={[null, null, null, "100%", "100%"]}>
 				<Heading fontSize="lg">{headingText}</Heading>
 				<Text overflow="hidden" textOverflow={"ellipsis"} whiteSpace={"normal"} lineHeight="1.5rem" maxHeight="3rem">
 					{data.titleAlias || data.title}
@@ -241,20 +251,152 @@ function createHeadingText(data: YoutubeMusicData, condition: number) {
 	}
 }
 
-function CarouselList({ heading, musics }: CarouselListProps) {
+function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
+	const [isMultiViewMode, setIsMultiViewMode] = useState(false);
 	return (
 		<Stack marginTop="8px">
-			<Heading size="xs">{heading}</Heading>
-			<HStack border="1px solid" borderRadius={".25rem"} borderColor="gray.300" height="120px" overflowX={"scroll"}>
+			<HStack>
+				<Heading size="xs">{heading}</Heading>
+			</HStack>
+			<HStack
+				border="1px solid"
+				borderRadius={".25rem"}
+				borderColor="gray.300"
+				minHeight="125.6px"
+				overflowX={"scroll"}
+				padding="8px"
+				gap="12px"
+			>
 				{musics &&
-					musics.map((c) => (
-						<Stack key={c.videoId}>
-							<Image src={c.thumbnail} alt="thumbnail" />
-						</Stack>
-					))}
+					musics.map((c) => {
+						const timeText = createTimeText(c, type);
+						return (
+							<Stack
+								as={Link}
+								href={youtube.videoUrl(c.videoId)}
+								isExternal
+								key={c.videoId}
+								sx={{
+									position: "relative",
+									minWidth: "100px",
+									maxHeight: "100px",
+									borderRadius: "8px",
+									overflow: "hidden",
+									cursor: "pointer",
+									transition: "all .3s",
+									"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
+									"> .music-information": { opacity: isMobile() ? 1 : 0 },
+									_hover: {
+										"> img": { opacity: 0.2 },
+										"> .music-information": { opacity: 1 },
+									},
+								}}
+							>
+								<Image
+									boxSize="100px"
+									src={getThumbnails(c.thumbnails).medium.url || ""}
+									alt="thumbnail"
+									objectFit={"cover"}
+									transform={"scale(1.35)"}
+								/>
+								<Stack
+									className="music-information"
+									position="absolute"
+									boxSize="100px"
+									alignItems={"center"}
+									justifyContent={"center"}
+									userSelect={"none"}
+									transition="all .3s"
+									// opacity={0}
+									gap="0"
+								>
+									<FaEye />
+									<Text fontWeight={"bold"}>{numberToLocaleString(c.viewCount)}</Text>
+									<Text fontSize="sm">{timeText.value}</Text>
+									{timeText.unit ? <Text fontSize={"2xs"}>{numberToLocaleString(timeText.unit)} 달성</Text> : null}
+								</Stack>
+							</Stack>
+						);
+					})}
+				{isMultiViewMode
+					? null
+					: lives &&
+					  lives.map((live) => {
+							return live.chzzkId ? (
+								<Stack
+									as={Link}
+									href={naver.chzzk.liveUrl(live.chzzkId)}
+									isExternal
+									key={live.uuid}
+									sx={{
+										position: "relative",
+										minWidth: "100px",
+										maxHeight: "100px",
+										borderRadius: "32px",
+										overflow: "hidden",
+										cursor: "pointer",
+										transition: "all .3s",
+										outline: "2px solid",
+										outlineColor: live.liveStatus ? "green.400" : "red.400",
+
+										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
+										"> .music-information": { opacity: isMobile() ? 1 : 0 },
+										_hover: {
+											"> img": { opacity: 0.2 },
+											"> .music-information": { opacity: 1 },
+										},
+									}}
+								>
+									<Image
+										boxSize="100px"
+										src={`${live.profileImage}?type=f120_120_na`}
+										alt="thumbnail"
+										objectFit={"cover"}
+										transform={"scale(1.35)"}
+										filter={!live.liveStatus ? "grayscale(1)" : undefined}
+									/>
+									<Stack
+										className="music-information"
+										position="absolute"
+										boxSize="100px"
+										alignItems={"center"}
+										justifyContent={"center"}
+										userSelect={"none"}
+										transition="all .3s"
+										// opacity={0}
+										gap="0"
+										sx={{ "> svg": { boxSize: "32px" } }}
+									>
+										{isMultiViewMode ? null : <MdOpenInNew />}
+										{/* <Text fontWeight={"bold"}>{numberToLocaleString(c.viewCount)}</Text> */}
+										{/* <Text fontSize="sm">{timeText.value}</Text>
+							{timeText.unit ? <Text fontSize={"2xs"}>{numberToLocaleString(timeText.unit)} 달성</Text> : null} */}
+									</Stack>
+								</Stack>
+							) : null;
+					  })}
 			</HStack>
 		</Stack>
 	);
+}
+
+function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
+	if (type === "recent") {
+		return {
+			value: elapsedTimeText(
+				new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
+				new Date(getLocale())
+			)[1],
+		};
+	} else if (type === "approach") {
+		return {
+			value: elapsedTimeText(
+				new Date(new Date(data.statistics.at(-1)?.annie_at || "1000-01-01T09:00:00.000Z")),
+				new Date(getLocale())
+			)[1],
+			unit: data.statistics.at(-1)?.unit,
+		};
+	} else return { value: "" };
 }
 // 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
 interface Data {
@@ -276,8 +418,10 @@ interface RecentNewsProps {
 	condition: number;
 }
 
+type CarouselListType = "recent" | "approach" | (string & {});
 interface CarouselListProps {
+	type?: CarouselListType;
 	heading: string;
 	musics?: YoutubeMusicData[];
-	lives?: unknown[];
+	lives?: LiveData[];
 }
