@@ -7,6 +7,7 @@ import {
 	LiveStatusState,
 	liveStatusState,
 	isLiveLoadingState,
+	isLiveFetchingState,
 } from "../Atom";
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
@@ -22,8 +23,10 @@ export function useStellar() {
 	const [, setIsLoading] = useRecoilState(isLoadingState);
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [, setIsLiveLoading] = useRecoilState(isLiveLoadingState);
+	const [, setIsLiveFetching] = useRecoilState(isLiveFetchingState);
 
 	const getLiveStatus = () => {
+		setIsLiveFetching(true);
 		fetchServer("/live-status", "v1")
 			.then((res) => {
 				if (res.status === 200) {
@@ -33,6 +36,7 @@ export function useStellar() {
 			})
 			.finally(() => {
 				setIsLiveLoading(false);
+				setIsLiveFetching(false);
 			});
 	};
 

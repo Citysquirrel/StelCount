@@ -145,9 +145,9 @@ export default function Home() {
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
 				<RecentNews data={firstMusic} isLoading={isNewsLoading} condition={condition} />
-				<CarouselList heading={"최근 게시된 영상"} contents={[]} />
-				<CarouselList heading={"최근 조회수 달성"} contents={[]} />
-				<CarouselList heading={"치지직 라이브 현황"} contents={[]} />
+				{data.recent.length > 0 ? <CarouselList heading={"최근 게시된 영상"} musics={data.recent} /> : null}
+				{data.approach.length > 0 ? <CarouselList heading={"최근 조회수 달성"} musics={data.approach} /> : null}
+				<CarouselList heading={"치지직 라이브 현황"} lives={[]} />
 			</Stack>
 		</Stack>
 	);
@@ -162,6 +162,10 @@ function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 		<Stack
 			direction={["column", "column", "row", "row", "row"]}
 			alignItems={["center", "center", "flex-end", "flex-end", "flex-end"]}
+			border="1px solid"
+			borderColor="gray.300"
+			borderRadius={".25rem"}
+			padding="12px"
 		>
 			<Link
 				href={isLoading ? undefined : youtube.videoUrl(data.videoId)}
@@ -211,14 +215,12 @@ function createHeadingText(data: YoutubeMusicData, condition: number) {
 	}
 }
 
-function CarouselList({ heading, contents }: CarouselListProps) {
+function CarouselList({ heading, musics }: CarouselListProps) {
 	return (
 		<Stack>
-			<Heading size="sm">{heading}</Heading>
-			<HStack>
-				{contents.map((c) => (
-					<></>
-				))}
+			<Heading size="xs">{heading}</Heading>
+			<HStack border="1px solid" borderRadius={".25rem"} borderColor="gray.300">
+				{musics && musics.map((c) => <></>)}
 			</HStack>
 		</Stack>
 	);
@@ -244,5 +246,6 @@ interface RecentNewsProps {
 
 interface CarouselListProps {
 	heading: string;
-	contents: unknown[];
+	musics?: YoutubeMusicData[];
+	lives?: unknown[];
 }

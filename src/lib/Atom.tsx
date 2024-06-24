@@ -96,6 +96,10 @@ export const isLiveLoadingState = atom<boolean>({
 	key: createAtomKey("isLiveLoading"),
 	default: true,
 });
+export const isLiveFetchingState = atom<boolean>({
+	key: createAtomKey("isLiveFetching"),
+	default: false,
+});
 
 export const isAdminState = atom<boolean>({
 	key: createAtomKey("isAdmin"),
