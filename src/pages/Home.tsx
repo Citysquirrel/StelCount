@@ -63,8 +63,6 @@ export default function Home() {
 	});
 	const [liveData, setLiveData] = useState<LiveData[]>([]);
 
-	const { isLoading: isAuthLoading, isLogin, isAdmin } = useAuth();
-
 	const isDataLoading = !data.isUpdated;
 
 	const arr =
@@ -166,9 +164,6 @@ export default function Home() {
 		});
 	}, [stellar]);
 
-	if (isAuthLoading) return <Loading options={{ mode: "fullscreen" }} />;
-	if (!isLogin) return <NotExist />;
-	if (!isAdmin) return <NotExist />;
 	return (
 		<Stack minHeight="calc(100vh - 125px)" alignItems={"center"}>
 			<Stack

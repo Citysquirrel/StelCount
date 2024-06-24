@@ -212,8 +212,6 @@ export function Counter() {
 			.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
 			.filter(tagFilterFunc(filter.tag)) || [];
 
-	useConsole(data);
-
 	useEffect(() => {
 		setIsFuncLoading(false);
 	}, [musics]);
