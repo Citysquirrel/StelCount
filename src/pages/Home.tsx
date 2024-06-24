@@ -1,4 +1,5 @@
 import {
+	Box,
 	Button,
 	Checkbox,
 	CloseButton,
@@ -12,6 +13,8 @@ import {
 	InputRightAddon,
 	InputRightElement,
 	Link,
+	Skeleton,
+	SkeletonText,
 	Stack,
 	Text,
 	Tooltip,
@@ -22,7 +25,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useLayoutEffect, useR
 import { useNavigate } from "react-router-dom";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
-import { LiveStatusState, liveStatusState, stellarState } from "../lib/Atom";
+import { LiveStatusState, isLiveLoadingState, liveStatusState, stellarState } from "../lib/Atom";
 import { YoutubeMusicData } from "../lib/types";
 import { useConsole } from "../lib/hooks/useConsole";
 import { useAuth } from "../lib/hooks/useAuth";
@@ -48,6 +51,7 @@ export default function Home() {
 	// const [isLoading, setIsLoading] = useState(true);
 	const [stellar] = useRecoilState(stellarState);
 	const [liveStatus] = useRecoilState(liveStatusState);
+	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
 
 	const [isNewsLoading, setIsNewsLoading] = useState(true);
 	const [data, setData] = useState<Data>({
@@ -61,7 +65,7 @@ export default function Home() {
 
 	const { isLoading: isAuthLoading, isLogin, isAdmin } = useAuth();
 
-	const isDataLoading = data.isUpdated;
+	const isDataLoading = !data.isUpdated;
 
 	const arr =
 		data.mostPopular.length > 0
@@ -162,16 +166,6 @@ export default function Home() {
 		});
 	}, [stellar]);
 
-	useConsole(data, "data");
-	useConsole(liveData);
-
-	useLayoutEffect(() => {
-		import.meta.env.PROD && nav("/counter");
-	}, []);
-	useEffect(() => {
-		import.meta.env.PROD && nav("/counter");
-	});
-
 	if (isAuthLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;
 	if (!isAdmin) return <NotExist />;
@@ -184,21 +178,26 @@ export default function Home() {
 				gap={"8px"}
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
-				<RecentNews data={firstMusic} isLoading={isNewsLoading} condition={condition} />
+				<RecentNews data={firstMusic} isLoading={isNewsLoading} condition={condition} isDataLoading={isDataLoading} />
 				{data.recent.length > 0 ? (
-					<CarouselList heading={"최근 게시된 영상"} musics={data.recent} type="recent" />
+					<CarouselList heading={"최근 게시된 영상"} musics={data.recent} type="recent" isDataLoading={isDataLoading} />
 				) : null}
 				{data.approach.length > 0 ? (
-					<CarouselList heading={"최근 조회수 달성"} musics={data.approach} type={"approach"} />
+					<CarouselList
+						heading={"최근 조회수 달성 (실험적 기능)"}
+						musics={data.approach}
+						type={"approach"}
+						isDataLoading={isDataLoading}
+					/>
 				) : null}
-				<CarouselList heading={"치지직 라이브 현황"} lives={liveData} />
+				<CarouselList heading={"치지직 라이브 현황"} lives={liveData} isDataLoading={isLiveLoading} />
 				<Spacing size={8} />
 			</Stack>
 		</Stack>
 	);
 }
 
-function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
+function RecentNews({ data, isLoading, condition, isDataLoading }: RecentNewsProps) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
 
 	const headingText = createHeadingText(data, condition);
@@ -212,55 +211,79 @@ function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 			backgroundColor={"blue.300"}
 			gap="12px"
 		>
-			<Link
-				href={isLoading ? undefined : youtube.videoUrl(data.videoId)}
-				_hover={{ "> .news-thumbnail": { opacity: 0.75 }, borderRadius: 0 }}
-			>
-				<Image
-					className="news-thumbnail"
-					src={data.thumbnail}
-					alt="thumbnail"
-					width={["432px", "432px", "360px", "360px", "360px"]} // 432 216
-					height={["216px", "216px", "180px", "180px", "180px"]}
-					minWidth="360px"
-					objectFit={"cover"}
-					transition="all .3s"
-					borderRadius={[
-						".5rem .5rem 0 0",
-						".5rem .5rem 0 0",
-						".5rem .5rem 0 .5rem",
-						".5rem .5rem 0 .5rem",
-						".5rem .5rem 0 .5rem",
-					]}
-					outline="1px solid"
-					outlineColor="blue.50"
-				/>
-			</Link>
-			<Stack gap="4px" width={[null, null, null, "100%", "100%"]}>
-				<Heading fontSize="lg">{headingText}</Heading>
-				<Text overflow="hidden" textOverflow={"ellipsis"} whiteSpace={"normal"} lineHeight="1.5rem" maxHeight="3rem">
-					{data.titleAlias || data.title}
-				</Text>
-				<HStack alignItems={"center"} justifyContent={"space-between"}>
-					<HStack>
-						<FaEye />
-						<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
-					</HStack>
-					<Text fontSize={"sm"} color="gray.700">
-						{
-							elapsedTimeText(
-								new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
-								new Date(getLocale())
-							)[1]
-						}
-					</Text>
-				</HStack>
-			</Stack>
+			{isLoading ? (
+				<>
+					<Skeleton
+						width={["432px", "432px", "360px", "360px", "360px"]}
+						minWidth={["432px", "432px", "360px", "360px", "360px"]}
+						height={["216px", "216px", "180px", "180px", "180px"]}
+					/>
+					<Stack width="100%">
+						<Box>
+							<SkeletonText width="100%" noOfLines={3} spacing={"4"} skeletonHeight={"2"} />
+						</Box>
+					</Stack>
+				</>
+			) : (
+				<>
+					<Link
+						href={isLoading ? undefined : youtube.videoUrl(data.videoId)}
+						isExternal
+						_hover={{ "> .news-thumbnail": { opacity: 0.75 }, borderRadius: 0 }}
+					>
+						<Image
+							className="news-thumbnail"
+							src={data.thumbnail}
+							alt="thumbnail"
+							width={["432px", "432px", "360px", "360px", "360px"]} // 432 216
+							height={["216px", "216px", "180px", "180px", "180px"]}
+							minWidth="360px"
+							objectFit={"cover"}
+							transition="all .3s"
+							borderRadius={[
+								".5rem .5rem 0 0",
+								".5rem .5rem 0 0",
+								".5rem .5rem 0 .5rem",
+								".5rem .5rem 0 .5rem",
+								".5rem .5rem 0 .5rem",
+							]}
+							outline="1px solid"
+							outlineColor="blue.50"
+						/>
+					</Link>
+					<Stack gap="4px" width={[null, null, null, "100%", "100%"]}>
+						<Heading fontSize="lg">{headingText}</Heading>
+						<Text
+							overflow="hidden"
+							textOverflow={"ellipsis"}
+							whiteSpace={"normal"}
+							lineHeight="1.5rem"
+							maxHeight="3rem"
+						>
+							{data.titleAlias || data.title}
+						</Text>
+						<HStack alignItems={"center"} justifyContent={"space-between"}>
+							<HStack>
+								<FaEye />
+								<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
+							</HStack>
+							<Text fontSize={"sm"} color="gray.700">
+								{
+									elapsedTimeText(
+										new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
+										new Date(getLocale())
+									)[1]
+								}
+							</Text>
+						</HStack>
+					</Stack>
+				</>
+			)}
 		</Stack>
 	);
 }
 
-function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
+function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselListProps) {
 	const [isMultiViewMode, setIsMultiViewMode] = useState(false);
 	const [multiViewList, setMultiViewList] = useState<IMultiViewItem[]>([]);
 
@@ -279,15 +302,22 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 			<HStack>
 				<Heading size="md">{heading}</Heading>
 				{lives ? (
-					<Button
-						colorScheme={isMultiViewMode ? "red" : "teal"}
-						size="xs"
-						onClick={() => {
-							setIsMultiViewMode((prev) => !prev);
-						}}
-					>
-						{isMultiViewMode ? "설정중" : "멀티뷰"}
-					</Button>
+					<>
+						<Button
+							colorScheme={isMultiViewMode ? "red" : "teal"}
+							size="xs"
+							onClick={() => {
+								setIsMultiViewMode((prev) => !prev);
+							}}
+						>
+							{isMultiViewMode ? "설정중" : "멀티뷰"}
+						</Button>
+						{isMultiViewMode ? (
+							<Text fontSize="xs" color="gray.600">
+								하단 스텔라들의 얼굴을 클릭해보세요!
+							</Text>
+						) : null}
+					</>
 				) : null}
 			</HStack>
 			<Spacing size={8} />
@@ -300,57 +330,61 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 				padding="8px"
 				gap="12px"
 			>
-				{musics &&
-					musics.map((c) => {
-						const timeText = createTimeText(c, type);
-						return (
-							<Stack
-								as={Link}
-								href={youtube.videoUrl(c.videoId)}
-								isExternal
-								key={c.videoId}
-								sx={{
-									position: "relative",
-									minWidth: "100px",
-									maxHeight: "100px",
-									borderRadius: "8px",
-									overflow: "hidden",
-									cursor: "pointer",
-									transition: "all .3s",
-									"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
-									"> .music-information": { opacity: isMobile() ? 1 : 0 },
-									_hover: {
-										"> img": { opacity: 0.2 },
-										"> .music-information": { opacity: 1 },
-									},
-								}}
-							>
-								<Image
-									boxSize="100px"
-									src={getThumbnails(c.thumbnails).medium.url || ""}
-									alt="thumbnail"
-									objectFit={"cover"}
-									transform={"scale(1.35)"}
-								/>
+				{musics && isDataLoading
+					? [1, 2, 3].map((a, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"8px"} />)
+					: musics &&
+					  musics.map((c) => {
+							const timeText = createTimeText(c, type);
+							return (
 								<Stack
-									className="music-information"
-									position="absolute"
-									boxSize="100px"
-									alignItems={"center"}
-									justifyContent={"center"}
-									userSelect={"none"}
-									transition="all .3s"
-									gap="0"
+									as={Link}
+									href={youtube.videoUrl(c.videoId)}
+									isExternal
+									key={c.videoId}
+									sx={{
+										position: "relative",
+										minWidth: "100px",
+										maxHeight: "100px",
+										borderRadius: "8px",
+										overflow: "hidden",
+										cursor: "pointer",
+										transition: "all .3s",
+										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
+										"> .music-information": { opacity: isMobile() ? 1 : 0 },
+										_hover: {
+											"> img": { opacity: 0.2 },
+											"> .music-information": { opacity: 1 },
+										},
+									}}
 								>
-									<FaEye />
-									<Text fontWeight={"bold"}>{numberToLocaleString(c.viewCount)}</Text>
-									<Text fontSize="sm">{timeText.value}</Text>
-									{timeText.unit ? <Text fontSize={"2xs"}>{numberToLocaleString(timeText.unit)} 달성</Text> : null}
+									<Image
+										boxSize="100px"
+										src={getThumbnails(c.thumbnails).medium.url || ""}
+										alt="thumbnail"
+										objectFit={"cover"}
+										transform={"scale(1.35)"}
+									/>
+									<Stack
+										className="music-information"
+										position="absolute"
+										boxSize="100px"
+										alignItems={"center"}
+										justifyContent={"center"}
+										userSelect={"none"}
+										transition="all .3s"
+										gap="0"
+									>
+										<FaEye />
+										<Text fontWeight={"bold"}>{numberToLocaleString(c.viewCount)}</Text>
+										<Text fontSize="sm">{timeText.value}</Text>
+										{timeText.unit ? <Text fontSize={"2xs"}>{numberToLocaleString(timeText.unit)} 달성</Text> : null}
+									</Stack>
 								</Stack>
-							</Stack>
-						);
-					})}
-				{isMultiViewMode
+							);
+					  })}
+				{lives && isDataLoading
+					? [1, 2, 3].map((a, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"32px"} />)
+					: isMultiViewMode
 					? lives &&
 					  lives.map((live) => {
 							return live.chzzkId ? (
@@ -522,7 +556,7 @@ function MultiView({ list, setList }: MultiViewProps) {
 			<Stack border="1px solid" borderColor="blue.500" borderRadius={".5rem"} padding="12px">
 				<HStack padding="2px" overflowX={"auto"}>
 					{list.map((item, i) => renderItem(item, i))}
-					<Tooltip label="다른 방송도 볼래요" hasArrow>
+					{/* <Tooltip label="다른 방송도 볼래요" hasArrow>
 						<Button
 							boxSize="50px"
 							minWidth="50px"
@@ -537,7 +571,7 @@ function MultiView({ list, setList }: MultiViewProps) {
 						>
 							<MdAdd />
 						</Button>
-					</Tooltip>
+					</Tooltip> */}
 				</HStack>
 				<InputGroup size="sm">
 					<InputLeftAddon>{urlPrefix}</InputLeftAddon>
@@ -710,6 +744,7 @@ interface LiveData extends LiveStatusState {
 interface RecentNewsProps {
 	data: YoutubeMusicData;
 	isLoading: boolean;
+	isDataLoading: boolean;
 	condition: number;
 }
 
@@ -719,6 +754,7 @@ interface CarouselListProps {
 	heading: string;
 	musics?: YoutubeMusicData[];
 	lives?: LiveData[];
+	isDataLoading: boolean;
 }
 
 interface MultiViewProps {
