@@ -1,5 +1,5 @@
-import { Checkbox, HStack, Heading, Link, Stack, Text } from "@chakra-ui/react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { Button, Checkbox, HStack, Heading, Link, Stack, Text } from "@chakra-ui/react";
+import { Dispatch, SetStateAction, useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
@@ -15,6 +15,8 @@ import { naver, youtube } from "../lib/functions/platforms";
 import { FaEye } from "react-icons/fa6";
 import isMobile from "is-mobile";
 import { MdOpenInNew } from "react-icons/md";
+import { FaArrowAltCircleDown } from "react-icons/fa";
+import { Spacing } from "../components/Spacing";
 
 // TODO: 여기서는 현재 활성중이거나 곧 다가오는 기념일 목록을 보여줍니다.
 // Card or List 형태?
@@ -168,6 +170,7 @@ export default function Home() {
 					<CarouselList heading={"최근 조회수 달성"} musics={data.approach} type={"approach"} />
 				) : null}
 				<CarouselList heading={"치지직 라이브 현황"} lives={liveData} />
+				<Spacing size={8} />
 			</Stack>
 		</Stack>
 	);
@@ -253,10 +256,22 @@ function createHeadingText(data: YoutubeMusicData, condition: number) {
 
 function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 	const [isMultiViewMode, setIsMultiViewMode] = useState(false);
+	const [multiViewList, setMultiViewList] = useState<MultiViewList[]>([]);
 	return (
 		<Stack marginTop="8px">
 			<HStack>
-				<Heading size="xs">{heading}</Heading>
+				<Heading size="md">{heading}</Heading>
+				{lives ? (
+					<Button
+						colorScheme={isMultiViewMode ? "red" : "teal"}
+						size="xs"
+						onClick={() => {
+							setIsMultiViewMode((prev) => !prev);
+						}}
+					>
+						{isMultiViewMode ? "설정중" : "멀티뷰"}
+					</Button>
+				) : null}
 			</HStack>
 			<HStack
 				border="1px solid"
@@ -319,7 +334,55 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 						);
 					})}
 				{isMultiViewMode
-					? null
+					? lives &&
+					  lives.map((live) => {
+							return live.chzzkId ? (
+								<Stack
+									as={Link}
+									key={live.uuid}
+									sx={{
+										position: "relative",
+										minWidth: "100px",
+										maxHeight: "100px",
+										borderRadius: "32px",
+										overflow: "hidden",
+										cursor: "pointer",
+										transition: "all .3s",
+										outline: "2px solid transparent",
+										outlineColor: live.liveStatus ? "green.400" : "red.400",
+
+										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
+										"> .music-information": { opacity: isMobile() ? 1 : 0 },
+										_hover: {
+											"> img": { opacity: 0.2 },
+											"> .music-information": { opacity: 1 },
+										},
+									}}
+								>
+									<Image
+										boxSize="100px"
+										src={`${live.profileImage}?type=f120_120_na`}
+										alt="thumbnail"
+										objectFit={"cover"}
+										transform={"scale(1.35)"}
+										filter={!live.liveStatus ? "grayscale(1)" : undefined}
+									/>
+									<Stack
+										className="music-information"
+										position="absolute"
+										boxSize="100px"
+										alignItems={"center"}
+										justifyContent={"center"}
+										userSelect={"none"}
+										transition="all .3s"
+										gap="0"
+										sx={{ "> svg": { boxSize: "32px" } }}
+									>
+										<FaArrowAltCircleDown />
+									</Stack>
+								</Stack>
+							) : null;
+					  })
 					: lives &&
 					  lives.map((live) => {
 							return live.chzzkId ? (
@@ -336,7 +399,7 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 										overflow: "hidden",
 										cursor: "pointer",
 										transition: "all .3s",
-										outline: "2px solid",
+										outline: "2px solid transparent",
 										outlineColor: live.liveStatus ? "green.400" : "red.400",
 
 										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
@@ -367,17 +430,19 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 										gap="0"
 										sx={{ "> svg": { boxSize: "32px" } }}
 									>
-										{isMultiViewMode ? null : <MdOpenInNew />}
-										{/* <Text fontWeight={"bold"}>{numberToLocaleString(c.viewCount)}</Text> */}
-										{/* <Text fontSize="sm">{timeText.value}</Text>
-							{timeText.unit ? <Text fontSize={"2xs"}>{numberToLocaleString(timeText.unit)} 달성</Text> : null} */}
+										<MdOpenInNew />
 									</Stack>
 								</Stack>
 							) : null;
 					  })}
 			</HStack>
+			{isMultiViewMode ? <MultiView list={multiViewList} setList={setMultiViewList} /> : null}
 		</Stack>
 	);
+}
+
+function MultiView({ list, setList }: MultiViewProps) {
+	return <Stack border="1px solid" borderColor="blue.500"></Stack>;
 }
 
 function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
@@ -424,4 +489,15 @@ interface CarouselListProps {
 	heading: string;
 	musics?: YoutubeMusicData[];
 	lives?: LiveData[];
+}
+
+interface MultiViewProps {
+	list: MultiViewList[];
+	setList: Dispatch<SetStateAction<MultiViewList[]>>;
+}
+
+interface MultiViewList {
+	uuid: string;
+	type: "chzzk" | "afreeca" | "twitch" | "youtube";
+	streamId: string;
 }
