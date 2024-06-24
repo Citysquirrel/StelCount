@@ -108,7 +108,11 @@ export default function Home() {
 
 	useEffect(() => {
 		setLiveData(
-			liveStatus.map((l) => ({ ...l, profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "" }))
+			liveStatus.map((l) => ({
+				...l,
+				profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
+				name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
+			}))
 		);
 	}, [liveStatus]);
 
@@ -117,6 +121,7 @@ export default function Home() {
 			const arr = [...prev];
 			for (let v of arr) {
 				v.profileImage = stellar.find((s) => s.uuid === v.uuid)?.profileImage || "";
+				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
 			}
 			return arr;
 		});
@@ -236,6 +241,7 @@ interface Data {
 
 interface LiveData extends LiveStatusState {
 	profileImage?: string;
+	name?: string;
 }
 
 interface RecentNewsProps {
