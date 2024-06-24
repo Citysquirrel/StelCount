@@ -35,7 +35,7 @@ export interface YoutubeMusicData {
 	statistics: Statistics[];
 }
 
-export interface Statistics {
+export interface Statistics extends DefaultDateFields {
 	id: number;
 	type: string;
 	unit: string;

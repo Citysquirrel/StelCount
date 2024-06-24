@@ -125,13 +125,16 @@ export default function Home() {
 			obj.approach = videos
 				.filter(
 					(v) =>
-						v.statistics.filter((s) => new Date(getLocale()).getTime() - new Date(s.annie_at).getTime() < 259200000) // 3 days
-							.length > 0
+						v.statistics.filter(
+							(s) =>
+								new Date(getLocale()).getTime() - new Date(s.updatedAt || "1000-01-01T09:00:00.000Z").getTime() <
+								259200000
+						).length > 0 // 3 days
 				)
 				.sort((a, b) => {
 					return (
-						new Date(b.statistics.at(-1)?.annie_at || new Date(getLocale())).getTime() -
-						new Date(a.statistics.at(-1)?.annie_at || new Date(getLocale())).getTime()
+						new Date(b.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime() -
+						new Date(a.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime()
 					);
 				})
 				.slice(0, 30);
@@ -715,7 +718,7 @@ function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
 	} else if (type === "approach") {
 		return {
 			value: elapsedTimeText(
-				new Date(new Date(data.statistics.at(-1)?.annie_at || "1000-01-01T09:00:00.000Z")),
+				new Date(new Date(data.statistics.at(-1)?.updatedAt || "1000-01-01T09:00:00.000Z")),
 				new Date(getLocale())
 			)[1],
 			unit: data.statistics.at(-1)?.unit,
