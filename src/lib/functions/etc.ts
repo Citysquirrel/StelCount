@@ -12,7 +12,8 @@ export function objectNullCheck(obj: Object): any {
 	return result;
 }
 
-export function numberToLocaleString(num: string | undefined) {
+export function numberToLocaleString(num: number | string | undefined) {
+	if (typeof num === "number") return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	return num ? num.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
 }
 

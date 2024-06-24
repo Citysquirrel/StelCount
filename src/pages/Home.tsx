@@ -1,4 +1,4 @@
-import { Card, CardBody, HStack, Heading, Link, Skeleton, Stack, Text } from "@chakra-ui/react";
+import { Box, Card, CardBody, HStack, Heading, Link, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
@@ -12,6 +12,9 @@ import { Loading, LoadingCircle } from "../components/Loading";
 import { elapsedTimeText, getLocale, numberToLocaleString } from "../lib/functions/etc";
 import { Image } from "../components/Image";
 import { youtube } from "../lib/functions/platforms";
+import { useResponsive } from "../lib/hooks/useResponsive";
+import { FaEye } from "react-icons/fa6";
+import { MdDateRange } from "react-icons/md";
 
 // TODO: 여기서는 현재 활성중이거나 곧 다가오는 기념일 목록을 보여줍니다.
 // Card or List 형태?
@@ -34,7 +37,7 @@ export default function Home() {
 
 	const { isLoading: isAuthLoading, isLogin, isAdmin } = useAuth();
 
-	const isLoading = data.isUpdated;
+	const isDataLoading = data.isUpdated;
 
 	const arr =
 		data.mostPopular.length > 0
@@ -160,17 +163,19 @@ export default function Home() {
 
 function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
+	const { windowWidth } = useResponsive();
 
 	const headingText = createHeadingText(data, condition);
-
+	const isUnder720 = windowWidth < 720;
 	return (
 		<Stack
 			direction={["column", "column", "row", "row", "row"]}
 			alignItems={["center", "center", "flex-end", "flex-end", "flex-end"]}
-			border="1px solid"
 			borderColor="gray.300"
-			borderRadius={".25rem"}
-			padding="12px"
+			borderRadius={"1rem"}
+			padding="16px"
+			backgroundColor={"blue.300"}
+			gap="12px"
 		>
 			<Link
 				href={isLoading ? undefined : youtube.videoUrl(data.videoId)}
@@ -192,6 +197,8 @@ function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 						".5rem .5rem 0 .5rem",
 						".5rem .5rem 0 .5rem",
 					]}
+					outline="1px solid"
+					outlineColor="blue.50"
 				/>
 			</Link>
 			<Stack gap="4px">
@@ -199,6 +206,20 @@ function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 				<Text overflow="hidden" textOverflow={"ellipsis"} whiteSpace={"normal"} lineHeight="1.5rem" maxHeight="3rem">
 					{data.titleAlias || data.title}
 				</Text>
+				<HStack alignItems={"center"} justifyContent={"space-between"}>
+					<HStack>
+						<FaEye />
+						<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
+					</HStack>
+					<Text fontSize={"sm"} color="gray.700">
+						{
+							elapsedTimeText(
+								new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
+								new Date(getLocale())
+							)[1]
+						}
+					</Text>
+				</HStack>
 			</Stack>
 		</Stack>
 	);
@@ -206,7 +227,7 @@ function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 
 function createHeadingText(data: YoutubeMusicData, condition: number) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
-	const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+	const now = new Date(getLocale());
 	const publishedDate = new Date(data.publishedAt || "1000-01-01T09:00:00.000Z");
 	const [, elapsedDateText] = elapsedTimeText(publishedDate, now);
 	if (condition === 0) {
@@ -222,10 +243,15 @@ function createHeadingText(data: YoutubeMusicData, condition: number) {
 
 function CarouselList({ heading, musics }: CarouselListProps) {
 	return (
-		<Stack>
+		<Stack marginTop="8px">
 			<Heading size="xs">{heading}</Heading>
-			<HStack border="1px solid" borderRadius={".25rem"} borderColor="gray.300">
-				{musics && musics.map((c) => <></>)}
+			<HStack border="1px solid" borderRadius={".25rem"} borderColor="gray.300" height="120px" overflowX={"scroll"}>
+				{musics &&
+					musics.map((c) => (
+						<Stack key={c.videoId}>
+							<Image src={c.thumbnail} alt="thumbnail" />
+						</Stack>
+					))}
 			</HStack>
 		</Stack>
 	);
