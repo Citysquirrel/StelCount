@@ -9,19 +9,20 @@ import { useConsole } from "../lib/hooks/useConsole";
 import { useAuth } from "../lib/hooks/useAuth";
 import { NotExist } from "./NotExist";
 import { Loading, LoadingCircle } from "../components/Loading";
-import { getLocale, numberToLocaleString } from "../lib/functions/etc";
+import { elapsedTimeText, getLocale, numberToLocaleString } from "../lib/functions/etc";
 import { Image } from "../components/Image";
 import { youtube } from "../lib/functions/platforms";
 
 // TODO: 여기서는 현재 활성중이거나 곧 다가오는 기념일 목록을 보여줍니다.
 // Card or List 형태?
 export default function Home() {
-	useBackgroundColor("blue.50");
+	useBackgroundColor("white");
 	const nav = useNavigate();
 	// const [isLoading, setIsLoading] = useState(true);
 	const [stellar] = useRecoilState(stellarState);
 	const [liveStatus] = useRecoilState(liveStatusState);
 
+	const [isNewsLoading, setIsNewsLoading] = useState(true);
 	const [data, setData] = useState<Data>({
 		mostPopular: [],
 		recent: [],
@@ -35,17 +36,40 @@ export default function Home() {
 
 	const isLoading = data.isUpdated;
 
+	const arr =
+		data.mostPopular.length > 0
+			? data.mostPopular
+			: data.recent.length > 0
+			? data.recent
+			: data.approach.length > 0
+			? data.approach
+			: data.mostViews;
+
+	const condition = data.mostPopular.length > 0 ? 0 : data.recent.length > 0 ? 1 : data.approach.length > 0 ? 2 : 3;
+	const firstMusic: YoutubeMusicData = !isNewsLoading
+		? arr[0]
+		: {
+				title: "",
+				titleAlias: "",
+				channelId: "",
+				thumbnail: "",
+				videoId: "",
+				mostPopular: -1,
+				details: [],
+				statistics: [],
+		  };
+
+	useEffect(() => {
+		if (arr[0]) setIsNewsLoading(false);
+	}, [arr]);
+
 	useEffect(() => {
 		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
 		const videos = stellar.map((s) => s.youtubeMusic).flat();
 
-		// [
-		// 	...videos.map((v) => v.statistics).flat(),
-		// 	...videos.map((v) => v.details.map((a) => a.statistics)).flat(2),
-		// ]
 		setData((prev) => {
 			const obj = { ...prev };
-			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1);
+			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1).sort((a, b) => a.mostPopular - b.mostPopular);
 			obj.recent = videos
 				.sort(
 					(a, b) =>
@@ -98,7 +122,7 @@ export default function Home() {
 		});
 	}, [stellar]);
 
-	useConsole(data);
+	useConsole(data, "data");
 	useConsole(liveData);
 
 	useLayoutEffect(() => {
@@ -120,94 +144,71 @@ export default function Home() {
 				gap={"8px"}
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
-				<RecentNews data={data} />
-				<CarouselList heading={"주목할 음악 영상"} contents={[]} />
-				<CarouselList heading={"주목할 음악 영상"} contents={[]} />
+				<RecentNews data={firstMusic} isLoading={isNewsLoading} condition={condition} />
+				<CarouselList heading={"최근 게시된 영상"} contents={[]} />
+				<CarouselList heading={"최근 조회수 달성"} contents={[]} />
 				<CarouselList heading={"치지직 라이브 현황"} contents={[]} />
 			</Stack>
 		</Stack>
 	);
 }
 
-function RecentNews({ data }: RecentNewsProps) {
+function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
-	const [isLoading, setIsLoading] = useState(true);
-	console.log(data);
-	const arr =
-		data.mostPopular.length > 0
-			? data.mostPopular
-			: data.recent.length > 0
-			? data.recent
-			: data.approach.length > 0
-			? data.approach
-			: data.mostViews;
-	const music: YoutubeMusicData = !isLoading
-		? arr[0]
-		: {
-				title: "",
-				titleAlias: "",
-				channelId: "",
-				thumbnail: "",
-				videoId: "",
-				mostPopular: -1,
-				details: [],
-				statistics: [],
-		  };
 
-	useEffect(() => {
-		if (arr[0]) setIsLoading(false);
-	}, [arr]);
+	const headingText = createHeadingText(data, condition);
+
 	return (
-		<Card
-			as={Link}
-			href={isLoading ? undefined : youtube.videoUrl(music.videoId)}
-			position="relative"
-			borderRadius={"lg"}
-			variant={"outline"}
-			overflow="hidden"
-			direction={"column"}
-			width="480px"
-			height="336px"
-			transition="all .3s"
-			cursor={isLoading ? "auto" : "pointer"}
-			sx={{ "> .news-thumbnail": { opacity: 0.5 } }}
-			_hover={{ "> .news-thumbnail": { opacity: 0.5 }, borderRadius: 0 }}
-			isExternal
+		<Stack
+			direction={["column", "column", "row", "row", "row"]}
+			alignItems={["center", "center", "flex-end", "flex-end", "flex-end"]}
 		>
-			{!isLoading ? (
-				<>
-					<Image
-						className="news-thumbnail"
-						src={music.thumbnail}
-						alt="thumbnail"
-						width="480px"
-						height="270px"
-						objectFit={"cover"}
-						transition="all .3s"
-					/>
-					<Stack position="absolute" width="100%" height="270px" alignItems={"center"} justifyContent={"center"}>
-						<Stack transform={"translateY(32px)"}>
-							<Text fontSize="6xl" fontWeight={"bold"}>
-								{numberToLocaleString(music.viewCount)}
-							</Text>
-						</Stack>
-					</Stack>
-					<CardBody padding="8px 12px">
-						<Stack>
-							<Text overflow="hidden" textOverflow={"ellipsis"} whiteSpace={"nowrap"}>
-								{music.titleAlias || music.title}
-							</Text>
-						</Stack>
-						{music.mostPopular !== -1 ? <Text float="right">인기 급상승 음악 #{music.mostPopular}</Text> : null}
-					</CardBody>
-				</>
-			) : (
-				<Stack width="100%" height="100%" alignItems="center" justifyContent={"center"}>
-					<Skeleton width="100%" height="100%" />
-				</Stack>
-			)}
-		</Card>
+			<Link
+				href={isLoading ? undefined : youtube.videoUrl(data.videoId)}
+				_hover={{ "> .news-thumbnail": { opacity: 0.75 }, borderRadius: 0 }}
+			>
+				<Image
+					className="news-thumbnail"
+					src={data.thumbnail}
+					alt="thumbnail"
+					width={["432px", "432px", "360px", "360px", "360px"]} // 432 216
+					height={["216px", "216px", "180px", "180px", "180px"]}
+					minWidth="360px"
+					objectFit={"cover"}
+					transition="all .3s"
+					borderRadius={[
+						".5rem .5rem 0 0",
+						".5rem .5rem 0 0",
+						".5rem .5rem 0 .5rem",
+						".5rem .5rem 0 .5rem",
+						".5rem .5rem 0 .5rem",
+					]}
+				/>
+			</Link>
+			<Stack gap="4px">
+				<Heading fontSize="lg">{headingText}</Heading>
+				<Text overflow="hidden" textOverflow={"ellipsis"} whiteSpace={"normal"} lineHeight="1.5rem" maxHeight="3rem">
+					{data.titleAlias || data.title}
+				</Text>
+			</Stack>
+		</Stack>
 	);
+}
+
+function createHeadingText(data: YoutubeMusicData, condition: number) {
+	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
+	const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+	const publishedDate = new Date(data.publishedAt || "1000-01-01T09:00:00.000Z");
+	const [, elapsedDateText] = elapsedTimeText(publishedDate, now);
+	if (condition === 0) {
+		return `인기 급상승 음악 #${data.mostPopular}`;
+	} else if (condition === 1) {
+		return `${elapsedDateText} 게시된 새 영상`;
+	} else if (condition === 2) {
+		return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
+	} else {
+		return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
+	}
 }
 
 function CarouselList({ heading, contents }: CarouselListProps) {
@@ -236,7 +237,9 @@ interface LiveData extends LiveStatusState {
 }
 
 interface RecentNewsProps {
-	data: Data;
+	data: YoutubeMusicData;
+	isLoading: boolean;
+	condition: number;
 }
 
 interface CarouselListProps {
