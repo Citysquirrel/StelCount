@@ -1,5 +1,24 @@
-import { Button, Checkbox, HStack, Heading, Link, Stack, Text } from "@chakra-ui/react";
-import { Dispatch, SetStateAction, useEffect, useLayoutEffect, useState } from "react";
+import {
+	Button,
+	Checkbox,
+	CloseButton,
+	Collapse,
+	HStack,
+	Heading,
+	IconButton,
+	Input,
+	InputGroup,
+	InputLeftAddon,
+	InputRightAddon,
+	InputRightElement,
+	Link,
+	Stack,
+	Text,
+	Tooltip,
+	useClipboard,
+	useToast,
+} from "@chakra-ui/react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
@@ -14,9 +33,12 @@ import { Image } from "../components/Image";
 import { naver, youtube } from "../lib/functions/platforms";
 import { FaEye } from "react-icons/fa6";
 import isMobile from "is-mobile";
-import { MdOpenInNew } from "react-icons/md";
+import { MdAdd, MdClear, MdContentCopy, MdOpenInNew } from "react-icons/md";
 import { FaArrowAltCircleDown } from "react-icons/fa";
 import { Spacing } from "../components/Spacing";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import update from "immutability-helper";
 
 // TODO: 여기서는 현재 활성중이거나 곧 다가오는 기념일 목록을 보여줍니다.
 // Card or List 형태?
@@ -238,27 +260,22 @@ function RecentNews({ data, isLoading, condition }: RecentNewsProps) {
 	);
 }
 
-function createHeadingText(data: YoutubeMusicData, condition: number) {
-	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
-	const now = new Date(getLocale());
-	const publishedDate = new Date(data.publishedAt || "1000-01-01T09:00:00.000Z");
-	const [, elapsedDateText] = elapsedTimeText(publishedDate, now);
-	if (condition === 0) {
-		return `인기 급상승 음악 #${data.mostPopular}`;
-	} else if (condition === 1) {
-		return `${elapsedDateText} 게시된 새 영상`;
-	} else if (condition === 2) {
-		return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
-	} else {
-		return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
-	}
-}
-
 function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 	const [isMultiViewMode, setIsMultiViewMode] = useState(false);
-	const [multiViewList, setMultiViewList] = useState<MultiViewList[]>([]);
+	const [multiViewList, setMultiViewList] = useState<IMultiViewItem[]>([]);
+
+	const handleAddMulView = (live: LiveData) => () => {
+		setMultiViewList((prev) => {
+			const id = prev.length === 0 ? 1 : Math.max(...prev.map((p) => p.id)) + 1;
+			return [
+				...prev,
+				{ id, uuid: live.uuid, type: "chzzk", streamId: live.chzzkId, profileImage: live.profileImage || "" },
+			];
+		});
+	};
+
 	return (
-		<Stack marginTop="8px">
+		<Stack marginTop="8px" gap={0}>
 			<HStack>
 				<Heading size="md">{heading}</Heading>
 				{lives ? (
@@ -273,6 +290,7 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 					</Button>
 				) : null}
 			</HStack>
+			<Spacing size={8} />
 			<HStack
 				border="1px solid"
 				borderRadius={".25rem"}
@@ -322,7 +340,6 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 									justifyContent={"center"}
 									userSelect={"none"}
 									transition="all .3s"
-									// opacity={0}
 									gap="0"
 								>
 									<FaEye />
@@ -340,6 +357,7 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 								<Stack
 									as={Link}
 									key={live.uuid}
+									onClick={handleAddMulView(live)}
 									sx={{
 										position: "relative",
 										minWidth: "100px",
@@ -426,7 +444,6 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 										justifyContent={"center"}
 										userSelect={"none"}
 										transition="all .3s"
-										// opacity={0}
 										gap="0"
 										sx={{ "> svg": { boxSize: "32px" } }}
 									>
@@ -436,13 +453,226 @@ function CarouselList({ heading, musics, type, lives }: CarouselListProps) {
 							) : null;
 					  })}
 			</HStack>
-			{isMultiViewMode ? <MultiView list={multiViewList} setList={setMultiViewList} /> : null}
+			<Collapse in={isMultiViewMode} animateOpacity>
+				<Spacing size={8} />
+				<MultiView list={multiViewList} setList={setMultiViewList} />
+			</Collapse>
 		</Stack>
 	);
 }
 
 function MultiView({ list, setList }: MultiViewProps) {
-	return <Stack border="1px solid" borderColor="blue.500"></Stack>;
+	const urlPrefix = "https://mul.live/";
+	const [mulLiveUrl, setMulLiveUrl] = useState("");
+	const [isOtherOn, setIsOtherOn] = useState(false);
+	const link = `${urlPrefix}${mulLiveUrl}`;
+	const { onCopy } = useClipboard(link);
+	const toast = useToast();
+
+	const handleOpen = () => {
+		window.open(link, "_blank");
+	};
+
+	const handleCopy = () => {
+		onCopy();
+		toast({ title: "클립보드에 주소를 복사했습니다.", status: "info", duration: 3000, isClosable: true });
+	};
+
+	const moveItem = useCallback((dragIndex: number, hoverIndex: number) => {
+		setList((prev) =>
+			update(prev, {
+				$splice: [
+					[dragIndex, 1],
+					[hoverIndex, 0, prev[dragIndex]],
+				],
+			})
+		);
+	}, []);
+	const renderItem = useCallback((item: IMultiViewItem, index: number) => {
+		return (
+			<MultiViewItem
+				key={item.id}
+				id={item.id}
+				uuid={item.uuid}
+				index={index}
+				moveItem={moveItem}
+				profileImage={item.profileImage}
+				streamId={item.streamId}
+				type={item.type}
+				setList={setList}
+			/>
+		);
+	}, []);
+
+	useEffect(() => {
+		const arr = list.reduce((a, c) => {
+			let value = c.streamId;
+			if (c.type === "afreeca") {
+				value = `a:${c.streamId}`;
+			} else if (c.type === "youtube") {
+				value = `y:${c.streamId}`;
+			}
+			return [...a, value];
+		}, [] as string[]);
+		setMulLiveUrl(arr.join("/"));
+	}, [list]);
+
+	return (
+		<DndProvider backend={HTML5Backend}>
+			<Stack border="1px solid" borderColor="blue.500" borderRadius={".5rem"} padding="12px">
+				<HStack padding="2px" overflowX={"auto"}>
+					{list.map((item, i) => renderItem(item, i))}
+					<Tooltip label="다른 방송도 볼래요" hasArrow>
+						<Button
+							boxSize="50px"
+							minWidth="50px"
+							borderRadius={"full"}
+							overflow="hidden"
+							cursor="pointer"
+							alignItems={"center"}
+							justifyContent={"center"}
+							onClick={() => {
+								setIsOtherOn(true);
+							}}
+						>
+							<MdAdd />
+						</Button>
+					</Tooltip>
+				</HStack>
+				<InputGroup size="sm">
+					<InputLeftAddon>{urlPrefix}</InputLeftAddon>
+					<Input value={mulLiveUrl} isDisabled />
+				</InputGroup>
+				<HStack>
+					<Button colorScheme="teal" size="sm" leftIcon={<MdContentCopy />} aria-label="copy-url" onClick={handleCopy}>
+						주소복사
+					</Button>
+					<Button colorScheme="teal" size="sm" leftIcon={<MdOpenInNew />} aria-label="open-url" onClick={handleOpen}>
+						새창으로 열기
+					</Button>
+				</HStack>
+				<Collapse in={isOtherOn} animateOpacity></Collapse>
+			</Stack>
+		</DndProvider>
+	);
+}
+
+function MultiViewItem({ id, uuid, index, moveItem, type, profileImage, streamId, setList }: MultiViewItemProps) {
+	const [throttle, setThrottle] = useState(false);
+	const ref = useRef<HTMLDivElement>(null);
+	const handleThrottle = () => {
+		setThrottle(true);
+		setTimeout(() => {
+			setThrottle(false);
+		}, 66);
+	};
+
+	const handleClickItem = (id: number) => () => {};
+	const handleDeleteItem = (id: number) => () => {
+		setList((prev) => {
+			const arr = [...prev];
+			const idx = prev.findIndex((item) => item.id === id);
+			arr.splice(idx, 1);
+			return arr;
+		});
+	};
+
+	const [{ handlerId }, drop] = useDrop({
+		accept: "multiViewItem",
+		collect(monitor) {
+			return {
+				handlerId: monitor.getHandlerId(),
+			};
+		},
+		hover: (item: any, monitor) => {
+			if (!ref.current) {
+				return;
+			}
+			// if (throttle) return;
+
+			const dragIndex = item.index;
+			const hoverIndex = index;
+			if (dragIndex === hoverIndex) {
+				return;
+			}
+			const hoverBoundingRect = ref.current?.getBoundingClientRect();
+			const hoverMiddleX = (hoverBoundingRect.left - hoverBoundingRect.right) / 2;
+			const clientOffset = monitor.getClientOffset();
+			const hoverClientX = (clientOffset?.x || 0) - hoverBoundingRect.right;
+			const hoverOffset = 1;
+
+			if (dragIndex < hoverIndex && hoverClientX < hoverMiddleX - hoverOffset) {
+				// handleThrottle();
+				return;
+			}
+			if (dragIndex > hoverIndex && hoverClientX > hoverMiddleX + hoverOffset) {
+				// handleThrottle();
+				return;
+			}
+			moveItem(dragIndex, hoverIndex);
+			item.index = hoverIndex;
+		},
+	});
+	const [{ isDragging }, drag] = useDrag({
+		type: "multiViewItem",
+		item: () => {
+			return { id, index };
+		},
+		collect: (monitor) => ({
+			isDragging: monitor.isDragging(),
+		}),
+	});
+	const opacity = isDragging ? 0 : 1;
+	drag(drop(ref));
+
+	return (
+		<Stack position="relative">
+			<IconButton
+				icon={<MdClear />}
+				variant={"solid"}
+				top={0}
+				right={0}
+				position="absolute"
+				borderRadius={"full"}
+				backgroundColor="black"
+				color="white"
+				size="2xs"
+				fontSize="sm"
+				onClick={handleDeleteItem(id)}
+				aria-label="close-button"
+			/>
+			<Stack
+				ref={ref}
+				boxSize="50px"
+				minWidth="50px"
+				borderRadius={"full"}
+				overflow="hidden"
+				opacity={opacity}
+				cursor="move"
+				onClick={handleClickItem(id)}
+				border={"2px dashed"}
+				borderColor={"gray.600"}
+			>
+				<Image boxSize="50px" src={`${profileImage}?type=f120_120_na`} alt="profile-image" />
+			</Stack>
+		</Stack>
+	);
+}
+
+function createHeadingText(data: YoutubeMusicData, condition: number) {
+	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
+	const now = new Date(getLocale());
+	const publishedDate = new Date(data.publishedAt || "1000-01-01T09:00:00.000Z");
+	const [, elapsedDateText] = elapsedTimeText(publishedDate, now);
+	if (condition === 0) {
+		return `인기 급상승 음악 #${data.mostPopular}`;
+	} else if (condition === 1) {
+		return `${elapsedDateText} 게시된 새 영상`;
+	} else if (condition === 2) {
+		return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
+	} else {
+		return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
+	}
 }
 
 function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
@@ -492,12 +722,20 @@ interface CarouselListProps {
 }
 
 interface MultiViewProps {
-	list: MultiViewList[];
-	setList: Dispatch<SetStateAction<MultiViewList[]>>;
+	list: IMultiViewItem[];
+	setList: Dispatch<SetStateAction<IMultiViewItem[]>>;
 }
 
-interface MultiViewList {
+interface IMultiViewItem {
+	id: number;
 	uuid: string;
 	type: "chzzk" | "afreeca" | "twitch" | "youtube";
 	streamId: string;
+	profileImage: string;
+}
+
+interface MultiViewItemProps extends IMultiViewItem {
+	index: number;
+	moveItem: (dragIndex: number, hoverIndex: number) => void;
+	setList: Dispatch<SetStateAction<IMultiViewItem[]>>;
 }
