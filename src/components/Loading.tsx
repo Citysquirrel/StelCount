@@ -1,4 +1,4 @@
-import { Image, Stack } from "@chakra-ui/react";
+import { Image, Stack, StackProps } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 
 export function Loading({ options }: LoadingProps) {
@@ -27,7 +27,7 @@ export function Loading({ options }: LoadingProps) {
 	);
 }
 
-export function LoadingCircle() {
+export function LoadingCircle({ sx, ...props }: StackProps) {
 	return (
 		<Stack
 			sx={{
@@ -40,7 +40,9 @@ export function LoadingCircle() {
 					animation: "rotate 1s ease infinite",
 					transformOrigin: "50% 50%",
 				},
+				...sx,
 			}}
+			{...props}
 		>
 			<svg
 				width="100"

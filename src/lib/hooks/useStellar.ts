@@ -27,17 +27,19 @@ export function useStellar() {
 
 	const getLiveStatus = () => {
 		setIsLiveFetching(true);
-		fetchServer("/live-status", "v1")
-			.then((res) => {
-				if (res.status === 200) {
-					const data = res.data as LiveStatusState[];
-					setLiveStatus(data);
-				}
-			})
-			.finally(() => {
-				setIsLiveLoading(false);
-				setIsLiveFetching(false);
-			});
+		setTimeout(() => {
+			fetchServer("/live-status", "v1")
+				.then((res) => {
+					if (res.status === 200) {
+						const data = res.data as LiveStatusState[];
+						setLiveStatus(data);
+					}
+				})
+				.finally(() => {
+					setIsLiveLoading(false);
+					setIsLiveFetching(false);
+				});
+		}, 3000);
 	};
 
 	const f = (isTimer?: boolean) => {

@@ -25,12 +25,12 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useLayoutEffect, useR
 import { useNavigate } from "react-router-dom";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
-import { LiveStatusState, isLiveLoadingState, liveStatusState, stellarState } from "../lib/Atom";
+import { LiveStatusState, isLiveFetchingState, isLiveLoadingState, liveStatusState, stellarState } from "../lib/Atom";
 import { YoutubeMusicData } from "../lib/types";
 import { useConsole } from "../lib/hooks/useConsole";
 import { useAuth } from "../lib/hooks/useAuth";
 import { NotExist } from "./NotExist";
-import { Loading } from "../components/Loading";
+import { Loading, LoadingCircle } from "../components/Loading";
 import { elapsedTimeText, getLocale, getThumbnails, numberToLocaleString } from "../lib/functions/etc";
 import { Image } from "../components/Image";
 import { naver, youtube } from "../lib/functions/platforms";
@@ -52,6 +52,7 @@ export default function Home() {
 	const [stellar] = useRecoilState(stellarState);
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
+	const [isLiveFetching] = useRecoilState(isLiveFetchingState);
 
 	const [isNewsLoading, setIsNewsLoading] = useState(true);
 	const [data, setData] = useState<Data>({
@@ -185,7 +186,12 @@ export default function Home() {
 						isDataLoading={isDataLoading}
 					/>
 				) : null}
-				<CarouselList heading={"치지직 라이브 현황"} lives={liveData} isDataLoading={isLiveLoading} />
+				<CarouselList
+					heading={"치지직 라이브 현황"}
+					lives={liveData}
+					isDataLoading={isLiveLoading}
+					isLiveFetching={isLiveFetching}
+				/>
 				{data.recent.length > 0 ? (
 					<CarouselList heading={"최근 게시된 영상"} musics={data.recent} type="recent" isDataLoading={isDataLoading} />
 				) : null}
@@ -248,25 +254,33 @@ function RecentNews({ data, isLoading, condition, isDataLoading }: RecentNewsPro
 							]}
 							outline="1px solid"
 							outlineColor="blue.50"
+							animation={`fadeIn 0.3s ease-in-out 0.1s 1 normal both`}
 						/>
 					</Link>
 					<Stack gap="4px" width={[null, null, null, "100%", "100%"]}>
-						<Heading fontSize="lg">{headingText}</Heading>
+						<Heading fontSize="lg" animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}>
+							{headingText}
+						</Heading>
 						<Text
 							overflow="hidden"
 							textOverflow={"ellipsis"}
 							whiteSpace={"normal"}
 							lineHeight="1.5rem"
 							maxHeight="3rem"
+							animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}
 						>
 							{data.titleAlias || data.title}
 						</Text>
-						<HStack alignItems={"center"} justifyContent={"space-between"}>
-							<HStack>
+						<HStack
+							alignItems={"center"}
+							justifyContent={"space-between"}
+							animation={`fadeIn 0.3s ease-in-out 0.3s 1 normal both`}
+						>
+							<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
 								<FaEye />
 								<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
 							</HStack>
-							<Text fontSize={"sm"} color="gray.700">
+							<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
 								{
 									elapsedTimeText(
 										new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
@@ -282,7 +296,7 @@ function RecentNews({ data, isLoading, condition, isDataLoading }: RecentNewsPro
 	);
 }
 
-function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselListProps) {
+function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetching }: CarouselListProps) {
 	const [isMultiViewMode, setIsMultiViewMode] = useState(false);
 	const [multiViewList, setMultiViewList] = useState<IMultiViewItem[]>([]);
 
@@ -300,6 +314,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 		<Stack marginTop="8px" gap={0}>
 			<HStack>
 				<Heading size="md">{heading}</Heading>
+
 				{lives ? (
 					<>
 						<Button
@@ -318,6 +333,11 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 						) : null}
 					</>
 				) : null}
+				{lives && (
+					<Collapse in={isLiveFetching}>
+						<LoadingCircle sx={{ boxSize: "16px", ">svg": { boxSize: "16px" } }} />
+					</Collapse>
+				)}
 			</HStack>
 			<Spacing size={8} />
 			<HStack
@@ -332,7 +352,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 				{musics && isDataLoading
 					? [1, 2, 3].map((a, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"8px"} />)
 					: musics &&
-					  musics.map((c) => {
+					  musics.map((c, idx) => {
 							const timeText = createTimeText(c, type);
 							return (
 								<Stack
@@ -348,6 +368,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 										overflow: "hidden",
 										cursor: "pointer",
 										transition: "all .3s",
+										animation: `fadeIn 0.3s ease-in-out ${idx * 0.05}s 1 normal both`,
 										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
 										"> .music-information": { opacity: isMobile() ? 1 : 0 },
 										_hover: {
@@ -385,7 +406,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 					? [1, 2, 3].map((a, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"32px"} />)
 					: isMultiViewMode
 					? lives &&
-					  lives.map((live) => {
+					  lives.map((live, idx) => {
 							return live.chzzkId ? (
 								<Stack
 									as={Link}
@@ -401,7 +422,6 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 										transition: "all .3s",
 										outline: "2px solid transparent",
 										outlineColor: live.liveStatus ? "green.400" : "red.400",
-
 										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
 										"> .music-information": { opacity: isMobile() ? 1 : 0 },
 										_hover: {
@@ -435,7 +455,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 							) : null;
 					  })
 					: lives &&
-					  lives.map((live) => {
+					  lives.map((live, idx) => {
 							return live.chzzkId ? (
 								<Stack
 									as={Link}
@@ -452,7 +472,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading }: CarouselL
 										transition: "all .3s",
 										outline: "2px solid transparent",
 										outlineColor: live.liveStatus ? "green.400" : "red.400",
-
+										animation: `fadeIn 0.3s ease-in-out ${idx * 0.05}s 1 normal both`,
 										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
 										"> .music-information": { opacity: isMobile() ? 1 : 0 },
 										_hover: {
@@ -754,6 +774,7 @@ interface CarouselListProps {
 	musics?: YoutubeMusicData[];
 	lives?: LiveData[];
 	isDataLoading: boolean;
+	isLiveFetching?: boolean;
 }
 
 interface MultiViewProps {
