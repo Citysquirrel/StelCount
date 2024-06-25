@@ -177,18 +177,19 @@ export default function Home() {
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
 				<RecentNews data={firstMusic} isLoading={isNewsLoading} condition={condition} isDataLoading={isDataLoading} />
-				{data.recent.length > 0 ? (
-					<CarouselList heading={"최근 게시된 영상"} musics={data.recent} type="recent" isDataLoading={isDataLoading} />
-				) : null}
 				{data.approach.length > 0 ? (
 					<CarouselList
-						heading={"최근 조회수 달성 (실험적 기능)"}
+						heading={"최근 조회수 달성"}
 						musics={data.approach}
 						type={"approach"}
 						isDataLoading={isDataLoading}
 					/>
 				) : null}
 				<CarouselList heading={"치지직 라이브 현황"} lives={liveData} isDataLoading={isLiveLoading} />
+				{data.recent.length > 0 ? (
+					<CarouselList heading={"최근 게시된 영상"} musics={data.recent} type="recent" isDataLoading={isDataLoading} />
+				) : null}
+
 				<Spacing size={8} />
 			</Stack>
 		</Stack>
