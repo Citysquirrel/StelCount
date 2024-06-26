@@ -96,6 +96,19 @@ export function getLocale() {
 	return new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
 }
 
+export function minus9Hs(input?: string | Date) {
+	try {
+		if (!input) {
+			return new Date();
+		}
+		const date = new Date(input);
+		date.setHours(date.getHours() - 9);
+		return date;
+	} catch (err) {
+		return new Date();
+	}
+}
+
 export function getThumbnails(thumbnails: string): Thumbnails {
 	try {
 		return JSON.parse(thumbnails);

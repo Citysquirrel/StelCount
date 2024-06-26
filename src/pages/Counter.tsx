@@ -37,6 +37,8 @@ import {
 	remainingCount,
 	elapsedTimeText,
 	remainingTimeText,
+	getLocale,
+	minus9Hs,
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
@@ -595,6 +597,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		scheduledStartTime,
 		details,
 		mostPopular,
+		countUpdatedAt,
 	} = data;
 
 	const isLive = liveBroadcastContent === "live";
@@ -731,7 +734,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 							</Stack>
 						</Stack>
 					) : (
-						<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} />
+						<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} countUpdatedAt={countUpdatedAt} />
 					)}
 
 					<ThumbnailImage
@@ -771,7 +774,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 	);
 }
 
-function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
+function ViewCount({ viewCount, calc, dir, details, countUpdatedAt }: ViewCountProps) {
 	const carouselRef = useRef<HTMLDivElement>(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const isDetailExist = details.length > 0;
@@ -782,16 +785,19 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 			dir,
 			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
 			type: undefined,
+			countUpdatedAt,
 		},
 		...details.map((v) => {
 			const viewCountNum = parseInt(v.viewCount || "0");
 			const [calc, dir] = remainingCount(viewCountNum);
+
 			return {
 				viewCount: v.viewCount,
 				calc,
 				dir,
 				totalCount: undefined,
 				type: v.type,
+				countUpdatedAt: v.countUpdatedAt,
 			};
 		}),
 	];
@@ -865,10 +871,19 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 						{c.calc ? (
 							<Text fontSize={"0.875rem"}>
 								(
-								<ColorText as="span" value={c.dir === 1 ? "orange.500" : "green.500"}>
-									{c.calc}
-								</ColorText>
-								회 {c.dir === 1 ? "남음" : "지남"})
+								{dir === 1 ? (
+									<>
+										<ColorText as="span" value={"orange.500"}>
+											{calc}
+										</ColorText>
+										회 남음
+									</>
+								) : (
+									<ColorText as="span" value="green.500">
+										{elapsedTimeText(new Date(minus9Hs(c.countUpdatedAt)), new Date(getLocale()))[1]}
+									</ColorText>
+								)}
+								)
 							</Text>
 						) : null}
 						{c.totalCount && c.totalCount !== parseInt(c.viewCount || "0") ? (
@@ -892,10 +907,19 @@ function ViewCount({ viewCount, calc, dir, details }: ViewCountProps) {
 			{calc ? (
 				<Text fontSize={"0.875rem"}>
 					(
-					<ColorText as="span" value={dir === 1 ? "orange.500" : "green.500"}>
-						{calc}
-					</ColorText>
-					회 {dir === 1 ? "남음" : "지남"})
+					{dir === 1 ? (
+						<>
+							<ColorText as="span" value={"orange.500"}>
+								{calc}
+							</ColorText>
+							회 남음
+						</>
+					) : (
+						<ColorText as="span" value="green.500">
+							{elapsedTimeText(new Date(minus9Hs(countUpdatedAt)), new Date(getLocale()))[1]}
+						</ColorText>
+					)}
+					)
 				</Text>
 			) : null}
 		</Stack>
@@ -1025,6 +1049,7 @@ interface ViewCountProps {
 	calc: number;
 	dir: number;
 	details: VideoDetail[];
+	countUpdatedAt: string | undefined;
 }
 
 interface ThumbnailImageProps extends BoxProps {
