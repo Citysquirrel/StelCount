@@ -57,6 +57,8 @@ export interface LiveStatusState {
 	chzzkId: string;
 	liveStatus: boolean;
 	uuid: string;
+	openDate: string;
+	closeDate: string;
 }
 
 // export interface MostPopularState {
