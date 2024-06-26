@@ -1,8 +1,6 @@
 import {
 	Box,
 	Button,
-	Checkbox,
-	CloseButton,
 	Collapse,
 	HStack,
 	Heading,
@@ -10,45 +8,34 @@ import {
 	Input,
 	InputGroup,
 	InputLeftAddon,
-	InputRightAddon,
-	InputRightElement,
 	Link,
 	Skeleton,
 	SkeletonText,
 	Stack,
 	Text,
-	Tooltip,
 	useClipboard,
 	useToast,
 } from "@chakra-ui/react";
-import { Dispatch, SetStateAction, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
 import { LiveStatusState, isLiveFetchingState, isLiveLoadingState, liveStatusState, stellarState } from "../lib/Atom";
 import { YoutubeMusicData } from "../lib/types";
-import { useConsole } from "../lib/hooks/useConsole";
-import { useAuth } from "../lib/hooks/useAuth";
-import { NotExist } from "./NotExist";
-import { Loading, LoadingCircle, LoadingThreeDot } from "../components/Loading";
+import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
 import { elapsedTimeText, getLocale, getThumbnails, numberToLocaleString } from "../lib/functions/etc";
 import { Image } from "../components/Image";
 import { naver, youtube } from "../lib/functions/platforms";
 import { FaEye } from "react-icons/fa6";
 import isMobile from "is-mobile";
-import { MdAdd, MdClear, MdContentCopy, MdOpenInNew } from "react-icons/md";
+import { MdClear, MdContentCopy, MdOpenInNew } from "react-icons/md";
 import { FaArrowAltCircleDown } from "react-icons/fa";
 import { Spacing } from "../components/Spacing";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
 
-// TODO: 여기서는 현재 활성중이거나 곧 다가오는 기념일 목록을 보여줍니다.
-// Card or List 형태?
 export default function Home() {
 	useBackgroundColor("white");
-	const nav = useNavigate();
-	// const [isLoading, setIsLoading] = useState(true);
 	const [stellar] = useRecoilState(stellarState);
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
@@ -356,7 +343,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 				gap="12px"
 			>
 				{musics && isDataLoading
-					? [1, 2, 3].map((a, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"8px"} />)
+					? [1, 2, 3].map((_, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"8px"} />)
 					: musics &&
 					  musics.map((c, idx) => {
 							const timeText = createTimeText(c, type);
@@ -409,10 +396,10 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 							);
 					  })}
 				{lives && isDataLoading
-					? [1, 2, 3].map((a, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"32px"} />)
+					? [1, 2, 3].map((_, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"32px"} />)
 					: isMultiViewMode
 					? lives &&
-					  lives.map((live, idx) => {
+					  lives.map((live) => {
 							// 멀티뷰 ON
 							return live.chzzkId ? (
 								<Stack
@@ -654,15 +641,15 @@ function MultiView({ list, setList }: MultiViewProps) {
 	);
 }
 
-function MultiViewItem({ id, uuid, index, moveItem, type, profileImage, streamId, setList }: MultiViewItemProps) {
-	const [throttle, setThrottle] = useState(false);
+function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiViewItemProps) {
+	// const [throttle, setThrottle] = useState(false);
 	const ref = useRef<HTMLDivElement>(null);
-	const handleThrottle = () => {
-		setThrottle(true);
-		setTimeout(() => {
-			setThrottle(false);
-		}, 66);
-	};
+	// const handleThrottle = () => {
+	// 	setThrottle(true);
+	// 	setTimeout(() => {
+	// 		setThrottle(false);
+	// 	}, 66);
+	// };
 
 	const handleClickItem = (id: number) => () => {};
 	const handleDeleteItem = (id: number) => () => {

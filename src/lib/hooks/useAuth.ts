@@ -27,7 +27,7 @@ export function useAuth() {
 						}
 					}
 				})
-				.catch((err) => {
+				.catch(() => {
 					setIsLogin(false);
 				})
 				.finally(() => {

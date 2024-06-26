@@ -15,7 +15,7 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 		const { headers, status, statusText } = res;
 
 		const response = {
-			data: await res.json().catch((err) => {
+			data: await res.json().catch(() => {
 				return;
 			}),
 			headers,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa6";
 import { ImMail4 } from "react-icons/im";
-import { Box, HStack, Image, Link, Stack, Text, Tooltip } from "@chakra-ui/react";
+import { Box, HStack, Image, Link, Text } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 
 export function Footer() {
@@ -9,9 +9,6 @@ export function Footer() {
 	return (
 		<HStack
 			sx={{
-				// position: "sticky",
-				// bottom: 0,
-				// left: 0,
 				width: "100%",
 				height: "60px",
 				backgroundColor: values.bgFooter,
@@ -24,7 +21,6 @@ export function Footer() {
 			<Text fontSize={"0.75rem"} fontWeight={"bold"}>
 				도시다람쥐
 			</Text>
-			{/* <Text>─</Text> */}
 			<Link
 				href="https://github.com/citysquirrel"
 				isExternal
@@ -49,18 +45,11 @@ export function Footer() {
 					">svg": {
 						width: "26px",
 						height: "26px",
-						// transform: "translateY(2px)",
 					},
 				}}
 			>
 				<ImMail4 />
 			</Link>
-			{/* <Text>─</Text>
-			<Tooltip label="복사">
-				<Text fontSize={"0.75rem"}>
-					(<CopyLink copy={"tok1324@naver.com"}>tok1324@naver.com</CopyLink>)
-				</Text>
-			</Tooltip> */}
 		</HStack>
 	);
 }

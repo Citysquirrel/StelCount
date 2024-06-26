@@ -38,10 +38,3 @@ export function useResponsive() {
 
 	return { windowWidth, width };
 }
-
-// ultra: 3440,
-// 		wide: 2560,
-// 		full: 1920,
-// 		basic: 1280,
-// 		tablet: 720,
-// 		mobile: 480,

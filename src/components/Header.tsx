@@ -1,7 +1,7 @@
 import { useRecoilState } from "recoil";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { headerOffsetState } from "../lib/Atom";
-import { Box, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 
 interface HeaderProps {

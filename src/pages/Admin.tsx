@@ -66,15 +66,14 @@ import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
 import { useNavigate, useParams } from "react-router-dom";
 import { useRecoilState } from "recoil";
-import { headerOffsetState, stellarState } from "../lib/Atom";
+import { headerOffsetState } from "../lib/Atom";
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 import VALIDATION from "../lib/functions/validation";
-import { objectNullCheck, stringNullCheck } from "../lib/functions/etc";
+import { objectNullCheck } from "../lib/functions/etc";
 import { TOAST_MESSAGE, stellarGroupName } from "../lib/constant";
 import { NotExist } from "./NotExist";
-import { useConsole } from "../lib/hooks/useConsole";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Tag as TagType, VideoDetail } from "../lib/types";
@@ -136,7 +135,7 @@ export function Admin() {
 			toast({ description: "스텔라 이름을 입력해주세요", status: "error" });
 			return;
 		}
-		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
+		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then(() => {
 			getStellarData();
 
 			toast({ description: `새 스텔라 등록을 완료했습니다`, status: "success" });
@@ -178,7 +177,7 @@ export function Admin() {
 	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
 		if (!confirm(`${stellarData.find((s) => s.id === id)?.name} 항목을 삭제하시겠습니까?`)) {
 		} else {
-			fetchServer(`/stellar/${id}`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then((res) => {
+			fetchServer(`/stellar/${id}`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then(() => {
 				getStellarData();
 			});
 		}
@@ -412,7 +411,6 @@ export function AdminEdit() {
 	useBackgroundColor(`white`);
 	const nav = useNavigate();
 	const { id } = useParams();
-	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading, setIsLoading] = useState(true);
 	const [alertStatus, setAlertStatus] = useState<"error" | "info" | "warning" | "success" | "loading">("loading");
 	const alertText = {
@@ -450,7 +448,7 @@ export function AdminEdit() {
 					}
 				}
 			})
-			.catch((err) => {
+			.catch(() => {
 				setAlertStatus("error");
 			})
 			.finally(() => {
@@ -479,7 +477,7 @@ export function AdminEdit() {
 					}
 				}
 			})
-			.catch((err) => {
+			.catch(() => {
 				setIsLoading(false);
 				setAlertStatus("error");
 			})
@@ -712,7 +710,6 @@ function MusicDrawer({
 	placement,
 	isOpen,
 	onClose,
-	setData,
 }: MusicDrawerProps) {
 	const toast = useToast();
 
@@ -754,7 +751,7 @@ function MusicDrawer({
 						toast({ description: "중복된 태그 이름입니다", status: "warning" });
 					}
 				})
-				.catch((err) => {
+				.catch(() => {
 					toast({ description: "태그 생성 중 에러가 발생했습니다", status: "error" });
 				})
 				.finally(() => {
@@ -784,7 +781,7 @@ function MusicDrawer({
 					toast({ description: "음악 수정 중 에러가 발생했습니다", status: "error" });
 				}
 			})
-			.catch((err) => {
+			.catch(() => {
 				toast({ description: "음악 수정 중 에러가 발생했습니다", status: "error" });
 			});
 	};

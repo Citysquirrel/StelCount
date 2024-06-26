@@ -30,7 +30,6 @@ import {
 } from "@chakra-ui/react";
 import { Image } from "../components/Image";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { useConsole } from "../lib/hooks/useConsole";
 import {
 	musicDefaultSortValue,
 	numberToLocaleString,
@@ -44,7 +43,6 @@ import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platform
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
 import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
-import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
 import { Statistics, Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
 import { ColorText } from "../components/Text";
@@ -101,7 +99,6 @@ export function Counter() {
 	);
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat());
-	// const currentExistTagIds = currentExistTags.map((t) => t.id);
 
 	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uuid)?.liveStatus || false;
 
