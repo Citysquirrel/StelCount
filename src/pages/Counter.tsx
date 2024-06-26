@@ -46,7 +46,7 @@ import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/c
 import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
 import { GoKebabHorizontal } from "react-icons/go";
 import { useLocalStorage } from "usehooks-ts";
-import { Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
+import { Statistics, Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
 import { ColorText } from "../components/Text";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import isMobile from "is-mobile";
@@ -598,6 +598,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 		details,
 		mostPopular,
 		countUpdatedAt,
+		statistics,
 	} = data;
 
 	const isLive = liveBroadcastContent === "live";
@@ -734,7 +735,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 							</Stack>
 						</Stack>
 					) : (
-						<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} countUpdatedAt={countUpdatedAt} />
+						<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} statistics={statistics} />
 					)}
 
 					<ThumbnailImage
@@ -774,7 +775,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 	);
 }
 
-function ViewCount({ viewCount, calc, dir, details, countUpdatedAt }: ViewCountProps) {
+function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps) {
 	const carouselRef = useRef<HTMLDivElement>(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const isDetailExist = details.length > 0;
@@ -785,7 +786,7 @@ function ViewCount({ viewCount, calc, dir, details, countUpdatedAt }: ViewCountP
 			dir,
 			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
 			type: undefined,
-			countUpdatedAt,
+			annieAt: statistics.at(-1)?.annie_at,
 		},
 		...details.map((v) => {
 			const viewCountNum = parseInt(v.viewCount || "0");
@@ -798,6 +799,7 @@ function ViewCount({ viewCount, calc, dir, details, countUpdatedAt }: ViewCountP
 				totalCount: undefined,
 				type: v.type,
 				countUpdatedAt: v.countUpdatedAt,
+				annieAt: statistics.at(-1)?.annie_at,
 			};
 		}),
 	];
@@ -880,7 +882,7 @@ function ViewCount({ viewCount, calc, dir, details, countUpdatedAt }: ViewCountP
 									</>
 								) : (
 									<ColorText as="span" value="green.500">
-										{elapsedTimeText(new Date(minus9Hs(c.countUpdatedAt)), new Date(getLocale()))[1]}
+										{elapsedTimeText(new Date(minus9Hs(c.annieAt)), new Date(getLocale()))[1]}
 									</ColorText>
 								)}
 								)
@@ -916,7 +918,7 @@ function ViewCount({ viewCount, calc, dir, details, countUpdatedAt }: ViewCountP
 						</>
 					) : (
 						<ColorText as="span" value="green.500">
-							{elapsedTimeText(new Date(minus9Hs(countUpdatedAt)), new Date(getLocale()))[1]}
+							{elapsedTimeText(new Date(minus9Hs(statistics.at(-1)?.annie_at)), new Date(getLocale()))[1]}
 						</ColorText>
 					)}
 					)
@@ -1049,7 +1051,7 @@ interface ViewCountProps {
 	calc: number;
 	dir: number;
 	details: VideoDetail[];
-	countUpdatedAt: string | undefined;
+	statistics: Statistics[];
 }
 
 interface ThumbnailImageProps extends BoxProps {
