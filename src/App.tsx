@@ -7,7 +7,7 @@ import { useStellar } from "./lib/hooks/useStellar";
 import { Button, Divider, IconButton, Link, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { serverErrorState, isStellarLoadingState, backgroundColorState } from "./lib/Atom";
+import { serverErrorState, isStellarLoadingState, backgroundColorState, liveStatusState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { LoadingAtCorner } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
@@ -22,6 +22,7 @@ function App() {
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [serverError] = useRecoilState(serverErrorState);
 	const [backgroundColor] = useRecoilState(backgroundColorState);
+	const [liveStatus] = useRecoilState(liveStatusState);
 	const { refetch } = useStellar();
 	const { isAdmin, isLoading } = useAuth();
 
@@ -29,7 +30,7 @@ function App() {
 		refetch(true);
 	};
 
-	useConsole(backgroundColor);
+	useConsole(liveStatus);
 
 	if (serverError.isError) return <ServerErrorPage />;
 	return (

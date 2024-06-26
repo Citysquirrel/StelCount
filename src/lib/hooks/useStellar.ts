@@ -40,7 +40,16 @@ export function useStellar() {
 			.then((res) => {
 				if (res.status === 200) {
 					const data = res.data as LiveStatusState[];
-					setLiveStatus(data);
+					setLiveStatus((prev) => {
+						if (prev.length === 0) return data;
+						const arr = [...prev];
+						for (let item of arr) {
+							const liveStatus = data.find((l) => l.uuid === item.uuid)?.liveStatus;
+							const curIdx = arr.findIndex((a) => a.uuid === item.uuid);
+							arr[curIdx] = { ...arr[curIdx], liveStatus };
+						}
+						return arr;
+					});
 					getLiveDetail();
 				}
 			})
