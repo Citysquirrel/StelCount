@@ -30,7 +30,7 @@ import { YoutubeMusicData } from "../lib/types";
 import { useConsole } from "../lib/hooks/useConsole";
 import { useAuth } from "../lib/hooks/useAuth";
 import { NotExist } from "./NotExist";
-import { Loading, LoadingCircle } from "../components/Loading";
+import { Loading, LoadingCircle, LoadingThreeDot } from "../components/Loading";
 import { elapsedTimeText, getLocale, getThumbnails, numberToLocaleString } from "../lib/functions/etc";
 import { Image } from "../components/Image";
 import { naver, youtube } from "../lib/functions/platforms";
@@ -150,8 +150,8 @@ export default function Home() {
 			profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
 			name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
 			gap: l.liveStatus
-				? elapsedTimeText(new Date(l.openDate), new Date(getLocale()))
-				: elapsedTimeText(new Date(l.closeDate), new Date(getLocale())),
+				? elapsedTimeText(new Date(l.openDate!), new Date(getLocale()))
+				: elapsedTimeText(new Date(l.closeDate!), new Date(getLocale())),
 		}));
 		const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
 		const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
@@ -165,8 +165,8 @@ export default function Home() {
 				v.profileImage = stellar.find((s) => s.uuid === v.uuid)?.profileImage || "";
 				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
 				v.gap = v.liveStatus
-					? elapsedTimeText(new Date(v.openDate), new Date(getLocale()))
-					: elapsedTimeText(new Date(v.closeDate), new Date(getLocale()));
+					? elapsedTimeText(new Date(v.openDate!), new Date(getLocale()))
+					: elapsedTimeText(new Date(v.closeDate!), new Date(getLocale()));
 			}
 			const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
 			const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
@@ -413,6 +413,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 					: isMultiViewMode
 					? lives &&
 					  lives.map((live, idx) => {
+							// 멀티뷰 ON
 							return live.chzzkId ? (
 								<Stack
 									as={Link}
@@ -437,14 +438,22 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 									}}
 								>
 									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
-										<Text
-											fontSize="0.75rem"
-											backgroundColor="rgb(255,255,255,.66)"
-											padding="1px 6px"
-											borderRadius={"4px"}
-										>
-											{live.gap[1]}
-										</Text>
+										{isNaN(live.gap[0]) ? (
+											<LoadingThreeDot
+												backgroundColor="rgb(255,255,255,.66)"
+												borderRadius={"4px"}
+												sx={{ height: "20px", ">svg": { boxSize: "20px", transform: "translateY(2px)" } }}
+											/>
+										) : (
+											<Text
+												fontSize="0.75rem"
+												backgroundColor="rgb(255,255,255,.66)"
+												padding="1px 6px"
+												borderRadius={"4px"}
+											>
+												{live.gap[1]}
+											</Text>
+										)}
 									</Stack>
 									<Image
 										boxSize="100px"
@@ -472,6 +481,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 					  })
 					: lives &&
 					  lives.map((live, idx) => {
+							// 멀티뷰 OFF
 							return live.chzzkId ? (
 								<Stack
 									as={Link}
@@ -498,14 +508,22 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 									}}
 								>
 									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
-										<Text
-											fontSize="0.75rem"
-											backgroundColor="rgb(255,255,255,.66)"
-											padding="1px 6px"
-											borderRadius={"4px"}
-										>
-											{live.gap[1]}
-										</Text>
+										{isNaN(live.gap[0]) ? (
+											<LoadingThreeDot
+												backgroundColor="rgb(255,255,255,.66)"
+												borderRadius={"4px"}
+												sx={{ height: "20px", ">svg": { boxSize: "20px", transform: "translateY(2px)" } }}
+											/>
+										) : (
+											<Text
+												fontSize="0.75rem"
+												backgroundColor="rgb(255,255,255,.66)"
+												padding="1px 6px"
+												borderRadius={"4px"}
+											>
+												{live.gap[1]}
+											</Text>
+										)}
 									</Stack>
 									<Image
 										boxSize="100px"

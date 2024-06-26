@@ -25,21 +25,29 @@ export function useStellar() {
 	const [, setIsLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [, setIsLiveFetching] = useRecoilState(isLiveFetchingState);
 
+	const getLiveDetail = () => {
+		fetchServer("/live-detail", "v1").then((res) => {
+			if (res.status === 200) {
+				const data = res.data as LiveStatusState[];
+				setLiveStatus(data);
+			}
+		});
+	};
+
 	const getLiveStatus = () => {
 		setIsLiveFetching(true);
-		setTimeout(() => {
-			fetchServer("/live-status", "v1")
-				.then((res) => {
-					if (res.status === 200) {
-						const data = res.data as LiveStatusState[];
-						setLiveStatus(data);
-					}
-				})
-				.finally(() => {
-					setIsLiveLoading(false);
-					setIsLiveFetching(false);
-				});
-		}, 3000);
+		fetchServer("/live-status", "v1")
+			.then((res) => {
+				if (res.status === 200) {
+					const data = res.data as LiveStatusState[];
+					setLiveStatus(data);
+					getLiveDetail();
+				}
+			})
+			.finally(() => {
+				setIsLiveLoading(false);
+				setIsLiveFetching(false);
+			});
 	};
 
 	const f = (isTimer?: boolean) => {

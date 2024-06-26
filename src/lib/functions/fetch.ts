@@ -50,6 +50,7 @@ type ServerAPI =
 	| "/tag/:id"
 	| "/tags"
 	| "/live-status"
+	| "/live-detail"
 	| (string & {});
 
 interface FetchServerOption extends FetchOptions {

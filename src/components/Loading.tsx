@@ -66,6 +66,36 @@ export function LoadingCircle({ sx, ...props }: StackProps) {
 	);
 }
 
+export function LoadingThreeDot({ sx, ...props }: StackProps) {
+	return (
+		<Stack
+			sx={{
+				width: "32px",
+				height: "32px",
+				alignItems: "center",
+				justifyContent: "center",
+				"> svg": {
+					boxSize: "32px",
+				},
+				...sx,
+			}}
+			{...props}
+		>
+			<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="#000">
+				<circle cx="25" cy="50" r="10">
+					<animate attributeName="cy" begin="0s" dur="0.6s" values="50;30;50" repeatCount="indefinite" />
+				</circle>
+				<circle cx="50" cy="50" r="10">
+					<animate attributeName="cy" begin="0.2s" dur="0.6s" values="50;30;50" repeatCount="indefinite" />
+				</circle>
+				<circle cx="75" cy="50" r="10">
+					<animate attributeName="cy" begin="0.4s" dur="0.6s" values="50;30;50" repeatCount="indefinite" />
+				</circle>
+			</svg>
+		</Stack>
+	);
+}
+
 export function LoadingAtCorner() {
 	return (
 		<Stack
