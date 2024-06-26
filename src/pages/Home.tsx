@@ -19,7 +19,14 @@ import {
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
-import { LiveStatusState, isLiveFetchingState, isLiveLoadingState, liveStatusState, stellarState } from "../lib/Atom";
+import {
+	LiveStatusState,
+	isLiveFetchingState,
+	isLiveLoadingState,
+	liveStatusState,
+	nowState,
+	stellarState,
+} from "../lib/Atom";
 import { YoutubeMusicData } from "../lib/types";
 import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
 import {
@@ -27,6 +34,7 @@ import {
 	getLocale,
 	getThumbnails,
 	numberToLocaleString,
+	remainingTimeText,
 	sortStatsByUnit,
 } from "../lib/functions/etc";
 import { Image } from "../components/Image";
@@ -39,6 +47,7 @@ import { Spacing } from "../components/Spacing";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
+import { MIN_DATE } from "../lib/constant";
 
 export default function Home() {
 	useBackgroundColor("white");
@@ -46,6 +55,7 @@ export default function Home() {
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [isLiveFetching] = useRecoilState(isLiveFetchingState);
+	const [now] = useRecoilState(nowState);
 
 	const [isNewsLoading, setIsNewsLoading] = useState(true);
 	const [data, setData] = useState<Data>({
@@ -105,12 +115,16 @@ export default function Home() {
 
 		setData((prev) => {
 			const obj = { ...prev };
+			obj.upcoming = videos
+				.filter((v) => v.liveBroadcastContent === "upcoming")
+				.sort(
+					(a, b) =>
+						new Date(a.scheduledStartTime || MIN_DATE).getTime() - new Date(b.scheduledStartTime || MIN_DATE).getTime()
+				);
 			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1).sort((a, b) => a.mostPopular - b.mostPopular);
 			obj.recent = videos
 				.filter(
-					(v) =>
-						new Date(getLocale()).getTime() - new Date(v.publishedAt || "1000-01-01T09:00:00.000Z").getTime() <
-						5184000000 // 2 months
+					(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 5184000000 // 2 months
 				)
 				.sort(
 					(a, b) =>
@@ -133,9 +147,7 @@ export default function Home() {
 				.filter(
 					(v) =>
 						v.statistics.filter(
-							(s) =>
-								new Date(getLocale()).getTime() - new Date(s.updatedAt || "1000-01-01T09:00:00.000Z").getTime() <
-								259200000 // 3 days
+							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
 						).length > 0
 				)
 				.sort((a, b) => {
@@ -189,7 +201,13 @@ export default function Home() {
 				gap={"8px"}
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
-				<RecentNews data={firstMusic} isLoading={isNewsLoading} condition={condition} isDataLoading={isDataLoading} />
+				<RecentNews
+					data={firstMusic}
+					isLoading={isNewsLoading}
+					condition={condition}
+					isDataLoading={isDataLoading}
+					now={now}
+				/>
 				{data.approach.length > 0 ? (
 					<CarouselList
 						heading={"최근 조회수 달성"}
@@ -214,8 +232,28 @@ export default function Home() {
 	);
 }
 
-function RecentNews({ data, isLoading, condition, isDataLoading }: RecentNewsProps) {
+function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNewsProps) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
+
+	function createHeadingText(data: YoutubeMusicData, condition: number) {
+		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
+		const publishedDate = new Date(data.publishedAt || MIN_DATE);
+		const [, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
+		const scheduledStartTimeDate = new Date(data.scheduledStartTime || MIN_DATE);
+		const [startTimeGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
+
+		if (condition === 1) {
+			return `최초 공개`;
+		} else if (condition === 0) {
+			return `인기 급상승 음악 #${data.mostPopular}`;
+		} else if (condition === 1) {
+			return `${elapsedDateText} 게시된 새 영상`;
+		} else if (condition === 2) {
+			return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
+		} else {
+			return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
+		}
+	}
 
 	const headingText = createHeadingText(data, condition);
 	return (
@@ -293,12 +331,7 @@ function RecentNews({ data, isLoading, condition, isDataLoading }: RecentNewsPro
 								<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
 							</HStack>
 							<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
-								{
-									elapsedTimeTextForCard(
-										new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
-										new Date(getLocale())
-									)[1]
-								}
+								{elapsedTimeTextForCard(new Date(new Date(data.publishedAt || MIN_DATE)), new Date(getLocale()))[1]}
 							</Text>
 						</HStack>
 					</Stack>
@@ -764,34 +797,15 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 
 // Functions
 
-function createHeadingText(data: YoutubeMusicData, condition: number) {
-	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
-	const now = new Date(getLocale());
-	const publishedDate = new Date(data.publishedAt || "1000-01-01T09:00:00.000Z");
-	const [, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
-	if (condition === 0) {
-		return `인기 급상승 음악 #${data.mostPopular}`;
-	} else if (condition === 1) {
-		return `${elapsedDateText} 게시된 새 영상`;
-	} else if (condition === 2) {
-		return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
-	} else {
-		return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
-	}
-}
-
 function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
 	if (type === "recent") {
 		return {
-			value: elapsedTimeTextForCard(
-				new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
-				new Date(getLocale())
-			)[1],
+			value: elapsedTimeTextForCard(new Date(new Date(data.publishedAt || MIN_DATE)), new Date(getLocale()))[1],
 		};
 	} else if (type === "approach") {
 		return {
 			value: elapsedTimeTextForCard(
-				new Date(new Date(data.statistics.at(-1)?.updatedAt || "1000-01-01T09:00:00.000Z")),
+				new Date(new Date(data.statistics.at(-1)?.updatedAt || MIN_DATE)),
 				new Date(getLocale())
 			)[1],
 			unit: data.statistics.at(-1)?.unit,
@@ -818,6 +832,7 @@ interface RecentNewsProps {
 	isLoading: boolean;
 	isDataLoading: boolean;
 	condition: number;
+	now: Date;
 }
 
 type CarouselListType = "recent" | "approach" | (string & {});

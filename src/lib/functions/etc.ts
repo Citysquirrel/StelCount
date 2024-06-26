@@ -102,7 +102,8 @@ export function remainingTimeText(date: Date, now: Date): [number, string] {
 		text = `${m}:${s}`;
 	} else if (gap < 86400) {
 		text = `${h}:${m}:${s}`;
-	} else text = `${Math.floor(gap / 86400)}일 전`;
+		// } else text = `${Math.floor(gap / 86400)}일 전`;
+	} else text = `${h}:${m}:${s}`;
 
 	return [gap, text];
 }

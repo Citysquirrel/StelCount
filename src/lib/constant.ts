@@ -16,6 +16,8 @@ const TOAST_MESSAGE = {
 	get: (target: string) => `${target} 데이터를 새로 불러왔습니다`,
 };
 
+const MIN_DATE = "1000-01-01T09:00:00.000Z";
+
 const stellarGroupName = [
 	["스텔라이브", "StelLive"],
 	["미스틱", "Mystic"],
@@ -39,4 +41,5 @@ export {
 	CAFE_WRITE_URL,
 	stellarGroupName,
 	TOAST_MESSAGE,
+	MIN_DATE,
 };

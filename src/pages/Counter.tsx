@@ -611,7 +611,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 
 	const isUpcoming = liveBroadcastContent === "upcoming";
 	const scheduledStartTimeDate = new Date(scheduledStartTime || "1000-01-01T09:00:00.000Z");
-	const [startTimeGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
+	const [remainingDateGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
 	const upcomingCardBg = `linear-gradient(217deg, rgba(93, 57, 255, 0.8), rgba(255,0,0,0) 70.71%),
             linear-gradient(127deg, rgba(209, 57, 255, 0.8), rgba(0,255,0,0) 70.71%),
             linear-gradient(336deg, rgba(155, 142, 255, 0.8), rgba(0,0,255,0) 70.71%)`;
@@ -714,7 +714,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 									최초공개
 								</ColorText>
 								<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
-									{parseInt(remainingDateText) < 0 ? "진행중" : remainingDateText}
+									{remainingDateGap < 0 ? "진행중" : remainingDateText}
 								</Text>
 							</Stack>
 						</Stack>
@@ -725,7 +725,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 									최초공개
 								</ColorText>
 								<Text fontSize={"2.25rem"} fontWeight={"bold"} lineHeight={1}>
-									{parseInt(remainingDateText) <= 0 ? "곧 시작" : remainingDateText}
+									{remainingDateGap <= 0 ? "곧 시작" : remainingDateText}
 								</Text>
 							</Stack>
 						</Stack>
