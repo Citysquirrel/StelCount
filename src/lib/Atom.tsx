@@ -60,6 +60,13 @@ export interface LiveStatusState {
 	openDate?: string;
 	closeDate?: string;
 }
+
+type FetchInfoKey = "stellar" | "liveStatus" | "liveDetail" | (string & {});
+
+export type FetchInfoState = {
+	[K in FetchInfoKey]?: { [key: string]: string | null | undefined };
+};
+
 export const stellarState = atom<StellarState[]>({
 	key: createAtomKey("stellar"),
 	default: [],
@@ -88,9 +95,20 @@ export const isLiveLoadingState = atom<boolean>({
 	key: createAtomKey("isLiveLoading"),
 	default: true,
 });
+
 export const isLiveFetchingState = atom<boolean>({
 	key: createAtomKey("isLiveFetching"),
 	default: false,
+});
+
+export const fetchInfoState = atom<FetchInfoState>({
+	key: createAtomKey("fetchInfo"),
+	default: {},
+});
+
+export const nowState = atom<Date>({
+	key: createAtomKey("now"),
+	default: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })),
 });
 
 export const isAdminState = atom<boolean>({

@@ -3,7 +3,14 @@ export interface FetchOptions extends RequestInit {
 	timeout?: number;
 }
 
-export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
+interface FetchResponse {
+	data?: any;
+	headers?: Headers;
+	status: number;
+	statusText: string;
+}
+
+export async function fetch_(input: RequestInfo | URL, options?: FetchOptions): Promise<FetchResponse> {
 	try {
 		const controller = new AbortController();
 		const id = setTimeout(() => controller.abort(), options?.timeout || 20000);
@@ -26,7 +33,7 @@ export async function fetch_(input: RequestInfo | URL, options?: FetchOptions) {
 		return response;
 	} catch (err: any) {
 		// 에러 관련
-		return { data: undefined, status: 500, statusText: err.stack.split("\n")[0] };
+		return { data: undefined, status: 500, statusText: err.stack.split("\n")[0], headers: undefined };
 	}
 }
 

@@ -4,17 +4,18 @@ import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, Divider, IconButton, Link, Stack, Tooltip, useColorMode } from "@chakra-ui/react";
+import { Button, Divider, IconButton, Link, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { serverErrorState, isStellarLoadingState, backgroundColorState, liveStatusState } from "./lib/Atom";
+import { serverErrorState, isStellarLoadingState, backgroundColorState, fetchInfoState, nowState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { LoadingAtCorner } from "./components/Loading";
 import { ImListNumbered } from "react-icons/im";
 import { IoReload } from "react-icons/io5";
-import { useConsole } from "./lib/hooks/useConsole";
 import { useAuth } from "./lib/hooks/useAuth";
 import { CAFE_WRITE_URL } from "./lib/constant";
+import { useEffect } from "react";
+import { elapsedTimeText } from "./lib/functions/etc";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -22,7 +23,8 @@ function App() {
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [serverError] = useRecoilState(serverErrorState);
 	const [backgroundColor] = useRecoilState(backgroundColorState);
-	const [liveStatus] = useRecoilState(liveStatusState);
+	const [fetchInfo] = useRecoilState(fetchInfoState);
+	const [now, setNow] = useRecoilState(nowState);
 	const { refetch } = useStellar();
 	const { isAdmin, isLoading } = useAuth();
 
@@ -30,7 +32,18 @@ function App() {
 		refetch(true);
 	};
 
-	useConsole(liveStatus);
+	useEffect(() => {
+		const i = setInterval(() => {
+			let ms = new Date().getMilliseconds();
+			if (ms) setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
+		}, 1000);
+
+		return () => {
+			clearInterval(i);
+		};
+	}, []);
+
+	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 
 	if (serverError.isError) return <ServerErrorPage />;
 	return (
@@ -132,6 +145,11 @@ function App() {
 						icon={colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
 						aria-label="color-mode"
 					/>
+				) : null}
+				{timeGap > 30 ? (
+					<Text position="absolute" right="2px" bottom="2px" fontSize="0.75rem" color="gray.500">
+						{timeText} 데이터
+					</Text>
 				) : null}
 			</Header>
 			<Container>

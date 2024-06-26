@@ -8,11 +8,13 @@ import {
 	liveStatusState,
 	isLiveLoadingState,
 	isLiveFetchingState,
+	fetchInfoState,
 } from "../Atom";
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
 import { useToast } from "@chakra-ui/react";
 import isMobile from "is-mobile";
+import { getLocale } from "../functions/etc";
 
 export function useStellar() {
 	const toast = useToast();
@@ -23,12 +25,18 @@ export function useStellar() {
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [, setIsLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [, setIsLiveFetching] = useRecoilState(isLiveFetchingState);
+	const [, setFetchInfo] = useRecoilState(fetchInfoState);
 
 	const getLiveDetail = () => {
 		fetchServer("/live-detail", "v1").then((res) => {
 			if (res.status === 200) {
 				const data = res.data as LiveStatusState[];
 				setLiveStatus(data);
+				setFetchInfo((prev) => {
+					const obj = { ...prev };
+					obj["liveDetail"] = { date: getLocale() };
+					return obj;
+				});
 			}
 		});
 	};
@@ -48,6 +56,11 @@ export function useStellar() {
 							arr[curIdx] = { ...arr[curIdx], liveStatus };
 						}
 						return arr;
+					});
+					setFetchInfo((prev) => {
+						const obj = { ...prev };
+						obj["liveStatus"] = { date: getLocale() };
+						return obj;
 					});
 					getLiveDetail();
 				}
@@ -74,6 +87,11 @@ export function useStellar() {
 								duration: isMobile() ? 1500 : 3000,
 								isClosable: true,
 							});
+						setFetchInfo((prev) => {
+							const obj = { ...prev };
+							obj["stellar"] = { date: getLocale() };
+							return obj;
+						});
 						getLiveStatus();
 					}
 					if (res.status === 429) {

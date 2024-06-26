@@ -22,7 +22,13 @@ import { useRecoilState } from "recoil";
 import { LiveStatusState, isLiveFetchingState, isLiveLoadingState, liveStatusState, stellarState } from "../lib/Atom";
 import { YoutubeMusicData } from "../lib/types";
 import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
-import { elapsedTimeText, getLocale, getThumbnails, numberToLocaleString } from "../lib/functions/etc";
+import {
+	elapsedTimeTextForCard,
+	getLocale,
+	getThumbnails,
+	numberToLocaleString,
+	sortStatsByUnit,
+} from "../lib/functions/etc";
 import { Image } from "../components/Image";
 import { naver, youtube } from "../lib/functions/platforms";
 import { FaEye } from "react-icons/fa6";
@@ -43,6 +49,7 @@ export default function Home() {
 
 	const [isNewsLoading, setIsNewsLoading] = useState(true);
 	const [data, setData] = useState<Data>({
+		upcoming: [],
 		mostPopular: [],
 		recent: [],
 		approach: [],
@@ -54,7 +61,9 @@ export default function Home() {
 	const isDataLoading = !data.isUpdated;
 
 	const arr =
-		data.mostPopular.length > 0
+		data.upcoming.length > 0
+			? data.mostPopular.length
+			: data.mostPopular.length > 0
 			? data.mostPopular
 			: data.recent.length > 0
 			? data.recent
@@ -62,7 +71,16 @@ export default function Home() {
 			? data.approach
 			: data.mostViews;
 
-	const condition = data.mostPopular.length > 0 ? 0 : data.recent.length > 0 ? 1 : data.approach.length > 0 ? 2 : 3;
+	const condition =
+		data.upcoming.length > 0
+			? -1
+			: data.mostPopular.length > 0
+			? 0
+			: data.recent.length > 0
+			? 1
+			: data.approach.length > 0
+			? 2
+			: 3;
 	const firstMusic: YoutubeMusicData = !isNewsLoading
 		? arr[0]
 		: {
@@ -111,13 +129,14 @@ export default function Home() {
 				})
 				.slice(0, 30);
 			obj.approach = videos
+				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
 				.filter(
 					(v) =>
 						v.statistics.filter(
 							(s) =>
 								new Date(getLocale()).getTime() - new Date(s.updatedAt || "1000-01-01T09:00:00.000Z").getTime() <
-								259200000
-						).length > 0 // 3 days
+								259200000 // 3 days
+						).length > 0
 				)
 				.sort((a, b) => {
 					return (
@@ -137,8 +156,8 @@ export default function Home() {
 			profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
 			name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
 			gap: l.liveStatus
-				? elapsedTimeText(new Date(l.openDate!), new Date(getLocale()))
-				: elapsedTimeText(new Date(l.closeDate!), new Date(getLocale())),
+				? elapsedTimeTextForCard(new Date(l.openDate!), new Date(getLocale()))
+				: elapsedTimeTextForCard(new Date(l.closeDate!), new Date(getLocale())),
 		}));
 		const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
 		const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
@@ -152,8 +171,8 @@ export default function Home() {
 				v.profileImage = stellar.find((s) => s.uuid === v.uuid)?.profileImage || "";
 				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
 				v.gap = v.liveStatus
-					? elapsedTimeText(new Date(v.openDate!), new Date(getLocale()))
-					: elapsedTimeText(new Date(v.closeDate!), new Date(getLocale()));
+					? elapsedTimeTextForCard(new Date(v.openDate!), new Date(getLocale()))
+					: elapsedTimeTextForCard(new Date(v.closeDate!), new Date(getLocale()));
 			}
 			const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
 			const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
@@ -275,7 +294,7 @@ function RecentNews({ data, isLoading, condition, isDataLoading }: RecentNewsPro
 							</HStack>
 							<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
 								{
-									elapsedTimeText(
+									elapsedTimeTextForCard(
 										new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
 										new Date(getLocale())
 									)[1]
@@ -743,11 +762,13 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 	);
 }
 
+// Functions
+
 function createHeadingText(data: YoutubeMusicData, condition: number) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
 	const now = new Date(getLocale());
 	const publishedDate = new Date(data.publishedAt || "1000-01-01T09:00:00.000Z");
-	const [, elapsedDateText] = elapsedTimeText(publishedDate, now);
+	const [, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
 	if (condition === 0) {
 		return `인기 급상승 음악 #${data.mostPopular}`;
 	} else if (condition === 1) {
@@ -762,14 +783,14 @@ function createHeadingText(data: YoutubeMusicData, condition: number) {
 function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
 	if (type === "recent") {
 		return {
-			value: elapsedTimeText(
+			value: elapsedTimeTextForCard(
 				new Date(new Date(data.publishedAt || "1000-01-01T09:00:00.000Z")),
 				new Date(getLocale())
 			)[1],
 		};
 	} else if (type === "approach") {
 		return {
-			value: elapsedTimeText(
+			value: elapsedTimeTextForCard(
 				new Date(new Date(data.statistics.at(-1)?.updatedAt || "1000-01-01T09:00:00.000Z")),
 				new Date(getLocale())
 			)[1],
@@ -777,8 +798,8 @@ function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
 		};
 	} else return { value: "" };
 }
-// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
 interface Data {
+	upcoming: YoutubeMusicData[];
 	mostPopular: YoutubeMusicData[];
 	recent: YoutubeMusicData[];
 	approach: YoutubeMusicData[];

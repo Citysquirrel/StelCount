@@ -3,7 +3,7 @@ import { useRecoilState } from "recoil";
 import { serverErrorState } from "../lib/Atom";
 import { useLocation } from "react-router-dom";
 
-export function ServerErrorPage() {
+export function ServerErrorPage({ isErrorComponent }: { isErrorComponent?: boolean }) {
 	const [serverError] = useRecoilState(serverErrorState);
 	const { pathname } = useLocation();
 	const errorMsg = {
@@ -13,6 +13,14 @@ export function ServerErrorPage() {
 			description: "내부 서버 에러입니다. 지속 발생 시 개발자에게 문의 바랍니다.",
 		},
 	};
+	if (isErrorComponent)
+		return (
+			<Stack sx={{ height: "100vh", alignItems: "center", justifyContent: "center" }}>
+				<Heading>This Page Is Invalid</Heading>
+				<Text>페이지가 망가졌습니다. 개발자에게 문의 바랍니다.</Text>
+				<Link href={`.${pathname}`}>재시도</Link>
+			</Stack>
+		);
 	return (
 		<Stack sx={{ height: "100vh", alignItems: "center", justifyContent: "center" }}>
 			<Heading>

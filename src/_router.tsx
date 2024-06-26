@@ -8,6 +8,7 @@ import { lazy } from "react";
 import Home from "./pages/Home";
 import { About } from "./pages/About";
 import { Counter } from "./pages/Counter";
+import { ServerErrorPage } from "./pages/ServerErrorPage";
 
 const Admin = lazy(() => import("./pages/Admin").then((m) => ({ default: m.Admin })));
 const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminEdit })));
@@ -18,6 +19,7 @@ export const routeObj: RouteObject[] = [
 	{
 		path: "/",
 		element: <App />,
+		errorElement: <ServerErrorPage isErrorComponent />,
 		children: [
 			{ path: "/", element: <NotExist /> },
 			{ path: "/home", element: <Home /> },
@@ -28,9 +30,9 @@ export const routeObj: RouteObject[] = [
 			...devRoutes,
 		],
 	},
-	{ path: "/login", element: <Login /> },
-	{ path: "/oauth", element: <OAuth /> },
-	{ path: "*", element: <NotExist /> },
+	{ path: "/login", element: <Login />, errorElement: <ServerErrorPage isErrorComponent /> },
+	{ path: "/oauth", element: <OAuth />, errorElement: <ServerErrorPage isErrorComponent /> },
+	{ path: "*", element: <NotExist />, errorElement: <ServerErrorPage isErrorComponent /> },
 ];
 
 export const router = createBrowserRouter(routeObj);

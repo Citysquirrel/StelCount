@@ -1,5 +1,12 @@
 import { useRecoilState } from "recoil";
-import { headerOffsetState, isLiveLoadingState, isLoadingState, liveStatusState, stellarState } from "../lib/Atom";
+import {
+	headerOffsetState,
+	isLiveLoadingState,
+	isLoadingState,
+	liveStatusState,
+	nowState,
+	stellarState,
+} from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -29,15 +36,16 @@ import {
 	Tooltip,
 } from "@chakra-ui/react";
 import { Image } from "../components/Image";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, useEffect, useRef, useState } from "react";
 import {
 	musicDefaultSortValue,
 	numberToLocaleString,
 	remainingCount,
-	elapsedTimeText,
+	elapsedTimeTextForCard,
 	remainingTimeText,
 	getLocale,
 	minus9Hs,
+	sortStatsByUnit,
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
@@ -80,6 +88,7 @@ export function Counter() {
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
 	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
+	const [now] = useRecoilState(nowState);
 	const [currentUuid, setCurrentUuid] = useState("");
 	const [filter, setFilter] = useState<Filter>({ tag: [] });
 	const [sort, setSort] = useState<Sort>({
@@ -483,6 +492,7 @@ export function Counter() {
 										currentColorCode={currentColorCode}
 										width={cardWidth}
 										thumbWidth={thumbWidth}
+										now={now}
 									/>
 								))
 							) : (
@@ -575,8 +585,7 @@ function FilterTag({ tagId, name, color, tagFilter, children, ...props }: Filter
 // 	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
 // }
 
-function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps) {
-	const [now, setNow] = useState(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
+function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCardProps) {
 	const [dateHover, setDateHover] = useState(false);
 	const {
 		type,
@@ -608,7 +617,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
             linear-gradient(336deg, rgba(155, 142, 255, 0.8), rgba(0,0,255,0) 70.71%)`;
 
 	const publishedDate = new Date(publishedAt || "1000-01-01T09:00:00.000Z");
-	const [dateGap, elapsedDateText] = elapsedTimeText(publishedDate, now);
+	const [dateGap, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
 	const isPlzInterest = !isUpcoming && Math.floor(dateGap / 86400) <= 14;
 
 	const titleText = titleAlias || title;
@@ -620,17 +629,6 @@ function MusicCard({ data, currentColorCode, width, thumbWidth }: MusicCardProps
 	const handleMouseLeave = () => {};
 
 	const handleMouseMove = () => {};
-
-	useEffect(() => {
-		const i = setInterval(() => {
-			let ms = new Date().getMilliseconds();
-			if (ms) setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
-		}, 1000);
-
-		return () => {
-			clearInterval(i);
-		};
-	}, []);
 
 	return (
 		<Card
@@ -783,7 +781,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 			dir,
 			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
 			type: undefined,
-			annieAt: statistics.at(-1)?.annie_at,
+			annieAt: statistics.filter((s) => sortStatsByUnit(s.unit)).at(-1)?.annie_at,
 		},
 		...details.map((v) => {
 			const viewCountNum = parseInt(v.viewCount || "0");
@@ -796,7 +794,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 				totalCount: undefined,
 				type: v.type,
 				countUpdatedAt: v.countUpdatedAt,
-				annieAt: statistics.at(-1)?.annie_at,
+				annieAt: statistics.filter((s) => sortStatsByUnit(s.unit)).at(-1)?.annie_at,
 			};
 		}),
 	];
@@ -879,7 +877,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 									</>
 								) : (
 									<ColorText as="span" value="green.500">
-										{elapsedTimeText(new Date(minus9Hs(c.annieAt)), new Date(getLocale()))[1]}
+										{elapsedTimeTextForCard(new Date(minus9Hs(c.annieAt)), new Date(getLocale()))[1]}
 									</ColorText>
 								)}
 								)
@@ -914,9 +912,18 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 							회 남음
 						</>
 					) : (
-						<ColorText as="span" value="green.500">
-							{elapsedTimeText(new Date(minus9Hs(statistics.at(-1)?.annie_at)), new Date(getLocale()))[1]}
-						</ColorText>
+						<>
+							<ColorText as="span" value="green.500">
+								{elapsedTimeTextForCard(new Date(minus9Hs(statistics.at(-1)?.annie_at)), new Date(getLocale()))[1]}
+							</ColorText>
+							&nbsp;
+							<Text as="span" fontSize="0.75rem">
+								<ColorText as="span" value="teal.500">
+									{numberToLocaleString(statistics.at(-1)?.unit)}
+								</ColorText>
+								&nbsp;달성
+							</Text>
+						</>
 					)}
 					)
 				</Text>
@@ -1041,6 +1048,7 @@ interface MusicCardProps {
 	currentColorCode?: string;
 	width: string[];
 	thumbWidth: string[];
+	now: Date;
 }
 
 interface ViewCountProps {
