@@ -145,15 +145,17 @@ export default function Home() {
 	}, [stellar]);
 
 	useEffect(() => {
-		setLiveData(
-			liveStatus
-				.map((l) => ({
-					...l,
-					profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
-					name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
-				}))
-				.sort((a) => (a.liveStatus ? -1 : 1))
-		);
+		const arr = liveStatus.map((l) => ({
+			...l,
+			profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
+			name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
+			gap: l.liveStatus
+				? elapsedTimeText(new Date(l.openDate), new Date(getLocale()))
+				: elapsedTimeText(new Date(l.closeDate), new Date(getLocale())),
+		}));
+		const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
+		const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
+		setLiveData([...openArr, ...closeArr]);
 	}, [liveStatus]);
 
 	useEffect(() => {
@@ -162,9 +164,13 @@ export default function Home() {
 			for (let v of arr) {
 				v.profileImage = stellar.find((s) => s.uuid === v.uuid)?.profileImage || "";
 				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
+				v.gap = v.liveStatus
+					? elapsedTimeText(new Date(v.openDate), new Date(getLocale()))
+					: elapsedTimeText(new Date(v.closeDate), new Date(getLocale()));
 			}
-			arr.sort((a) => (a.liveStatus ? -1 : 1));
-			return arr;
+			const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
+			const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
+			return [...openArr, ...closeArr];
 		});
 	}, [stellar]);
 
@@ -430,6 +436,16 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										},
 									}}
 								>
+									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+										<Text
+											fontSize="0.75rem"
+											backgroundColor="rgb(255,255,255,.66)"
+											padding="1px 6px"
+											borderRadius={"4px"}
+										>
+											{live.gap[1]}
+										</Text>
+									</Stack>
 									<Image
 										boxSize="100px"
 										src={`${live.profileImage}?type=f120_120_na`}
@@ -481,6 +497,16 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										},
 									}}
 								>
+									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+										<Text
+											fontSize="0.75rem"
+											backgroundColor="rgb(255,255,255,.66)"
+											padding="1px 6px"
+											borderRadius={"4px"}
+										>
+											{live.gap[1]}
+										</Text>
+									</Stack>
 									<Image
 										boxSize="100px"
 										src={`${live.profileImage}?type=f120_120_na`}
@@ -758,6 +784,7 @@ interface Data {
 interface LiveData extends LiveStatusState {
 	profileImage?: string;
 	name?: string;
+	gap: [number, string];
 }
 
 interface RecentNewsProps {
