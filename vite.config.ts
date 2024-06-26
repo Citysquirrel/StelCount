@@ -4,7 +4,7 @@ import { dependencies } from "./package.json";
 import ssl from "@vitejs/plugin-basic-ssl";
 
 const vendor = ["react", "react-router-dom", "react-dom"];
-const libs = ["uuid", "recoil"];
+const libs = ["uuid", "recoil", "is-mobile", "usehooks-ts", "immutability-helper", "react-icons"];
 const excludes = [...vendor, ...libs];
 
 function renderChunks(deps: Record<string, string>) {
