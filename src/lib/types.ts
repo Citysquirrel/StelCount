@@ -26,7 +26,7 @@ export interface YoutubeMusicData {
 	isOriginal?: boolean;
 	isCollaborated?: boolean;
 	publishedAt?: string;
-	liveBroadcastContent?: string;
+	liveBroadcastContent?: "live" | "upcoming" | (string & {});
 	scheduledStartTime?: string;
 	mostPopular: number;
 	isActive?: boolean;

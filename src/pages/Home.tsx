@@ -72,7 +72,7 @@ export default function Home() {
 
 	const arr =
 		data.upcoming.length > 0
-			? data.mostPopular.length
+			? data.upcoming
 			: data.mostPopular.length > 0
 			? data.mostPopular
 			: data.recent.length > 0
@@ -116,7 +116,7 @@ export default function Home() {
 		setData((prev) => {
 			const obj = { ...prev };
 			obj.upcoming = videos
-				.filter((v) => v.liveBroadcastContent === "upcoming")
+				.filter((v) => v.liveBroadcastContent === "upcoming" || v.liveBroadcastContent === "live")
 				.sort(
 					(a, b) =>
 						new Date(a.scheduledStartTime || MIN_DATE).getTime() - new Date(b.scheduledStartTime || MIN_DATE).getTime()
@@ -234,7 +234,8 @@ export default function Home() {
 
 function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNewsProps) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
-
+	const isUpcoming = data.liveBroadcastContent === "upcoming";
+	const isLive = data.liveBroadcastContent === "live";
 	function createHeadingText(data: YoutubeMusicData, condition: number) {
 		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
 		const publishedDate = new Date(data.publishedAt || MIN_DATE);
@@ -242,8 +243,8 @@ function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNe
 		const scheduledStartTimeDate = new Date(data.scheduledStartTime || MIN_DATE);
 		const [startTimeGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
 
-		if (condition === 1) {
-			return `최초 공개`;
+		if (condition === -1) {
+			return `최초 공개 ${isLive ? "진행중" : startTimeGap <= 0 ? "곧 시작" : remainingDateText}`;
 		} else if (condition === 0) {
 			return `인기 급상승 음악 #${data.mostPopular}`;
 		} else if (condition === 1) {
@@ -256,6 +257,7 @@ function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNe
 	}
 
 	const headingText = createHeadingText(data, condition);
+	const timeTextDate = isLive ? data.scheduledStartTime || MIN_DATE : data.publishedAt || MIN_DATE;
 	return (
 		<Stack
 			direction={["column", "column", "row", "row", "row"]}
@@ -290,9 +292,9 @@ function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNe
 							className="news-thumbnail"
 							src={data.thumbnail}
 							alt="thumbnail"
-							width={["432px", "432px", "360px", "360px", "360px"]} // 432 216
-							height={["216px", "216px", "180px", "180px", "180px"]}
-							minWidth="360px"
+							width={["300px", "432px", "360px", "360px", "360px"]} // 432 216
+							height={["150px", "216px", "180px", "180px", "180px"]}
+							minWidth={["300px", "360px", "360px", "360px", "360px"]}
 							objectFit={"cover"}
 							transition="all .3s"
 							borderRadius={[
@@ -308,7 +310,7 @@ function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNe
 						/>
 					</Link>
 					<Stack gap="4px" width={[null, null, null, "100%", "100%"]}>
-						<Heading fontSize="lg" animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}>
+						<Heading fontSize={condition === -1 ? "3xl" : "lg"} animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}>
 							{headingText}
 						</Heading>
 						<Text
@@ -326,13 +328,17 @@ function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNe
 							justifyContent={"space-between"}
 							animation={`fadeIn 0.3s ease-in-out 0.3s 1 normal both`}
 						>
-							<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
-								<FaEye />
-								<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
-							</HStack>
-							<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
-								{elapsedTimeTextForCard(new Date(new Date(data.publishedAt || MIN_DATE)), new Date(getLocale()))[1]}
-							</Text>
+							{isUpcoming ? null : (
+								<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
+									<FaEye />
+									<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
+								</HStack>
+							)}
+							{isUpcoming ? null : (
+								<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
+									{elapsedTimeTextForCard(new Date(new Date(timeTextDate)), new Date(getLocale()))[1]}
+								</Text>
+							)}
 						</HStack>
 					</Stack>
 				</>
