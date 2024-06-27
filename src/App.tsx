@@ -16,6 +16,7 @@ import { useAuth } from "./lib/hooks/useAuth";
 import { CAFE_WRITE_URL } from "./lib/constant";
 import { useEffect } from "react";
 import { elapsedTimeText } from "./lib/functions/etc";
+import { useConsole } from "./lib/hooks/useConsole";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -45,6 +46,7 @@ function App() {
 
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 
+	useConsole(timeGap);
 	if (serverError.isError) return <ServerErrorPage />;
 	return (
 		<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">
@@ -146,7 +148,7 @@ function App() {
 						aria-label="color-mode"
 					/>
 				) : null}
-				{timeGap > 30 ? (
+				{timeGap > 30 && timeGap < 12345678900 ? (
 					<Text position="absolute" right="2px" bottom="2px" fontSize="0.75rem" color="gray.500">
 						{timeText} 데이터
 					</Text>
