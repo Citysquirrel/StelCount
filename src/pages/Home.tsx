@@ -143,6 +143,25 @@ export default function Home() {
 				})
 				.slice(0, 30);
 			obj.approach = videos
+				.reduce(
+					(a, c) =>
+						c.details.length > 0
+							? [
+									...a,
+									c,
+									...c.details.map((d) => ({
+										...d,
+										title: c.title,
+										channelId: c.channelId,
+										thumbnail: c.thumbnail,
+										thumbnails: c.thumbnails,
+										mostPopular: c.mostPopular,
+										details: [],
+									})),
+							  ]
+							: [...a, c],
+					[] as YoutubeMusicData[]
+				)
 				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
 				.filter(
 					(v) =>
