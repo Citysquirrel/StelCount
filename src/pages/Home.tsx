@@ -315,13 +315,24 @@ function RecentNews({
 		});
 	};
 
-	const reOgData: YoutubeMusicData[] = [
-		...upcoming,
-		...recent.filter(
-			(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 259200000 // 3 days
-		),
-		...mostPopular,
-		...approach.slice(1),
+	// data.upcoming.length > 0
+	// ? -1
+	// : data.mostPopular.length > 0
+	// ? 0
+	// : data.recent.length > 0
+	// ? 1
+	// : data.approach.length > 0
+	// ? 2
+	// : 3;
+	const reOgData: ({ condition: number } & YoutubeMusicData)[] = [
+		...upcoming.map((v) => ({ ...v, condition: -1 })),
+		...recent
+			.filter(
+				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 259200000 // 3 days
+			)
+			.map((v) => ({ ...v, condition: 1 })),
+		...mostPopular.map((v) => ({ ...v, condition: 0 })),
+		...approach.slice(0, 1).map((v) => ({ ...v, condition: 2 })),
 	];
 
 	const isUnder720 = windowWidth <= 720;
@@ -401,7 +412,7 @@ function RecentNews({
 					{reOgData.map((v, idx) => {
 						const isUpcoming = v.liveBroadcastContent === "upcoming";
 						const isLive = v.liveBroadcastContent === "live";
-						const headingText = createHeadingText(v, condition, isLive);
+						const headingText = createHeadingText(v, v.condition, isLive);
 						const timeTextDate = isLive ? v.scheduledStartTime || MIN_DATE : v.publishedAt || MIN_DATE;
 						return (
 							<Stack key={`${idx}-${v.videoId}`} direction={["column", "column", "row", "row", "row"]} minWidth="100%">
