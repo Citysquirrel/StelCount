@@ -146,5 +146,5 @@ export function sortStatsByUnit(unit: string): boolean {
 		9600000, 9700000, 9800000, 9900000, 10000000,
 	];
 	const int = parseInt(unit);
-	return list.includes(int) || int % 1000000 === 0;
+	return unit !== "0" && (list.includes(int) || int % 1000000 === 0);
 }
