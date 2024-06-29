@@ -168,14 +168,14 @@ export default function Home() {
 							: [...a, c],
 					[] as YoutubeMusicData[]
 				)
-				// .map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
-				// .filter(
-				// 	(v) =>
-				// 		v.liveBroadcastContent === "none" &&
-				// 		v.statistics.filter(
-				// 			(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
-				// 		).length > 0
-				// )
+				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
+				.filter(
+					(v) =>
+						v.liveBroadcastContent === "none" &&
+						v.statistics.filter(
+							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
+						).length > 0
+				)
 				.sort((a, b) => {
 					return (
 						new Date(b.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime() -
@@ -472,7 +472,7 @@ function RecentNews({
 													<Text fontWeight={"bold"}>{numberToLocaleString(v.viewCount)}</Text>
 												</HStack>
 											)}
-											{isUpcoming ? null : (
+											{isUpcoming || timeText.value ? null : (
 												<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
 													{elapsedTimeTextForCard(new Date(new Date(timeTextDate)), new Date(getLocale()))[1]}
 												</Text>
