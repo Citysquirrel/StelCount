@@ -16,7 +16,7 @@ import {
 	useClipboard,
 	useToast,
 } from "@chakra-ui/react";
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
 import {
@@ -50,6 +50,7 @@ import update from "immutability-helper";
 import { MIN_DATE } from "../lib/constant";
 import { useConsole } from "../lib/hooks/useConsole";
 import { m } from "framer-motion";
+import { useResponsive } from "../lib/hooks/useResponsive";
 
 export default function Home() {
 	useBackgroundColor("white");
@@ -276,10 +277,12 @@ function RecentNews({
 	approach,
 	mostViews,
 }: RecentNewsProps) {
-	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
-	const isUpcoming = data.liveBroadcastContent === "upcoming";
-	const isLive = data.liveBroadcastContent === "live";
-	function createHeadingText(data: YoutubeMusicData, condition: number) {
+	const { windowWidth } = useResponsive();
+	const intervalRef = useRef<number>();
+	const [currentPageIdx, setCurrentPageIdx] = useState(0);
+	// 최초공개 > 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순서로
+	// 최근 게시 영상은 3일 이내일 경우 최상단(최초공개 다음)으로 이동
+	function createHeadingText(data: YoutubeMusicData, condition: number, isLive: boolean) {
 		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
 		const publishedDate = new Date(data.publishedAt || MIN_DATE);
 		const [, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
@@ -299,92 +302,180 @@ function RecentNews({
 		}
 	}
 
-	const headingText = createHeadingText(data, condition);
-	const timeTextDate = isLive ? data.scheduledStartTime || MIN_DATE : data.publishedAt || MIN_DATE;
+	const handlePage = (pageIdx: number) => () => {
+		setCurrentPageIdx(pageIdx);
+		clearInterval(intervalRef.current);
+		intervalRef.current = setInterval(autoPaging, 5000);
+	};
+
+	const autoPaging = () => {
+		setCurrentPageIdx((prev) => {
+			if (prev + 1 > reOgData.length - 1) return 0;
+			return prev + 1;
+		});
+	};
+
+	const reOgData: YoutubeMusicData[] = [
+		...upcoming,
+		...recent.filter(
+			(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 259200000 // 3 days
+		),
+		...mostPopular,
+		...approach.slice(1),
+	];
+
+	const isUnder720 = windowWidth <= 720;
+
+	console.log(reOgData);
+
+	useEffect(() => {
+		if (!isLoading) intervalRef.current = setInterval(autoPaging, 5000);
+		return () => {
+			clearInterval(intervalRef.current);
+		};
+	}, [isLoading]);
+
 	return (
 		<Stack
-			direction={["column", "column", "row", "row", "row"]}
+			position="relative"
+			direction={["row", "row", "row", "row", "row"]}
 			alignItems={["center", "center", "flex-end", "flex-end", "flex-end"]}
 			borderColor="gray.300"
 			borderRadius={"1rem"}
-			padding="16px"
 			backgroundColor={"blue.300"}
-			gap="12px"
+			overflow="hidden"
 		>
+			{reOgData.length > 1 && !isLoading ? (
+				<HStack
+					position="absolute"
+					top={isUnder720 ? undefined : "8px"}
+					right={isUnder720 ? 0 : "8px"}
+					bottom={isUnder720 ? "4px" : undefined}
+					width={isUnder720 ? "100%" : undefined}
+					justifyContent={isUnder720 ? "center" : undefined}
+					gap="2px"
+					zIndex={1}
+				>
+					{reOgData.map((_, i) => (
+						<Stack
+							key={i}
+							boxSize="16px"
+							alignItems={"center"}
+							justifyContent={"center"}
+							cursor={"pointer"}
+							onClick={handlePage(i)}
+						>
+							<Box
+								boxSize="8px"
+								borderRadius={"100%"}
+								backgroundColor={currentPageIdx === i ? "gray.600" : "gray.300"}
+								cursor={"pointer"}
+								transition="background-color .3s"
+							/>
+						</Stack>
+					))}
+				</HStack>
+			) : null}
 			{isLoading ? (
-				<>
+				<Stack direction={["column", "column", "row", "row", "row"]} padding="16px">
 					<Skeleton
-						width={["432px", "432px", "360px", "360px", "360px"]}
-						minWidth={["432px", "432px", "360px", "360px", "360px"]}
-						height={["216px", "216px", "180px", "180px", "180px"]}
+						width={["300px", "432px", "360px", "360px", "360px"]}
+						height={["150px", "216px", "180px", "180px", "180px"]}
+						minWidth={["300px", "360px", "360px", "360px", "360px"]}
 					/>
-					<Stack width="100%">
+					<Stack width="100%" minWidth="100%" alignSelf={"flex-end"}>
 						<Box>
 							<SkeletonText width="100%" noOfLines={3} spacing={"4"} skeletonHeight={"2"} />
 						</Box>
 					</Stack>
-				</>
+				</Stack>
 			) : (
-				<>
-					<Link
-						href={isLoading ? undefined : youtube.videoUrl(data.videoId)}
-						isExternal
-						_hover={{ "> .news-thumbnail": { opacity: 0.75 }, borderRadius: 0 }}
-					>
-						<Image
-							className="news-thumbnail"
-							src={data.thumbnail}
-							alt="thumbnail"
-							width={["300px", "432px", "360px", "360px", "360px"]} // 432 216
-							height={["150px", "216px", "180px", "180px", "180px"]}
-							minWidth={["300px", "360px", "360px", "360px", "360px"]}
-							objectFit={"cover"}
-							transition="all .3s"
-							borderRadius={[
-								".5rem .5rem 0 0",
-								".5rem .5rem 0 0",
-								".5rem .5rem 0 .5rem",
-								".5rem .5rem 0 .5rem",
-								".5rem .5rem 0 .5rem",
-							]}
-							outline="1px solid"
-							outlineColor="blue.50"
-							animation={`fadeIn 0.3s ease-in-out 0.1s 1 normal both`}
-						/>
-					</Link>
-					<Stack gap="4px" width={[null, null, null, "100%", "100%"]}>
-						<Heading fontSize={condition === -1 ? "3xl" : "lg"} animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}>
-							{headingText}
-						</Heading>
-						<Text
-							overflow="hidden"
-							textOverflow={"ellipsis"}
-							whiteSpace={"normal"}
-							lineHeight="1.5rem"
-							maxHeight="3rem"
-							animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}
-						>
-							{data.titleAlias || data.title}
-						</Text>
-						<HStack
-							alignItems={"center"}
-							justifyContent={"space-between"}
-							animation={`fadeIn 0.3s ease-in-out 0.3s 1 normal both`}
-						>
-							{isUpcoming ? null : (
-								<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
-									<FaEye />
-									<Text fontWeight={"bold"}>{numberToLocaleString(data.viewCount)}</Text>
-								</HStack>
-							)}
-							{isUpcoming ? null : (
-								<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
-									{elapsedTimeTextForCard(new Date(new Date(timeTextDate)), new Date(getLocale()))[1]}
-								</Text>
-							)}
-						</HStack>
-					</Stack>
-				</>
+				<HStack
+					minWidth="100%"
+					alignItems={["center", "center", "flex-end", "flex-end", "flex-end"]}
+					padding="16px"
+					gap="32px"
+					transform={`translateX(-${100 * currentPageIdx}%)`}
+					transition="all .3s"
+				>
+					{reOgData.map((v, idx) => {
+						const isUpcoming = v.liveBroadcastContent === "upcoming";
+						const isLive = v.liveBroadcastContent === "live";
+						const headingText = createHeadingText(v, condition, isLive);
+						const timeTextDate = isLive ? v.scheduledStartTime || MIN_DATE : v.publishedAt || MIN_DATE;
+						return (
+							<Stack key={`${idx}-${v.videoId}`} direction={["column", "column", "row", "row", "row"]} minWidth="100%">
+								<Stack flex={1} direction={["column", "column", "row", "row", "row"]} alignItems={"center"} gap="12px">
+									<Link
+										href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
+										isExternal
+										_hover={{ "> .news-thumbnail": { opacity: 0.75 }, borderRadius: 0 }}
+									>
+										<Image
+											className="news-thumbnail"
+											src={v.thumbnail}
+											alt="thumbnail"
+											width={["300px", "432px", "360px", "360px", "360px"]}
+											height={["150px", "216px", "180px", "180px", "180px"]}
+											minWidth={["300px", "360px", "360px", "360px", "360px"]}
+											objectFit={"cover"}
+											transition="all .3s"
+											borderRadius={[
+												".5rem .5rem 0 0",
+												".5rem .5rem 0 0",
+												".5rem .5rem 0 .5rem",
+												".5rem .5rem 0 .5rem",
+												".5rem .5rem 0 .5rem",
+											]}
+											outline="1px solid"
+											outlineColor="blue.50"
+											animation={`fadeIn 0.3s ease-in-out 0.1s 1 normal both`}
+										/>
+									</Link>
+									<Stack
+										gap="4px"
+										width={[null, null, null, "100%", "100%"]}
+										alignSelf={[null, null, "flex-end", "flex-end", "flex-end"]}
+									>
+										<Heading
+											fontSize={condition === -1 ? "3xl" : "lg"}
+											animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}
+										>
+											{headingText}
+										</Heading>
+										<Text
+											overflow="hidden"
+											textOverflow={"ellipsis"}
+											whiteSpace={"normal"}
+											lineHeight="1.5rem"
+											maxHeight="3rem"
+											animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}
+										>
+											{v.titleAlias || v.title}
+										</Text>
+										<HStack
+											alignItems={"center"}
+											justifyContent={"space-between"}
+											animation={`fadeIn 0.3s ease-in-out 0.3s 1 normal both`}
+										>
+											{isUpcoming ? null : (
+												<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
+													<FaEye />
+													<Text fontWeight={"bold"}>{numberToLocaleString(v.viewCount)}</Text>
+												</HStack>
+											)}
+											{isUpcoming ? null : (
+												<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
+													{elapsedTimeTextForCard(new Date(new Date(timeTextDate)), new Date(getLocale()))[1]}
+												</Text>
+											)}
+										</HStack>
+									</Stack>
+								</Stack>
+							</Stack>
+						);
+					})}
+				</HStack>
 			)}
 		</Stack>
 	);
