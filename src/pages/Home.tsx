@@ -48,6 +48,8 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
 import { MIN_DATE } from "../lib/constant";
+import { useConsole } from "../lib/hooks/useConsole";
+import { m } from "framer-motion";
 
 export default function Home() {
 	useBackgroundColor("white");
@@ -124,7 +126,9 @@ export default function Home() {
 			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1).sort((a, b) => a.mostPopular - b.mostPopular);
 			obj.recent = videos
 				.filter(
-					(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 5184000000 // 2 months
+					(v) =>
+						v.liveBroadcastContent === "none" &&
+						new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 5184000000 // 2 months
 				)
 				.sort(
 					(a, b) =>
@@ -152,6 +156,7 @@ export default function Home() {
 									...c.details.map((d) => ({
 										...d,
 										title: c.title,
+										titleAlias: c.titleAlias,
 										channelId: c.channelId,
 										thumbnail: c.thumbnail,
 										thumbnails: c.thumbnails,
@@ -165,6 +170,7 @@ export default function Home() {
 				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
 				.filter(
 					(v) =>
+						v.liveBroadcastContent === "none" &&
 						v.statistics.filter(
 							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
 						).length > 0
@@ -180,6 +186,8 @@ export default function Home() {
 			return obj;
 		});
 	}, [stellar]);
+
+	useConsole(data);
 
 	useEffect(() => {
 		const arr = liveStatus.map((l) => ({
@@ -464,6 +472,11 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										transition="all .3s"
 										gap="0"
 									>
+										{c.type !== "music" ? (
+											<Text fontSize="2xs" color="blue.600">
+												{c.type}
+											</Text>
+										) : null}
 										<FaEye />
 										<Text fontWeight={"bold"}>{numberToLocaleString(c.viewCount)}</Text>
 										<Text fontSize="sm">{timeText.value}</Text>
