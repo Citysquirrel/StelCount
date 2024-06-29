@@ -168,14 +168,14 @@ export default function Home() {
 							: [...a, c],
 					[] as YoutubeMusicData[]
 				)
-				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
-				.filter(
-					(v) =>
-						v.liveBroadcastContent === "none" &&
-						v.statistics.filter(
-							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
-						).length > 0
-				)
+				// .map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
+				// .filter(
+				// 	(v) =>
+				// 		v.liveBroadcastContent === "none" &&
+				// 		v.statistics.filter(
+				// 			(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
+				// 		).length > 0
+				// )
 				.sort((a, b) => {
 					return (
 						new Date(b.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime() -
@@ -187,8 +187,6 @@ export default function Home() {
 			return obj;
 		});
 	}, [stellar]);
-
-	useConsole(data);
 
 	useEffect(() => {
 		const arr = liveStatus.map((l) => ({
@@ -315,15 +313,13 @@ function RecentNews({
 		});
 	};
 
-	// data.upcoming.length > 0
-	// ? -1
-	// : data.mostPopular.length > 0
-	// ? 0
-	// : data.recent.length > 0
-	// ? 1
-	// : data.approach.length > 0
-	// ? 2
-	// : 3;
+	const conditionDict = {
+		"-1": "upcoming",
+		"0": "mostPopular",
+		"1": "recent",
+		"2": "approach",
+	};
+
 	const reOgData: ({ condition: number } & YoutubeMusicData)[] = [
 		...upcoming.map((v) => ({ ...v, condition: -1 })),
 		...recent
@@ -414,6 +410,7 @@ function RecentNews({
 						const isLive = v.liveBroadcastContent === "live";
 						const headingText = createHeadingText(v, v.condition, isLive);
 						const timeTextDate = isLive ? v.scheduledStartTime || MIN_DATE : v.publishedAt || MIN_DATE;
+						const timeText = createTimeText(v, conditionDict[v.condition]);
 						return (
 							<Stack key={`${idx}-${v.videoId}`} direction={["column", "column", "row", "row", "row"]} minWidth="100%">
 								<Stack flex={1} direction={["column", "column", "row", "row", "row"]} alignItems={"center"} gap="12px">
@@ -480,6 +477,11 @@ function RecentNews({
 													{elapsedTimeTextForCard(new Date(new Date(timeTextDate)), new Date(getLocale()))[1]}
 												</Text>
 											)}
+											{timeText.value ? (
+												<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
+													{timeText.value} 달성
+												</Text>
+											) : null}
 										</HStack>
 									</Stack>
 								</Stack>
