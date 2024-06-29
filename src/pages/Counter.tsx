@@ -782,6 +782,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
 			type: undefined,
 			annieAt: statistics.filter((s) => sortStatsByUnit(s.unit)).at(-1)?.annie_at,
+			statistics,
 		},
 		...details.map((v) => {
 			const viewCountNum = parseInt(v.viewCount || "0");
@@ -795,6 +796,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 				type: v.type,
 				countUpdatedAt: v.countUpdatedAt,
 				annieAt: statistics.filter((s) => sortStatsByUnit(s.unit)).at(-1)?.annie_at,
+				statistics: v.statistics,
 			};
 		}),
 	];
@@ -876,9 +878,23 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 										회 남음
 									</>
 								) : (
-									<ColorText as="span" value="green.500">
-										{elapsedTimeTextForCard(new Date(minus9Hs(c.annieAt)), new Date(getLocale()))[1]}
-									</ColorText>
+									<>
+										<ColorText as="span" value="green.500">
+											{
+												elapsedTimeTextForCard(
+													new Date(minus9Hs(c.statistics.at(-1)?.annie_at)),
+													new Date(getLocale())
+												)[1]
+											}
+										</ColorText>
+										&nbsp;
+										<Text as="span" fontSize="0.75rem">
+											<ColorText as="span" value="teal.500">
+												{numberToLocaleString(c.statistics.at(-1)?.unit)}
+											</ColorText>
+											&nbsp;달성
+										</Text>
+									</>
 								)}
 								)
 							</Text>

@@ -234,6 +234,11 @@ export default function Home() {
 					condition={condition}
 					isDataLoading={isDataLoading}
 					now={now}
+					recent={data.recent}
+					mostPopular={data.mostPopular}
+					upcoming={data.upcoming}
+					approach={data.approach}
+					mostViews={data.mostViews}
 				/>
 				{data.approach.length > 0 ? (
 					<CarouselList
@@ -259,7 +264,18 @@ export default function Home() {
 	);
 }
 
-function RecentNews({ data, isLoading, condition, isDataLoading, now }: RecentNewsProps) {
+function RecentNews({
+	data,
+	isLoading,
+	condition,
+	isDataLoading,
+	now,
+	recent,
+	mostPopular,
+	upcoming,
+	approach,
+	mostViews,
+}: RecentNewsProps) {
 	// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순ㅇ서로
 	const isUpcoming = data.liveBroadcastContent === "upcoming";
 	const isLive = data.liveBroadcastContent === "live";
@@ -871,6 +887,12 @@ interface RecentNewsProps {
 	isDataLoading: boolean;
 	condition: number;
 	now: Date;
+
+	recent: YoutubeMusicData[];
+	mostPopular: YoutubeMusicData[];
+	upcoming: YoutubeMusicData[];
+	approach: YoutubeMusicData[];
+	mostViews: YoutubeMusicData[];
 }
 
 type CarouselListType = "recent" | "approach" | (string & {});
