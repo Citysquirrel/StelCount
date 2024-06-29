@@ -873,7 +873,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 								{dir === 1 ? (
 									<>
 										<ColorText as="span" value={"orange.500"}>
-											{calc}
+											{c.calc}
 										</ColorText>
 										회 남음
 									</>
