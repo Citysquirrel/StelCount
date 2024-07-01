@@ -870,7 +870,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 						{c.calc ? (
 							<Text fontSize={"0.875rem"}>
 								(
-								{dir === 1 ? (
+								{c.dir === 1 ? (
 									<>
 										<ColorText as="span" value={"orange.500"}>
 											{c.calc}

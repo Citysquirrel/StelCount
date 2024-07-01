@@ -48,7 +48,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
 import { MIN_DATE } from "../lib/constant";
-import { useConsole } from "../lib/hooks/useConsole";
+import { useConsole, useConsoleAdmin } from "../lib/hooks/useConsole";
 import { m } from "framer-motion";
 import { useResponsive } from "../lib/hooks/useResponsive";
 
@@ -187,6 +187,9 @@ export default function Home() {
 			return obj;
 		});
 	}, [stellar]);
+
+	useConsoleAdmin(data.approach, "Approached");
+	useConsoleAdmin(data, "Whole Data");
 
 	useEffect(() => {
 		const arr = liveStatus.map((l) => ({
@@ -332,8 +335,6 @@ function RecentNews({
 	];
 
 	const isUnder720 = windowWidth <= 720;
-
-	console.log(reOgData);
 
 	useEffect(() => {
 		if (!isLoading) intervalRef.current = setInterval(autoPaging, 5000);
