@@ -162,6 +162,7 @@ export default function Home() {
 										thumbnail: c.thumbnail,
 										thumbnails: c.thumbnails,
 										mostPopular: c.mostPopular,
+										liveBroadcastContent: c.liveBroadcastContent,
 										details: [],
 									})),
 							  ]
