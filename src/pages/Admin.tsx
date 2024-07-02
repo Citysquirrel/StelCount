@@ -7,6 +7,7 @@ import {
 	Card,
 	CardBody,
 	Checkbox,
+	CheckboxIcon,
 	CloseButton,
 	Divider,
 	Drawer,
@@ -65,13 +66,11 @@ import { CopyText } from "../components/CopyText";
 import { useAuth } from "../lib/hooks/useAuth";
 import { Loading } from "../components/Loading";
 import { useNavigate, useParams } from "react-router-dom";
-import { useRecoilState } from "recoil";
-import { headerOffsetState } from "../lib/Atom";
 import { Spacing } from "../components/Spacing";
 import { Image } from "../components/Image";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 import VALIDATION from "../lib/functions/validation";
-import { objectNullCheck } from "../lib/functions/etc";
+import { objectBoolCheck, objectNullCheck } from "../lib/functions/etc";
 import { TOAST_MESSAGE, stellarGroupName } from "../lib/constant";
 import { NotExist } from "./NotExist";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
@@ -79,6 +78,7 @@ import { useResponsive } from "../lib/hooks/useResponsive";
 import { Tag as TagType, VideoDetail } from "../lib/types";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import Wrapper from "../components/Wrapper";
+import { useConsole } from "../lib/hooks/useConsole";
 
 export function Admin() {
 	useBackgroundColor(`white`);
@@ -93,6 +93,7 @@ export function Admin() {
 		xId: "",
 		colorCode: "",
 		playlistIdForMusic: "",
+		justLive: false,
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const [tagInputValue, setTagInputValue] = useState<TagData>({ id: -1, name: "", colorCode: "" });
@@ -121,7 +122,13 @@ export function Admin() {
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
-		setInputValue((prev) => ({ ...prev, [key]: value }));
+		const type = e.target.type;
+		if (type === "checkbox") {
+			const checked = e.target.checked;
+			setInputValue((prev) => ({ ...prev, [key]: checked }));
+		} else {
+			setInputValue((prev) => ({ ...prev, [key]: value }));
+		}
 	};
 
 	const handleInputValueY = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,19 +142,24 @@ export function Admin() {
 			toast({ description: "스텔라 이름을 입력해주세요", status: "error" });
 			return;
 		}
-		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then(() => {
-			getStellarData();
+		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
+			if (res.status === 201) {
+				getStellarData();
 
-			toast({ description: `새 스텔라 등록을 완료했습니다`, status: "success" });
-			setInputValue({
-				name: "",
-				group: "",
-				youtubeId: "",
-				chzzkId: "",
-				xId: "",
-				colorCode: "",
-				playlistIdForMusic: "",
-			});
+				toast({ description: `새 스텔라 등록을 완료했습니다`, status: "success" });
+				setInputValue({
+					name: "",
+					group: "",
+					youtubeId: "",
+					chzzkId: "",
+					xId: "",
+					colorCode: "",
+					playlistIdForMusic: "",
+					justLive: false,
+				});
+			} else if (res.status === 500) {
+				toast({ description: `스텔라 등록 중 오류가 발생했습니다`, status: "error" });
+			}
 		});
 	};
 
@@ -205,6 +217,8 @@ export function Admin() {
 		getTagData();
 		firstRef.current?.focus();
 	}, []);
+
+	useConsole(inputValue);
 
 	if (isLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;
@@ -288,6 +302,11 @@ export function Admin() {
 								onChange={handleInputValue("playlistIdForMusic")}
 							/>
 						</InputGroup>
+						<InputGroup>
+							<Checkbox marginLeft="8px" isChecked={inputValue.justLive} onChange={handleInputValue("justLive")}>
+								라이브 현황만 게시합니다
+							</Checkbox>
+						</InputGroup>
 						<Button type="submit">등록</Button>
 					</Stack>
 				</Box>
@@ -318,7 +337,7 @@ export function Admin() {
 									<Td isNumeric>{s.id}</Td>
 									<Td>{s.name}</Td>
 									<Td>
-										{Number(s.group) < stellarGroupName.length
+										{s.group && Number(s.group) < stellarGroupName.length
 											? `${s.group}기 - ${stellarGroupName[s.group][0]}`
 											: null}
 									</Td>
@@ -427,13 +446,20 @@ export function AdminEdit() {
 		xId: "",
 		colorCode: "",
 		playlistIdForMusic: "",
+		justLive: false,
 	});
 	const [videoData, setVideoData] = useState<VideoAdminData[]>([]);
 	const { isLogin, isAdmin, isLoading: isAuthLoading } = useAuth();
 
 	const handleInputValue = (key: keyof StellarInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
-		setInputValue((prev) => ({ ...prev, [key]: value }));
+		const type = e.target.type;
+		if (type === "checkbox") {
+			const checked = e.currentTarget.checked;
+			setInputValue((prev) => ({ ...prev, [key]: checked }));
+		} else {
+			setInputValue((prev) => ({ ...prev, [key]: value }));
+		}
 	};
 
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
@@ -464,11 +490,13 @@ export function AdminEdit() {
 						if (!res.data) {
 							nav("/admin");
 						}
-						const { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video } = res.data;
+						const { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video, justLive } = res.data;
 						const obj = { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video };
+						const boolean = { justLive };
 						setInputValue((prev) => ({
 							...prev,
 							...objectNullCheck(obj),
+							...objectBoolCheck(boolean),
 						}));
 						setVideoData(video);
 						setAlertStatus("success");
@@ -485,6 +513,8 @@ export function AdminEdit() {
 				setIsLoading(false);
 			});
 	}, []);
+
+	useConsole(inputValue);
 
 	if (isAuthLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;
@@ -575,6 +605,16 @@ export function AdminEdit() {
 							onChange={handleInputValue("playlistIdForMusic")}
 							isDisabled={isLoading}
 						/>
+					</InputGroup>
+					<InputGroup>
+						<Checkbox
+							marginLeft="8px"
+							isChecked={inputValue.justLive}
+							onChange={handleInputValue("justLive")}
+							isDisabled={isLoading}
+						>
+							라이브 현황만 게시합니다
+						</Checkbox>
 					</InputGroup>
 					<HStack width="100%" justifyContent={"space-between"}>
 						<Button flex={1} type="submit" colorScheme="blue">
@@ -1112,6 +1152,7 @@ interface StellarInputValue {
 	xId: string;
 	colorCode: string;
 	playlistIdForMusic: string;
+	justLive: boolean;
 }
 
 interface StellarData extends StellarInputValue {

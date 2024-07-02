@@ -46,6 +46,7 @@ export interface StellarInfo {
 	chzzkId: string;
 	youtubeId: string;
 	youtubeCustomUrl: string;
+	justLive: boolean | null;
 }
 export interface StellarState extends StellarInfo {
 	chzzkFollowerCount: string;

@@ -115,11 +115,11 @@ export function Counter() {
 	const { backgroundColor } = useBackgroundColor(!currentColorCode ? "white" : `${currentColorCode}aa`);
 	const isUnder720 = windowWidth < 720;
 
-	const stellive = data.filter((s) => s.group === 0);
-	const mystic = data.filter((s) => s.group === 1);
-	const universe = data.filter((s) => s.group === 2);
-	const cliche = data.filter((s) => s.group === 3);
-	const unclassified = data.filter((s) => !s.group && s.group !== 0);
+	const stellive = data.filter((s) => s.group === 0 && !s.justLive);
+	const mystic = data.filter((s) => s.group === 1 && !s.justLive);
+	const universe = data.filter((s) => s.group === 2 && !s.justLive);
+	const cliche = data.filter((s) => s.group === 3 && !s.justLive);
+	const unclassified = data.filter((s) => !s.group && s.group !== 0 && !s.justLive);
 	const total = [stellive, mystic, universe, cliche, unclassified];
 
 	const gridWidth = gridRef.current?.clientWidth || 0;
