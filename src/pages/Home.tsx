@@ -334,7 +334,7 @@ function RecentNews({
 		...approach.slice(0, 1).map((v) => ({ ...v, condition: 2 })),
 	];
 
-	const isUnder720 = windowWidth <= 720;
+	const isUnder720 = windowWidth < 720;
 
 	useEffect(() => {
 		if (!isLoading) intervalRef.current = setInterval(autoPaging, 5000);
