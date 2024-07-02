@@ -16,7 +16,6 @@ import { useAuth } from "./lib/hooks/useAuth";
 import { CAFE_WRITE_URL } from "./lib/constant";
 import { useEffect } from "react";
 import { elapsedTimeText } from "./lib/functions/etc";
-import { useConsole } from "./lib/hooks/useConsole";
 
 function App() {
 	const nav = useNavigateEvent();

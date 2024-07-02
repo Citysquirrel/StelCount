@@ -78,7 +78,6 @@ import { useResponsive } from "../lib/hooks/useResponsive";
 import { Tag as TagType, VideoDetail } from "../lib/types";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import Wrapper from "../components/Wrapper";
-import { useConsole } from "../lib/hooks/useConsole";
 
 export function Admin() {
 	useBackgroundColor(`white`);
@@ -217,8 +216,6 @@ export function Admin() {
 		getTagData();
 		firstRef.current?.focus();
 	}, []);
-
-	useConsole(inputValue);
 
 	if (isLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;
@@ -513,8 +510,6 @@ export function AdminEdit() {
 				setIsLoading(false);
 			});
 	}, []);
-
-	useConsole(inputValue);
 
 	if (isAuthLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;

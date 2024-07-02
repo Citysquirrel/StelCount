@@ -16,7 +16,7 @@ import {
 	useClipboard,
 	useToast,
 } from "@chakra-ui/react";
-import { Dispatch, Fragment, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
 import {
@@ -48,8 +48,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
 import { MIN_DATE } from "../lib/constant";
-import { useConsole, useConsoleAdmin } from "../lib/hooks/useConsole";
-import { m } from "framer-motion";
+import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
 
 export default function Home() {
