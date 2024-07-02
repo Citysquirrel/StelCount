@@ -9,6 +9,7 @@ import {
 	isLiveLoadingState,
 	isLiveFetchingState,
 	fetchInfoState,
+	isLiveDetailFetchingState,
 } from "../Atom";
 import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
@@ -25,20 +26,24 @@ export function useStellar() {
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [, setIsLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [, setIsLiveFetching] = useRecoilState(isLiveFetchingState);
+	const [, setIsLiveDetailFetching] = useRecoilState(isLiveDetailFetchingState);
 	const [, setFetchInfo] = useRecoilState(fetchInfoState);
 
 	const getLiveDetail = () => {
-		fetchServer("/live-detail", "v1").then((res) => {
-			if (res.status === 200) {
-				const data = res.data as LiveStatusState[];
-				setLiveStatus(data);
-				setFetchInfo((prev) => {
-					const obj = { ...prev };
-					obj["liveDetail"] = { date: getLocale() };
-					return obj;
-				});
-			}
-		});
+		setIsLiveDetailFetching(true);
+		fetchServer("/live-detail", "v1")
+			.then((res) => {
+				if (res.status === 200) {
+					const data = res.data as LiveStatusState[];
+					setLiveStatus(data);
+					setFetchInfo((prev) => {
+						const obj = { ...prev };
+						obj["liveDetail"] = { date: getLocale() };
+						return obj;
+					});
+				}
+			})
+			.finally(() => setIsLiveDetailFetching(false));
 	};
 
 	const getLiveStatus = () => {

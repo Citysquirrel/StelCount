@@ -21,6 +21,7 @@ import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useRecoilState } from "recoil";
 import {
 	LiveStatusState,
+	isLiveDetailFetchingState,
 	isLiveFetchingState,
 	isLiveLoadingState,
 	liveStatusState,
@@ -498,6 +499,7 @@ function RecentNews({
 function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetching }: CarouselListProps) {
 	const [isMultiViewMode, setIsMultiViewMode] = useState(false);
 	const [multiViewList, setMultiViewList] = useState<IMultiViewItem[]>([]);
+	const [isLiveDetailFetching] = useRecoilState(isLiveDetailFetchingState);
 
 	const handleAddMulView = (live: LiveData) => () => {
 		setMultiViewList((prev) => {
@@ -533,9 +535,14 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 					</>
 				) : null}
 				{lives && (
-					<Collapse in={isLiveFetching}>
-						<LoadingCircle sx={{ boxSize: "16px", ">svg": { boxSize: "16px" } }} />
-					</Collapse>
+					<>
+						<Collapse in={isLiveFetching}>
+							<LoadingCircle sx={{ boxSize: "16px", ">svg": { boxSize: "16px" } }} />
+						</Collapse>
+						<Collapse in={isLiveDetailFetching}>
+							<LoadingCircle sx={{ boxSize: "16px", ">svg": { boxSize: "16px" } }} />
+						</Collapse>
+					</>
 				)}
 			</HStack>
 			<Spacing size={8} />

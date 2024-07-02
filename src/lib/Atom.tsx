@@ -102,6 +102,11 @@ export const isLiveFetchingState = atom<boolean>({
 	default: false,
 });
 
+export const isLiveDetailFetchingState = atom<boolean>({
+	key: createAtomKey("isLiveDetailFetching"),
+	default: false,
+});
+
 export const fetchInfoState = atom<FetchInfoState>({
 	key: createAtomKey("fetchInfo"),
 	default: {},
