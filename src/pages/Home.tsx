@@ -328,7 +328,7 @@ function RecentNews({
 		...upcoming.map((v) => ({ ...v, condition: -1 })),
 		...recent
 			.filter(
-				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 5 // 5 days
+				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 14 // 2 weeks
 			)
 			.map((v) => ({ ...v, condition: 1 })),
 		...mostPopular.map((v) => ({ ...v, condition: 0 })),
