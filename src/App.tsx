@@ -123,15 +123,14 @@ function App() {
 				</Tooltip>
 				<Tooltip label="축하 글쓰러 가기">
 					<Button
-						as={Link}
 						fontSize="1.125rem"
 						borderRadius={"full"}
 						padding="0"
 						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={handleReload}
-						aria-label="reload"
-						href={CAFE_WRITE_URL}
-						isExternal
+						aria-label="write_"
+						onClick={(e) => {
+							window.open(CAFE_WRITE_URL);
+						}}
 					>
 						<MdCreate />
 					</Button>
