@@ -328,11 +328,11 @@ function RecentNews({
 		...upcoming.map((v) => ({ ...v, condition: -1 })),
 		...recent
 			.filter(
-				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 259200000 // 3 days
+				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 5 // 5 days
 			)
 			.map((v) => ({ ...v, condition: 1 })),
 		...mostPopular.map((v) => ({ ...v, condition: 0 })),
-		...approach.slice(0, 1).map((v) => ({ ...v, condition: 2 })),
+		...approach.slice(0, 2).map((v) => ({ ...v, condition: 2 })),
 	];
 
 	const isUnder720 = windowWidth < 720;
