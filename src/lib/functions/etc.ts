@@ -126,8 +126,11 @@ export function minus9Hs(input?: string | Date) {
 		if (!input) {
 			return new Date();
 		}
+		const serverTZUpdatedAt = "2024-07-04 11:31:08";
 		const date = new Date(input);
-		date.setHours(date.getHours() - 9);
+		if (new Date(serverTZUpdatedAt).getTime() > date.getTime()) {
+			date.setHours(date.getHours() - 9);
+		}
 		return date;
 	} catch (err) {
 		return new Date();
