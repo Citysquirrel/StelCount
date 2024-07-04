@@ -49,7 +49,7 @@ import {
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { CAFE_WRITE_URL, MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
+import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
 import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
 import { useLocalStorage } from "usehooks-ts";
 import { Statistics, Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
@@ -882,7 +882,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 										<ColorText as="span" value="green.500">
 											{
 												elapsedTimeTextForCard(
-													new Date(c.statistics.at(-1)?.annie_at || MIN_DATE),
+													new Date(minus9Hs(c.statistics.at(-1)?.annie_at)),
 													new Date(getLocale())
 												)[1]
 											}
@@ -930,7 +930,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 					) : (
 						<>
 							<ColorText as="span" value="green.500">
-								{elapsedTimeTextForCard(new Date(statistics.at(-1)?.annie_at || MIN_DATE), new Date(getLocale()))[1]}
+								{elapsedTimeTextForCard(new Date(minus9Hs(statistics.at(-1)?.annie_at)), new Date(getLocale()))[1]}
 							</ColorText>
 							&nbsp;
 							<Text as="span" fontSize="0.75rem">
