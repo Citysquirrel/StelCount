@@ -126,15 +126,17 @@ export function minus9Hs(input?: string | Date) {
 		if (!input) {
 			return new Date();
 		}
-		const serverTZUpdatedAt = "2024-07-04 11:31:08";
+		console.log(input);
 		const date = new Date(input);
-		if (new Date(serverTZUpdatedAt).getTime() > date.getTime()) {
-			date.setHours(date.getHours() - 9);
-		}
+		date.setHours(date.getHours() - 9);
 		return date;
 	} catch (err) {
 		return new Date();
 	}
+}
+
+export function serverTZSync() {
+	const timeZoneUpdatedAt = "2024-07-04 11:30:08";
 }
 
 export function getThumbnails(thumbnails: string): Thumbnails {

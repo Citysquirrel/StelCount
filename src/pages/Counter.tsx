@@ -49,7 +49,7 @@ import {
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { CAFE_WRITE_URL, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
+import { CAFE_WRITE_URL, MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
 import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
 import { useLocalStorage } from "usehooks-ts";
 import { Statistics, Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
@@ -730,7 +730,14 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 							</Stack>
 						</Stack>
 					) : (
-						<ViewCount viewCount={viewCount} calc={calc} dir={dir} details={details} statistics={statistics} />
+						<ViewCount
+							viewCount={viewCount}
+							videoId={videoId}
+							calc={calc}
+							dir={dir}
+							details={details}
+							statistics={statistics}
+						/>
 					)}
 
 					<ThumbnailImage
@@ -770,13 +777,14 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 	);
 }
 
-function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps) {
+function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewCountProps) {
 	const carouselRef = useRef<HTMLDivElement>(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const isDetailExist = details.length > 0;
 	const data = [
 		{
 			viewCount,
+			videoId,
 			calc,
 			dir,
 			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
@@ -790,6 +798,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 
 			return {
 				viewCount: v.viewCount,
+				videoId: v.videoId,
 				calc,
 				dir,
 				totalCount: undefined,
@@ -859,7 +868,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 			<Stack ref={carouselRef} overflowY={"hidden"} height="125.8px" minWidth="100%" gap={0}>
 				{data.map((c, i) => (
 					<Stack key={i} alignItems={"center"} justifyContent={"center"} gap="0" minHeight="100%" minWidth="100%">
-						<Text fontSize={"0.75rem"} color="gray.600">
+						<Text as={Link} href={youtube.videoUrl(c.videoId)} fontSize={"0.75rem"} color="gray.600" isExternal>
 							<ColorText as="span" value={"blue.600"}>
 								{c.type || "Main"}
 							</ColorText>
@@ -882,7 +891,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 										<ColorText as="span" value="green.500">
 											{
 												elapsedTimeTextForCard(
-													new Date(minus9Hs(c.statistics.at(-1)?.annie_at)),
+													new Date(c.statistics.at(-1)?.createdAt || MIN_DATE),
 													new Date(getLocale())
 												)[1]
 											}
@@ -930,7 +939,7 @@ function ViewCount({ viewCount, calc, dir, details, statistics }: ViewCountProps
 					) : (
 						<>
 							<ColorText as="span" value="green.500">
-								{elapsedTimeTextForCard(new Date(minus9Hs(statistics.at(-1)?.annie_at)), new Date(getLocale()))[1]}
+								{elapsedTimeTextForCard(new Date(statistics.at(-1)?.createdAt || MIN_DATE), new Date(getLocale()))[1]}
 							</ColorText>
 							&nbsp;
 							<Text as="span" fontSize="0.75rem">
@@ -1069,6 +1078,7 @@ interface MusicCardProps {
 
 interface ViewCountProps {
 	viewCount?: string;
+	videoId: string;
 	calc: number;
 	dir: number;
 	details: VideoDetail[];
