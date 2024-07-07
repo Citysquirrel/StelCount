@@ -799,6 +799,8 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 												backgroundColor="rgb(255,255,255,.66)"
 												padding="1px 6px"
 												borderRadius={"4px"}
+												textAlign={"center"}
+												maxWidth="84px"
 											>
 												{live.liveCategoryValue}
 											</Text>
