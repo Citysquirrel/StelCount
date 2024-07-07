@@ -39,10 +39,11 @@ export function useStellar() {
 						if (prev.length === 0) return data;
 						const arr = [...prev];
 						for (let item of arr) {
-							const liveCategoryValue = data.find((l) => l.uuid === item.uuid)?.liveCategoryValue || "";
-							const liveTitle = data.find((l) => l.uuid === item.uuid)?.liveTitle || "";
+							// const liveTitle = data.find((l) => l.uuid === item.uuid)?.liveTitle || "";
+							const openDate = data.find((l) => l.uuid === item.uuid)?.openDate || "";
+							const closeDate = data.find((l) => l.uuid === item.uuid)?.closeDate || "";
 							const curIdx = arr.findIndex((a) => a.uuid === item.uuid);
-							arr[curIdx] = { ...arr[curIdx], liveCategoryValue, liveTitle };
+							arr[curIdx] = { ...arr[curIdx], openDate, closeDate };
 						}
 						return arr;
 					});
