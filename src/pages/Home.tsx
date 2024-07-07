@@ -705,6 +705,18 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										},
 									}}
 								>
+									{live.liveCategoryValue ? (
+										<Stack position="absolute" top={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+											<Text
+												fontSize="0.75rem"
+												backgroundColor="rgb(255,255,255,.66)"
+												padding="1px 6px"
+												borderRadius={"4px"}
+											>
+												{live.liveCategoryValue}
+											</Text>
+										</Stack>
+									) : null}
 									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
 										{isNaN(live.gap[0]) ? (
 											<LoadingThreeDot
@@ -775,6 +787,19 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										},
 									}}
 								>
+									{live.liveCategoryValue ? (
+										<Stack position="absolute" top={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+											<Text
+												fontSize="0.75rem"
+												backgroundColor="rgb(255,255,255,.66)"
+												padding="1px 6px"
+												borderRadius={"4px"}
+											>
+												{live.liveCategoryValue}
+											</Text>
+										</Stack>
+									) : null}
+
 									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
 										{isNaN(live.gap[0]) ? (
 											<LoadingThreeDot

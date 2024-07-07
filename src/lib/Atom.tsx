@@ -60,6 +60,8 @@ export interface LiveStatusState {
 	uuid: string;
 	openDate?: string;
 	closeDate?: string;
+	liveTitle: string | null;
+	liveCategoryValue: string;
 }
 
 type FetchInfoKey = "stellar" | "liveStatus" | "liveDetail" | (string & {});
