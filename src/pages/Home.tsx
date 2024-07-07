@@ -463,6 +463,26 @@ function RecentNews({
 										>
 											{v.titleAlias || v.title}
 										</Text>
+										{v.details.length > 0 ? (
+											<HStack paddingLeft="8px">
+												<Text fontSize="xs">부가 영상</Text>
+												{v.details.map((detail) => {
+													const { id, type, videoId } = detail;
+													return (
+														<Text
+															as={Link}
+															href={youtube.videoUrl(videoId)}
+															key={`${id}_${videoId}`}
+															color="blue.800"
+															fontSize="sm"
+															isExternal
+														>
+															{type}
+														</Text>
+													);
+												})}
+											</HStack>
+										) : null}
 										<HStack
 											alignItems={"center"}
 											justifyContent={"space-between"}
