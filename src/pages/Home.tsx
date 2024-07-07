@@ -28,7 +28,7 @@ import {
 	nowState,
 	stellarState,
 } from "../lib/Atom";
-import { YoutubeMusicData } from "../lib/types";
+import { UserSettingStorage, YoutubeMusicData } from "../lib/types";
 import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
 import {
 	elapsedTimeTextForCard,
@@ -48,9 +48,10 @@ import { Spacing } from "../components/Spacing";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
-import { MIN_DATE } from "../lib/constant";
+import { MIN_DATE, USER_SETTING_STORAGE } from "../lib/constant";
 import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
+import { useLocalStorage } from "usehooks-ts";
 
 export default function Home() {
 	useBackgroundColor("white");
@@ -280,8 +281,10 @@ function RecentNews({
 	mostViews,
 }: RecentNewsProps) {
 	const { windowWidth } = useResponsive();
+	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const intervalRef = useRef<number>();
 	const [currentPageIdx, setCurrentPageIdx] = useState(0);
+	const [isAutoScrollOn, setIsAutoScrollOn] = useState(true);
 	// 최초공개 > 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순서로
 	// 최근 게시 영상은 3일 이내일 경우 최상단(최초공개 다음)으로 이동
 	function createHeadingText(data: YoutubeMusicData, condition: number, isLive: boolean) {
@@ -304,16 +307,32 @@ function RecentNews({
 		}
 	}
 
+	const autoPagingTime = 6500;
+
 	const handlePage = (pageIdx: number) => () => {
 		setCurrentPageIdx(pageIdx);
-		clearInterval(intervalRef.current);
-		intervalRef.current = setInterval(autoPaging, 5000);
+		if (isAutoScrollOn) {
+			clearInterval(intervalRef.current);
+			intervalRef.current = setInterval(autoPaging, autoPagingTime);
+		}
 	};
 
 	const autoPaging = () => {
 		setCurrentPageIdx((prev) => {
 			if (prev + 1 > reOgData.length - 1) return 0;
 			return prev + 1;
+		});
+	};
+
+	const handleAutoPaging = () => {
+		setIsAutoScrollOn((prev) => {
+			if (prev) {
+				clearInterval(intervalRef.current);
+			} else {
+				intervalRef.current = setInterval(autoPaging, autoPagingTime);
+			}
+			setUserSetting((prevUS) => ({ ...prevUS, isAutoScrollOn: !prev }));
+			return !prev;
 		});
 	};
 
@@ -338,7 +357,10 @@ function RecentNews({
 	const isUnder720 = windowWidth < 720;
 
 	useEffect(() => {
-		if (!isLoading) intervalRef.current = setInterval(autoPaging, 5000);
+		if (userSetting.isAutoScrollOn === true) setIsAutoScrollOn(true);
+		else if (userSetting.isAutoScrollOn === false) setIsAutoScrollOn(false);
+		if (!isLoading && (userSetting.isAutoScrollOn === true || userSetting.isAutoScrollOn === undefined))
+			intervalRef.current = setInterval(autoPaging, autoPagingTime);
 		return () => {
 			clearInterval(intervalRef.current);
 		};
@@ -353,6 +375,11 @@ function RecentNews({
 			borderRadius={"1rem"}
 			backgroundColor={"blue.300"}
 			overflow="hidden"
+			_hover={{
+				".paging-arrow": {
+					opacity: 1,
+				},
+			}}
 		>
 			{reOgData.length > 1 && !isLoading ? (
 				<HStack
@@ -365,6 +392,22 @@ function RecentNews({
 					gap="2px"
 					zIndex={1}
 				>
+					<Stack
+						boxSize="16px"
+						alignItems={"center"}
+						justifyContent={"center"}
+						cursor={"pointer"}
+						marginRight="2px"
+						onClick={handleAutoPaging}
+					>
+						<Box
+							boxSize="8px"
+							borderRadius={"100%"}
+							backgroundColor={isAutoScrollOn ? "green.700" : "red.700"}
+							cursor={"pointer"}
+							transition="background-color .3s"
+						/>
+					</Stack>
 					{reOgData.map((_, i) => (
 						<Stack
 							key={i}

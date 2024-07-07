@@ -1,4 +1,5 @@
 export interface UserSettingStorage {
+	isAutoScrollOn?: boolean;
 	homeStellar?: string;
 	isFilterOn?: string;
 	sortBy?: number;
