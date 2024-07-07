@@ -13,6 +13,7 @@ import {
 	SkeletonText,
 	Stack,
 	Text,
+	Tooltip,
 	useClipboard,
 	useToast,
 } from "@chakra-ui/react";
@@ -392,22 +393,24 @@ function RecentNews({
 					gap="2px"
 					zIndex={1}
 				>
-					<Stack
-						boxSize="16px"
-						alignItems={"center"}
-						justifyContent={"center"}
-						cursor={"pointer"}
-						marginRight="2px"
-						onClick={handleAutoPaging}
-					>
-						<Box
-							boxSize="8px"
-							borderRadius={"100%"}
-							backgroundColor={isAutoScrollOn ? "green.700" : "red.700"}
+					<Tooltip label="자동 스크롤" bg={"rgb(0,0,0,0.35)"}>
+						<Stack
+							boxSize="16px"
+							alignItems={"center"}
+							justifyContent={"center"}
 							cursor={"pointer"}
-							transition="background-color .3s"
-						/>
-					</Stack>
+							marginRight="2px"
+							onClick={handleAutoPaging}
+						>
+							<Box
+								boxSize="8px"
+								borderRadius={"100%"}
+								backgroundColor={isAutoScrollOn ? "green.700" : "red.700"}
+								cursor={"pointer"}
+								transition="background-color .3s"
+							/>
+						</Stack>
+					</Tooltip>
 					{reOgData.map((_, i) => (
 						<Stack
 							key={i}
@@ -708,10 +711,12 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 									{live.liveCategoryValue ? (
 										<Stack position="absolute" top={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
 											<Text
-												fontSize="0.675rem"
+												fontSize={"0.675rem"}
 												backgroundColor="rgb(255,255,255,.66)"
 												padding="1px 6px"
 												borderRadius={"4px"}
+												textAlign={"center"}
+												maxWidth="84px"
 											>
 												{live.liveCategoryValue}
 											</Text>
