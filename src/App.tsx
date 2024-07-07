@@ -25,11 +25,16 @@ function App() {
 	const [backgroundColor] = useRecoilState(backgroundColorState);
 	const [fetchInfo] = useRecoilState(fetchInfoState);
 	const [now, setNow] = useRecoilState(nowState);
-	const { refetch } = useStellar();
+	const { refetch, intervalRef } = useStellar();
 	const { isAdmin, isLoading } = useAuth();
 
 	const handleReload = () => {
 		refetch(true);
+		clearInterval(intervalRef.current);
+		intervalRef.current = setInterval(() => {
+			let second = new Date().getSeconds();
+			if (second === 0 && import.meta.env.PROD) refetch(true);
+		}, 1000);
 	};
 
 	useEffect(() => {

@@ -11,7 +11,7 @@ import {
 	fetchInfoState,
 	isLiveDetailFetchingState,
 } from "../Atom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { fetchServer } from "../functions/fetch";
 import { useToast } from "@chakra-ui/react";
 import isMobile from "is-mobile";
@@ -19,6 +19,7 @@ import { getLocale } from "../functions/etc";
 
 export function useStellar() {
 	const toast = useToast();
+	const intervalRef = useRef<number>();
 	const [data, setData] = useRecoilState(stellarState);
 	const [, setLiveStatus] = useRecoilState(liveStatusState);
 	const [, setServerError] = useRecoilState(serverErrorState);
@@ -68,8 +69,10 @@ export function useStellar() {
 						const arr = [...prev];
 						for (let item of arr) {
 							const liveStatus = data.find((l) => l.uuid === item.uuid)?.liveStatus;
+							const liveCategoryValue = data.find((l) => l.uuid === item.uuid)?.liveCategoryValue || "";
+							const liveTitle = data.find((l) => l.uuid === item.uuid)?.liveTitle || null;
 							const curIdx = arr.findIndex((a) => a.uuid === item.uuid);
-							arr[curIdx] = { ...arr[curIdx], liveStatus };
+							arr[curIdx] = { ...arr[curIdx], liveStatus, liveTitle, liveCategoryValue };
 						}
 						return arr;
 					});
@@ -134,14 +137,14 @@ export function useStellar() {
 
 	useEffect(() => {
 		f();
-		const i = setInterval(() => {
+		intervalRef.current = setInterval(() => {
 			let second = new Date().getSeconds();
 			if (second === 0 && import.meta.env.PROD) f(true);
 		}, 1000);
 		return () => {
-			clearInterval(i);
+			clearInterval(intervalRef.current);
 		};
 	}, []);
 
-	return { data, setData, refetch: f };
+	return { data, setData, refetch: f, intervalRef };
 }
