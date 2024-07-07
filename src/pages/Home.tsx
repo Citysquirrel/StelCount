@@ -507,7 +507,7 @@ function RecentNews({
 											{v.titleAlias || v.title}
 										</Text>
 										{v.details.length > 0 ? (
-											<HStack paddingLeft="8px">
+											<HStack paddingLeft="8px" animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}>
 												<Text fontSize="xs">부가 영상</Text>
 												{v.details.map((detail) => {
 													const { id, type, videoId } = detail;
