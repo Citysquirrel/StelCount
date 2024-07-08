@@ -393,7 +393,7 @@ function RecentNews({
 					gap="2px"
 					zIndex={1}
 				>
-					<Tooltip label="자동 스크롤" bg={"rgb(0,0,0,0.35)"}>
+					<Tooltip label={`자동 스크롤 ${isAutoScrollOn ? "켜짐" : "꺼짐"}`} bg={"rgb(0,0,0,0.35)"}>
 						<Stack
 							boxSize="16px"
 							alignItems={"center"}
@@ -717,6 +717,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 												borderRadius={"4px"}
 												textAlign={"center"}
 												maxWidth="84px"
+												wordBreak="keep-all"
 											>
 												{live.liveCategoryValue}
 											</Text>
@@ -801,6 +802,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 												borderRadius={"4px"}
 												textAlign={"center"}
 												maxWidth="84px"
+												wordBreak="keep-all"
 											>
 												{live.liveCategoryValue}
 											</Text>
