@@ -30,6 +30,7 @@ export interface YoutubeMusicData {
 	liveBroadcastContent?: "live" | "upcoming" | "none" | (string & {});
 	scheduledStartTime?: string;
 	mostPopular: number;
+	mostPopularMusic: number;
 	isActive?: boolean;
 	tags?: Tag[];
 	details: VideoDetail[];

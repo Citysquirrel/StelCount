@@ -66,6 +66,7 @@ export default function Home() {
 	const [data, setData] = useState<Data>({
 		upcoming: [],
 		mostPopular: [],
+		mostPopularMusic: [],
 		recent: [],
 		approach: [],
 		mostViews: [],
@@ -75,6 +76,7 @@ export default function Home() {
 
 	const isDataLoading = !data.isUpdated;
 
+	//! 이것도 삭제될 예정
 	const arr =
 		data.upcoming.length > 0
 			? data.upcoming
@@ -86,6 +88,7 @@ export default function Home() {
 			? data.approach
 			: data.mostViews;
 
+	//! 이것도 미사용
 	const condition =
 		data.upcoming.length > 0
 			? -1
@@ -96,6 +99,8 @@ export default function Home() {
 			: data.approach.length > 0
 			? 2
 			: 3;
+
+	//! firstMusic is DEPRECATED
 	const firstMusic: YoutubeMusicData = !isNewsLoading
 		? arr[0]
 		: {
@@ -106,6 +111,7 @@ export default function Home() {
 				thumbnails: "",
 				videoId: "",
 				mostPopular: -1,
+				mostPopularMusic: -1,
 				details: [],
 				statistics: [],
 		  };
@@ -119,6 +125,8 @@ export default function Home() {
 		const videos = stellar.map((s) => s.youtubeMusic).flat();
 
 		setData((prev) => {
+			//! 필터링하는 방식을 바꿔야함. 현재는 중복된 비디오를 걸러내지 않음
+			//? 중복되도 상관없다고 생각함.
 			const obj = { ...prev };
 			obj.upcoming = videos
 				.filter((v) => v.liveBroadcastContent === "upcoming" || v.liveBroadcastContent === "live")
@@ -127,6 +135,9 @@ export default function Home() {
 						new Date(a.scheduledStartTime || MIN_DATE).getTime() - new Date(b.scheduledStartTime || MIN_DATE).getTime()
 				);
 			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1).sort((a, b) => a.mostPopular - b.mostPopular);
+			obj.mostPopularMusic = videos
+				.filter((v) => v.mostPopularMusic !== -1)
+				.sort((a, b) => a.mostPopularMusic - b.mostPopularMusic);
 			obj.recent = videos
 				.filter(
 					(v) =>
@@ -164,6 +175,7 @@ export default function Home() {
 										thumbnail: c.thumbnail,
 										thumbnails: c.thumbnails,
 										mostPopular: c.mostPopular,
+										mostPopularMusic: c.mostPopularMusic,
 										liveBroadcastContent: c.liveBroadcastContent,
 										details: [],
 									})),
@@ -241,6 +253,7 @@ export default function Home() {
 					now={now}
 					recent={data.recent}
 					mostPopular={data.mostPopular}
+					mostPopularMusic={data.mostPopularMusic}
 					upcoming={data.upcoming}
 					approach={data.approach}
 					mostViews={data.mostViews}
@@ -277,6 +290,7 @@ function RecentNews({
 	now,
 	recent,
 	mostPopular,
+	mostPopularMusic,
 	upcoming,
 	approach,
 	mostViews,
@@ -298,11 +312,13 @@ function RecentNews({
 		if (condition === -1) {
 			return `최초 공개 ${isLive ? "진행중" : startTimeGap <= 0 ? "곧 시작" : remainingDateText}`;
 		} else if (condition === 0) {
-			return `인기 급상승 음악 #${data.mostPopular}`;
+			return `인기 급상승 동영상 #${data.mostPopular}`;
 		} else if (condition === 1) {
 			return `${elapsedDateText} 게시된 새 영상`;
 		} else if (condition === 2) {
 			return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
+		} else if (condition === 3) {
+			return `인기 급상승 음악 #${data.mostPopularMusic}`;
 		} else {
 			return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
 		}
@@ -342,15 +358,17 @@ function RecentNews({
 		"0": "mostPopular",
 		"1": "recent",
 		"2": "approach",
+		"3": "mostPopularMusic",
 	};
 
 	const reOgData: ({ condition: number } & YoutubeMusicData)[] = [
 		...upcoming.map((v) => ({ ...v, condition: -1 })),
 		...recent
 			.filter(
-				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 14 // 2 weeks
+				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 7 // 1 weeks
 			)
 			.map((v) => ({ ...v, condition: 1 })),
+		...mostPopularMusic.map((v) => ({ ...v, condition: 3 })),
 		...mostPopular.map((v) => ({ ...v, condition: 0 })),
 		...approach.slice(0, 2).map((v) => ({ ...v, condition: 2 })),
 	];
@@ -467,7 +485,13 @@ function RecentNews({
 										href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
 										isExternal
 										transition="all .3s"
-										_hover={{ "> .news-thumbnail": { filter: "grayscale(0.5)", borderRadius: 0 } }}
+										_hover={{
+											"> .news-thumbnail": {
+												filter: "grayscale(0.5)",
+												borderRadius: 0,
+												boxShadow: "2px 4px 6px black",
+											},
+										}}
 									>
 										<Image
 											className="news-thumbnail"
@@ -496,12 +520,15 @@ function RecentNews({
 										alignSelf={[null, null, "flex-end", "flex-end", "flex-end"]}
 									>
 										<Heading
-											fontSize={condition === -1 ? "3xl" : "lg"}
+											fontSize={v.condition === -1 ? "3xl" : "lg"}
 											animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}
 										>
 											{headingText}
 										</Heading>
 										<Text
+											as={Link}
+											href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
+											isExternal
 											overflow="hidden"
 											textOverflow={"ellipsis"}
 											whiteSpace={"normal"}
@@ -1083,6 +1110,7 @@ function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
 interface Data {
 	upcoming: YoutubeMusicData[];
 	mostPopular: YoutubeMusicData[];
+	mostPopularMusic: YoutubeMusicData[];
 	recent: YoutubeMusicData[];
 	approach: YoutubeMusicData[];
 	mostViews: YoutubeMusicData[];
@@ -1104,6 +1132,7 @@ interface RecentNewsProps {
 
 	recent: YoutubeMusicData[];
 	mostPopular: YoutubeMusicData[];
+	mostPopularMusic: YoutubeMusicData[];
 	upcoming: YoutubeMusicData[];
 	approach: YoutubeMusicData[];
 	mostViews: YoutubeMusicData[];
