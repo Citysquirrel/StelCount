@@ -382,6 +382,7 @@ function RecentNews({
 				},
 			}}
 		>
+			{/* 캐로셀 페이징 부분 */}
 			{reOgData.length > 1 && !isLoading ? (
 				<HStack
 					position="absolute"
@@ -465,7 +466,8 @@ function RecentNews({
 									<Link
 										href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
 										isExternal
-										_hover={{ "> .news-thumbnail": { opacity: 0.75 }, borderRadius: 0 }}
+										transition="all .3s"
+										_hover={{ "> .news-thumbnail": { filter: "grayscale(0.5)", borderRadius: 0 } }}
 									>
 										<Image
 											className="news-thumbnail"
@@ -718,6 +720,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 												textAlign={"center"}
 												maxWidth="84px"
 												wordBreak="keep-all"
+												lineHeight={1.25}
 											>
 												{live.liveCategoryValue}
 											</Text>
@@ -803,6 +806,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 												textAlign={"center"}
 												maxWidth="84px"
 												wordBreak="keep-all"
+												lineHeight={1.25}
 											>
 												{live.liveCategoryValue}
 											</Text>
@@ -1039,6 +1043,7 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 				fontSize="sm"
 				onClick={handleDeleteItem(id)}
 				aria-label="close-button"
+				opacity={opacity}
 			/>
 			<Stack
 				ref={ref}
