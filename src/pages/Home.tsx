@@ -38,6 +38,7 @@ import {
 	numberToLocaleString,
 	remainingTimeText,
 	sortStatsByUnit,
+	sortStatsByUnitForBigNews,
 } from "../lib/functions/etc";
 import { Image } from "../components/Image";
 import { naver, youtube } from "../lib/functions/platforms";
@@ -69,6 +70,7 @@ export default function Home() {
 		mostPopularMusic: [],
 		recent: [],
 		approach: [],
+		approachForNews: [],
 		mostViews: [],
 		isUpdated: false,
 	});
@@ -125,9 +127,31 @@ export default function Home() {
 		const videos = stellar.map((s) => s.youtubeMusic).flat();
 
 		setData((prev) => {
-			//! 필터링하는 방식을 바꿔야함. 현재는 중복된 비디오를 걸러내지 않음
-			//? 중복되도 상관없다고 생각함.
 			const obj = { ...prev };
+
+			const approachTemp = videos.reduce(
+				(a, c) =>
+					c.details.length > 0
+						? [
+								...a,
+								c,
+								...c.details.map((d) => ({
+									...d,
+									title: c.title,
+									titleAlias: c.titleAlias,
+									channelId: c.channelId,
+									thumbnail: c.thumbnail,
+									thumbnails: c.thumbnails,
+									mostPopular: c.mostPopular,
+									mostPopularMusic: c.mostPopularMusic,
+									liveBroadcastContent: c.liveBroadcastContent,
+									details: [],
+								})),
+						  ]
+						: [...a, c],
+				[] as YoutubeMusicData[]
+			);
+
 			obj.upcoming = videos
 				.filter((v) => v.liveBroadcastContent === "upcoming" || v.liveBroadcastContent === "live")
 				.sort(
@@ -160,29 +184,7 @@ export default function Home() {
 					return B - A;
 				})
 				.slice(0, 30);
-			obj.approach = videos
-				.reduce(
-					(a, c) =>
-						c.details.length > 0
-							? [
-									...a,
-									c,
-									...c.details.map((d) => ({
-										...d,
-										title: c.title,
-										titleAlias: c.titleAlias,
-										channelId: c.channelId,
-										thumbnail: c.thumbnail,
-										thumbnails: c.thumbnails,
-										mostPopular: c.mostPopular,
-										mostPopularMusic: c.mostPopularMusic,
-										liveBroadcastContent: c.liveBroadcastContent,
-										details: [],
-									})),
-							  ]
-							: [...a, c],
-					[] as YoutubeMusicData[]
-				)
+			obj.approach = approachTemp
 				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
 				.filter(
 					(v) =>
@@ -197,7 +199,23 @@ export default function Home() {
 						new Date(a.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime()
 					);
 				})
-				.slice(0, 30);
+				.slice(0, 100);
+			obj.approachForNews = approachTemp
+				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnitForBigNews(s.unit)) }))
+				.filter(
+					(v) =>
+						v.liveBroadcastContent === "none" &&
+						v.statistics.filter(
+							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
+						).length > 0
+				)
+				.sort((a, b) => {
+					return (
+						new Date(b.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime() -
+						new Date(a.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime()
+					);
+				})
+				.slice(0, 3);
 			obj.isUpdated = true;
 			return obj;
 		});
@@ -255,7 +273,7 @@ export default function Home() {
 					mostPopular={data.mostPopular}
 					mostPopularMusic={data.mostPopularMusic}
 					upcoming={data.upcoming}
-					approach={data.approach}
+					approach={data.approachForNews}
 					mostViews={data.mostViews}
 				/>
 				{data.approach.length > 0 ? (
@@ -370,7 +388,7 @@ function RecentNews({
 			.map((v) => ({ ...v, condition: 1 })),
 		...mostPopularMusic.map((v) => ({ ...v, condition: 3 })),
 		...mostPopular.map((v) => ({ ...v, condition: 0 })),
-		...approach.slice(0, 2).map((v) => ({ ...v, condition: 2 })),
+		...approach.slice(0, 3).map((v) => ({ ...v, condition: 2 })),
 	];
 
 	const isUnder720 = windowWidth < 720;
@@ -1071,6 +1089,8 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 				onClick={handleDeleteItem(id)}
 				aria-label="close-button"
 				opacity={opacity}
+				transitionProperty={"background-color, border-color, color, fill, stroke, box-shadow, transform"}
+				transitionDuration={"0.2s"}
 			/>
 			<Stack
 				ref={ref}
@@ -1113,6 +1133,7 @@ interface Data {
 	mostPopularMusic: YoutubeMusicData[];
 	recent: YoutubeMusicData[];
 	approach: YoutubeMusicData[];
+	approachForNews: YoutubeMusicData[];
 	mostViews: YoutubeMusicData[];
 	isUpdated: boolean;
 }
