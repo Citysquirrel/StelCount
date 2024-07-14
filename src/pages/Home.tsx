@@ -190,7 +190,7 @@ export default function Home() {
 					(v) =>
 						v.liveBroadcastContent === "none" &&
 						v.statistics.filter(
-							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
+							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 86400 * 5 // 5 days
 						).length > 0
 				)
 				.sort((a, b) => {
@@ -206,7 +206,7 @@ export default function Home() {
 					(v) =>
 						v.liveBroadcastContent === "none" &&
 						v.statistics.filter(
-							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 259200000 // 3 days
+							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 86400 * 5 // 5 days
 						).length > 0
 				)
 				.sort((a, b) => {
