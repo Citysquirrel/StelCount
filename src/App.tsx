@@ -6,6 +6,7 @@ import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
 import { Button, Divider, IconButton, Link, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
 import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
+import { GrMultiple } from "react-icons/gr";
 import { useRecoilState } from "recoil";
 import { serverErrorState, isStellarLoadingState, backgroundColorState, fetchInfoState, nowState } from "./lib/Atom";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
@@ -78,14 +79,16 @@ function App() {
 
 				{import.meta.env.DEV ? (
 					<>
-						<Tooltip label="영상모음">
+						<Tooltip label="멀티뷰">
 							<IconButton
 								fontSize="1.125rem"
 								isRound
-								icon={<MdOndemandVideo />}
+								icon={<GrMultiple />}
 								colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-								onClick={nav("/video")}
-								aria-label="video"
+								onClick={() => {
+									window.open("/multiview", "_blank");
+								}}
+								aria-label="multiview"
 							/>
 						</Tooltip>
 					</>

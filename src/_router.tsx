@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import { About } from "./pages/About";
 import { Counter } from "./pages/Counter";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
+import { MultiView } from "./pages/MultiView";
 
 const Admin = lazy(() => import("./pages/Admin").then((m) => ({ default: m.Admin })));
 const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminEdit })));
@@ -16,6 +17,7 @@ const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.A
 const devRoutes: RouteObject[] = import.meta.env.DEV ? [{ path: "/video", element: <YoutubeVideo /> }] : [];
 
 export const routeObj: RouteObject[] = [
+	// { path: "/multiview", element: <MultiView /> },
 	{
 		path: "/",
 		element: <App />,
