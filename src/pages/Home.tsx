@@ -78,6 +78,12 @@ export default function Home() {
 
 	const isDataLoading = !data.isUpdated;
 
+	const config = {
+		recent: { period: 5184000000 },
+		approach: { period: 86400000 * 5 },
+		approachForNews: { period: 86400000 * 5 },
+	};
+
 	//! 이것도 삭제될 예정
 	const arr =
 		data.upcoming.length > 0
@@ -125,6 +131,7 @@ export default function Home() {
 	useEffect(() => {
 		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
 		const videos = stellar.map((s) => s.youtubeMusic).flat();
+		const currentTime = new Date(getLocale()).getTime();
 
 		setData((prev) => {
 			const obj = { ...prev };
@@ -166,7 +173,7 @@ export default function Home() {
 				.filter(
 					(v) =>
 						v.liveBroadcastContent === "none" &&
-						new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 5184000000 // 2 months
+						currentTime - new Date(v.publishedAt || MIN_DATE).getTime() < config.recent.period // 2 months
 				)
 				.sort(
 					(a, b) =>
@@ -190,7 +197,7 @@ export default function Home() {
 					(v) =>
 						v.liveBroadcastContent === "none" &&
 						v.statistics.filter(
-							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 86400000 * 5 // 5 days
+							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approach.period // 5 days
 						).length > 0
 				)
 				.sort((a, b) => {
@@ -206,7 +213,7 @@ export default function Home() {
 					(v) =>
 						v.liveBroadcastContent === "none" &&
 						v.statistics.filter(
-							(s) => new Date(getLocale()).getTime() - new Date(s.updatedAt || MIN_DATE).getTime() < 86400000 * 5 // 5 days
+							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approachForNews.period // 5 days
 						).length > 0
 				)
 				.sort((a, b) => {
