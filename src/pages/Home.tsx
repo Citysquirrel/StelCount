@@ -388,13 +388,13 @@ function RecentNews({
 
 	const reOgData: ({ condition: number } & YoutubeMusicData)[] = [
 		...upcoming.map((v) => ({ ...v, condition: -1 })),
+		...mostPopularMusic.map((v) => ({ ...v, condition: 3 })),
+		...mostPopular.map((v) => ({ ...v, condition: 0 })),
 		...recent
 			.filter(
 				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 7 // 1 weeks
 			)
 			.map((v) => ({ ...v, condition: 1 })),
-		...mostPopularMusic.map((v) => ({ ...v, condition: 3 })),
-		...mostPopular.map((v) => ({ ...v, condition: 0 })),
 		...approach.slice(0, 3).map((v) => ({ ...v, condition: 2 })),
 	];
 

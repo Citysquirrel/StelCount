@@ -79,3 +79,18 @@ interface ThumbnailScheme {
 	url?: string | null;
 	width?: number | null;
 }
+
+export interface MultiViewData {
+	name: string;
+	chzzkId: string | undefined;
+	uuid: string;
+	colorCode: string | undefined;
+	channelName?: string;
+	channelImageUrl?: string | null;
+	liveCategoryValue?: string;
+	liveTitle?: string | null;
+	liveImageUrl?: string;
+	openLive?: boolean;
+	openDate?: string;
+	closeDate?: string;
+}

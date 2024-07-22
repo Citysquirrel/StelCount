@@ -1,15 +1,23 @@
-import { Box, HStack, SimpleGrid, Stack } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { Box, CloseButton, HStack, SimpleGrid, Stack, Text } from "@chakra-ui/react";
+import { Fragment, SetStateAction, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
+import { useMultiView } from "../lib/hooks/useMultiView";
+import { MultiViewData } from "../lib/types";
+import { MdKeyboardDoubleArrowRight } from "react-icons/md";
+import { useConsole } from "../lib/hooks/useConsole";
+import { useResponsive } from "../lib/hooks/useResponsive";
 
 export function MultiView() {
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
 	const [isInnerChatOpen, setIsInnerChatOpen] = useState(false);
-	const [streams, setStreams] = useState<Stream[]>([{ type: "chzzk", streamId: "45e71a76e949e16a34764deb962f9d9f" }]);
+	const [streams, setStreams] = useState<Stream[]>([]);
+	const { data } = useMultiView();
+	const { windowWidth, windowHeight } = useResponsive();
 
 	const handleFrameSize = () => {
-		const width = window.innerWidth - 8 - (isInnerChatOpen ? 350 : 0);
-		const height = window.innerHeight - 8;
+		console.log(12345);
+		const width = windowWidth - 8 - (isInnerChatOpen ? 350 : 0);
+		const height = windowHeight - 8;
 		for (let frame = 1; frame <= streams.length; frame++) {
 			const row = Math.ceil(streams.length / frame);
 			let maxWidth = Math.floor(width / frame);
@@ -27,28 +35,51 @@ export function MultiView() {
 		}
 	};
 
+	const handleAddStream = (streamId: string, type: StreamType) => () => {
+		setStreams((prev) => [...prev, { streamId, type }]);
+	};
+
 	useEffect(() => {
 		handleFrameSize();
+	}, [windowWidth, windowHeight, streams]);
 
-		window.addEventListener("resize", handleFrameSize);
-		return () => {
-			window.removeEventListener("resize", handleFrameSize);
-		};
-	}, []);
+	useConsole(frameSize);
+	// useConsole(streams);
+
 	return (
-		<HStack width="100%" height="100dvh" backgroundColor="black" alignItems={"center"} justifyContent={"center"}>
-			<SimpleGrid id="streams">
+		<HStack
+			position="relative"
+			width="100%"
+			height="100dvh"
+			backgroundColor="black"
+			alignItems={"center"}
+			justifyContent={"center"}
+		>
+			<SideMenu data={data} handleAddStream={handleAddStream} />
+			<Stack
+				id="streams"
+				sx={{
+					flexGrow: 1,
+					flexWrap: "wrap",
+					alignItems: "center",
+					justifyContent: "center",
+					alignContent: "center",
+					width: "min-content",
+					height: "100%",
+				}}
+			>
 				{streams.length > 0
-					? streams.map((stream) => {
-							const ref = useRef<HTMLIFrameElement>(null);
+					? streams.map((stream, idx) => {
+							// const ref = useRef<HTMLIFrameElement>(null);
 							const { type, streamId } = stream;
 							const src = createStreamSrc(type, streamId);
 
-							if (!src) return <></>;
+							if (!src) return <Fragment key={`${idx}-${streamId}`}></Fragment>;
 							return (
 								<Box
+									key={`${idx}-${streamId}`}
 									as="iframe"
-									ref={ref}
+									// ref={ref}
 									src={src}
 									width={`${frameSize.width}px`}
 									height={`${frameSize.height}px`}
@@ -60,10 +91,100 @@ export function MultiView() {
 							);
 					  })
 					: null}
-			</SimpleGrid>
+			</Stack>
 		</HStack>
 	);
 }
+
+function SideMenu({ data, handleAddStream }: SideMenuProps) {
+	const [isOpen, setIsOpen] = useState(false);
+	return (
+		<>
+			<Stack
+				sx={{
+					position: "absolute",
+					top: 0,
+					left: 0,
+					alignItems: "center",
+					justifyContent: "center",
+					width: "24px",
+					height: "100%",
+					color: "white",
+					transition: "all .25s",
+					opacity: 0,
+					cursor: "pointer",
+					":hover": { backgroundColor: "rgba(127,127,127,.5)", opacity: 1 },
+				}}
+				onClick={() => {
+					setIsOpen(true);
+				}}
+			>
+				<MdKeyboardDoubleArrowRight />
+			</Stack>
+			<Stack
+				sx={{
+					position: "absolute",
+					top: 0,
+					left: 0,
+					width: "240px",
+					height: "100%",
+					color: "white",
+					backgroundColor: "rgb(7,7,7)",
+					padding: "8px",
+					transform: isOpen ? `translateX(0px)` : `translateX(-240px)`,
+					transition: "all .3s",
+				}}
+			>
+				<HStack>
+					<Stack flexGrow={1}></Stack>
+					<CloseButton
+						size="sm"
+						sx={{ ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+						onClick={() => {
+							setIsOpen(false);
+						}}
+					/>
+				</HStack>
+
+				<Stack>
+					{data.length > 0
+						? data.map((item, idx) => {
+								const {
+									name,
+									chzzkId,
+									uuid,
+									colorCode,
+									channelName,
+									channelImageUrl,
+									liveCategoryValue,
+									liveTitle,
+									liveImageUrl,
+									openLive,
+									openDate,
+									closeDate,
+								} = item;
+								if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
+								return (
+									<Stack
+										key={`${idx}-${chzzkId}`}
+										sx={{
+											borderRadius: ".25rem",
+											background: `linear-gradient(115deg, #${colorCode}44, rgba(18,18,18,0.5) 55.71%)`,
+										}}
+										onClick={handleAddStream(chzzkId, "chzzk")}
+									>
+										<Text>{name}</Text>
+									</Stack>
+								);
+						  })
+						: null}
+				</Stack>
+			</Stack>
+		</>
+	);
+}
+
+//? Function
 
 function createStreamSrc(type: StreamType, streamId: string) {
 	switch (type) {
@@ -80,4 +201,9 @@ type StreamType = "chzzk" | (string & {});
 interface Stream {
 	type: StreamType;
 	streamId: string;
+}
+
+interface SideMenuProps {
+	data: MultiViewData[];
+	handleAddStream: (streamId: string, type: StreamType) => () => void;
 }

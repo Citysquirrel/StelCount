@@ -16,7 +16,7 @@ export function OAuth() {
 			toast({ title: `${error}`, description: `${errorDesc}`, status: "error" });
 		} else {
 			fetchServer(`/naver?code=${code}&state=${state}`, "v1").then((res) => {
-				if (res.data.state) {
+				if (res.data && res.data.state) {
 					navigate(res.data.state);
 				} else navigate("/");
 			});

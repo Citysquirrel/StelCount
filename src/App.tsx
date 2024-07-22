@@ -77,7 +77,7 @@ function App() {
 					/>
 				</Tooltip>
 
-				{import.meta.env.DEV ? (
+				{isAdmin ? (
 					<>
 						<Tooltip label="멀티뷰">
 							<IconButton

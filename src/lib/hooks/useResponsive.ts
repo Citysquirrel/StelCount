@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 export function useResponsive() {
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+	const [windowHeight, setWindowHeight] = useState(window.innerHeight);
 	const [width, setWidth] = useState(() => {
 		if (window.innerWidth > 1440) {
 			return 1440;
@@ -16,6 +17,7 @@ export function useResponsive() {
 
 	const handleWindowSize = () => {
 		setWindowWidth(window.innerWidth);
+		setWindowHeight(window.innerHeight);
 		if (window.innerWidth > 1440) {
 			setWidth(1440);
 		} else if (window.innerWidth > 1280) {
@@ -36,5 +38,5 @@ export function useResponsive() {
 		};
 	}, []);
 
-	return { windowWidth, width };
+	return { windowWidth, windowHeight, width };
 }
