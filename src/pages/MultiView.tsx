@@ -5,7 +5,7 @@ import { naver } from "../lib/functions/platforms";
 export function MultiView() {
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
 	const [isInnerChatOpen, setIsInnerChatOpen] = useState(false);
-	const [streams, setStreams] = useState<Stream[]>([{ type: "chzzk", streamId: "b044e3a3b9259246bc92e863e7d3f3b8" }]);
+	const [streams, setStreams] = useState<Stream[]>([{ type: "chzzk", streamId: "45e71a76e949e16a34764deb962f9d9f" }]);
 
 	const handleFrameSize = () => {
 		const width = window.innerWidth - 8 - (isInnerChatOpen ? 350 : 0);

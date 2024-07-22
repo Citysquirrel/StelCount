@@ -17,7 +17,7 @@ const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.A
 const devRoutes: RouteObject[] = import.meta.env.DEV ? [{ path: "/video", element: <YoutubeVideo /> }] : [];
 
 export const routeObj: RouteObject[] = [
-	// { path: "/multiview", element: <MultiView /> },
+	{ path: "/multiview", element: <MultiView /> },
 	{
 		path: "/",
 		element: <App />,
