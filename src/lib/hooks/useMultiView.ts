@@ -8,7 +8,9 @@ export function useMultiView() {
 
 	const refetch = () => {
 		fetchServer("/multiview", "v1").then((res) => {
-			setData(res.data);
+			if (res.status === 200) {
+				setData(res.data);
+			}
 		});
 	};
 
