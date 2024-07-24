@@ -1,21 +1,24 @@
 import { Box, CloseButton, HStack, SimpleGrid, Stack, Text } from "@chakra-ui/react";
-import { Fragment, SetStateAction, useEffect, useRef, useState } from "react";
+import { Fragment, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData } from "../lib/types";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
 import { useConsole } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
+import { useAuth } from "../lib/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export function MultiView() {
+	const navigate = useNavigate();
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
 	const [isInnerChatOpen, setIsInnerChatOpen] = useState(false);
 	const [streams, setStreams] = useState<Stream[]>([]);
 	const { data } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
+	const { isAdmin } = useAuth();
 
 	const handleFrameSize = () => {
-		console.log(12345);
 		const width = windowWidth - 8 - (isInnerChatOpen ? 350 : 0);
 		const height = windowHeight - 8;
 		for (let frame = 1; frame <= streams.length; frame++) {
@@ -43,8 +46,12 @@ export function MultiView() {
 		handleFrameSize();
 	}, [windowWidth, windowHeight, streams]);
 
-	useConsole(frameSize);
-	// useConsole(streams);
+	useLayoutEffect(() => {
+		if (!isAdmin) {
+			alert("테스트 중인 페이지입니다.");
+			navigate("/");
+		}
+	}, []);
 
 	return (
 		<HStack
