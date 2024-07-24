@@ -46,13 +46,7 @@ export function MultiView() {
 		handleFrameSize();
 	}, [windowWidth, windowHeight, streams]);
 
-	useLayoutEffect(() => {
-		if (!isAdmin) {
-			alert("테스트 중인 페이지입니다.");
-			navigate("/");
-		}
-	}, []);
-
+	if (!isAdmin) return <></>;
 	return (
 		<HStack
 			position="relative"
