@@ -34,7 +34,6 @@ export function MultiView() {
 	const [streams, setStreams] = useState<Stream[]>([]);
 	const { data, isLoading, refetch } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
-	const { isAdmin } = useAuth();
 	const len = streams.length;
 
 	const handleFrameSize = () => {
@@ -113,7 +112,6 @@ export function MultiView() {
 		document.title = "StelCount - Multiview";
 	}, []);
 
-	if (!isAdmin) return <></>;
 	return (
 		<HStack
 			position="relative"
