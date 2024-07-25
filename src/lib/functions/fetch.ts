@@ -73,7 +73,13 @@ export async function fetchServer(api: ServerAPI, version: Version, options?: Fe
 		}${api}`,
 		{
 			body: options?.body,
-			headers: { "Content-Type": "application/json", ...options?.headers },
+			headers: {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-cache, no-store, must-revalidate",
+				Pragma: "no-cache",
+				Expires: "0",
+				...options?.headers,
+			},
 			credentials: import.meta.env.DEV ? "include" : "same-origin",
 			...options,
 		}

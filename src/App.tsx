@@ -17,6 +17,7 @@ import { useAuth } from "./lib/hooks/useAuth";
 import { CAFE_WRITE_URL } from "./lib/constant";
 import { useEffect } from "react";
 import { elapsedTimeText } from "./lib/functions/etc";
+import { useNow } from "./lib/hooks/useNow";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -38,16 +39,7 @@ function App() {
 		}, 1000);
 	};
 
-	useEffect(() => {
-		const i = setInterval(() => {
-			let ms = new Date().getMilliseconds();
-			if (ms) setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
-		}, 1000);
-
-		return () => {
-			clearInterval(i);
-		};
-	}, []);
+	useNow();
 
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 

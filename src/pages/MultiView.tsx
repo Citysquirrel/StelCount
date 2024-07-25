@@ -1,20 +1,26 @@
-import { Box, CloseButton, HStack, SimpleGrid, Stack, Text } from "@chakra-ui/react";
+import { Box, Card, CardBody, CloseButton, HStack, IconButton, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { Fragment, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData } from "../lib/types";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
+import { CiStreamOff, CiImageOff } from "react-icons/ci";
 import { useConsole } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { useAuth } from "../lib/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { Image } from "../components/Image";
+import { IoReload } from "react-icons/io5";
+import { useRecoilState } from "recoil";
+import { nowState } from "../lib/Atom";
+import { useNow } from "../lib/hooks/useNow";
 
 export function MultiView() {
 	const navigate = useNavigate();
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
 	const [isInnerChatOpen, setIsInnerChatOpen] = useState(false);
 	const [streams, setStreams] = useState<Stream[]>([]);
-	const { data } = useMultiView();
+	const { data, isLoading, refetch } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isAdmin } = useAuth();
 
@@ -38,8 +44,18 @@ export function MultiView() {
 		}
 	};
 
-	const handleAddStream = (streamId: string, type: StreamType) => () => {
-		setStreams((prev) => [...prev, { streamId, type }]);
+	const handleAddStream = (streamId: string | undefined, type: StreamType, uuid: string) => () => {
+		if (!streamId) return;
+		setStreams((prev) => [...prev, { streamId, type, uuid }]);
+	};
+
+	const handleDeleteStream = (uuid: string) => () => {
+		setStreams((prev) => {
+			const arr = [...prev];
+			const idx = arr.findIndex((a) => a.uuid === uuid);
+			arr.splice(idx, 1);
+			return arr;
+		});
 	};
 
 	useEffect(() => {
@@ -56,16 +72,28 @@ export function MultiView() {
 			alignItems={"center"}
 			justifyContent={"center"}
 		>
-			<SideMenu data={data} handleAddStream={handleAddStream} />
-			<Stack
+			<Box position="fixed" top={0} left={0} zIndex={999} color="white">
+				{frameSize.width}&nbsp;
+				{frameSize.height}
+			</Box>
+			<SideMenu
+				data={data}
+				handleAddStream={handleAddStream}
+				handleDeleteStream={handleDeleteStream}
+				refetch={refetch}
+				isLoading={isLoading}
+				streams={streams}
+			/>
+			<SimpleGrid
 				id="streams"
+				columns={2}
 				sx={{
 					flexGrow: 1,
 					flexWrap: "wrap",
 					alignItems: "center",
 					justifyContent: "center",
 					alignContent: "center",
-					width: "min-content",
+					// width: "min-content",
 					height: "100%",
 				}}
 			>
@@ -92,13 +120,14 @@ export function MultiView() {
 							);
 					  })
 					: null}
-			</Stack>
+			</SimpleGrid>
 		</HStack>
 	);
 }
 
-function SideMenu({ data, handleAddStream }: SideMenuProps) {
-	const [isOpen, setIsOpen] = useState(false);
+function SideMenu({ data, handleAddStream, handleDeleteStream, refetch, isLoading, streams }: SideMenuProps) {
+	const WIDTH = 320;
+	const [isOpen, setIsOpen] = useState(true);
 	return (
 		<>
 			<Stack
@@ -127,17 +156,32 @@ function SideMenu({ data, handleAddStream }: SideMenuProps) {
 					position: "absolute",
 					top: 0,
 					left: 0,
-					width: "240px",
+					width: `${WIDTH}px`,
 					height: "100%",
 					color: "white",
 					backgroundColor: "rgb(7,7,7)",
-					padding: "8px",
-					transform: isOpen ? `translateX(0px)` : `translateX(-240px)`,
+					padding: "0px 12px 12px 12px",
+					transform: isOpen ? `translateX(0px)` : `translateX(-${WIDTH}px)`,
 					transition: "all .3s",
+					overflowY: "auto",
 				}}
 			>
-				<HStack>
+				<HStack position="sticky" top={0} left={0} backgroundColor={"rgb(7,7,7)"} zIndex={1} paddingBlock={"4px"}>
 					<Stack flexGrow={1}></Stack>
+					<IconButton
+						boxSize={"24px"}
+						minWidth="auto"
+						padding="0"
+						fontSize={"0.825rem"}
+						variant={"ghost"}
+						icon={<IoReload />}
+						aria-label="reload"
+						isDisabled={isLoading}
+						onClick={() => {
+							refetch(true);
+						}}
+						sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+					/>
 					<CloseButton
 						size="sm"
 						sx={{ ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
@@ -147,41 +191,124 @@ function SideMenu({ data, handleAddStream }: SideMenuProps) {
 					/>
 				</HStack>
 
-				<Stack>
+				<Stack gap="12px">
 					{data.length > 0
 						? data.map((item, idx) => {
-								const {
-									name,
-									chzzkId,
-									uuid,
-									colorCode,
-									channelName,
-									channelImageUrl,
-									liveCategoryValue,
-									liveTitle,
-									liveImageUrl,
-									openLive,
-									openDate,
-									closeDate,
-								} = item;
+								const chzzkId = item.chzzkId;
+								const uuid = item.uuid;
+								const itemIdx = streams.findIndex((a) => a.uuid === uuid);
 								if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
 								return (
-									<Stack
+									<MenuCard
 										key={`${idx}-${chzzkId}`}
-										sx={{
-											borderRadius: ".25rem",
-											background: `linear-gradient(115deg, #${colorCode}44, rgba(18,18,18,0.5) 55.71%)`,
-										}}
-										onClick={handleAddStream(chzzkId, "chzzk")}
-									>
-										<Text>{name}</Text>
-									</Stack>
+										item={item}
+										itemIdx={itemIdx}
+										handleAddStream={handleAddStream}
+										handleDeleteStream={handleDeleteStream}
+									/>
 								);
 						  })
 						: null}
 				</Stack>
 			</Stack>
 		</>
+	);
+}
+
+function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCardProps) {
+	const {
+		name,
+		chzzkId,
+		uuid,
+		colorCode,
+		channelName,
+		channelImageUrl,
+		liveCategoryValue,
+		liveTitle,
+		liveImageUrl,
+		openLive,
+		openDate,
+		closeDate,
+	} = item;
+
+	const isSelected = itemIdx !== -1;
+
+	return (
+		<Card
+			sx={{
+				borderRadius: ".25rem",
+				background: `linear-gradient(115deg, ${colorCode ? `#${colorCode}77` : "#aaaaaa77"}, rgba(18,18,18,.5) 45.71%)`,
+				cursor: "pointer",
+				transition: "all .3s",
+				userSelect: "none",
+				outline: isSelected ? "1px solid white" : undefined,
+				":hover": {
+					background: `linear-gradient(115deg, ${colorCode ? `#${colorCode}` : "#aaaaaa"}, rgba(18,18,18,1) 45.71%)`,
+				},
+			}}
+			onClick={isSelected ? handleDeleteStream(uuid) : handleAddStream(chzzkId, "chzzk", uuid)}
+		>
+			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
+				<HStack>
+					<MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} />
+					<Stack flex="1 0 50%" height="100%">
+						<HStack>
+							<Image
+								src={`${channelImageUrl}?type=f60_60_na` || ""}
+								objectFit={"cover"}
+								boxSize="24px"
+								borderRadius={"full"}
+								filter={openLive ? undefined : "grayscale(1)"}
+							/>
+							<Text fontSize="0.75em" fontWeight={"bold"} color={openLive ? undefined : "gray.400"}>
+								{channelName}
+							</Text>
+						</HStack>
+						<Text color="#00ffa3" fontWeight={"bold"} fontSize={"0.75em"}>
+							{liveCategoryValue || "　"}
+						</Text>
+						<Text color="gray.500" fontSize="0.65em">
+							{openLive ? modDateText(openDate) + " 시작" : modDateText(closeDate) + " 종료"}
+						</Text>
+					</Stack>
+				</HStack>
+				<Stack>
+					<Text fontSize="0.825em" color={openLive ? undefined : "gray.500"}>
+						{openLive ? liveTitle : "방송 종료됨"}
+					</Text>
+				</Stack>
+			</CardBody>
+		</Card>
+	);
+}
+
+function MenuCardImage({ liveImageUrl, openLive }: MenuCardImageProps) {
+	const [now] = useRecoilState(nowState);
+
+	return (
+		<Stack flex="1 0 50%">
+			{openLive ? (
+				<Image
+					src={modImageUrl(liveImageUrl + `?t=${now.getTime()}`, "320")}
+					height="72px"
+					objectFit={"cover"}
+					borderRadius={".5rem"}
+					transition="all .3s"
+					_hover={{ transform: "scale(1.5) translate(20px,9px)" }}
+				/>
+			) : (
+				<Stack
+					height={"72px"}
+					borderRadius={".5rem"}
+					backgroundColor={"black"}
+					fontSize="1.25em"
+					alignItems={"center"}
+					justifyContent={"center"}
+				>
+					<CiStreamOff />
+				</Stack>
+			)}
+		</Stack>
 	);
 }
 
@@ -197,14 +324,47 @@ function createStreamSrc(type: StreamType, streamId: string) {
 	}
 }
 
-type StreamType = "chzzk" | (string & {});
+function modImageUrl(liveImageUrl: string | undefined, size?: ImageSize) {
+	if (!liveImageUrl) return "";
+	return liveImageUrl.replace("{type}", size || "160");
+}
 
+function modDateText(streamDate: string | undefined) {
+	if (!streamDate) return "";
+	const date = new Date(streamDate);
+	const h = String(date.getHours()).padStart(2, "0");
+	const m = String(date.getMinutes()).padStart(2, "0");
+	const mon = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDay()).padStart(2, "0");
+
+	return `${mon}-${day} ${h}:${m}`;
+}
+
+type StreamType = "chzzk" | (string & {});
+type ImageSize = "160" | "320" | "480" | "640" | "720" | "1280" | "1920" | (string & {});
 interface Stream {
 	type: StreamType;
 	streamId: string;
+	uuid: string;
 }
 
 interface SideMenuProps {
 	data: MultiViewData[];
-	handleAddStream: (streamId: string, type: StreamType) => () => void;
+	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string) => () => void;
+	handleDeleteStream: (uuid: string) => () => void;
+	refetch: (isTimer?: boolean) => void;
+	isLoading: boolean;
+	streams: Stream[];
+}
+
+interface MenuCardProps {
+	item: MultiViewData;
+	itemIdx: number;
+	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string) => () => void;
+	handleDeleteStream: (uuid: string) => () => void;
+}
+
+interface MenuCardImageProps {
+	liveImageUrl: string | undefined;
+	openLive: boolean | undefined;
 }
