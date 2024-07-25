@@ -68,23 +68,18 @@ function App() {
 						aria-label="counter"
 					/>
 				</Tooltip>
-
-				{isAdmin ? (
-					<>
-						<Tooltip label="멀티뷰">
-							<IconButton
-								fontSize="1.125rem"
-								isRound
-								icon={<GrMultiple />}
-								colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-								onClick={() => {
-									window.open("/multiview", "_blank");
-								}}
-								aria-label="multiview"
-							/>
-						</Tooltip>
-					</>
-				) : null}
+				<Tooltip label="멀티뷰">
+					<IconButton
+						fontSize="1.125rem"
+						isRound
+						icon={<GrMultiple />}
+						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+						onClick={() => {
+							window.open("/multiview", "_blank");
+						}}
+						aria-label="multiview"
+					/>
+				</Tooltip>
 				<Tooltip label="사이트 설명">
 					<IconButton
 						fontSize="1.125rem"

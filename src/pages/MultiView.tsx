@@ -199,13 +199,14 @@ export function MultiView() {
 								</Box>
 								에서 스텔라를 선택해주세요
 							</Text>
-							<Text>
-								기존 계정으로 채팅 및 인증을 원하시면{" "}
+							<Text>인증용 확장 프로그램은 준비중이니 조금만 기다려주세요 :&#41;</Text>
+							{/* <Text>
+								네이버 계정으로 인증 및 을 원하시면{" "}
 								<Link href="" isExternal color="blue.500">
 									확장 프로그램
 								</Link>
 								을 이용해보세요
-							</Text>
+							</Text> */}
 						</Stack>
 					)}
 				</SimpleGrid>
