@@ -16,6 +16,8 @@ const TOAST_MESSAGE = {
 	get: (target: string) => `${target} 데이터를 새로 불러왔습니다`,
 };
 
+const COLOR_CHZZK = "#00ffa3";
+
 const MIN_DATE = "1000-01-01T09:00:00.000Z";
 
 const stellarGroupName = [
@@ -37,6 +39,7 @@ export {
 	NAME_MASHIRO,
 	NAME_HINA,
 	NAME_LIZE,
+	COLOR_CHZZK,
 	USER_SETTING_STORAGE,
 	CAFE_WRITE_URL,
 	stellarGroupName,

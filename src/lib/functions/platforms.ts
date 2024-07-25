@@ -33,6 +33,7 @@ export function objectToUrlParams(object: Object) {
 export const naver = {
 	chzzk: {
 		liveUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}` : undefined),
+		liveChatUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}/chat` : undefined),
 		channelUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/${channelId}` : undefined),
 	},
 };
