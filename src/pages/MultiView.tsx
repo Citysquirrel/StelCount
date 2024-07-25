@@ -5,7 +5,6 @@ import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData } from "../lib/types";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
 import { CiStreamOff, CiImageOff } from "react-icons/ci";
-import { useConsole } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { useAuth } from "../lib/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +12,6 @@ import { Image } from "../components/Image";
 import { IoReload } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
-import { useNow } from "../lib/hooks/useNow";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -23,12 +21,17 @@ export function MultiView() {
 	const { data, isLoading, refetch } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isAdmin } = useAuth();
+	const len = streams.length;
 
 	const handleFrameSize = () => {
-		const width = windowWidth - 8 - (isInnerChatOpen ? 350 : 0);
-		const height = windowHeight - 8;
-		for (let frame = 1; frame <= streams.length; frame++) {
-			const row = Math.ceil(streams.length / frame);
+		const width = windowWidth - 4 - (isInnerChatOpen ? 350 : 0);
+		const height = windowHeight - 4;
+
+		let fitWidth = 0;
+		let fitHeight = 0;
+
+		for (let frame = 1; frame <= len; frame++) {
+			const row = Math.ceil(len / frame);
 			let maxWidth = Math.floor(width / frame);
 			let maxHeight = Math.floor(height / row);
 
@@ -38,10 +41,12 @@ export function MultiView() {
 			} else {
 				maxWidth = Math.floor((maxHeight * 16) / 9);
 			}
-			if (maxWidth > frameSize.width) {
-				setFrameSize({ width: maxWidth, height: maxHeight });
+			if (maxWidth > fitWidth) {
+				fitWidth = maxWidth;
+				fitHeight = maxHeight;
 			}
 		}
+		setFrameSize({ width: fitWidth, height: fitHeight });
 	};
 
 	const handleAddStream = (streamId: string | undefined, type: StreamType, uuid: string) => () => {
@@ -58,6 +63,13 @@ export function MultiView() {
 		});
 	};
 
+	const calcColumns = (len: number) => {
+		if (len <= 1) return 1;
+		else if (len <= 4) return 2;
+		else if (len <= 9) return 3;
+		else return 4;
+	};
+
 	useEffect(() => {
 		handleFrameSize();
 	}, [windowWidth, windowHeight, streams]);
@@ -72,10 +84,6 @@ export function MultiView() {
 			alignItems={"center"}
 			justifyContent={"center"}
 		>
-			<Box position="fixed" top={0} left={0} zIndex={999} color="white">
-				{frameSize.width}&nbsp;
-				{frameSize.height}
-			</Box>
 			<SideMenu
 				data={data}
 				handleAddStream={handleAddStream}
@@ -84,21 +92,20 @@ export function MultiView() {
 				isLoading={isLoading}
 				streams={streams}
 			/>
-			<SimpleGrid
-				id="streams"
-				columns={2}
-				sx={{
-					flexGrow: 1,
-					flexWrap: "wrap",
-					alignItems: "center",
-					justifyContent: "center",
-					alignContent: "center",
-					// width: "min-content",
-					height: "100%",
-				}}
-			>
-				{streams.length > 0
-					? streams.map((stream, idx) => {
+			<Stack alignItems={"center"} justifyContent={"center"}>
+				<SimpleGrid
+					id="streams"
+					columns={calcColumns(len)}
+					sx={{
+						flexGrow: 1,
+						flexWrap: "wrap",
+						height: "100%",
+						placeItems: "center",
+						gap: 0,
+					}}
+				>
+					{streams.length > 0 ? (
+						streams.map((stream, idx) => {
 							// const ref = useRef<HTMLIFrameElement>(null);
 							const { type, streamId } = stream;
 							const src = createStreamSrc(type, streamId);
@@ -106,7 +113,7 @@ export function MultiView() {
 							if (!src) return <Fragment key={`${idx}-${streamId}`}></Fragment>;
 							return (
 								<Box
-									key={`${idx}-${streamId}`}
+									key={`${streamId}`}
 									as="iframe"
 									// ref={ref}
 									src={src}
@@ -118,9 +125,19 @@ export function MultiView() {
 									// frameBorder={"0"}
 								/>
 							);
-					  })
-					: null}
-			</SimpleGrid>
+						})
+					) : (
+						<Stack alignItems={"center"} justifyContent={"center"} width="100%">
+							<Text color="white">
+								<Box as="span" fontWeight={"bold"}>
+									좌측 메뉴
+								</Box>
+								에서 스텔라를 선택해주세요
+							</Text>
+						</Stack>
+					)}
+				</SimpleGrid>
+			</Stack>
 		</HStack>
 	);
 }
