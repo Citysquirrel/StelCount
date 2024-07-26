@@ -473,9 +473,9 @@ function modDateText(streamDate: string | undefined) {
 	const h = String(date.getHours()).padStart(2, "0");
 	const m = String(date.getMinutes()).padStart(2, "0");
 	const mon = String(date.getMonth() + 1).padStart(2, "0");
-	const day = String(date.getDay()).padStart(2, "0");
+	const d = String(date.getDate()).padStart(2, "0");
 
-	return `${mon}-${day} ${h}:${m}`;
+	return `${mon}-${d} ${h}:${m}`;
 }
 
 type StreamType = "chzzk" | (string & {});
