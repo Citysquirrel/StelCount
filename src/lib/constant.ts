@@ -18,6 +18,10 @@ const TOAST_MESSAGE = {
 
 const COLOR_CHZZK = "#00ffa3";
 
+const PRIVACY_POLICY_URL = "https://citysquirrel.notion.site/8ab0732adabe416c862e3100659d14d3";
+
+const CHROME_EXTENSION_URL = "";
+
 const MIN_DATE = "1000-01-01T09:00:00.000Z";
 
 const stellarGroupName = [
@@ -41,6 +45,8 @@ export {
 	NAME_LIZE,
 	COLOR_CHZZK,
 	USER_SETTING_STORAGE,
+	PRIVACY_POLICY_URL,
+	CHROME_EXTENSION_URL,
 	CAFE_WRITE_URL,
 	stellarGroupName,
 	TOAST_MESSAGE,

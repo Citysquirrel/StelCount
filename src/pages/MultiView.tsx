@@ -23,7 +23,7 @@ import { Image } from "../components/Image";
 import { IoReload } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
-import { COLOR_CHZZK } from "../lib/constant";
+import { COLOR_CHZZK, PRIVACY_POLICY_URL, CHROME_EXTENSION_URL } from "../lib/constant";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -202,10 +202,11 @@ export function MultiView() {
 							<Text>인증용 확장 프로그램은 준비중이니 조금만 기다려주세요 :&#41;</Text>
 							{/* <Text>
 								네이버 계정으로 인증 및 을 원하시면{" "}
-								<Link href="" isExternal color="blue.500">
+								<Link href={CHROME_EXTENSION_URL} isExternal color="blue.500">
 									확장 프로그램
 								</Link>
 								을 이용해보세요
+								<Link href={PRIVACY_POLICY_URL} isExternal/>							
 							</Text> */}
 						</Stack>
 					)}
