@@ -5,6 +5,7 @@ import {
 	CardBody,
 	CloseButton,
 	HStack,
+	Heading,
 	IconButton,
 	Link,
 	SimpleGrid,
@@ -18,12 +19,12 @@ import { MultiViewData } from "../lib/types";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
 import { CiStreamOff, CiImageOff } from "react-icons/ci";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { useAuth } from "../lib/hooks/useAuth";
 import { Image } from "../components/Image";
 import { IoReload } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
 import { COLOR_CHZZK, PRIVACY_POLICY_URL, CHROME_EXTENSION_URL } from "../lib/constant";
+import { useKeyBind } from "../lib/hooks/useKeyBind";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -32,7 +33,7 @@ export function MultiView() {
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
 	const [chatStream, setChatStream] = useState({ streamId: "", name: "" });
 	const [streams, setStreams] = useState<Stream[]>([]);
-	const { data, isLoading, refetch } = useMultiView();
+	const { data, isLoading, refetch, intervalRef } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const len = streams.length;
 
@@ -84,6 +85,20 @@ export function MultiView() {
 		setChatStream({ streamId, name });
 	};
 
+	const handleOpenMenu = () => {
+		setIsMenuOpen(true);
+		refetch();
+		intervalRef.current = setInterval(() => {
+			let second = new Date().getSeconds();
+			if (second === 0 || second === 30) refetch(true);
+		}, 1000);
+	};
+
+	const handleCloseMenu = () => {
+		setIsMenuOpen(false);
+		clearInterval(intervalRef.current);
+	};
+
 	const calcColumns = (len: number) => {
 		if (len <= 1) return 1;
 		else if (len <= 4) {
@@ -112,6 +127,10 @@ export function MultiView() {
 		document.title = "StelCount - Multiview";
 	}, []);
 
+	useKeyBind({
+		Escape: handleCloseMenu,
+	});
+
 	return (
 		<HStack
 			position="relative"
@@ -123,10 +142,11 @@ export function MultiView() {
 		>
 			<SideMenu
 				isOpen={isMenuOpen}
-				setIsOpen={setIsMenuOpen}
 				data={data}
 				handleAddStream={handleAddStream}
 				handleDeleteStream={handleDeleteStream}
+				handleOpen={handleOpenMenu}
+				handleClose={handleCloseMenu}
 				refetch={refetch}
 				isLoading={isLoading}
 				streams={streams}
@@ -199,6 +219,7 @@ export function MultiView() {
 								</Box>
 								에서 스텔라를 선택해주세요
 							</Text>
+							<Text>스텔라 이외의 타 스트리머에 대한 멀티뷰는 지원하지 않습니다!</Text>
 							<Text>인증용 확장 프로그램은 준비중이니 조금만 기다려주세요 :&#41;</Text>
 							{/* <Text>
 								네이버 계정으로 인증 및 을 원하시면{" "}
@@ -251,10 +272,11 @@ export function MultiView() {
 
 function SideMenu({
 	isOpen,
-	setIsOpen,
 	data,
 	handleAddStream,
 	handleDeleteStream,
+	handleOpen,
+	handleClose,
 	refetch,
 	isLoading,
 	streams,
@@ -278,9 +300,7 @@ function SideMenu({
 					zIndex: 10,
 					":hover": { backgroundColor: "rgba(127,127,127,.5)", opacity: 1 },
 				}}
-				onClick={() => {
-					setIsOpen(true);
-				}}
+				onClick={handleOpen}
 			>
 				<MdKeyboardDoubleArrowRight />
 			</Stack>
@@ -323,9 +343,7 @@ function SideMenu({
 					<CloseButton
 						size="sm"
 						sx={{ ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
-						onClick={() => {
-							setIsOpen(false);
-						}}
+						onClick={handleClose}
 					/>
 				</HStack>
 				<Stack gap="12px" padding="0 12px 24px 12px">
@@ -490,10 +508,11 @@ interface Stream {
 
 interface SideMenuProps {
 	isOpen: boolean;
-	setIsOpen: Dispatch<SetStateAction<boolean>>;
 	data: MultiViewData[];
 	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => void;
 	handleDeleteStream: (uuid: string) => () => void;
+	handleOpen: () => void;
+	handleClose: () => void;
 	refetch: (isTimer?: boolean) => void;
 	isLoading: boolean;
 	streams: Stream[];
