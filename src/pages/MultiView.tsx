@@ -32,7 +32,7 @@ import {
 } from "../lib/constant";
 import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
-import { useConsole } from "../lib/hooks/useConsole";
+import { useConsole, useConsoleAdmin } from "../lib/hooks/useConsole";
 import { Spacing } from "../components/Spacing";
 
 export function MultiView() {
@@ -141,7 +141,8 @@ export function MultiView() {
 		Escape: handleCloseMenu,
 	});
 
-	useConsole(isExtensionInstalled);
+	useConsoleAdmin(isExtensionInstalled);
+	useConsoleAdmin(isLatestVersion);
 	return (
 		<HStack
 			position="relative"
