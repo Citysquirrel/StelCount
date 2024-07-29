@@ -5,19 +5,18 @@ import {
 	CardBody,
 	CloseButton,
 	HStack,
-	Heading,
 	IconButton,
 	Link,
 	SimpleGrid,
 	Stack,
 	Text,
 } from "@chakra-ui/react";
-import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData } from "../lib/types";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
-import { CiStreamOff, CiImageOff } from "react-icons/ci";
+import { CiStreamOff } from "react-icons/ci";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
 import { IoReload } from "react-icons/io5";
@@ -32,7 +31,7 @@ import {
 } from "../lib/constant";
 import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
-import { useConsole, useConsoleAdmin } from "../lib/hooks/useConsole";
+import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { Spacing } from "../components/Spacing";
 
 export function MultiView() {
@@ -97,16 +96,19 @@ export function MultiView() {
 
 	const handleOpenMenu = () => {
 		setIsMenuOpen(true);
+		clearInterval(intervalRef.current);
 		refetch();
 		intervalRef.current = setInterval(() => {
-			let second = new Date().getSeconds();
-			if (second === 0 || second === 30) refetch(true);
-		}, 1000);
+			refetch(true);
+		}, 30000);
 	};
 
 	const handleCloseMenu = () => {
 		setIsMenuOpen(false);
 		clearInterval(intervalRef.current);
+		intervalRef.current = setInterval(() => {
+			refetch(true);
+		}, 60000);
 	};
 
 	const calcColumns = (len: number) => {
@@ -141,8 +143,6 @@ export function MultiView() {
 		Escape: handleCloseMenu,
 	});
 
-	useConsoleAdmin(isExtensionInstalled);
-	useConsoleAdmin(isLatestVersion);
 	return (
 		<HStack
 			position="relative"
