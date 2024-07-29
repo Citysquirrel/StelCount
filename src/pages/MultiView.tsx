@@ -23,8 +23,17 @@ import { Image } from "../components/Image";
 import { IoReload } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
-import { COLOR_CHZZK, PRIVACY_POLICY_URL, CHROME_EXTENSION_URL } from "../lib/constant";
+import {
+	COLOR_CHZZK,
+	PRIVACY_POLICY_URL,
+	CHROME_EXTENSION_URL,
+	CHROME_EXTENSION_ID,
+	CHROME_EXTENSION_GITHUB_URL,
+} from "../lib/constant";
 import { useKeyBind } from "../lib/hooks/useKeyBind";
+import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
+import { useConsole } from "../lib/hooks/useConsole";
+import { Spacing } from "../components/Spacing";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -35,6 +44,7 @@ export function MultiView() {
 	const [streams, setStreams] = useState<Stream[]>([]);
 	const { data, isLoading, refetch, intervalRef } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
+	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
 	const len = streams.length;
 
 	const handleFrameSize = () => {
@@ -131,6 +141,7 @@ export function MultiView() {
 		Escape: handleCloseMenu,
 	});
 
+	useConsole(isExtensionInstalled);
 	return (
 		<HStack
 			position="relative"
@@ -212,7 +223,7 @@ export function MultiView() {
 							);
 						})
 					) : (
-						<Stack color="white" alignItems={"center"} justifyContent={"center"} width="100%">
+						<Stack color="white" justifyContent={"center"} width="100%">
 							<Text>
 								<Box as="span" fontWeight={"bold"}>
 									좌측 메뉴
@@ -220,15 +231,31 @@ export function MultiView() {
 								에서 스텔라를 선택해주세요
 							</Text>
 							<Text>스텔라 이외의 타 스트리머에 대한 멀티뷰는 지원하지 않습니다!</Text>
-							<Text>인증용 확장 프로그램은 준비중이니 조금만 기다려주세요 :&#41;</Text>
-							{/* <Text>
-								네이버 계정으로 인증 및 을 원하시면{" "}
-								<Link href={CHROME_EXTENSION_URL} isExternal color="blue.500">
-									확장 프로그램
+							{isExtensionInstalled ? (
+								isLatestVersion ? (
+									<Text>확장 프로그램이 성공적으로 실행되었습니다</Text>
+								) : (
+									<Text>확장 프로그램을 최신버전으로 업데이트 해주세요</Text>
+								)
+							) : (
+								<Text>
+									네이버 계정으로 인증 및 채팅을 원하시면{" "}
+									<Link href={CHROME_EXTENSION_URL} isExternal color="blue.500">
+										확장 프로그램
+									</Link>
+									을 이용해보세요
+								</Text>
+							)}
+							<Spacing size={4} />
+							<Text fontSize="sm">
+								<Link href={CHROME_EXTENSION_GITHUB_URL} isExternal>
+									Extension Github
 								</Link>
-								을 이용해보세요
-								<Link href={PRIVACY_POLICY_URL} isExternal/>							
-							</Text> */}
+								&nbsp;|&nbsp;
+								<Link href={PRIVACY_POLICY_URL} isExternal>
+									개인정보처리방침
+								</Link>
+							</Text>
 						</Stack>
 					)}
 				</SimpleGrid>
