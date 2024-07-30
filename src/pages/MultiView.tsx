@@ -434,6 +434,7 @@ function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCa
 			}
 		>
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
+				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
 				<HStack>
 					<MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} />
 					<Stack flex="1 0 50%" height="100%">
@@ -493,6 +494,26 @@ function MenuCardImage({ liveImageUrl, openLive }: MenuCardImageProps) {
 					<CiStreamOff />
 				</Stack>
 			)}
+		</Stack>
+	);
+}
+
+function MenuCardNumber({ number }: { number: number }) {
+	return (
+		<Stack
+			position="absolute"
+			top={"4px"}
+			right="4px"
+			boxSize="18px"
+			borderRadius={"full"}
+			color={"black"}
+			backgroundColor={"white"}
+			alignItems={"center"}
+			justifyContent={"center"}
+		>
+			<Text fontSize="xs" fontWeight={"bold"}>
+				{number}
+			</Text>
 		</Stack>
 	);
 }
