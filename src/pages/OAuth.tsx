@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchServer } from "../lib/functions/fetch";
 import { useToast } from "@chakra-ui/react";
+import { Loading } from "../components/Loading";
 
 export function OAuth() {
 	const toast = useToast();
@@ -22,5 +23,5 @@ export function OAuth() {
 			});
 		}
 	}, []);
-	return <></>;
+	return <Loading options={{ mode: "fullscreen" }} />;
 }
