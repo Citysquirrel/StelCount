@@ -319,7 +319,7 @@ function SideMenu({
 					left: 0,
 					alignItems: "center",
 					justifyContent: "center",
-					width: "24px",
+					width: "32px",
 					height: "100%",
 					color: "white",
 					transition: "all .25s",
