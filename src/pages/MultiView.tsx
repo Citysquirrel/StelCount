@@ -96,7 +96,7 @@ export function MultiView() {
 
 	const handleOpenMenu = () => {
 		setIsMenuOpen(true);
-		clearInterval(intervalRef.current);
+		// clearInterval(intervalRef.current);
 		refetch();
 		intervalRef.current = setInterval(() => {
 			refetch(true);
@@ -106,9 +106,9 @@ export function MultiView() {
 	const handleCloseMenu = () => {
 		setIsMenuOpen(false);
 		clearInterval(intervalRef.current);
-		intervalRef.current = setInterval(() => {
-			refetch(true);
-		}, 60000);
+		// intervalRef.current = setInterval(() => {
+		// 	refetch(true);
+		// }, 60000);
 	};
 
 	const calcColumns = (len: number) => {
