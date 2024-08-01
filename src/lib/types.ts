@@ -4,6 +4,7 @@ export interface UserSettingStorage {
 	isFilterOn?: string;
 	sortBy?: number;
 	sortDirection?: number;
+	chatToLeft?: boolean;
 }
 
 export interface Tag extends DefaultDateFields {

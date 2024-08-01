@@ -1,25 +1,30 @@
 import {
 	Box,
 	Button,
+	ButtonGroup,
 	Card,
 	CardBody,
 	CloseButton,
+	FormControl,
+	FormLabel,
 	HStack,
 	IconButton,
 	Link,
 	SimpleGrid,
 	Stack,
+	Switch,
 	Text,
+	useDisclosure,
 } from "@chakra-ui/react";
-import { Fragment, createRef, useEffect, useRef, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
-import { MultiViewData } from "../lib/types";
-import { MdKeyboardDoubleArrowRight } from "react-icons/md";
+import { MultiViewData, UserSettingStorage } from "../lib/types";
+import { MdKeyboardDoubleArrowRight, MdOpenInNew } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
-import { IoReload } from "react-icons/io5";
+import { IoReload, IoSettings } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
 import {
@@ -28,11 +33,13 @@ import {
 	CHROME_EXTENSION_URL,
 	CHROME_EXTENSION_ID,
 	CHROME_EXTENSION_GITHUB_URL,
+	USER_SETTING_STORAGE,
 } from "../lib/constant";
 import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
-import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { Spacing } from "../components/Spacing";
+import { useLocalStorage } from "usehooks-ts";
+import { useConsole } from "../lib/hooks/useConsole";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -41,9 +48,11 @@ export function MultiView() {
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
 	const [chatStream, setChatStream] = useState({ streamId: "", name: "" });
 	const [streams, setStreams] = useState<Stream[]>([]);
+	const [configState, setConfigState] = useState<ConfigState>({ chatToLeft: false });
 	const { data, isLoading, refetch, intervalRef } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
+	const { isOpen: isSettingOpen, onToggle: handleToggleSetting, onClose: handleCloseSetting } = useDisclosure();
 	const len = streams.length;
 
 	const handleFrameSize = () => {
@@ -89,9 +98,13 @@ export function MultiView() {
 		});
 	};
 
-	const handleOpenChat = (streamId: string, name: string) => () => {
-		setIsInnerChatOpen(true);
-		setChatStream({ streamId, name });
+	const handleOpenChat = (streamId: string, name: string, openInNewWindow?: boolean) => () => {
+		if (openInNewWindow) {
+			window.open(naver.chzzk.liveChatUrl(streamId), "_blank", "width=400, height=580");
+		} else {
+			setIsInnerChatOpen(true);
+			setChatStream({ streamId, name });
+		}
 	};
 
 	const handleOpenMenu = () => {
@@ -109,6 +122,7 @@ export function MultiView() {
 		// intervalRef.current = setInterval(() => {
 		// 	refetch(true);
 		// }, 60000);
+		handleCloseSetting();
 	};
 
 	const calcColumns = (len: number) => {
@@ -159,11 +173,21 @@ export function MultiView() {
 				handleDeleteStream={handleDeleteStream}
 				handleOpen={handleOpenMenu}
 				handleClose={handleCloseMenu}
+				configState={configState}
+				setConfigState={setConfigState}
+				isSettingOpen={isSettingOpen}
+				handleToggleSetting={handleToggleSetting}
+				handleCloseSetting={handleCloseSetting}
 				refetch={refetch}
 				isLoading={isLoading}
 				streams={streams}
 			/>
-			<HStack alignItems={"center"} justifyContent={"center"} gap={0}>
+			<HStack
+				alignItems={"center"}
+				justifyContent={"center"}
+				gap={0}
+				flexDirection={configState.chatToLeft ? "row-reverse" : "row"}
+			>
 				<SimpleGrid
 					id="streams"
 					columns={calcColumns(len)}
@@ -210,9 +234,14 @@ export function MultiView() {
 										opacity={isMenuOpen ? 1 : 0}
 										_hover={{ opacity: 1 }}
 									>
-										<Button size="sm" colorScheme="green" onClick={handleOpenChat(streamId, name)}>
-											채팅 열기
-										</Button>
+										<ButtonGroup size="sm" isAttached colorScheme="green">
+											<Button onClick={handleOpenChat(streamId, name)}>채팅</Button>
+											<IconButton
+												onClick={handleOpenChat(streamId, name, true)}
+												icon={<MdOpenInNew />}
+												aria-label="open-chat-in-new-tab"
+											/>
+										</ButtonGroup>
 										<Button size="sm" colorScheme="blue" onClick={handleRefresh}>
 											새로고침
 										</Button>
@@ -269,6 +298,7 @@ export function MultiView() {
 							// backgroundColor={"rgba(7,7,7,0.9)"}
 							zIndex={1}
 							padding="4px 12px"
+							flexDir={configState ? "row-reverse" : "row"}
 						>
 							<CloseButton
 								size="sm"
@@ -305,11 +335,43 @@ function SideMenu({
 	handleDeleteStream,
 	handleOpen,
 	handleClose,
+	configState,
+	setConfigState,
+	isSettingOpen,
+	handleToggleSetting,
+	handleCloseSetting,
 	refetch,
 	isLoading,
 	streams,
 }: SideMenuProps) {
 	const WIDTH = 320;
+	const CONFIG_HEIGHT = 92;
+	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
+
+	const configDict: ConfigDict[] = [
+		{
+			name: "chatToLeft",
+			label: "채팅창 위치 좌측으로",
+		},
+	];
+
+	const handleRefresh = () => {
+		refetch(true);
+	};
+
+	const handleConfig = (name: keyof ConfigState) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.checked;
+		setConfigState((prev) => ({ ...prev, [name]: value }));
+		setUserSetting((prev) => ({ ...prev, [name]: value }));
+	};
+
+	useEffect(() => {
+		if (userSetting.chatToLeft) {
+			const { chatToLeft } = userSetting;
+			setConfigState((prev) => ({ ...prev, chatToLeft }));
+		}
+	}, []);
+
 	return (
 		<>
 			<Stack
@@ -344,7 +406,7 @@ function SideMenu({
 					// padding: "0px 12px 12px 12px",
 					transform: isOpen ? `translateX(0px)` : `translateX(-${WIDTH}px)`,
 					transition: "all .3s",
-					overflowY: "auto",
+					gap: "0",
 					zIndex: 11,
 				}}
 			>
@@ -360,12 +422,26 @@ function SideMenu({
 						padding="0"
 						fontSize={"0.825rem"}
 						variant={"ghost"}
+						icon={<IoSettings />}
+						aria-label="setting"
+						onClick={handleToggleSetting}
+						isActive={isSettingOpen}
+						sx={{
+							color: "white",
+							_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+							_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+						}}
+					/>
+					<IconButton
+						boxSize={"24px"}
+						minWidth="auto"
+						padding="0"
+						fontSize={"0.825rem"}
+						variant={"ghost"}
 						icon={<IoReload />}
 						aria-label="reload"
 						isDisabled={isLoading}
-						onClick={() => {
-							refetch(true);
-						}}
+						onClick={handleRefresh}
 						sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
 					/>
 					<CloseButton
@@ -374,7 +450,7 @@ function SideMenu({
 						onClick={handleClose}
 					/>
 				</HStack>
-				<Stack gap="12px" padding="0 12px 24px 12px">
+				<Stack gap="12px" padding="8px 12px 24px 12px" overflowY="auto">
 					{data.length > 0
 						? data.map((item, idx) => {
 								const chzzkId = item.chzzkId;
@@ -392,6 +468,37 @@ function SideMenu({
 								);
 						  })
 						: null}
+				</Stack>
+				<Stack
+					position="relative"
+					backgroundColor={"rgba(7,7,7,0.9)"}
+					zIndex={1}
+					width="100%"
+					minHeight={isSettingOpen ? `${CONFIG_HEIGHT}px` : "0px"}
+					maxHeight={isSettingOpen ? `${CONFIG_HEIGHT}px` : "0px"}
+					gap={0}
+					transition="all .3s"
+					overflowY="hidden"
+				>
+					<HStack padding="4px" position="relative">
+						<Stack flexGrow={1} alignItems={"center"} padding="4px">
+							<Text fontSize={"sm"}>설정</Text>
+						</Stack>
+						<CloseButton position="absolute" top={0} right={0} onClick={handleCloseSetting} />
+					</HStack>
+					<Stack padding="12px">
+						{configDict.map((c) => {
+							const { label, name } = c;
+							return (
+								<FormControl key={name} display="flex" alignItems="center" justifyContent={"space-between"} gap={0}>
+									<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
+										{label}
+									</FormLabel>
+									<Switch id={name} isChecked={configState[name]} onChange={handleConfig(name)} />
+								</FormControl>
+							);
+						})}
+					</Stack>
 				</Stack>
 			</Stack>
 		</>
@@ -562,6 +669,11 @@ interface SideMenuProps {
 	handleDeleteStream: (uuid: string) => () => void;
 	handleOpen: () => void;
 	handleClose: () => void;
+	configState: ConfigState;
+	setConfigState: Dispatch<SetStateAction<ConfigState>>;
+	isSettingOpen: boolean;
+	handleToggleSetting: () => void;
+	handleCloseSetting: () => void;
 	refetch: (isTimer?: boolean) => void;
 	isLoading: boolean;
 	streams: Stream[];
@@ -577,4 +689,13 @@ interface MenuCardProps {
 interface MenuCardImageProps {
 	liveImageUrl: string | undefined;
 	openLive: boolean | undefined;
+}
+
+interface ConfigState {
+	chatToLeft: boolean;
+}
+
+interface ConfigDict {
+	name: keyof ConfigState;
+	label: string;
 }
