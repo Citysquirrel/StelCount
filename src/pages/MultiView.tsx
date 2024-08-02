@@ -24,7 +24,7 @@ import { MdKeyboardDoubleArrowRight, MdOpenInNew } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
-import { IoReload, IoSettings } from "react-icons/io5";
+import { IoHome, IoReload, IoSettings } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
 import {
@@ -40,6 +40,7 @@ import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
 import { useConsole } from "../lib/hooks/useConsole";
+import { useSearchParams } from "react-router-dom";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -52,8 +53,27 @@ export function MultiView() {
 	const { data, isLoading, refetch, intervalRef } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
+	const [searchParams] = useSearchParams();
+	const query = searchParams.get("query");
 	const { isOpen: isSettingOpen, onToggle: handleToggleSetting, onClose: handleCloseSetting } = useDisclosure();
 	const len = streams.length;
+
+	const handleQuery = (query: string | null) => {
+		if (!query) return;
+		if (data.length === 0) return;
+
+		let storage: Stream[] = [];
+		const streamIds = query.split(",");
+		for (let streamId of streamIds) {
+			const idx = data.findIndex((s) => s.chzzkId === streamId);
+			if (idx !== -1) {
+				const { channelName, uuid } = data[idx];
+				storage.push({ type: "chzzk", streamId, name: channelName || "", uuid });
+			}
+		}
+
+		setStreams(storage);
+	};
 
 	const handleFrameSize = () => {
 		const WIDTH_PADDING = 4;
@@ -100,7 +120,7 @@ export function MultiView() {
 
 	const handleOpenChat = (streamId: string, name: string, openInNewWindow?: boolean) => () => {
 		if (openInNewWindow) {
-			window.open(naver.chzzk.liveChatUrl(streamId), "_blank", "width=400, height=580");
+			openChatInNewWindow(streamId);
 		} else {
 			setIsInnerChatOpen(true);
 			setChatStream({ streamId, name });
@@ -123,6 +143,12 @@ export function MultiView() {
 		// 	refetch(true);
 		// }, 60000);
 		handleCloseSetting();
+	};
+
+	const handleOpenChatInNewWindow = (streamId: string | undefined) => () => {
+		openChatInNewWindow(streamId);
+		setIsInnerChatOpen(false);
+		setChatStream({ streamId: "", name: "" });
 	};
 
 	const calcColumns = (len: number) => {
@@ -149,13 +175,17 @@ export function MultiView() {
 		}
 	}, [streams]);
 
+	useKeyBind({
+		Escape: handleCloseMenu,
+	});
+
 	useEffect(() => {
 		document.title = "StelCount - Multiview";
 	}, []);
 
-	useKeyBind({
-		Escape: handleCloseMenu,
-	});
+	useEffect(() => {
+		if (query) handleQuery(query);
+	}, [data]);
 
 	return (
 		<HStack
@@ -290,15 +320,19 @@ export function MultiView() {
 					)}
 				</SimpleGrid>
 				{isInnerChatOpen ? (
-					<Box position="relative">
+					<Box position="relative" userSelect={"none"} overflow="hidden">
 						<HStack
+							flexDir={configState ? "row-reverse" : "row"}
 							position="absolute"
 							top={"6px"}
-							left={0}
-							// backgroundColor={"rgba(7,7,7,0.9)"}
-							zIndex={1}
+							left={"24px"}
+							width="280px"
+							justifyContent={"center"}
+							backgroundColor={"#141517"}
+							borderRadius={".5rem"}
 							padding="4px 12px"
-							flexDir={configState ? "row-reverse" : "row"}
+							zIndex={1}
+							gap="2px"
 						>
 							<CloseButton
 								size="sm"
@@ -307,7 +341,22 @@ export function MultiView() {
 									setIsInnerChatOpen(false);
 								}}
 							/>
-							<Stack flexGrow={1}>
+							<IconButton
+								boxSize={"24px"}
+								minWidth="auto"
+								padding="0"
+								fontSize={"0.825rem"}
+								variant={"ghost"}
+								icon={<MdOpenInNew />}
+								aria-label="chat-open-in-new"
+								onClick={handleOpenChatInNewWindow(chatStream.streamId)}
+								sx={{
+									color: "white",
+									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+								}}
+							/>
+							<Spacing size={8} direction="horizontal" />
+							<Stack>
 								<Text color={COLOR_CHZZK} fontWeight={"bold"}>
 									{chatStream.name}
 								</Text>
@@ -365,6 +414,10 @@ function SideMenu({
 		setUserSetting((prev) => ({ ...prev, [name]: value }));
 	};
 
+	const handleOpenHome = () => {
+		window.open("/home", "_blank");
+	};
+
 	useEffect(() => {
 		if (userSetting.chatToLeft) {
 			const { chatToLeft } = userSetting;
@@ -416,6 +469,20 @@ function SideMenu({
 							멀티뷰(Beta)
 						</Text>
 					</Stack>
+					<IconButton
+						boxSize={"24px"}
+						minWidth="auto"
+						padding="0"
+						fontSize={"0.825rem"}
+						variant={"ghost"}
+						icon={<IoHome />}
+						aria-label="home"
+						onClick={handleOpenHome}
+						sx={{
+							color: "white",
+							_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+						}}
+					/>
 					<IconButton
 						boxSize={"24px"}
 						minWidth="auto"
@@ -484,6 +551,7 @@ function SideMenu({
 						<Stack flexGrow={1} alignItems={"center"} padding="4px">
 							<Text fontSize={"sm"}>설정</Text>
 						</Stack>
+
 						<CloseButton position="absolute" top={0} right={0} onClick={handleCloseSetting} />
 					</HStack>
 					<Stack padding="12px">
@@ -651,6 +719,11 @@ function modDateText(streamDate: string | undefined) {
 	const d = String(date.getDate()).padStart(2, "0");
 
 	return `${mon}-${d} ${h}:${m}`;
+}
+
+function openChatInNewWindow(streamId: string | undefined) {
+	if (!streamId) return;
+	return window.open(naver.chzzk.liveChatUrl(streamId), "_blank", "width=400, height=580");
 }
 
 type StreamType = "chzzk" | (string & {});
