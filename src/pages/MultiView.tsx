@@ -10,6 +10,10 @@ import {
 	HStack,
 	IconButton,
 	Link,
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuList,
 	SimpleGrid,
 	Stack,
 	Switch,
@@ -24,7 +28,7 @@ import { MdKeyboardDoubleArrowRight, MdOpenInNew } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
-import { IoHome, IoReload, IoSettings } from "react-icons/io5";
+import { IoHome, IoList, IoReload, IoSettings } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
 import {
@@ -149,6 +153,10 @@ export function MultiView() {
 		openChatInNewWindow(streamId);
 		setIsInnerChatOpen(false);
 		setChatStream({ streamId: "", name: "" });
+	};
+
+	const handleChangeChatStream = (streamId: string, name: string) => () => {
+		setChatStream({ streamId, name });
 	};
 
 	const calcColumns = (len: number) => {
@@ -321,8 +329,9 @@ export function MultiView() {
 				</SimpleGrid>
 				{isInnerChatOpen ? (
 					<Box position="relative" userSelect={"none"} overflow="hidden">
+						{/* 채팅 컨트롤러 */}
 						<HStack
-							flexDir={configState ? "row-reverse" : "row"}
+							flexDir={"row-reverse"}
 							position="absolute"
 							top={"6px"}
 							left={"24px"}
@@ -361,7 +370,53 @@ export function MultiView() {
 									{chatStream.name}
 								</Text>
 							</Stack>
+							<Spacing size={8} direction="horizontal" />
+							{data.length > 0 ? (
+								<Menu>
+									<MenuButton
+										as={IconButton}
+										aria-label="chat-list-menu"
+										icon={<IoList />}
+										variant={"ghost"}
+										boxSize={"24px"}
+										minWidth="auto"
+										padding="0"
+										fontSize={"0.825rem"}
+										sx={{
+											color: "white",
+											_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+											_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+										}}
+									/>
+									<MenuList
+										sx={{
+											minWidth: "120px",
+											padding: "4px 0",
+											fontSize: "sm",
+											color: "white",
+											backgroundColor: "rgba(0,0,0,0.9)",
+											borderColor: "rgba(0,0,0,0.9)",
+										}}
+									>
+										{data
+											.filter((s) => s.chzzkId && s.chzzkId !== chatStream.streamId)
+											.map((s) => (
+												<MenuItem
+													key={s.chzzkId}
+													sx={{
+														backgroundColor: "rgba(0,0,0,0.5)",
+														_hover: { backgroundColor: "rgba(35,35,35,0.5)" },
+													}}
+													onClick={handleChangeChatStream(s.chzzkId || "", s.channelName || "")}
+												>
+													{s.channelName}
+												</MenuItem>
+											))}
+									</MenuList>
+								</Menu>
+							) : null}
 						</HStack>
+						{/* 채팅 IFRAME 시작 */}
 						<Box
 							as="iframe"
 							src={`${naver.chzzk.liveChatUrl(chatStream.streamId)}`}
