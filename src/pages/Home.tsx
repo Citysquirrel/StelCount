@@ -917,9 +917,10 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 }
 
 function MultiView({ list, setList }: MultiViewProps) {
-	const urlPrefix = "https://mul.live/";
 	const [mulLiveUrl, setMulLiveUrl] = useState("");
+	const [mulLiveMode, setMulLiveMode] = useState(0);
 	const [isOtherOn, setIsOtherOn] = useState(false);
+	const urlPrefix = "https://mul.live/";
 	const link = `${urlPrefix}${mulLiveUrl}`;
 	const { onCopy } = useClipboard(link);
 	const toast = useToast();

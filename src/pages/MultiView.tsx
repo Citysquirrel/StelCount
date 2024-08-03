@@ -394,18 +394,20 @@ export function MultiView() {
 											padding: "4px 0",
 											fontSize: "sm",
 											color: "white",
-											backgroundColor: "rgba(0,0,0,0.9)",
+											backgroundColor: "rgba(35,35,35,0.9)",
 											borderColor: "rgba(0,0,0,0.9)",
 										}}
 									>
 										{data
 											.filter((s) => s.chzzkId && s.chzzkId !== chatStream.streamId)
+											.sort(sortByChannelName)
 											.map((s) => (
 												<MenuItem
 													key={s.chzzkId}
 													sx={{
-														backgroundColor: "rgba(0,0,0,0.5)",
-														_hover: { backgroundColor: "rgba(35,35,35,0.5)" },
+														color: s.openLive ? `#${s.colorCode}` : "rgba(147,147,147)",
+														backgroundColor: "rgba(35,35,35,0.5)",
+														_hover: { backgroundColor: "rgba(0,0,0,0.5)" },
 													}}
 													onClick={handleChangeChatStream(s.chzzkId || "", s.channelName || "")}
 												>
@@ -779,6 +781,27 @@ function modDateText(streamDate: string | undefined) {
 function openChatInNewWindow(streamId: string | undefined) {
 	if (!streamId) return;
 	return window.open(naver.chzzk.liveChatUrl(streamId), "_blank", "width=400, height=580");
+}
+
+const sortOrderDict = [
+	"아이리 칸나",
+	"아야츠노 유니",
+	"시라유키 히나",
+	"네네코 마시로",
+	"아카네 리제",
+	"아라하시 타비",
+	"텐코 시부키",
+	"아오쿠모 린",
+	"하나코 나나",
+	"유즈하 리코",
+	"강지",
+	"이브",
+];
+
+function sortByChannelName(a: MultiViewData, b: MultiViewData): number {
+	const A = sortOrderDict.findIndex((k) => k === a.channelName);
+	const B = sortOrderDict.findIndex((k) => k === b.channelName);
+	return A - B;
 }
 
 type StreamType = "chzzk" | (string & {});
