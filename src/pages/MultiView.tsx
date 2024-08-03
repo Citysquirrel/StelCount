@@ -45,6 +45,7 @@ import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
 import { useConsole } from "../lib/hooks/useConsole";
 import { useSearchParams } from "react-router-dom";
+import { lightenColor } from "../lib/functions/etc";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -405,7 +406,7 @@ export function MultiView() {
 												<MenuItem
 													key={s.chzzkId}
 													sx={{
-														color: s.openLive ? `#${s.colorCode}` : "rgba(147,147,147)",
+														color: s.openLive ? `${lightenColor(s.colorCode || "", 60)}` : "rgba(70,70,70)",
 														backgroundColor: "rgba(35,35,35,0.5)",
 														_hover: { backgroundColor: "rgba(0,0,0,0.5)" },
 													}}
