@@ -15,7 +15,7 @@ export function Loading({ options }: LoadingProps) {
 				backgroundColor: options?.mode === "fullscreen" ? values.background : values.bgOpacity,
 				justifyContent: "center",
 				zIndex: 1001,
-				"> img": {
+				"> svg": {
 					boxSize: "128px",
 					animation: "rotate 1s ease infinite",
 					transformOrigin: "50% 50%",
