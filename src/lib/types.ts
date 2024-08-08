@@ -90,8 +90,9 @@ export interface MultiViewData {
 	channelImageUrl?: string | null;
 	liveCategoryValue?: string;
 	liveTitle?: string | null;
-	liveImageUrl?: string;
+	liveImageUrl?: string | null;
 	openLive?: boolean;
 	openDate?: string;
 	closeDate?: string;
+	adult?: boolean;
 }

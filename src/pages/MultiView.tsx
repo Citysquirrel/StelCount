@@ -645,6 +645,7 @@ function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCa
 		openLive,
 		openDate,
 		closeDate,
+		adult,
 	} = item;
 
 	const isSelected = itemIdx !== -1;
@@ -669,7 +670,7 @@ function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCa
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
 				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
 				<HStack>
-					<MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} />
+					<MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} adult={adult} />
 					<Stack flex="1 0 50%" height="100%">
 						<HStack>
 							<Image
@@ -701,20 +702,38 @@ function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCa
 	);
 }
 
-function MenuCardImage({ liveImageUrl, openLive }: MenuCardImageProps) {
+function MenuCardImage({ liveImageUrl, openLive, adult }: MenuCardImageProps) {
 	const [now] = useRecoilState(nowState);
 
 	return (
 		<Stack flex="1 0 50%">
 			{openLive ? (
-				<Image
-					src={modImageUrl(liveImageUrl + `?t=${now.getTime()}`, "320")}
-					height="72px"
-					objectFit={"cover"}
-					borderRadius={".5rem"}
-					transition="all .3s"
-					_hover={{ transform: "scale(1.5) translate(20px,9px)" }}
-				/>
+				adult ? (
+					<Stack
+						height={"72px"}
+						borderRadius={".5rem"}
+						backgroundColor={"#333"}
+						fontSize="1.25em"
+						alignItems={"center"}
+						justifyContent={"center"}
+						sx={{
+							"> svg": {
+								boxSize: "32px",
+							},
+						}}
+					>
+						<AdultIcon />
+					</Stack>
+				) : (
+					<Image
+						src={modImageUrl(liveImageUrl + `?t=${now.getTime()}`, "320")}
+						height="72px"
+						objectFit={"cover"}
+						borderRadius={".5rem"}
+						transition="all .3s"
+						_hover={{ transform: "scale(1.5) translate(20px,9px)" }}
+					/>
+				)
 			) : (
 				<Stack
 					height={"72px"}
@@ -748,6 +767,18 @@ function MenuCardNumber({ number }: { number: number }) {
 				{number}
 			</Text>
 		</Stack>
+	);
+}
+
+function AdultIcon() {
+	return (
+		<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<circle cx="100" cy="100" r="76" stroke="#707070" stroke-width="8" />
+			<path
+				d="M79.344 59.312V142.128H61.936V59.312H79.344ZM114.901 109.36H108.501C97.9197 109.36 92.629 103.728 92.629 92.464V74.8C92.629 63.536 97.9197 57.904 108.501 57.904H123.605C134.186 57.904 139.477 63.536 139.477 74.8V126.384C139.477 137.648 134.186 143.28 123.605 143.28H109.781C99.1997 143.28 93.909 137.648 93.909 126.384V120.24H110.293V126.768C110.293 127.451 110.506 128.048 110.933 128.56C111.445 129.072 112.042 129.328 112.725 129.328H121.045C121.728 129.328 122.282 129.072 122.709 128.56C123.221 128.048 123.477 127.451 123.477 126.768V107.696C121.173 108.805 118.314 109.36 114.901 109.36ZM108.501 76.208V91.056C108.501 91.7387 108.714 92.336 109.141 92.848C109.653 93.36 110.25 93.616 110.933 93.616H121.045C121.728 93.616 122.282 93.36 122.709 92.848C123.221 92.336 123.477 91.7387 123.477 91.056V76.208C123.477 75.5253 123.221 74.928 122.709 74.416C122.282 73.904 121.728 73.648 121.045 73.648H110.933C110.25 73.648 109.653 73.904 109.141 74.416C108.714 74.928 108.501 75.5253 108.501 76.208Z"
+				fill="#707070"
+			/>
+		</svg>
 	);
 }
 
@@ -839,8 +870,9 @@ interface MenuCardProps {
 }
 
 interface MenuCardImageProps {
-	liveImageUrl: string | undefined;
+	liveImageUrl?: string | null;
 	openLive: boolean | undefined;
+	adult?: boolean;
 }
 
 interface ConfigState {
