@@ -24,7 +24,7 @@ import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useSt
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData, UserSettingStorage } from "../lib/types";
-import { MdKeyboardDoubleArrowRight, MdOpenInNew } from "react-icons/md";
+import { MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
@@ -49,6 +49,7 @@ import { lightenColor } from "../lib/functions/etc";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
+	const chatRef = useRef<HTMLIFrameElement>(null);
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
 	const [isInnerChatOpen, setIsInnerChatOpen] = useState(false);
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
@@ -158,6 +159,12 @@ export function MultiView() {
 
 	const handleChangeChatStream = (streamId: string, name: string) => () => {
 		setChatStream({ streamId, name });
+	};
+
+	const handleChatRefresh = () => {
+		if (chatRef.current) {
+			chatRef.current.src = chatRef.current.src;
+		}
 	};
 
 	const calcColumns = (len: number) => {
@@ -418,10 +425,25 @@ export function MultiView() {
 									</MenuList>
 								</Menu>
 							) : null}
+							<IconButton
+								boxSize={"24px"}
+								minWidth="auto"
+								padding="0"
+								fontSize={"0.825rem"}
+								variant={"ghost"}
+								icon={<MdRefresh />}
+								aria-label="chat-refresh"
+								onClick={handleChatRefresh}
+								sx={{
+									color: "white",
+									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+								}}
+							/>
 						</HStack>
 						{/* 채팅 IFRAME 시작 */}
 						<Box
 							as="iframe"
+							ref={chatRef}
 							src={`${naver.chzzk.liveChatUrl(chatStream.streamId)}`}
 							width="350px"
 							height="100dvh"
@@ -453,6 +475,7 @@ function SideMenu({
 }: SideMenuProps) {
 	const WIDTH = 320;
 	const CONFIG_HEIGHT = 92;
+	const listRef = useRef<HTMLDivElement>(null);
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 
 	const configDict: ConfigDict[] = [
@@ -461,6 +484,11 @@ function SideMenu({
 			label: "채팅창 위치 좌측으로",
 		},
 	];
+
+	const handleOpenRedefine = () => {
+		listRef.current?.scrollTo({ top: 0 });
+		handleOpen();
+	};
 
 	const handleRefresh = () => {
 		refetch(true);
@@ -501,7 +529,7 @@ function SideMenu({
 					zIndex: 10,
 					":hover": { backgroundColor: "rgba(127,127,127,.5)", opacity: 1 },
 				}}
-				onClick={handleOpen}
+				onClick={handleOpenRedefine}
 			>
 				<MdKeyboardDoubleArrowRight />
 			</Stack>
@@ -575,7 +603,7 @@ function SideMenu({
 						onClick={handleClose}
 					/>
 				</HStack>
-				<Stack gap="12px" padding="8px 12px 24px 12px" overflowY="auto">
+				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto">
 					{data.length > 0
 						? data.map((item, idx) => {
 								const chzzkId = item.chzzkId;
