@@ -574,7 +574,12 @@ function FilterTag({ tagId, name, color, tagFilter, children, ...props }: Filter
 
 	return (
 		// outline
-		<Tag variant={!isIncluded ? "outline" : "solid"} colorScheme={defaultColorScheme} cursor="pointer" {...props}>
+		<Tag
+			variant={!isIncluded ? "outline" : "solid"}
+			colorScheme={color || defaultColorScheme}
+			cursor="pointer"
+			{...props}
+		>
 			{children}
 			{!isIncluded ? <TagRightIcon as={MdClear} color="red.400" /> : <TagRightIcon as={MdCheck} color="green.300" />}
 		</Tag>
