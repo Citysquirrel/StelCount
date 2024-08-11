@@ -95,7 +95,7 @@ export function Admin() {
 		justLive: false,
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
-	const [tagInputValue, setTagInputValue] = useState<TagData>({ id: -1, name: "", colorCode: "" });
+	const [tagInputValue, setTagInputValue] = useState<TagData>({ id: -1, name: "", colorCode: "", isCover: false });
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
 	const [tagData, setTagData] = useState<TagData[]>([]);
 	const { isLoading, isLogin, isAdmin } = useAuth();
@@ -206,7 +206,7 @@ export function Admin() {
 	};
 
 	const handleClickTag = (id: number) => () => {
-		const t: TagData = tagData.find((t) => t.id === id) || { id: -1, name: "", colorCode: "" };
+		const t: TagData = tagData.find((t) => t.id === id) || { id: -1, name: "", colorCode: "", isCover: false };
 		setTagInputValue({ ...t });
 		onModalOpen();
 	};
@@ -394,7 +394,8 @@ export function Admin() {
 									ID
 								</Th>
 								<Th width="240px">이름</Th>
-								<Th width="240px">색상코드</Th>
+								<Th width="240px">색상타입</Th>
+								<Th width="180px">커버곡 태그입니다</Th>
 								<Th></Th>
 							</Tr>
 						</Thead>
@@ -411,6 +412,7 @@ export function Admin() {
 										<Td isNumeric>{t.id}</Td>
 										<Td>{t.name}</Td>
 										<Td>{t.colorCode}</Td>
+										<Td>{t.isCover}</Td>
 										<Td></Td>
 									</Tr>
 								))
@@ -1083,7 +1085,7 @@ function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagMo
 							<Input
 								value={inputValue.colorCode}
 								onChange={handleInputValue("colorCode")}
-								isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
+								// isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
 							/>
 						</InputGroup>
 					</Stack>
@@ -1191,6 +1193,7 @@ interface TagData {
 	id: number;
 	name: string;
 	colorCode: string;
+	isCover: boolean;
 }
 
 interface AdditionalInputValue {
