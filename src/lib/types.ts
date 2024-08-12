@@ -5,6 +5,7 @@ export interface UserSettingStorage {
 	sortBy?: number;
 	sortDirection?: number;
 	chatToLeft?: boolean;
+	listOpenerWidth?: string;
 }
 
 export interface Tag extends DefaultDateFields {

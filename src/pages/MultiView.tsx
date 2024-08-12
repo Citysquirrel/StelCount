@@ -14,6 +14,11 @@ import {
 	MenuButton,
 	MenuItem,
 	MenuList,
+	NumberInput,
+	NumberInputField,
+	NumberInputStepper,
+	NumberIncrementStepper,
+	NumberDecrementStepper,
 	SimpleGrid,
 	Stack,
 	Switch,
@@ -43,7 +48,6 @@ import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
-import { useConsole } from "../lib/hooks/useConsole";
 import { useSearchParams } from "react-router-dom";
 import { lightenColor } from "../lib/functions/etc";
 
@@ -55,7 +59,7 @@ export function MultiView() {
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
 	const [chatStream, setChatStream] = useState({ streamId: "", name: "" });
 	const [streams, setStreams] = useState<Stream[]>([]);
-	const [configState, setConfigState] = useState<ConfigState>({ chatToLeft: false });
+	const [configState, setConfigState] = useState<ConfigState>({ chatToLeft: false, listOpenerWidth: "32" });
 	const { data, isLoading, refetch, intervalRef } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
@@ -474,7 +478,8 @@ function SideMenu({
 	streams,
 }: SideMenuProps) {
 	const WIDTH = 320;
-	const CONFIG_HEIGHT = 92;
+	const OPENER_WIDTH = 32;
+	const CONFIG_HEIGHT = 180;
 	const listRef = useRef<HTMLDivElement>(null);
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 
@@ -482,7 +487,9 @@ function SideMenu({
 		{
 			name: "chatToLeft",
 			label: "채팅창 위치 좌측으로",
+			type: "switch",
 		},
+		{ name: "listOpenerWidth", label: "방송 리스트 버튼 너비", type: "number", suffix: "px" },
 	];
 
 	const handleOpenRedefine = () => {
@@ -494,8 +501,13 @@ function SideMenu({
 		refetch(true);
 	};
 
-	const handleConfig = (name: keyof ConfigState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.checked;
+	const handleConfig = (name: keyof ConfigState, type: ConfigType) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		let value: string | boolean;
+		if (type === "switch") {
+			value = e.target.checked;
+		} else if (type === "number") {
+			value = e.target.value;
+		}
 		setConfigState((prev) => ({ ...prev, [name]: value }));
 		setUserSetting((prev) => ({ ...prev, [name]: value }));
 	};
@@ -509,6 +521,10 @@ function SideMenu({
 			const { chatToLeft } = userSetting;
 			setConfigState((prev) => ({ ...prev, chatToLeft }));
 		}
+		if (userSetting.listOpenerWidth) {
+			const { listOpenerWidth } = userSetting;
+			setConfigState((prev) => ({ ...prev, listOpenerWidth }));
+		}
 	}, []);
 
 	return (
@@ -520,7 +536,7 @@ function SideMenu({
 					left: 0,
 					alignItems: "center",
 					justifyContent: "center",
-					width: "32px",
+					width: `${userSetting.listOpenerWidth || OPENER_WIDTH}px`,
 					height: "100%",
 					color: "white",
 					transition: "all .25s",
@@ -641,16 +657,8 @@ function SideMenu({
 						<CloseButton position="absolute" top={0} right={0} onClick={handleCloseSetting} />
 					</HStack>
 					<Stack padding="12px">
-						{configDict.map((c) => {
-							const { label, name } = c;
-							return (
-								<FormControl key={name} display="flex" alignItems="center" justifyContent={"space-between"} gap={0}>
-									<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
-										{label}
-									</FormLabel>
-									<Switch id={name} isChecked={configState[name]} onChange={handleConfig(name)} />
-								</FormControl>
-							);
+						{configDict.map((config) => {
+							return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
 						})}
 					</Stack>
 				</Stack>
@@ -810,6 +818,56 @@ function AdultIcon() {
 	);
 }
 
+function createConfigComponent(
+	config: ConfigDict,
+	configState: ConfigState,
+	setConfigState: Dispatch<SetStateAction<ConfigState>>,
+	handleConfig: (name: keyof ConfigState, type: ConfigType) => (e: React.ChangeEvent<HTMLInputElement>) => void,
+	setUserSetting: Dispatch<SetStateAction<UserSettingStorage>>
+) {
+	const { type, name, label, suffix } = config;
+	if (type === "switch") {
+		const isChecked = configState[name] as boolean;
+		return (
+			<FormControl key={name} display="flex" alignItems="center" justifyContent={"space-between"} gap={0}>
+				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
+					{label}
+				</FormLabel>
+				<Switch id={name} isChecked={isChecked} onChange={handleConfig(name, type)} />
+			</FormControl>
+		);
+	} else if (type === "number") {
+		const value = configState[name] as string;
+		const format = (val: string) => (suffix ? `${val}${suffix}` : `${val}`);
+		const parse = (val: string) => (suffix ? val.replace(suffix, "") : val);
+		return (
+			<FormControl key={name} display="flex" alignItems="center" justifyContent={"space-between"} gap={0}>
+				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
+					{label}
+				</FormLabel>
+				<NumberInput
+					size="xs"
+					maxW={20}
+					defaultValue={32}
+					min={24}
+					max={120}
+					onChange={(val) => {
+						setConfigState((prev) => ({ ...prev, [name]: parse(val) }));
+						setUserSetting((prev) => ({ ...prev, [name]: val }));
+					}}
+					value={format(value)}
+				>
+					<NumberInputField />
+					<NumberInputStepper>
+						<NumberIncrementStepper />
+						<NumberDecrementStepper />
+					</NumberInputStepper>
+				</NumberInput>
+			</FormControl>
+		);
+	} else return <></>;
+}
+
 //? Function
 
 function createStreamSrc(type: StreamType, streamId: string) {
@@ -905,9 +963,14 @@ interface MenuCardImageProps {
 
 interface ConfigState {
 	chatToLeft: boolean;
+	listOpenerWidth: string;
 }
 
 interface ConfigDict {
 	name: keyof ConfigState;
 	label: string;
+	type: ConfigType;
+	suffix?: string;
 }
+
+type ConfigType = "switch" | "number" | "slider" | (string & {});
