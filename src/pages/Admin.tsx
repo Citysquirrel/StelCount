@@ -96,7 +96,14 @@ export function Admin() {
 		justLive: false,
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
-	const [tagInputValue, setTagInputValue] = useState<TagData>({ id: -1, name: "", colorCode: "", isCover: false });
+	const tagDefault = {
+		id: -1,
+		name: "",
+		colorCode: "",
+		isCover: false,
+		count: 0,
+	};
+	const [tagInputValue, setTagInputValue] = useState<TagData>(tagDefault);
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
 	const [tagData, setTagData] = useState<TagData[]>([]);
 	const { isLoading, isLogin, isAdmin } = useAuth();
@@ -207,7 +214,7 @@ export function Admin() {
 	};
 
 	const handleClickTag = (id: number) => () => {
-		const t: TagData = tagData.find((t) => t.id === id) || { id: -1, name: "", colorCode: "", isCover: false };
+		const t: TagData = tagData.find((t) => t.id === id) || tagDefault;
 		setTagInputValue({ ...t });
 		onModalOpen();
 	};
@@ -395,8 +402,9 @@ export function Admin() {
 									ID
 								</Th>
 								<Th width="240px">이름</Th>
-								<Th width="240px">색상타입</Th>
+								<Th width="240px">색상테마</Th>
 								<Th width="180px">커버곡 태그입니다</Th>
+								<Th width="80px">참조횟수</Th>
 								<Th></Th>
 							</Tr>
 						</Thead>
@@ -414,6 +422,7 @@ export function Admin() {
 										<Td>{t.name}</Td>
 										<Td>{t.colorCode}</Td>
 										<Td>{t.isCover && "True"}</Td>
+										<Td>{t.count}</Td>
 										<Td></Td>
 									</Tr>
 								))
@@ -1231,6 +1240,7 @@ interface TagData {
 	name: string;
 	colorCode: string;
 	isCover: boolean;
+	count: number;
 }
 
 interface AdditionalInputValue {
