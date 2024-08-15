@@ -769,7 +769,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 						{data.tags?.map((tag) => (
 							<Tag
 								key={tag.id}
-								colorScheme={customTagColorScheme[tag.name] || customTagColorScheme.other}
+								colorScheme={tag.colorCode || customTagColorScheme[tag.name] || customTagColorScheme.other}
 								marginLeft="2px"
 							>
 								<TagLabel>{tag.name}</TagLabel>

@@ -26,6 +26,21 @@ const CHROME_EXTENSION_URL = `https://chromewebstore.google.com/detail/stelcount
 
 const MIN_DATE = "1000-01-01T09:00:00.000Z";
 
+const CHAKRA_COLOR_SCHEME = [
+	"blackAlpha",
+	"whiteAlpha",
+	"gray",
+	"red",
+	"orange",
+	"yellow",
+	"green",
+	"teal",
+	"blue",
+	"cyan",
+	"purple",
+	"pink",
+];
+
 const stellarGroupName = [
 	["스텔라이브", "StelLive"],
 	["미스틱", "Mystic"],
@@ -52,6 +67,7 @@ export {
 	CHROME_EXTENSION_ID,
 	CHROME_EXTENSION_URL,
 	CAFE_WRITE_URL,
+	CHAKRA_COLOR_SCHEME,
 	stellarGroupName,
 	TOAST_MESSAGE,
 	MIN_DATE,

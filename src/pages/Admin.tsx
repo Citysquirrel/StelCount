@@ -72,7 +72,7 @@ import { Image } from "../components/Image";
 import { FaXTwitter, FaYoutube } from "react-icons/fa6";
 import VALIDATION from "../lib/functions/validation";
 import { objectBoolCheck, objectNullCheck } from "../lib/functions/etc";
-import { TOAST_MESSAGE, stellarGroupName } from "../lib/constant";
+import { CHAKRA_COLOR_SCHEME, TOAST_MESSAGE, stellarGroupName } from "../lib/constant";
 import { NotExist } from "./NotExist";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 import { useResponsive } from "../lib/hooks/useResponsive";
@@ -759,6 +759,8 @@ function MusicDrawer({
 	const [colorCode, setColorCode] = useState<string>("");
 	const [isCover, setIsCover] = useState<boolean>(false);
 
+	const colorSchemes = CHAKRA_COLOR_SCHEME;
+
 	const handleInputValue = (key: keyof MPLInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		const type = e.target.type;
@@ -798,6 +800,11 @@ function MusicDrawer({
 					setIsSaveLoading(false);
 				});
 		}
+	};
+
+	const handleChangeColorCode = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = e.target.value;
+		setColorCode(value);
 	};
 
 	const handleSaveMusic = (e: React.FormEvent<HTMLElement>) => {
@@ -897,15 +904,13 @@ function MusicDrawer({
 							/>
 						</InputGroup>
 						<InputGroup>
-							<InputLeftElement>
-								<MdColorLens />
-							</InputLeftElement>
-							<Input
-								value={colorCode}
-								onChange={(e) => {
-									setColorCode(e.target.value);
-								}}
-							/>
+							<Select placeholder="색상테마" onChange={handleChangeColorCode}>
+								{colorSchemes.map((t, idx) => (
+									<Box as="option" key={`${idx}-${t}`} value={t} color={`${t}.500`}>
+										{t}
+									</Box>
+								))}
+							</Select>
 						</InputGroup>
 						<InputGroup>
 							<Checkbox
@@ -954,7 +959,7 @@ function MusicDrawer({
 									/>
 								</InputGroup>
 								<InputGroup>
-									<Select placeholder="태그" onChange={handleChangeTag}>
+									<Select placeholder="태그" onChange={handleChangeTag} value={colorCode}>
 										{tags.map((t) => (
 											<option key={t.id} value={t.id}>
 												{t.name}
@@ -1053,6 +1058,9 @@ function MusicDrawer({
 
 function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagModalProps) {
 	const toast = useToast();
+
+	const colorSchemes = CHAKRA_COLOR_SCHEME;
+
 	const handleInputValue = (key: keyof TagData) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		let value: boolean | string;
 		if (key === "isCover") {
@@ -1062,6 +1070,12 @@ function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagMo
 		}
 		setInputValue((prev) => ({ ...prev, [key]: value }));
 	};
+
+	const handleColorCode = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = e.target.value;
+		setInputValue((prev) => ({ ...prev, colorCode: value }));
+	};
+
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		if (inputValue.name.trim() === "") {
@@ -1098,14 +1112,13 @@ function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagMo
 							<Input value={inputValue.name} onChange={handleInputValue("name")} />
 						</InputGroup>
 						<InputGroup>
-							<InputLeftElement>
-								<MdColorLens />
-							</InputLeftElement>
-							<Input
-								value={inputValue.colorCode}
-								onChange={handleInputValue("colorCode")}
-								// isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
-							/>
+							<Select placeholder="색상테마" onChange={handleColorCode} value={inputValue.colorCode}>
+								{colorSchemes.map((t, idx) => (
+									<Box as="option" key={`${idx}-${t}`} value={t} color={`${t}.500`}>
+										{t}
+									</Box>
+								))}
+							</Select>
 						</InputGroup>
 						<InputGroup>
 							<Checkbox marginLeft="8px" isChecked={inputValue.isCover} onChange={handleInputValue("isCover")}>
