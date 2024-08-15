@@ -52,6 +52,7 @@ import { fetchServer } from "../lib/functions/fetch";
 import {
 	MdAdd,
 	MdCalendarMonth,
+	MdCheckCircle,
 	MdColorLens,
 	MdDelete,
 	MdEdit,
@@ -412,7 +413,7 @@ export function Admin() {
 										<Td isNumeric>{t.id}</Td>
 										<Td>{t.name}</Td>
 										<Td>{t.colorCode}</Td>
-										<Td>{t.isCover}</Td>
+										<Td>{t.isCover && "True"}</Td>
 										<Td></Td>
 									</Tr>
 								))
@@ -756,6 +757,7 @@ function MusicDrawer({
 	const { isOpen: isTagOpen, onOpen: onTagOpen, onClose: onTagClose } = useDisclosure();
 	const [tagName, setTagName] = useState<string>("");
 	const [colorCode, setColorCode] = useState<string>("");
+	const [isCover, setIsCover] = useState<boolean>(false);
 
 	const handleInputValue = (key: keyof MPLInputValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -777,12 +779,13 @@ function MusicDrawer({
 			toast({ description: "태그 이름을 입력해주세요", status: "warning" });
 		} else {
 			setIsSaveLoading(true);
-			fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName, colorCode }) })
+			fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName, colorCode, isCover }) })
 				.then((res) => {
 					if (res.status === 200) {
 						onTagClose();
 						setTagName("");
 						setColorCode("");
+						setIsCover(false);
 						setTags((prev) => [...prev, res.data]);
 					} else if (res.status === 409) {
 						toast({ description: "중복된 태그 이름입니다", status: "warning" });
@@ -903,6 +906,17 @@ function MusicDrawer({
 									setColorCode(e.target.value);
 								}}
 							/>
+						</InputGroup>
+						<InputGroup>
+							<Checkbox
+								marginLeft="8px"
+								isChecked={isCover}
+								onChange={(e) => {
+									setIsCover(e.target.checked);
+								}}
+							>
+								커버곡 태그입니다
+							</Checkbox>
 						</InputGroup>
 					</ModalBody>
 					<ModalFooter gap="4px">
@@ -1040,7 +1054,12 @@ function MusicDrawer({
 function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagModalProps) {
 	const toast = useToast();
 	const handleInputValue = (key: keyof TagData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value;
+		let value: boolean | string;
+		if (key === "isCover") {
+			value = e.target.checked as boolean;
+		} else {
+			value = e.target.value as string;
+		}
 		setInputValue((prev) => ({ ...prev, [key]: value }));
 	};
 	const handleSubmit = (e: React.FormEvent<HTMLDivElement>) => {
@@ -1087,6 +1106,11 @@ function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagMo
 								onChange={handleInputValue("colorCode")}
 								// isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
 							/>
+						</InputGroup>
+						<InputGroup>
+							<Checkbox marginLeft="8px" isChecked={inputValue.isCover} onChange={handleInputValue("isCover")}>
+								커버곡 태그입니다
+							</Checkbox>
 						</InputGroup>
 					</Stack>
 				</ModalBody>
