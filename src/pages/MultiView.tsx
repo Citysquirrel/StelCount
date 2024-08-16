@@ -55,6 +55,7 @@ import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
 import { useSearchParams } from "react-router-dom";
 import { lightenColor } from "../lib/functions/etc";
+import { LoadingCircle } from "../components/Loading";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -494,7 +495,15 @@ function SideMenu({
 			label: "채팅창 위치 좌측으로",
 			type: "switch",
 		},
-		{ name: "listOpenerWidth", label: "방송 리스트 버튼 너비", type: "slider", suffix: "px" },
+		{
+			name: "listOpenerWidth",
+			label: "방송 리스트 버튼 너비",
+			type: "slider",
+			suffix: "px",
+			defaultValue: 32,
+			min: 24,
+			max: 120,
+		},
 	];
 
 	const handleOpenRedefine = () => {
@@ -563,7 +572,6 @@ function SideMenu({
 					height: "100%",
 					color: "white",
 					backgroundColor: "rgb(7,7,7)",
-					// padding: "0px 12px 12px 12px",
 					transform: isOpen ? `translateX(0px)` : `translateX(-${WIDTH}px)`,
 					transition: "all .3s",
 					gap: "0",
@@ -572,9 +580,13 @@ function SideMenu({
 			>
 				<HStack position="sticky" top={0} left={0} backgroundColor={"rgba(7,7,7,0.9)"} zIndex={1} padding="4px 12px">
 					<Stack flexGrow={1}>
-						<Text fontSize="0.875rem" fontWeight={"bold"} userSelect={"none"}>
-							멀티뷰(Beta)
-						</Text>
+						{isLoading ? (
+							<LoadingCircle sx={{ boxSize: "24px", marginLeft: "12px" }} />
+						) : (
+							<Text fontSize="0.875rem" fontWeight={"bold"} userSelect={"none"}>
+								멀티뷰(Beta)
+							</Text>
+						)}
 					</Stack>
 					<IconButton
 						boxSize={"24px"}
@@ -845,6 +857,7 @@ function createConfigComponent(
 		const value = configState[name] as string;
 		const format = (val: string) => (suffix ? `${val}${suffix}` : `${val}`);
 		const parse = (val: string) => (suffix ? val.replace(suffix, "") : val);
+		const { defaultValue, min, max } = config;
 		return (
 			<FormControl key={name} display="flex" alignItems="center" justifyContent={"space-between"} gap={0}>
 				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
@@ -853,9 +866,9 @@ function createConfigComponent(
 				<NumberInput
 					size="xs"
 					maxW={20}
-					defaultValue={32}
-					min={24}
-					max={120}
+					defaultValue={defaultValue}
+					min={min}
+					max={max}
 					onChange={(val) => {
 						setConfigState((prev) => ({ ...prev, [name]: parse(val) }));
 						setUserSetting((prev) => ({ ...prev, [name]: val }));
@@ -873,6 +886,7 @@ function createConfigComponent(
 	} else if (type === "slider") {
 		const value = configState[name] as string;
 		const numVal = parseInt(value);
+		const { defaultValue, min, max } = config;
 		return (
 			<FormControl>
 				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
@@ -883,9 +897,9 @@ function createConfigComponent(
 				</FormLabel>
 				<Box p={4} pt={0}>
 					<Slider
-						defaultValue={32}
-						min={24}
-						max={120}
+						defaultValue={defaultValue}
+						min={min}
+						max={max}
 						value={numVal}
 						onChange={(val) => {
 							setConfigState((prev) => ({ ...prev, [name]: val }));
@@ -1006,6 +1020,9 @@ interface ConfigDict {
 	label: string;
 	type: ConfigType;
 	suffix?: string;
+	defaultValue?: number;
+	min?: number;
+	max?: number;
 }
 
 type ConfigType = "switch" | "number" | "slider" | (string & {});
