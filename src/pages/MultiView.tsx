@@ -24,6 +24,11 @@ import {
 	Switch,
 	Text,
 	useDisclosure,
+	SliderMark,
+	Slider,
+	SliderTrack,
+	SliderFilledTrack,
+	SliderThumb,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
@@ -489,7 +494,7 @@ function SideMenu({
 			label: "채팅창 위치 좌측으로",
 			type: "switch",
 		},
-		{ name: "listOpenerWidth", label: "방송 리스트 버튼 너비", type: "number", suffix: "px" },
+		{ name: "listOpenerWidth", label: "방송 리스트 버튼 너비", type: "slider", suffix: "px" },
 	];
 
 	const handleOpenRedefine = () => {
@@ -863,6 +868,36 @@ function createConfigComponent(
 						<NumberDecrementStepper />
 					</NumberInputStepper>
 				</NumberInput>
+			</FormControl>
+		);
+	} else if (type === "slider") {
+		const value = configState[name] as string;
+		const numVal = parseInt(value);
+		return (
+			<FormControl>
+				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
+					{label}
+					<Text as="span" float={"right"} fontSize="sm">
+						{numVal}px
+					</Text>
+				</FormLabel>
+				<Box p={4} pt={0}>
+					<Slider
+						defaultValue={32}
+						min={24}
+						max={120}
+						value={numVal}
+						onChange={(val) => {
+							setConfigState((prev) => ({ ...prev, [name]: val }));
+							setUserSetting((prev) => ({ ...prev, [name]: val }));
+						}}
+					>
+						<SliderTrack bg="blue.50">
+							<SliderFilledTrack bg="blue.300" />
+						</SliderTrack>
+						<SliderThumb borderColor="blue.500" />
+					</Slider>
+				</Box>
 			</FormControl>
 		);
 	} else return <></>;
