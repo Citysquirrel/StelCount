@@ -30,9 +30,9 @@ export default defineConfig(({ mode }) => {
 							libs,
 							...renderChunks(dependencies),
 						},
-						entryFileNames:'[name].[hash].js',
-						chunkFileNames:'[name].[hash].js',
-						assetFileNames:'[name].[hash][extname]'
+						entryFileNames: "[name].[hash].js",
+						chunkFileNames: "chunks/[name].[hash].js",
+						assetFileNames: "assets/[name].[hash][extname]",
 					},
 				},
 				sourcemap: false,
