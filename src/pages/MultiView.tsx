@@ -24,7 +24,6 @@ import {
 	Switch,
 	Text,
 	useDisclosure,
-	SliderMark,
 	Slider,
 	SliderTrack,
 	SliderFilledTrack,
@@ -49,7 +48,7 @@ import {
 	CHROME_EXTENSION_GITHUB_URL,
 	USER_SETTING_STORAGE,
 } from "../lib/constant";
-import { useKeyBind } from "../lib/hooks/useKeyBind";
+import { useKeyDown } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
@@ -201,7 +200,7 @@ export function MultiView() {
 		}
 	}, [streams]);
 
-	useKeyBind({
+	useKeyDown({
 		Escape: handleCloseMenu,
 	});
 
@@ -888,7 +887,7 @@ function createConfigComponent(
 		const numVal = parseInt(value);
 		const { defaultValue, min, max } = config;
 		return (
-			<FormControl>
+			<FormControl key={name}>
 				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
 					{label}
 					<Text as="span" float={"right"} fontSize="sm">
