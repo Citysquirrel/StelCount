@@ -97,3 +97,7 @@ export interface MultiViewData {
 	closeDate?: string;
 	adult?: boolean;
 }
+
+export interface ImprovedIntervalOptions {
+	executeCallbackWhenWindowFocused?: boolean;
+}
