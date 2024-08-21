@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
 import { useKeyBind } from "./lib/hooks/useKeyBind";
+import { useHotkeys } from "react-hotkeys-hook";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -41,6 +42,9 @@ function App() {
 	};
 
 	useNow();
+	useHotkeys("ctrl+alt+l", () => {
+		nav("/login")();
+	});
 
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 
