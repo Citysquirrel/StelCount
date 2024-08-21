@@ -41,11 +41,6 @@ function App() {
 	};
 
 	useNow();
-	useKeyBind({
-		"Control+Alt+L": () => {
-			console.log("ok");
-		},
-	});
 
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 
