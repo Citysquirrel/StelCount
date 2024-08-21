@@ -15,10 +15,8 @@ import { ImListNumbered } from "react-icons/im";
 import { IoReload } from "react-icons/io5";
 import { useAuth } from "./lib/hooks/useAuth";
 import { CAFE_WRITE_URL } from "./lib/constant";
-import { useEffect } from "react";
 import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
-import { useKeyBind } from "./lib/hooks/useKeyBind";
 import { useHotkeys } from "react-hotkeys-hook";
 
 function App() {
