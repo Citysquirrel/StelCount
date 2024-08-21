@@ -18,6 +18,7 @@ import { CAFE_WRITE_URL } from "./lib/constant";
 import { useEffect } from "react";
 import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
+import { useKeyBind } from "./lib/hooks/useKeyBind";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -40,6 +41,11 @@ function App() {
 	};
 
 	useNow();
+	useKeyBind({
+		"Control+Alt+L": () => {
+			console.log("ok");
+		},
+	});
 
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 

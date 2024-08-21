@@ -48,7 +48,7 @@ import {
 	CHROME_EXTENSION_GITHUB_URL,
 	USER_SETTING_STORAGE,
 } from "../lib/constant";
-import { useKeyDown } from "../lib/hooks/useKeyBind";
+import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
@@ -200,7 +200,7 @@ export function MultiView() {
 		}
 	}, [streams]);
 
-	useKeyDown({
+	useKeyBind({
 		Escape: handleCloseMenu,
 	});
 

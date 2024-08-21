@@ -16,6 +16,7 @@ import { fetchServer } from "../functions/fetch";
 import { useToast } from "@chakra-ui/react";
 import isMobile from "is-mobile";
 import { getLocale } from "../functions/etc";
+import { useImprovedInterval } from "./useInterval";
 
 export function useStellar() {
 	const toast = useToast();
@@ -145,6 +146,14 @@ export function useStellar() {
 			clearInterval(intervalRef.current);
 		};
 	}, []);
+
+	// useImprovedInterval(
+	// 	() => {
+	// 		f(true);
+	// 	},
+	// 	60000,
+	// 	{ executeCallbackWhenWindowFocused: true }
+	// );
 
 	return { data, setData, refetch: f, intervalRef };
 }
