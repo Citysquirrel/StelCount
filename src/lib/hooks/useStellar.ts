@@ -138,22 +138,22 @@ export function useStellar() {
 
 	useEffect(() => {
 		f();
-		intervalRef.current = setInterval(() => {
-			let second = new Date().getSeconds();
-			if (second === 0 && import.meta.env.PROD) f(true);
-		}, 1000);
-		return () => {
-			clearInterval(intervalRef.current);
-		};
+		// intervalRef.current = setInterval(() => {
+		// 	let second = new Date().getSeconds();
+		// 	if (second === 0 && import.meta.env.PROD) f(true);
+		// }, 1000);
+		// return () => {
+		// 	clearInterval(intervalRef.current);
+		// };
 	}, []);
 
-	// useImprovedInterval(
-	// 	() => {
-	// 		f(true);
-	// 	},
-	// 	60000,
-	// 	{ executeCallbackWhenWindowFocused: true }
-	// );
+	useImprovedInterval(
+		() => {
+			f(true);
+		},
+		60000,
+		{ executeCallbackWhenWindowFocused: true }
+	);
 
 	return { data, setData, refetch: f, intervalRef };
 }

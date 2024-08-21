@@ -34,7 +34,8 @@ export function useImprovedInterval(
 
 			if (mergedOptions.executeCallbackWhenWindowFocused) {
 				const currentTime = new Date().getTime();
-				if (currentTime - lastExecutionTime.current > 60000) {
+				console.log(currentTime, lastExecutionTime.current);
+				if (currentTime - lastExecutionTime.current > timeout) {
 					executeCallback();
 				}
 			}
