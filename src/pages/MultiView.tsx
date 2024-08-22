@@ -69,22 +69,27 @@ export function MultiView() {
 	const { data, isLoading, refetch, intervalRef } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
-	const [searchParams] = useSearchParams();
-	const query = searchParams.get("query");
+	const [searchParams, setSearchParams] = useSearchParams();
+	const STREAMS_PARAM_NAME = "streams";
+	const PARAMS_DELIMITER = "--";
+	const streamsParam = searchParams.get(STREAMS_PARAM_NAME);
 	const { isOpen: isSettingOpen, onToggle: handleToggleSetting, onClose: handleCloseSetting } = useDisclosure();
 	const len = streams.length;
 
-	const handleQuery = (query: string | null) => {
-		if (!query) return;
+	const handleStreamsParam = (params: string | null) => {
+		if (!params) return;
 		if (data.length === 0) return;
 
 		let storage: Stream[] = [];
-		const streamIds = query.split(",");
+		const streamIds = params.split(PARAMS_DELIMITER).filter((s) => s);
 		for (let streamId of streamIds) {
 			const idx = data.findIndex((s) => s.chzzkId === streamId);
 			if (idx !== -1) {
 				const { channelName, uuid } = data[idx];
-				storage.push({ type: "chzzk", streamId, name: channelName || "", uuid });
+				if (storage.findIndex((stream) => stream.streamId === streamId) === -1) {
+					// 중복검사
+					storage.push({ type: "chzzk", streamId, name: channelName || "", uuid });
+				}
 			}
 		}
 
@@ -122,7 +127,14 @@ export function MultiView() {
 
 	const handleAddStream = (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => {
 		if (!streamId) return;
-		setStreams((prev) => [...prev, { streamId, type, uuid, name }]);
+		setStreams((prev) => {
+			const result = [...prev, { streamId, type, uuid, name }];
+			const value = result.reduce((a, c) => {
+				return !a ? c.streamId : a + PARAMS_DELIMITER + c.streamId;
+			}, "");
+			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
+			return result;
+		});
 	};
 
 	const handleDeleteStream = (uuid: string) => () => {
@@ -130,6 +142,8 @@ export function MultiView() {
 			const arr = [...prev];
 			const idx = arr.findIndex((a) => a.uuid === uuid);
 			arr.splice(idx, 1);
+			const value = arr.reduce((a, c) => (a.length === 0 ? c.streamId : a + PARAMS_DELIMITER + c.streamId), "");
+			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
 			return arr;
 		});
 	};
@@ -210,7 +224,7 @@ export function MultiView() {
 	}, []);
 
 	useEffect(() => {
-		if (query) handleQuery(query);
+		if (streamsParam) handleStreamsParam(streamsParam);
 	}, [data]);
 
 	return (
