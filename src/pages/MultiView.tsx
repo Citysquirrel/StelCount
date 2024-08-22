@@ -210,9 +210,7 @@ export function MultiView() {
 	}, [windowWidth, windowHeight, streams, isInnerChatOpen]);
 
 	useEffect(() => {
-		if (streams.length === 0) {
-			setIsInnerChatOpen(false);
-		}
+		if (streams.length === 0) setIsInnerChatOpen(false);
 	}, [streams]);
 
 	useKeyBind({
@@ -221,6 +219,7 @@ export function MultiView() {
 
 	useEffect(() => {
 		document.title = "StelCount - Multiview";
+		if (streamsParam) setIsMenuOpen(false);
 	}, []);
 
 	useEffect(() => {
