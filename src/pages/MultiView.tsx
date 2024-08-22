@@ -35,6 +35,7 @@ import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData, UserSettingStorage } from "../lib/types";
 import { MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
+import { TbForbid } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
 import { IoHome, IoList, IoReload, IoSettings } from "react-icons/io5";
@@ -776,7 +777,7 @@ function MenuCardImage({ liveImageUrl, openLive, adult }: MenuCardImageProps) {
 					>
 						<AdultIcon />
 					</Stack>
-				) : (
+				) : liveImageUrl ? (
 					<Image
 						src={modImageUrl(liveImageUrl + `?t=${now.getTime()}`, "320")}
 						height="72px"
@@ -785,6 +786,22 @@ function MenuCardImage({ liveImageUrl, openLive, adult }: MenuCardImageProps) {
 						transition="all .3s"
 						_hover={{ transform: "scale(1.5) translate(20px,9px)" }}
 					/>
+				) : (
+					<Stack
+						height={"72px"}
+						borderRadius={".5rem"}
+						backgroundColor={"#333"}
+						fontSize="1.25em"
+						alignItems={"center"}
+						justifyContent={"center"}
+						sx={{
+							"> svg": {
+								boxSize: "32px",
+							},
+						}}
+					>
+						<TbForbid />
+					</Stack>
 				)
 			) : (
 				<Stack
