@@ -48,21 +48,21 @@ export function useMultiView() {
 
 	useEffect(() => {
 		refetch();
-		// intervalRef.current = setInterval(() => {
-		// 	refetch(true);
-		// }, 30000);
-		// return () => {
-		// 	clearInterval(intervalRef.current);
-		// };
+		intervalRef.current = setInterval(() => {
+			refetch(true);
+		}, 30000);
+		return () => {
+			clearInterval(intervalRef.current);
+		};
 	}, []);
 
-	useImprovedInterval(
-		() => {
-			refetch(true);
-		},
-		30000,
-		{ executeCallbackWhenWindowFocused: true }
-	);
+	// useImprovedInterval(
+	// 	() => {
+	// 		refetch(true);
+	// 	},
+	// 	30000,
+	// 	{ executeCallbackWhenWindowFocused: true }
+	// );
 
 	return { data, setData, isLoading, refetch, intervalRef, liveInfos };
 }
