@@ -61,6 +61,7 @@ import {
 	MdOutlineVideocam,
 	MdPerson,
 	MdPlaylistPlay,
+	MdShortText,
 	MdTitle,
 } from "react-icons/md";
 import { CopyText } from "../components/CopyText";
@@ -87,6 +88,7 @@ export function Admin() {
 	const toast = useToast();
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
+		nameShort: "",
 		group: "",
 		youtubeId: "",
 		chzzkId: "",
@@ -156,6 +158,7 @@ export function Admin() {
 				toast({ description: `새 스텔라 등록을 완료했습니다`, status: "success" });
 				setInputValue({
 					name: "",
+					nameShort: "",
 					group: "",
 					youtubeId: "",
 					chzzkId: "",
@@ -312,6 +315,12 @@ export function Admin() {
 								라이브 현황만 게시합니다
 							</Checkbox>
 						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdShortText />
+							</InputLeftElement>
+							<Input placeholder="짧은 이름" value={inputValue.nameShort} onChange={handleInputValue("nameShort")} />
+						</InputGroup>
 						<Button type="submit">등록</Button>
 					</Stack>
 				</Box>
@@ -449,6 +458,7 @@ export function AdminEdit() {
 	};
 	const [inputValue, setInputValue] = useState<StellarInputValue>({
 		name: "",
+		nameShort: "",
 		group: "",
 		youtubeId: "",
 		chzzkId: "",
@@ -499,8 +509,9 @@ export function AdminEdit() {
 						if (!res.data) {
 							nav("/admin");
 						}
-						const { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video, justLive } = res.data;
-						const obj = { name, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video };
+						const { name, nameShort, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video, justLive } =
+							res.data;
+						const obj = { name, nameShort, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video };
 						const boolean = { justLive };
 						setInputValue((prev) => ({
 							...prev,
@@ -622,6 +633,17 @@ export function AdminEdit() {
 						>
 							라이브 현황만 게시합니다
 						</Checkbox>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<MdShortText />
+						</InputLeftElement>
+						<Input
+							placeholder="짧은 이름"
+							value={inputValue.nameShort}
+							onChange={handleInputValue("nameShort")}
+							isDisabled={isLoading}
+						/>
 					</InputGroup>
 					<HStack width="100%" justifyContent={"space-between"}>
 						<Button flex={1} type="submit" colorScheme="blue">
@@ -1189,6 +1211,7 @@ interface VideoAdminData {
 
 interface StellarInputValue {
 	name: string;
+	nameShort: string;
 	group: string;
 	youtubeId: string;
 	chzzkId: string;

@@ -84,6 +84,7 @@ interface ThumbnailScheme {
 
 export interface MultiViewData {
 	name: string;
+	nameShort?: string;
 	chzzkId: string | undefined;
 	uuid: string;
 	colorCode: string | undefined;
