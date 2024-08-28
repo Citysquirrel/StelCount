@@ -3,6 +3,7 @@ import { fetchServer } from "../functions/fetch";
 import { MultiViewData } from "../types";
 import { useRecoilState } from "recoil";
 import { nowState } from "../Atom";
+import { useImprovedInterval } from "./useInterval";
 
 export function useMultiView() {
 	const intervalRef = useRef<number>();
@@ -47,13 +48,21 @@ export function useMultiView() {
 
 	useEffect(() => {
 		refetch();
-		intervalRef.current = setInterval(() => {
-			refetch(true);
-		}, 30000);
-		return () => {
-			clearInterval(intervalRef.current);
-		};
+		// intervalRef.current = setInterval(() => {
+		// 	refetch(true);
+		// }, 30000);
+		// return () => {
+		// 	clearInterval(intervalRef.current);
+		// };
 	}, []);
+
+	useImprovedInterval(
+		() => {
+			refetch(true);
+		},
+		30000,
+		{ executeCallbackWhenWindowFocused: true }
+	);
 
 	return { data, setData, isLoading, refetch, intervalRef, liveInfos };
 }
