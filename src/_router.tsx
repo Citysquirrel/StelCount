@@ -10,6 +10,7 @@ import { About } from "./pages/About";
 import { Counter } from "./pages/Counter";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
 import { MultiView } from "./pages/MultiView";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const Admin = lazy(() => import("./pages/Admin").then((m) => ({ default: m.Admin })));
 const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminEdit })));
@@ -31,7 +32,7 @@ export const routeObj: RouteObject[] = [
 			{ path: "/", element: <NotExist /> },
 		],
 	},
-	{ path: "/multiview", element: <MultiView /> },
+	{ path: "/multiview", element: <MultiView />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/login", element: <Login />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/oauth", element: <OAuth />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "*", element: <NotExist />, errorElement: <ServerErrorPage isErrorComponent /> },

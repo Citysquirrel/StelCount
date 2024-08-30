@@ -85,9 +85,9 @@ interface ThumbnailScheme {
 export interface MultiViewData {
 	name: string;
 	nameShort?: string;
-	chzzkId: string | undefined;
+	chzzkId?: string | undefined;
 	uuid: string;
-	colorCode: string | undefined;
+	colorCode?: string | undefined;
 	channelName?: string;
 	channelImageUrl?: string | null;
 	liveCategoryValue?: string;

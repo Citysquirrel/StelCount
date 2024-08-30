@@ -29,12 +29,15 @@ import {
 	SliderFilledTrack,
 	SliderThumb,
 	Tooltip,
+	InputGroup,
+	Input,
+	Avatar,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData, UserSettingStorage } from "../lib/types";
-import { MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdStar } from "react-icons/md";
+import { MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdSearch, MdStar } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
 import { TbForbid } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
@@ -54,9 +57,13 @@ import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
-import { useSearchParams } from "react-router-dom";
+import { Search, useSearchParams } from "react-router-dom";
 import { lightenColor } from "../lib/functions/etc";
 import { LoadingCircle } from "../components/Loading";
+import { fetchServer } from "../lib/functions/fetch";
+import { createComponentMap } from "../lib/functions/createComponent";
+import { useConsole } from "../lib/hooks/useConsole";
+import { v4 } from "uuid";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -504,6 +511,14 @@ function SideMenu({
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [currentMode, setCurrentMode] = useState(0);
 	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
+	const [searchInputValue, setSearchInputValue] = useState<string>("");
+	const [selectedStreamer, setSelectedStreamer] = useState<Streamer>({
+		name: "",
+		imageUrl: "",
+		streamId: "",
+		platform: "",
+	});
+	const [searchResult, setSearchResult] = useState<SearchData[]>([]);
 
 	const configDict: ConfigDict[] = [
 		{
@@ -521,6 +536,15 @@ function SideMenu({
 			max: 120,
 		},
 	];
+
+	const onSearch = () => {
+		fetchServer("/search-streamer", "v1", { body: JSON.stringify({ keyword: searchInputValue }), method: "POST" }).then(
+			(res) => {
+				const data: SearchData[] = res.data;
+				setSearchResult(data);
+			}
+		);
+	};
 
 	const handleOpenRedefine = () => {
 		listRef.current?.scrollTo({ top: 0 });
@@ -550,6 +574,17 @@ function SideMenu({
 		setCurrentMode(mode);
 	};
 
+	const handleClickSearchResult = (streamer: Streamer) => () => {
+		setSelectedStreamer(streamer);
+	};
+
+	const handleAddCustomStream = () => {
+		setCustomStreams((prev) => {
+			const { name, imageUrl, streamId, platform } = selectedStreamer;
+			return [...prev, { name, channelName: name, channelImageUrl: imageUrl, chzzkId: streamId, uuid: v4() }];
+		});
+	};
+
 	useEffect(() => {
 		if (userSetting.chatToLeft) {
 			const { chatToLeft } = userSetting;
@@ -573,6 +608,8 @@ function SideMenu({
 	};
 
 	const currentStreams = getCurrentStreams(currentMode);
+
+	useConsole(searchResult, "searchResult");
 
 	return (
 		<>
@@ -725,6 +762,108 @@ function SideMenu({
 					</Tooltip>
 				</HStack>
 				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
+					{currentMode === 1 ? (
+						<Stack width="100%" minHeight="80px" border="1px solid white" borderRadius={".25rem"} p="8px">
+							<InputGroup gap="4px">
+								<Input
+									size="sm"
+									value={searchInputValue}
+									onChange={(e) => {
+										setSearchInputValue(e.target.value);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") onSearch();
+									}}
+								/>
+								<IconButton
+									icon={<MdSearch />}
+									aria-label="search-chzzk-stream"
+									colorScheme="green"
+									size="sm"
+									onClick={() => {
+										onSearch();
+									}}
+								/>
+							</InputGroup>
+							<Stack
+								border="1px solid gray"
+								borderRadius={".5rem"}
+								minHeight="24px"
+								maxHeight="120px"
+								p="4px 0"
+								gap={0}
+								overflow={"auto"}
+							>
+								{createComponentMap(
+									// 검색 결과 창
+									searchResult,
+									(data, idx) => {
+										const { channel, live } = data;
+										const { channelId, channelImageUrl, channelName, channelDescription, openLive } = channel;
+										return (
+											<HStack
+												padding="2px 8px"
+												_hover={{ backgroundColor: "gray.700" }}
+												cursor={"pointer"}
+												onClick={handleClickSearchResult({
+													name: channelName,
+													imageUrl: channelImageUrl,
+													streamId: channelId,
+													platform: "chzzk",
+													openLive,
+													openDate: live ? live.openDate : "",
+													liveTitle: live ? live.liveTitle : "",
+													liveCategoryValue: live ? live.liveCategoryValue : "",
+													liveImageUrl: live ? live.liveImageUrl : "",
+												})}
+											>
+												<Avatar boxSize="24px" src={`${channelImageUrl}?type=f120_120_na`} />
+												<Text
+													key={`${channelId}-${idx}`}
+													fontSize="sm"
+													textOverflow={"ellipsis"}
+													overflow="hidden"
+													whiteSpace={"nowrap"}
+												>
+													{channelName}
+												</Text>
+											</HStack>
+										);
+									},
+
+									<Text fontSize={"sm"} textAlign={"center"} color="gray.400" userSelect={"none"}>
+										검색결과없음
+									</Text>
+								)}
+							</Stack>
+							<HStack justifyContent={"space-between"} gap="4px">
+								<HStack paddingLeft="4px" gap={"4px"}>
+									{selectedStreamer.platform === "chzzk" ? <Image boxSize="18px" src="/images/i_chzzk_1.png" /> : null}
+									<Avatar boxSize="24px" src={`${selectedStreamer.imageUrl}?type=f120_120_na`} />
+									<Box />
+									<Text
+										maxWidth="172px"
+										fontSize="sm"
+										color={selectedStreamer.name ? undefined : "gray"}
+										textOverflow={"ellipsis"}
+										overflow="hidden"
+										whiteSpace={"nowrap"}
+									>
+										{selectedStreamer.name || "미선택"}
+									</Text>
+								</HStack>
+								<Button
+									minWidth="40px"
+									colorScheme="blue"
+									size="xs"
+									isDisabled={!selectedStreamer.streamId}
+									onClick={handleAddCustomStream}
+								>
+									추가
+								</Button>
+							</HStack>
+						</Stack>
+					) : null}
 					{currentStreams.length > 0
 						? currentStreams.map((item, idx) => {
 								const chzzkId = item.chzzkId;
@@ -742,9 +881,6 @@ function SideMenu({
 								);
 						  })
 						: null}
-					{currentMode === 1 ? (
-						<Stack width="100%" height="120px" border="1px solid white" borderRadius={".25rem"}></Stack>
-					) : null}
 				</Stack>
 				<Stack
 					position="relative"
@@ -933,7 +1069,7 @@ function MenuCardNumber({ number }: { number: number }) {
 function AdultIcon() {
 	return (
 		<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<circle cx="100" cy="100" r="76" stroke="#707070" stroke-width="8" />
+			<circle cx="100" cy="100" r="76" stroke="#707070" strokeWidth="8" />
 			<path
 				d="M79.344 59.312V142.128H61.936V59.312H79.344ZM114.901 109.36H108.501C97.9197 109.36 92.629 103.728 92.629 92.464V74.8C92.629 63.536 97.9197 57.904 108.501 57.904H123.605C134.186 57.904 139.477 63.536 139.477 74.8V126.384C139.477 137.648 134.186 143.28 123.605 143.28H109.781C99.1997 143.28 93.909 137.648 93.909 126.384V120.24H110.293V126.768C110.293 127.451 110.506 128.048 110.933 128.56C111.445 129.072 112.042 129.328 112.725 129.328H121.045C121.728 129.328 122.282 129.072 122.709 128.56C123.221 128.048 123.477 127.451 123.477 126.768V107.696C121.173 108.805 118.314 109.36 114.901 109.36ZM108.501 76.208V91.056C108.501 91.7387 108.714 92.336 109.141 92.848C109.653 93.36 110.25 93.616 110.933 93.616H121.045C121.728 93.616 122.282 93.36 122.709 92.848C123.221 92.336 123.477 91.7387 123.477 91.056V76.208C123.477 75.5253 123.221 74.928 122.709 74.416C122.282 73.904 121.728 73.648 121.045 73.648H110.933C110.25 73.648 109.653 73.904 109.141 74.416C108.714 74.928 108.501 75.5253 108.501 76.208Z"
 				fill="#707070"
@@ -1133,3 +1269,38 @@ interface ConfigDict {
 }
 
 type ConfigType = "switch" | "number" | "slider" | (string & {});
+
+interface Streamer {
+	name: string;
+	streamId: string;
+	imageUrl: string;
+	platform: "chzzk" | (string & {});
+	liveCategoryValue?: string;
+	liveTitle?: string;
+	liveImageUrl?: string;
+	openLive?: boolean;
+	openDate?: string;
+}
+
+interface SearchData {
+	channel: SearchDataChannel;
+	live?: SearchDataLive;
+}
+
+interface SearchDataChannel {
+	channelId: string;
+	channelName: string;
+	channelImageUrl: string;
+	channelDescription: string;
+	openLive: boolean;
+}
+
+interface SearchDataLive {
+	liveTitle: string;
+	liveImageUrl: string;
+	defaultThumbnailImageUrl: string;
+	openDate: string;
+	liveCategoryValue: string;
+	channelId: string;
+	livePlaybackJson: string;
+}
