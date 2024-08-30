@@ -16,8 +16,8 @@ export function useMultiView() {
 	});
 	const [, setNow] = useRecoilState(nowState);
 
-	const refetch = (isTimer?: boolean) => {
-		isTimer && setIsLoading(true);
+	const refetch = (activeLoading?: boolean) => {
+		activeLoading && setIsLoading(true);
 		fetchServer(`/multiview`, "v1")
 			.then((res) => {
 				if (res.status === 200) {

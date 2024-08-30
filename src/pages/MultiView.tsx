@@ -28,17 +28,18 @@ import {
 	SliderTrack,
 	SliderFilledTrack,
 	SliderThumb,
+	Tooltip,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData, UserSettingStorage } from "../lib/types";
-import { MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh } from "react-icons/md";
+import { MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdStar } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
 import { TbForbid } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
-import { IoHome, IoList, IoReload, IoSettings } from "react-icons/io5";
+import { IoHome, IoList, IoPeople, IoReload, IoSettings } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
 import {
@@ -160,7 +161,7 @@ export function MultiView() {
 	const handleOpenMenu = () => {
 		setIsMenuOpen(true);
 		// clearInterval(intervalRef.current);
-		refetch();
+		refetch(true);
 		intervalRef.current = setInterval(() => {
 			refetch(true);
 		}, 30000);
@@ -501,6 +502,8 @@ function SideMenu({
 	const CONFIG_HEIGHT = 180;
 	const listRef = useRef<HTMLDivElement>(null);
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
+	const [currentMode, setCurrentMode] = useState(0);
+	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
 
 	const configDict: ConfigDict[] = [
 		{
@@ -543,6 +546,10 @@ function SideMenu({
 		window.open("/home", "_blank");
 	};
 
+	const handleCurrentMode = (mode: number) => () => {
+		setCurrentMode(mode);
+	};
+
 	useEffect(() => {
 		if (userSetting.chatToLeft) {
 			const { chatToLeft } = userSetting;
@@ -553,6 +560,19 @@ function SideMenu({
 			setConfigState((prev) => ({ ...prev, listOpenerWidth }));
 		}
 	}, []);
+
+	const getCurrentStreams = (currentMode: number) => {
+		switch (currentMode) {
+			case 0:
+				return data;
+			case 1:
+				return customStreams;
+			default:
+				return [];
+		}
+	};
+
+	const currentStreams = getCurrentStreams(currentMode);
 
 	return (
 		<>
@@ -591,67 +611,122 @@ function SideMenu({
 					zIndex: 11,
 				}}
 			>
-				<HStack position="sticky" top={0} left={0} backgroundColor={"rgba(7,7,7,0.9)"} zIndex={1} padding="4px 12px">
+				<HStack
+					position="sticky"
+					top={0}
+					left={0}
+					backgroundColor={"rgba(7,7,7,0.9)"}
+					zIndex={1}
+					padding="4px 12px"
+					gap="4px"
+				>
 					<Stack flexGrow={1}>
 						{isLoading ? (
 							<LoadingCircle sx={{ boxSize: "24px", marginLeft: "12px" }} />
 						) : (
 							<Text fontSize="0.875rem" fontWeight={"bold"} userSelect={"none"}>
-								멀티뷰(Beta)
+								멀티뷰
 							</Text>
 						)}
 					</Stack>
-					<IconButton
-						boxSize={"24px"}
-						minWidth="auto"
-						padding="0"
-						fontSize={"0.825rem"}
-						variant={"ghost"}
-						icon={<IoHome />}
-						aria-label="home"
-						onClick={handleOpenHome}
-						sx={{
-							color: "white",
-							_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-						}}
-					/>
-					<IconButton
-						boxSize={"24px"}
-						minWidth="auto"
-						padding="0"
-						fontSize={"0.825rem"}
-						variant={"ghost"}
-						icon={<IoSettings />}
-						aria-label="setting"
-						onClick={handleToggleSetting}
-						isActive={isSettingOpen}
-						sx={{
-							color: "white",
-							_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-							_active: { backgroundColor: "rgba(255,255,255,0.5)" },
-						}}
-					/>
-					<IconButton
-						boxSize={"24px"}
-						minWidth="auto"
-						padding="0"
-						fontSize={"0.825rem"}
-						variant={"ghost"}
-						icon={<IoReload />}
-						aria-label="reload"
-						isDisabled={isLoading}
-						onClick={handleRefresh}
-						sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
-					/>
-					<CloseButton
-						size="sm"
-						sx={{ ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
-						onClick={handleClose}
-					/>
+					<HStack gap="2px" border="1px solid gray" padding="1px 2px" borderRadius={"4px"}>
+						<Tooltip label="스텔라 방송">
+							<IconButton
+								boxSize={"24px"}
+								minWidth="auto"
+								padding="0"
+								fontSize={"0.825rem"}
+								variant={"ghost"}
+								icon={<MdStar color={"#8d97ef"} />}
+								aria-label="home"
+								onClick={handleCurrentMode(0)}
+								isActive={currentMode === 0}
+								sx={{
+									color: "white",
+									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+									_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+								}}
+							/>
+						</Tooltip>
+						<Tooltip label={"사용자 설정 방송"}>
+							<IconButton
+								boxSize={"24px"}
+								minWidth="auto"
+								padding="0"
+								fontSize={"0.825rem"}
+								variant={"ghost"}
+								icon={<IoPeople />}
+								aria-label="home"
+								onClick={handleCurrentMode(1)}
+								isActive={currentMode === 1}
+								sx={{
+									color: "white",
+									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+									_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+								}}
+							/>
+						</Tooltip>
+					</HStack>
+					<Spacing size={1} direction="horizontal" />
+					<Tooltip label="스텔카운트 홈">
+						<IconButton
+							boxSize={"24px"}
+							minWidth="auto"
+							padding="0"
+							fontSize={"0.825rem"}
+							variant={"ghost"}
+							icon={<IoHome />}
+							aria-label="home"
+							onClick={handleOpenHome}
+							sx={{
+								color: "white",
+								_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+							}}
+						/>
+					</Tooltip>
+					<Tooltip label="멀티뷰 설정">
+						<IconButton
+							boxSize={"24px"}
+							minWidth="auto"
+							padding="0"
+							fontSize={"0.825rem"}
+							variant={"ghost"}
+							icon={<IoSettings />}
+							aria-label="setting"
+							onClick={handleToggleSetting}
+							isActive={isSettingOpen}
+							sx={{
+								color: "white",
+								_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+								_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+							}}
+						/>
+					</Tooltip>
+					<Tooltip label="새로고침">
+						<IconButton
+							boxSize={"24px"}
+							minWidth="auto"
+							padding="0"
+							fontSize={"0.825rem"}
+							variant={"ghost"}
+							icon={<IoReload />}
+							aria-label="reload"
+							isDisabled={isLoading}
+							onClick={handleRefresh}
+							sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+						/>
+					</Tooltip>
+					<Tooltip label="목록 닫기(ESC)">
+						<CloseButton
+							size="sm"
+							sx={{ ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+							onClick={handleClose}
+						/>
+					</Tooltip>
 				</HStack>
-				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto">
-					{data.length > 0
-						? data.map((item, idx) => {
+				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
+					{currentStreams.length > 0
+						? currentStreams.map((item, idx) => {
 								const chzzkId = item.chzzkId;
 								const uuid = item.uuid;
 								const itemIdx = streams.findIndex((a) => a.uuid === uuid);
@@ -667,6 +742,9 @@ function SideMenu({
 								);
 						  })
 						: null}
+					{currentMode === 1 ? (
+						<Stack width="100%" height="120px" border="1px solid white" borderRadius={".25rem"}></Stack>
+					) : null}
 				</Stack>
 				<Stack
 					position="relative"
