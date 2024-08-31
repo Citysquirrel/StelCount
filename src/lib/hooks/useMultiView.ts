@@ -3,12 +3,12 @@ import { fetchServer } from "../functions/fetch";
 import { MultiViewData } from "../types";
 import { useRecoilState } from "recoil";
 import { nowState } from "../Atom";
-import { useImprovedInterval } from "./useInterval";
 
 export function useMultiView() {
 	const intervalRef = useRef<number>();
 	const [data, setData] = useState<MultiViewData[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isCustomLoading, setIsCustomLoading] = useState<boolean>(true);
 	const [liveInfos, setLiveInfos] = useState<LiveStatusDict>({
 		isLoaded: false,
 		liveCount: 0,
@@ -56,15 +56,7 @@ export function useMultiView() {
 		};
 	}, []);
 
-	// useImprovedInterval(
-	// 	() => {
-	// 		refetch(true);
-	// 	},
-	// 	30000,
-	// 	{ executeCallbackWhenWindowFocused: true }
-	// );
-
-	return { data, setData, isLoading, refetch, intervalRef, liveInfos };
+	return { data, setData, isLoading, isCustomLoading, refetch, intervalRef, liveInfos };
 }
 
 interface LiveStatusDict {

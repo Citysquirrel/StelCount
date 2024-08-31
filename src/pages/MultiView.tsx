@@ -76,6 +76,7 @@ export function MultiView() {
 	const [streams, setStreams] = useState<Stream[]>([]);
 	const [configState, setConfigState] = useState<ConfigState>({ chatToLeft: false, listOpenerWidth: "32" });
 	const { data, isLoading, refetch, intervalRef } = useMultiView();
+	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -91,13 +92,19 @@ export function MultiView() {
 
 		let storage: Stream[] = [];
 		const streamIds = params.split(PARAMS_DELIMITER).filter((s) => s);
+		const mergedData = [...data, ...customStreams];
 		for (let streamId of streamIds) {
-			const idx = data.findIndex((s) => s.chzzkId === streamId);
+			const idx = mergedData.findIndex((s) => s.chzzkId === streamId);
 			if (idx !== -1) {
-				const { channelName, uuid } = data[idx];
+				const { channelName, uuid } = mergedData[idx];
 				if (storage.findIndex((stream) => stream.streamId === streamId) === -1) {
 					// 중복검사
 					storage.push({ type: "chzzk", streamId, name: channelName || "", uuid });
+				}
+			} else {
+				if (storage.findIndex((stream) => stream.streamId === streamId) === -1) {
+					// 중복검사
+					storage.push({ type: "chzzk", streamId, name: "", uuid: v4() });
 				}
 			}
 		}
@@ -222,10 +229,6 @@ export function MultiView() {
 		if (streams.length === 0) setIsInnerChatOpen(false);
 	}, [streams]);
 
-	useKeyBind({
-		Escape: handleCloseMenu,
-	});
-
 	useEffect(() => {
 		document.title = "StelCount - Multiview";
 		if (streamsParam) setIsMenuOpen(false);
@@ -254,6 +257,8 @@ export function MultiView() {
 				configState={configState}
 				setConfigState={setConfigState}
 				isSettingOpen={isSettingOpen}
+				customStreams={customStreams}
+				setCustomStreams={setCustomStreams}
 				handleToggleSetting={handleToggleSetting}
 				handleCloseSetting={handleCloseSetting}
 				refetch={refetch}
@@ -499,6 +504,8 @@ function SideMenu({
 	configState,
 	setConfigState,
 	isSettingOpen,
+	customStreams,
+	setCustomStreams,
 	handleToggleSetting,
 	handleCloseSetting,
 	refetch,
@@ -511,7 +518,6 @@ function SideMenu({
 	const listRef = useRef<HTMLDivElement>(null);
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [currentMode, setCurrentMode] = useState(0);
-	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
 	const [searchInputValue, setSearchInputValue] = useState<string>("");
 	const [selectedStreamer, setSelectedStreamer] = useState<Streamer>({
 		name: "",
@@ -565,6 +571,14 @@ function SideMenu({
 		}
 		setConfigState((prev) => ({ ...prev, [name]: value }));
 		setUserSetting((prev) => ({ ...prev, [name]: value }));
+	};
+
+	const handleCloseMenu = () => {
+		handleClose();
+		setCurrentMode(0);
+		setSearchInputValue("");
+		setSelectedStreamer({ name: "", imageUrl: "", streamId: "", platform: "" });
+		setSearchResult([]);
 	};
 
 	const handleOpenHome = () => {
@@ -639,9 +653,11 @@ function SideMenu({
 		}
 	};
 
-	const currentStreams = getCurrentStreams(currentMode);
+	useKeyBind({
+		Escape: handleCloseMenu,
+	});
 
-	useConsole(searchResult, "searchResult");
+	const currentStreams = getCurrentStreams(currentMode);
 
 	return (
 		<>
@@ -789,7 +805,7 @@ function SideMenu({
 						<CloseButton
 							size="sm"
 							sx={{ ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
-							onClick={handleClose}
+							onClick={handleCloseMenu}
 						/>
 					</Tooltip>
 				</HStack>
@@ -1275,6 +1291,8 @@ interface SideMenuProps {
 	configState: ConfigState;
 	setConfigState: Dispatch<SetStateAction<ConfigState>>;
 	isSettingOpen: boolean;
+	customStreams: MultiViewData[];
+	setCustomStreams: Dispatch<SetStateAction<MultiViewData[]>>;
 	handleToggleSetting: () => void;
 	handleCloseSetting: () => void;
 	refetch: (isTimer?: boolean) => void;
