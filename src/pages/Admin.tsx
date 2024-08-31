@@ -467,6 +467,7 @@ export function AdminEdit() {
 		playlistIdForMusic: "",
 		justLive: false,
 	});
+	const [inheritChannelId, setInheritChannelId] = useState<string>("");
 	const [videoData, setVideoData] = useState<VideoAdminData[]>([]);
 	const { isLogin, isAdmin, isLoading: isAuthLoading } = useAuth();
 
@@ -511,6 +512,7 @@ export function AdminEdit() {
 						}
 						const { name, nameShort, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video, justLive } =
 							res.data;
+						setInheritChannelId(youtubeId);
 						const obj = { name, nameShort, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video };
 						const boolean = { justLive };
 						setInputValue((prev) => ({
@@ -663,14 +665,14 @@ export function AdminEdit() {
 			</Stack>
 			<Stack as="section">
 				<HeadedDivider>음악 재생목록</HeadedDivider>
-				<MusicPlaylist data={videoData} setData={setVideoData} />
+				<MusicPlaylist data={videoData} setData={setVideoData} inheritChannelId={inheritChannelId} />
 			</Stack>
 			<Spacing size={64} />
 		</Stack>
 	);
 }
 
-function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
+function MusicPlaylist({ data, setData, inheritChannelId }: MusicPlaylistProps) {
 	const values = useColorModeValues();
 	const { windowWidth } = useResponsive();
 	const { isOpen, onOpen, onClose } = useDisclosure();
@@ -681,6 +683,7 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 		tags: [],
 		publishedAt: "",
 		isActive: true,
+		isInheritChannelId: false,
 	});
 	const [additionalInputValue, setAdditionalInputValue] = useState<AdditionalInputValue[]>([
 		{ id: -1, type: "", videoId: "" },
@@ -690,7 +693,7 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 	const handleClickCard = (givenId: number) => () => {
 		setCurrentId(givenId);
 		const idx = data.findIndex((m) => m.id === givenId);
-		const { id, title, titleAlias, tags, publishedAt, isActive, details } = data[idx];
+		const { id, title, titleAlias, tags, publishedAt, isActive, details, inheritChannelId } = data[idx];
 
 		//2024-04-10T08:30:39.000Z"  "yyyy-MM-ddThh:mm
 		setInputValue({
@@ -700,6 +703,7 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 			tags,
 			publishedAt: publishedAt.slice(0, -1),
 			isActive,
+			isInheritChannelId: !!inheritChannelId,
 		});
 
 		setAdditionalInputValue(
@@ -717,7 +721,15 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 
 	const handleClose = () => {
 		setCurrentId(-1);
-		setInputValue({ id: "", title: "", titleAlias: "", tags: [], publishedAt: "", isActive: true });
+		setInputValue({
+			id: "",
+			title: "",
+			titleAlias: "",
+			tags: [],
+			publishedAt: "",
+			isActive: true,
+			isInheritChannelId: false,
+		});
 		onClose();
 	};
 
@@ -732,6 +744,7 @@ function MusicPlaylist({ data, setData }: MusicPlaylistProps) {
 				setData={setData}
 				additionalInputValue={additionalInputValue}
 				setAdditionalInputValue={setAdditionalInputValue}
+				inheritChannelId={inheritChannelId}
 			/>
 			<Stack height="360px" overflowY={"scroll"} paddingRight="4px">
 				{data.map((v) => {
@@ -779,6 +792,7 @@ function MusicDrawer({
 	placement,
 	isOpen,
 	onClose,
+	inheritChannelId,
 }: MusicDrawerProps) {
 	const toast = useToast();
 
@@ -850,6 +864,8 @@ function MusicDrawer({
 				tags: inputValue.tags,
 				details: additionalInputValue,
 				isActive: inputValue.isActive,
+				isInheritChannelId: inputValue.isInheritChannelId,
+				inheritChannelId,
 			}),
 		})
 			.then((res) => {
@@ -1033,6 +1049,11 @@ function MusicDrawer({
 										활성화
 									</Checkbox>
 								</InputGroup>
+								<InputGroup paddingLeft="12px">
+									<Checkbox isChecked={inputValue.isInheritChannelId} onChange={handleInputValue("isInheritChannelId")}>
+										소속된 스텔라로부터 채널 ID를 상속합니다
+									</Checkbox>
+								</InputGroup>
 								<Wrapper marginTop="8px">
 									<Heading size="md">부가 영상</Heading>
 									{/* 이 리스트는 길이가 1 이상 */}
@@ -1199,6 +1220,7 @@ interface VideoAdminData {
 	thumbnail: string;
 	videoId: string;
 	channelId: string;
+	inheritChannelId: string;
 	viewCount: string;
 	likeCount: string;
 	isOriginal: boolean | null;
@@ -1232,11 +1254,13 @@ interface MPLInputValue {
 	tags: TagType[];
 	publishedAt: string;
 	isActive: boolean;
+	isInheritChannelId: boolean;
 }
 
 interface MusicPlaylistProps {
 	data: VideoAdminData[];
 	setData: Dispatch<SetStateAction<VideoAdminData[]>>;
+	inheritChannelId: string;
 }
 
 interface MusicDrawerProps {
@@ -1248,6 +1272,7 @@ interface MusicDrawerProps {
 	setData: Dispatch<SetStateAction<VideoAdminData[]>>;
 	additionalInputValue: AdditionalInputValue[];
 	setAdditionalInputValue: Dispatch<SetStateAction<AdditionalInputValue[]>>;
+	inheritChannelId: string;
 }
 
 interface TagModalProps {
