@@ -65,6 +65,7 @@ import { fetchServer } from "../lib/functions/fetch";
 import { createComponentMap } from "../lib/functions/createComponent";
 import { useConsole } from "../lib/hooks/useConsole";
 import { v4 } from "uuid";
+import { useAuth } from "../lib/hooks/useAuth";
 
 export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
@@ -343,7 +344,7 @@ export function MultiView() {
 								</Box>
 								에서 스텔라를 선택해주세요
 							</Text>
-							<Text>스텔라 이외의 타 스트리머에 대한 멀티뷰는 지원하지 않습니다!</Text>
+							{/* <Text>스텔라 이외의 타 스트리머에 대한 멀티뷰는 지원하지 않습니다!</Text> */}
 							{isExtensionInstalled ? (
 								isLatestVersion ? (
 									<Text>확장 프로그램이 성공적으로 실행되었습니다</Text>
@@ -516,6 +517,7 @@ function SideMenu({
 	const OPENER_WIDTH = 32;
 	const CONFIG_HEIGHT = 180;
 	const listRef = useRef<HTMLDivElement>(null);
+	const { isAdmin, isLoading: isAuthLoading } = useAuth();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [currentMode, setCurrentMode] = useState(0);
 	const [searchInputValue, setSearchInputValue] = useState<string>("");
@@ -714,44 +716,47 @@ function SideMenu({
 							</Text>
 						)}
 					</Stack>
-					<HStack gap="2px" border="1px solid gray" padding="1px 2px" borderRadius={"4px"}>
-						<Tooltip label="스텔라 방송">
-							<IconButton
-								boxSize={"24px"}
-								minWidth="auto"
-								padding="0"
-								fontSize={"0.825rem"}
-								variant={"ghost"}
-								icon={<MdStar color={"#8d97ef"} />}
-								aria-label="home"
-								onClick={handleCurrentMode(0)}
-								isActive={currentMode === 0}
-								sx={{
-									color: "white",
-									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-									_active: { backgroundColor: "rgba(255,255,255,0.5)" },
-								}}
-							/>
-						</Tooltip>
-						<Tooltip label={"사용자 설정 방송"}>
-							<IconButton
-								boxSize={"24px"}
-								minWidth="auto"
-								padding="0"
-								fontSize={"0.825rem"}
-								variant={"ghost"}
-								icon={<IoPeople />}
-								aria-label="home"
-								onClick={handleCurrentMode(1)}
-								isActive={currentMode === 1}
-								sx={{
-									color: "white",
-									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-									_active: { backgroundColor: "rgba(255,255,255,0.5)" },
-								}}
-							/>
-						</Tooltip>
-					</HStack>
+					{isAdmin ? (
+						<HStack gap="2px" border="1px solid gray" padding="1px 2px" borderRadius={"4px"}>
+							<Tooltip label="스텔라 방송">
+								<IconButton
+									boxSize={"24px"}
+									minWidth="auto"
+									padding="0"
+									fontSize={"0.825rem"}
+									variant={"ghost"}
+									icon={<MdStar color={"#8d97ef"} />}
+									aria-label="home"
+									onClick={handleCurrentMode(0)}
+									isActive={currentMode === 0}
+									sx={{
+										color: "white",
+										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+										_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+									}}
+								/>
+							</Tooltip>
+							<Tooltip label={"사용자 설정 방송"}>
+								<IconButton
+									boxSize={"24px"}
+									minWidth="auto"
+									padding="0"
+									fontSize={"0.825rem"}
+									variant={"ghost"}
+									icon={<IoPeople />}
+									aria-label="home"
+									onClick={handleCurrentMode(1)}
+									isActive={currentMode === 1}
+									sx={{
+										color: "white",
+										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+										_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+									}}
+								/>
+							</Tooltip>
+						</HStack>
+					) : null}
+
 					<Spacing size={1} direction="horizontal" />
 					<Tooltip label="스텔카운트 홈">
 						<IconButton
