@@ -6,6 +6,13 @@ export interface UserSettingStorage {
 	sortDirection?: number;
 	chatToLeft?: boolean;
 	listOpenerWidth?: string;
+	customStreams?: CustomStreamsForUS[];
+}
+
+interface CustomStreamsForUS {
+	name: string;
+	streamId: string;
+	platform: "chzzk" | (string & {});
 }
 
 export interface Tag extends DefaultDateFields {

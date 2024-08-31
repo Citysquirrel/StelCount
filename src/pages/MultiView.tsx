@@ -32,6 +32,7 @@ import {
 	InputGroup,
 	Input,
 	Avatar,
+	AvatarBadge,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
@@ -579,9 +580,30 @@ function SideMenu({
 	};
 
 	const handleAddCustomStream = () => {
+		const { name, imageUrl, streamId, platform, liveCategoryValue, liveTitle, liveImageUrl, openLive, openDate } =
+			selectedStreamer;
 		setCustomStreams((prev) => {
-			const { name, imageUrl, streamId, platform } = selectedStreamer;
-			return [...prev, { name, channelName: name, channelImageUrl: imageUrl, chzzkId: streamId, uuid: v4() }];
+			return [
+				...prev,
+				{
+					name,
+					channelName: name,
+					channelImageUrl: imageUrl,
+					chzzkId: streamId,
+					uuid: v4(),
+					liveTitle,
+					liveImageUrl,
+					liveCategoryValue,
+					openLive,
+					openDate,
+				},
+			];
+		});
+
+		setUserSetting((prev) => {
+			const newItem = { name, platform, streamId };
+			const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
+			return { ...prev, customStreams: arr };
 		});
 	};
 
@@ -593,6 +615,16 @@ function SideMenu({
 		if (userSetting.listOpenerWidth) {
 			const { listOpenerWidth } = userSetting;
 			setConfigState((prev) => ({ ...prev, listOpenerWidth }));
+		}
+		if (userSetting.customStreams) {
+			const { customStreams } = userSetting;
+			const temp: MultiViewData[] = customStreams.map((s) => ({
+				name: s.name,
+				channelName: s.name,
+				chzzkId: s.streamId,
+				uuid: v4(),
+			}));
+			setCustomStreams(temp);
 		}
 	}, []);
 
@@ -817,7 +849,15 @@ function SideMenu({
 													liveImageUrl: live ? live.liveImageUrl : "",
 												})}
 											>
-												<Avatar boxSize="24px" src={`${channelImageUrl}?type=f120_120_na`} />
+												<Avatar boxSize="24px" src={`${channelImageUrl}?type=f40_40_na`}>
+													<AvatarBadge
+														bg={openLive ? "green.500" : "red.500"}
+														border="1px"
+														boxSize="8px"
+														right="1px"
+														bottom="1px"
+													/>
+												</Avatar>
 												<Text
 													key={`${channelId}-${idx}`}
 													fontSize="sm"
@@ -839,7 +879,7 @@ function SideMenu({
 							<HStack justifyContent={"space-between"} gap="4px">
 								<HStack paddingLeft="4px" gap={"4px"}>
 									{selectedStreamer.platform === "chzzk" ? <Image boxSize="18px" src="/images/i_chzzk_1.png" /> : null}
-									<Avatar boxSize="24px" src={`${selectedStreamer.imageUrl}?type=f120_120_na`} />
+									<Avatar boxSize="24px" src={`${selectedStreamer.imageUrl}?type=f40_40_na`} />
 									<Box />
 									<Text
 										maxWidth="172px"
@@ -856,7 +896,9 @@ function SideMenu({
 									minWidth="40px"
 									colorScheme="blue"
 									size="xs"
-									isDisabled={!selectedStreamer.streamId}
+									isDisabled={
+										!selectedStreamer.streamId || data.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1
+									}
 									onClick={handleAddCustomStream}
 								>
 									추가
