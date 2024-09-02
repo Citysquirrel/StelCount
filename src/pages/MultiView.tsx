@@ -58,7 +58,7 @@ import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
-import { Search, useSearchParams } from "react-router-dom";
+import { Search, useNavigate, useSearchParams } from "react-router-dom";
 import { lightenColor } from "../lib/functions/etc";
 import { LoadingCircle } from "../components/Loading";
 import { fetchServer } from "../lib/functions/fetch";
@@ -66,8 +66,10 @@ import { createComponentMap } from "../lib/functions/createComponent";
 import { useConsole } from "../lib/hooks/useConsole";
 import { v4 } from "uuid";
 import { useAuth } from "../lib/hooks/useAuth";
+import { useHotkeys } from "react-hotkeys-hook";
 
 export function MultiView() {
+	const navigate = useNavigate();
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
 	const chatRef = useRef<HTMLIFrameElement>(null);
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
@@ -238,6 +240,10 @@ export function MultiView() {
 	useEffect(() => {
 		if (streamsParam) handleStreamsParam(streamsParam);
 	}, [data]);
+
+	useHotkeys("ctrl+alt+l", () => {
+		navigate("/login");
+	});
 
 	return (
 		<HStack
