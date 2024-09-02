@@ -663,6 +663,21 @@ function SideMenu({
 
 	useKeyBind({
 		Escape: handleCloseMenu,
+		"1": () => {
+			setCurrentMode(0);
+		},
+		"2": () => {
+			setCurrentMode(1);
+		},
+		r: () => {
+			handleRefresh();
+		},
+		h: () => {
+			handleOpenHome();
+		},
+		c: () => {
+			handleToggleSetting();
+		},
 	});
 
 	const currentStreams = getCurrentStreams(currentMode);
