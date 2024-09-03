@@ -33,12 +33,13 @@ import {
 	Input,
 	Avatar,
 	AvatarBadge,
+	IconButtonProps,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData, UserSettingStorage } from "../lib/types";
-import { MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdSearch, MdStar } from "react-icons/md";
+import { MdClear, MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdSearch, MdStar } from "react-icons/md";
 import { CiStreamOff } from "react-icons/ci";
 import { TbForbid } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
@@ -78,8 +79,7 @@ export function MultiView() {
 	const [chatStream, setChatStream] = useState({ streamId: "", name: "" });
 	const [streams, setStreams] = useState<Stream[]>([]);
 	const [configState, setConfigState] = useState<ConfigState>({ chatToLeft: false, listOpenerWidth: "32" });
-	const { data, isLoading, refetch, intervalRef } = useMultiView();
-	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
+	const { data, customStreams, setCustomStreams, isLoading, refetch, intervalRef } = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -239,7 +239,7 @@ export function MultiView() {
 
 	useEffect(() => {
 		if (streamsParam) handleStreamsParam(streamsParam);
-	}, [data]);
+	}, [data, streamsParam]);
 
 	useHotkeys("ctrl+alt+l", () => {
 		navigate("/login");
@@ -618,14 +618,29 @@ function SideMenu({
 					liveCategoryValue,
 					openLive,
 					openDate,
+					isCustom: true,
 				},
-			];
+			].sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive));
 		});
 
 		setUserSetting((prev) => {
 			const newItem = { name, platform, streamId };
 			const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
 			return { ...prev, customStreams: arr };
+		});
+	};
+
+	const handleDeleteCustomStream = (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
+		e.stopPropagation();
+		setCustomStreams((prev) => prev.filter((s) => s.uuid !== uuid));
+		const currentStreamId = customStreams.find((s) => s.uuid === uuid)?.chzzkId;
+
+		setUserSetting((prev) => {
+			const arr = prev.customStreams;
+			if (arr) {
+				return { ...prev, customStreams: arr.filter((s) => s.streamId !== currentStreamId) };
+			}
+			return prev;
 		});
 	};
 
@@ -645,6 +660,7 @@ function SideMenu({
 				channelName: s.name,
 				chzzkId: s.streamId,
 				uuid: v4(),
+				isCustom: true,
 			}));
 			setCustomStreams(temp);
 		}
@@ -739,7 +755,7 @@ function SideMenu({
 					</Stack>
 					{isAdmin ? (
 						<HStack gap="2px" border="1px solid gray" padding="1px 2px" borderRadius={"4px"}>
-							<Tooltip label="스텔라 방송">
+							<Tooltip label="스텔라 방송(1)">
 								<IconButton
 									boxSize={"24px"}
 									minWidth="auto"
@@ -757,7 +773,7 @@ function SideMenu({
 									}}
 								/>
 							</Tooltip>
-							<Tooltip label={"사용자 설정 방송"}>
+							<Tooltip label={"사용자 설정 방송(2)"}>
 								<IconButton
 									boxSize={"24px"}
 									minWidth="auto"
@@ -779,7 +795,7 @@ function SideMenu({
 					) : null}
 
 					<Spacing size={1} direction="horizontal" />
-					<Tooltip label="스텔카운트 홈">
+					<Tooltip label="스텔카운트 홈(H)">
 						<IconButton
 							boxSize={"24px"}
 							minWidth="auto"
@@ -795,7 +811,7 @@ function SideMenu({
 							}}
 						/>
 					</Tooltip>
-					<Tooltip label="멀티뷰 설정">
+					<Tooltip label="멀티뷰 설정(C)">
 						<IconButton
 							boxSize={"24px"}
 							minWidth="auto"
@@ -813,7 +829,7 @@ function SideMenu({
 							}}
 						/>
 					</Tooltip>
-					<Tooltip label="새로고침">
+					<Tooltip label="새로고침(R)">
 						<IconButton
 							boxSize={"24px"}
 							minWidth="auto"
@@ -837,7 +853,7 @@ function SideMenu({
 				</HStack>
 				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
 					{currentMode === 1 ? (
-						<Stack width="100%" minHeight="80px" border="1px solid white" borderRadius={".25rem"} p="8px">
+						<Stack width="100%" height="fit-content" border="1px solid white" borderRadius={".25rem"} p="8px">
 							<InputGroup gap="4px">
 								<Input
 									size="sm"
@@ -939,7 +955,8 @@ function SideMenu({
 									colorScheme="blue"
 									size="xs"
 									isDisabled={
-										!selectedStreamer.streamId || data.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1
+										!selectedStreamer.streamId ||
+										currentStreams.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1
 									}
 									onClick={handleAddCustomStream}
 								>
@@ -961,6 +978,7 @@ function SideMenu({
 										itemIdx={itemIdx}
 										handleAddStream={handleAddStream}
 										handleDeleteStream={handleDeleteStream}
+										handleDeleteCustomStream={handleDeleteCustomStream}
 									/>
 								);
 						  })
@@ -995,7 +1013,7 @@ function SideMenu({
 	);
 }
 
-function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCardProps) {
+function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream, handleDeleteCustomStream }: MenuCardProps) {
 	const {
 		name,
 		chzzkId,
@@ -1010,6 +1028,7 @@ function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCa
 		openDate,
 		closeDate,
 		adult,
+		isCustom,
 	} = item;
 
 	const isSelected = itemIdx !== -1;
@@ -1033,6 +1052,9 @@ function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream }: MenuCa
 		>
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
 				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
+				{isCustom ? (
+					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
+				) : null}
 				<HStack>
 					<MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} adult={adult} />
 					<Stack flex="1 0 50%" height="100%">
@@ -1147,6 +1169,18 @@ function MenuCardNumber({ number }: { number: number }) {
 				{number}
 			</Text>
 		</Stack>
+	);
+}
+
+function MenuCardCloseButton({ ...props }: MenuCardCloseButtonProps) {
+	return (
+		<IconButton
+			variant={"ghost"}
+			icon={<MdClear />}
+			colorScheme="red"
+			sx={{ position: "absolute", right: "4px", bottom: "4px", boxSize: "18px", minW: 0, borderRadius: "full" }}
+			{...props}
+		/>
 	);
 }
 
@@ -1331,6 +1365,7 @@ interface MenuCardProps {
 	itemIdx: number;
 	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => void;
 	handleDeleteStream: (uuid: string) => () => void;
+	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 interface MenuCardImageProps {
@@ -1338,6 +1373,8 @@ interface MenuCardImageProps {
 	openLive: boolean | undefined;
 	adult?: boolean;
 }
+
+interface MenuCardCloseButtonProps extends IconButtonProps {}
 
 interface ConfigState {
 	chatToLeft: boolean;

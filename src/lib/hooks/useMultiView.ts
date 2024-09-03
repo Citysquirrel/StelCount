@@ -7,6 +7,7 @@ import { nowState } from "../Atom";
 export function useMultiView() {
 	const intervalRef = useRef<number>();
 	const [data, setData] = useState<MultiViewData[]>([]);
+	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [isCustomLoading, setIsCustomLoading] = useState<boolean>(true);
 	const [liveInfos, setLiveInfos] = useState<LiveStatusDict>({
@@ -18,6 +19,7 @@ export function useMultiView() {
 
 	const refetch = (activeLoading?: boolean) => {
 		activeLoading && setIsLoading(true);
+		activeLoading && setIsCustomLoading(true);
 		fetchServer(`/multiview`, "v1")
 			.then((res) => {
 				if (res.status === 200) {
@@ -44,6 +46,12 @@ export function useMultiView() {
 			.finally(() => {
 				setIsLoading(false);
 			});
+
+		fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams }) })
+			.then((res) => {})
+			.finally(() => {
+				setIsCustomLoading(false);
+			});
 	};
 
 	useEffect(() => {
@@ -56,7 +64,17 @@ export function useMultiView() {
 		};
 	}, []);
 
-	return { data, setData, isLoading, isCustomLoading, refetch, intervalRef, liveInfos };
+	return {
+		data,
+		setData,
+		customStreams,
+		setCustomStreams,
+		isLoading,
+		isCustomLoading,
+		refetch,
+		intervalRef,
+		liveInfos,
+	};
 }
 
 interface LiveStatusDict {

@@ -104,6 +104,7 @@ export interface MultiViewData {
 	openDate?: string;
 	closeDate?: string;
 	adult?: boolean;
+	isCustom?: boolean;
 }
 
 export interface ImprovedIntervalOptions {
