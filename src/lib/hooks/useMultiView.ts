@@ -6,20 +6,17 @@ import { nowState } from "../Atom";
 
 export function useMultiView() {
 	const intervalRef = useRef<number>();
+	const customIntervalRef = useRef<number>();
 	const [data, setData] = useState<MultiViewData[]>([]);
 	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
-	const [isCustomLoading, setIsCustomLoading] = useState<boolean>(true);
-	const [liveInfos, setLiveInfos] = useState<LiveStatusDict>({
-		isLoaded: false,
-		liveCount: 0,
-		justNowLiveList: [],
-	});
+	const [isCustomLoading, setIsCustomLoading] = useState<boolean>(false);
+
 	const [, setNow] = useRecoilState(nowState);
 
 	const refetch = (activeLoading?: boolean) => {
 		activeLoading && setIsLoading(true);
-		activeLoading && setIsCustomLoading(true);
+
 		fetchServer(`/multiview`, "v1")
 			.then((res) => {
 				if (res.status === 200) {
@@ -31,24 +28,21 @@ export function useMultiView() {
 						...closes.sort((a, b) => new Date(b.closeDate!).getTime() - new Date(a.closeDate!).getTime()),
 					]);
 					setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
-					setLiveInfos({
-						isLoaded: true,
-						liveCount: opens.length,
-						justNowLiveList: opens.map(({ chzzkId, uuid, channelName, openDate }) => ({
-							chzzkId,
-							uuid,
-							channelName,
-							openDate,
-						})),
-					});
 				}
 			})
 			.finally(() => {
 				setIsLoading(false);
 			});
-
+	};
+	const refetchCustom = (activeLoading?: boolean) => {
+		activeLoading && setIsCustomLoading(true);
 		fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams }) })
-			.then((res) => {})
+			.then((res) => {
+				if (res.status === 200) {
+					const data: MultiViewData[] = res.data;
+					setCustomStreams(data.sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive)));
+				}
+			})
 			.finally(() => {
 				setIsCustomLoading(false);
 			});
@@ -64,6 +58,17 @@ export function useMultiView() {
 		};
 	}, []);
 
+	useEffect(() => {
+		if (customStreams.length > 0) {
+			customIntervalRef.current = setInterval(() => {
+				refetchCustom(true);
+			}, 60000);
+		}
+		return () => {
+			clearInterval(customIntervalRef.current);
+		};
+	}, []);
+
 	return {
 		data,
 		setData,
@@ -72,8 +77,9 @@ export function useMultiView() {
 		isLoading,
 		isCustomLoading,
 		refetch,
+		refetchCustom,
 		intervalRef,
-		liveInfos,
+		customIntervalRef,
 	};
 }
 

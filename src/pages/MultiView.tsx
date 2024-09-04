@@ -79,7 +79,17 @@ export function MultiView() {
 	const [chatStream, setChatStream] = useState({ streamId: "", name: "" });
 	const [streams, setStreams] = useState<Stream[]>([]);
 	const [configState, setConfigState] = useState<ConfigState>({ chatToLeft: false, listOpenerWidth: "32" });
-	const { data, customStreams, setCustomStreams, isLoading, refetch, intervalRef } = useMultiView();
+	const {
+		data,
+		customStreams,
+		setCustomStreams,
+		isLoading,
+		isCustomLoading,
+		refetch,
+		intervalRef,
+		refetchCustom,
+		customIntervalRef,
+	} = useMultiView();
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -180,17 +190,19 @@ export function MultiView() {
 		setIsMenuOpen(true);
 		// clearInterval(intervalRef.current);
 		refetch(true);
+		refetchCustom(true);
 		intervalRef.current = setInterval(() => {
 			refetch(true);
 		}, 30000);
+		customIntervalRef.current = setInterval(() => {
+			refetchCustom(true);
+		}, 60000);
 	};
 
 	const handleCloseMenu = () => {
 		setIsMenuOpen(false);
 		clearInterval(intervalRef.current);
-		// intervalRef.current = setInterval(() => {
-		// 	refetch(true);
-		// }, 60000);
+		clearInterval(customIntervalRef.current);
 		handleCloseSetting();
 	};
 
@@ -269,7 +281,10 @@ export function MultiView() {
 				handleToggleSetting={handleToggleSetting}
 				handleCloseSetting={handleCloseSetting}
 				refetch={refetch}
+				refetchCustom={refetchCustom}
+				customIntervalRef={customIntervalRef}
 				isLoading={isLoading}
+				isCustomLoading={isCustomLoading}
 				streams={streams}
 			/>
 			<HStack
@@ -516,7 +531,10 @@ function SideMenu({
 	handleToggleSetting,
 	handleCloseSetting,
 	refetch,
+	refetchCustom,
+	customIntervalRef,
 	isLoading,
+	isCustomLoading,
 	streams,
 }: SideMenuProps) {
 	const WIDTH = 320;
@@ -568,6 +586,7 @@ function SideMenu({
 
 	const handleRefresh = () => {
 		refetch(true);
+		refetchCustom(true);
 	};
 
 	const handleConfig = (name: keyof ConfigState, type: ConfigType) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -628,6 +647,11 @@ function SideMenu({
 			const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
 			return { ...prev, customStreams: arr };
 		});
+
+		clearInterval(customIntervalRef.current);
+		customIntervalRef.current = setInterval(() => {
+			refetchCustom(true);
+		}, 60000);
 	};
 
 	const handleDeleteCustomStream = (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -642,6 +666,11 @@ function SideMenu({
 			}
 			return prev;
 		});
+
+		clearInterval(customIntervalRef.current);
+		customIntervalRef.current = setInterval(() => {
+			refetchCustom(true);
+		}, 60000);
 	};
 
 	useEffect(() => {
@@ -663,6 +692,12 @@ function SideMenu({
 				isCustom: true,
 			}));
 			setCustomStreams(temp);
+			fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams: temp }) }).then((res) => {
+				if (res.status === 200) {
+					const data: MultiViewData[] = res.data;
+					setCustomStreams(data.sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive)));
+				}
+			});
 		}
 	}, []);
 
@@ -838,7 +873,7 @@ function SideMenu({
 							variant={"ghost"}
 							icon={<IoReload />}
 							aria-label="reload"
-							isDisabled={isLoading}
+							isDisabled={isLoading || isCustomLoading}
 							onClick={handleRefresh}
 							sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
 						/>
@@ -1071,7 +1106,7 @@ function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream, handleDe
 							</Text>
 						</HStack>
 						<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
-							{liveCategoryValue || "　"}
+							{(openLive && liveCategoryValue) || "　"}
 						</Text>
 						<Text color="gray.500" fontSize="0.65em">
 							{openLive ? modDateText(openDate) + " 시작" : modDateText(closeDate) + " 종료"}
@@ -1356,7 +1391,10 @@ interface SideMenuProps {
 	handleToggleSetting: () => void;
 	handleCloseSetting: () => void;
 	refetch: (isTimer?: boolean) => void;
+	refetchCustom: (isTimer?: boolean) => void;
+	customIntervalRef: React.MutableRefObject<number | undefined>;
 	isLoading: boolean;
+	isCustomLoading: boolean;
 	streams: Stream[];
 }
 
