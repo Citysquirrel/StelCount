@@ -40,7 +40,7 @@ import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData, UserSettingStorage } from "../lib/types";
 import { MdClear, MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdSearch, MdStar } from "react-icons/md";
-import { CiStreamOff } from "react-icons/ci";
+import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
 import { TbForbid } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
@@ -889,6 +889,40 @@ function SideMenu({
 				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
 					{currentMode === 1 ? (
 						<Stack width="100%" height="fit-content" border="1px solid white" borderRadius={".25rem"} p="8px">
+							<HStack justifyContent={"flex-end"}>
+								<Tooltip label="리스트 저장하기">
+									<IconButton
+										boxSize={"24px"}
+										minWidth="auto"
+										padding="0"
+										fontSize={"0.825rem"}
+										variant={"ghost"}
+										icon={<CiExport />}
+										aria-label="export-list"
+										onClick={() => {}}
+										sx={{
+											color: "white",
+											_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+										}}
+									/>
+								</Tooltip>
+								<Tooltip label="리스트 불러오기">
+									<IconButton
+										boxSize={"24px"}
+										minWidth="auto"
+										padding="0"
+										fontSize={"0.825rem"}
+										variant={"ghost"}
+										icon={<CiImport />}
+										aria-label="import-list"
+										onClick={() => {}}
+										sx={{
+											color: "white",
+											_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+										}}
+									/>
+								</Tooltip>
+							</HStack>
 							<InputGroup gap="4px">
 								<Input
 									size="sm"
@@ -926,41 +960,43 @@ function SideMenu({
 										const { channel, live } = data;
 										const { channelId, channelImageUrl, channelName, channelDescription, openLive } = channel;
 										return (
-											<HStack
-												padding="2px 8px"
-												_hover={{ backgroundColor: "gray.700" }}
-												cursor={"pointer"}
-												onClick={handleClickSearchResult({
-													name: channelName,
-													imageUrl: channelImageUrl,
-													streamId: channelId,
-													platform: "chzzk",
-													openLive,
-													openDate: live ? live.openDate : "",
-													liveTitle: live ? live.liveTitle : "",
-													liveCategoryValue: live ? live.liveCategoryValue : "",
-													liveImageUrl: live ? live.liveImageUrl : "",
-												})}
-											>
-												<Avatar boxSize="24px" src={`${channelImageUrl}?type=f40_40_na`}>
-													<AvatarBadge
-														bg={openLive ? "green.500" : "red.500"}
-														border="1px"
-														boxSize="8px"
-														right="1px"
-														bottom="1px"
-													/>
-												</Avatar>
-												<Text
-													key={`${channelId}-${idx}`}
-													fontSize="sm"
-													textOverflow={"ellipsis"}
-													overflow="hidden"
-													whiteSpace={"nowrap"}
+											<Tooltip label={channelDescription || ""} placement="right-start">
+												<HStack
+													padding="2px 8px"
+													_hover={{ backgroundColor: "gray.700" }}
+													cursor={"pointer"}
+													onClick={handleClickSearchResult({
+														name: channelName,
+														imageUrl: channelImageUrl,
+														streamId: channelId,
+														platform: "chzzk",
+														openLive,
+														openDate: live ? live.openDate : "",
+														liveTitle: live ? live.liveTitle : "",
+														liveCategoryValue: live ? live.liveCategoryValue : "",
+														liveImageUrl: live ? live.liveImageUrl : "",
+													})}
 												>
-													{channelName}
-												</Text>
-											</HStack>
+													<Avatar boxSize="24px" src={`${channelImageUrl}?type=f40_40_na`}>
+														<AvatarBadge
+															bg={openLive ? "green.500" : "red.500"}
+															border="1px"
+															boxSize="8px"
+															right="1px"
+															bottom="1px"
+														/>
+													</Avatar>
+													<Text
+														key={`${channelId}-${idx}`}
+														fontSize="sm"
+														textOverflow={"ellipsis"}
+														overflow="hidden"
+														whiteSpace={"nowrap"}
+													>
+														{channelName}
+													</Text>
+												</HStack>
+											</Tooltip>
 										);
 									},
 
