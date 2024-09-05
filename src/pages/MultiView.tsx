@@ -788,47 +788,44 @@ function SideMenu({
 							</Text>
 						)}
 					</Stack>
-					{isAdmin ? (
-						<HStack gap="2px" border="1px solid gray" padding="1px 2px" borderRadius={"4px"}>
-							<Tooltip label="스텔라 방송(1)">
-								<IconButton
-									boxSize={"24px"}
-									minWidth="auto"
-									padding="0"
-									fontSize={"0.825rem"}
-									variant={"ghost"}
-									icon={<MdStar color={"#8d97ef"} />}
-									aria-label="home"
-									onClick={handleCurrentMode(0)}
-									isActive={currentMode === 0}
-									sx={{
-										color: "white",
-										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-										_active: { backgroundColor: "rgba(255,255,255,0.5)" },
-									}}
-								/>
-							</Tooltip>
-							<Tooltip label={"사용자 설정 방송(2)"}>
-								<IconButton
-									boxSize={"24px"}
-									minWidth="auto"
-									padding="0"
-									fontSize={"0.825rem"}
-									variant={"ghost"}
-									icon={<IoPeople />}
-									aria-label="home"
-									onClick={handleCurrentMode(1)}
-									isActive={currentMode === 1}
-									sx={{
-										color: "white",
-										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-										_active: { backgroundColor: "rgba(255,255,255,0.5)" },
-									}}
-								/>
-							</Tooltip>
-						</HStack>
-					) : null}
-
+					<HStack gap="2px" border="1px solid gray" padding="1px 2px" borderRadius={"4px"}>
+						<Tooltip label="스텔라 방송(1)">
+							<IconButton
+								boxSize={"24px"}
+								minWidth="auto"
+								padding="0"
+								fontSize={"0.825rem"}
+								variant={"ghost"}
+								icon={<MdStar color={"#8d97ef"} />}
+								aria-label="home"
+								onClick={handleCurrentMode(0)}
+								isActive={currentMode === 0}
+								sx={{
+									color: "white",
+									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+									_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+								}}
+							/>
+						</Tooltip>
+						<Tooltip label={"사용자 설정 방송(2)"}>
+							<IconButton
+								boxSize={"24px"}
+								minWidth="auto"
+								padding="0"
+								fontSize={"0.825rem"}
+								variant={"ghost"}
+								icon={<IoPeople />}
+								aria-label="home"
+								onClick={handleCurrentMode(1)}
+								isActive={currentMode === 1}
+								sx={{
+									color: "white",
+									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+									_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+								}}
+							/>
+						</Tooltip>
+					</HStack>
 					<Spacing size={1} direction="horizontal" />
 					<Tooltip label="스텔카운트 홈(H)">
 						<IconButton
@@ -888,41 +885,51 @@ function SideMenu({
 				</HStack>
 				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
 					{currentMode === 1 ? (
-						<Stack width="100%" height="fit-content" border="1px solid white" borderRadius={".25rem"} p="8px">
-							<HStack justifyContent={"flex-end"}>
-								<Tooltip label="리스트 저장하기">
-									<IconButton
-										boxSize={"24px"}
-										minWidth="auto"
-										padding="0"
-										fontSize={"0.825rem"}
-										variant={"ghost"}
-										icon={<CiExport />}
-										aria-label="export-list"
-										onClick={() => {}}
-										sx={{
-											color: "white",
-											_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-										}}
-									/>
-								</Tooltip>
-								<Tooltip label="리스트 불러오기">
-									<IconButton
-										boxSize={"24px"}
-										minWidth="auto"
-										padding="0"
-										fontSize={"0.825rem"}
-										variant={"ghost"}
-										icon={<CiImport />}
-										aria-label="import-list"
-										onClick={() => {}}
-										sx={{
-											color: "white",
-											_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-										}}
-									/>
-								</Tooltip>
-							</HStack>
+						<Stack
+							width="100%"
+							height="fit-content"
+							border="1px solid white"
+							borderRadius={".25rem"}
+							p="4px 8px 8px 8px"
+							gap="2px"
+						>
+							{isAdmin ? (
+								<HStack justifyContent={"flex-end"} gap="2px">
+									<Tooltip label="리스트 저장하기">
+										<IconButton
+											boxSize={"24px"}
+											minWidth="auto"
+											padding="0"
+											fontSize={"0.825rem"}
+											variant={"ghost"}
+											icon={<CiExport />}
+											aria-label="export-list"
+											onClick={() => {}}
+											sx={{
+												color: "white",
+												_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+											}}
+										/>
+									</Tooltip>
+									<Tooltip label="리스트 불러오기">
+										<IconButton
+											boxSize={"24px"}
+											minWidth="auto"
+											padding="0"
+											fontSize={"0.825rem"}
+											variant={"ghost"}
+											icon={<CiImport />}
+											aria-label="import-list"
+											onClick={() => {}}
+											sx={{
+												color: "white",
+												_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+											}}
+										/>
+									</Tooltip>
+								</HStack>
+							) : null}
+
 							<InputGroup gap="4px">
 								<Input
 									size="sm"
@@ -944,6 +951,7 @@ function SideMenu({
 									}}
 								/>
 							</InputGroup>
+							<Spacing size={2} />
 							<Stack
 								border="1px solid gray"
 								borderRadius={".5rem"}
@@ -1005,6 +1013,7 @@ function SideMenu({
 									</Text>
 								)}
 							</Stack>
+							<Spacing size={2} />
 							<HStack justifyContent={"space-between"} gap="4px">
 								<HStack paddingLeft="4px" gap={"4px"}>
 									{selectedStreamer.platform === "chzzk" ? <Image boxSize="18px" src="/images/i_chzzk_1.png" /> : null}
