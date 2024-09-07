@@ -918,9 +918,9 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 
 function MultiView({ list, setList }: MultiViewProps) {
 	const [mulLiveUrl, setMulLiveUrl] = useState("");
-	const [mulLiveMode, setMulLiveMode] = useState(0);
+	const [mulLiveMode, setMulLiveMode] = useState(1);
 	const [isOtherOn, setIsOtherOn] = useState(false);
-	const urlPrefix = "https://mul.live/";
+	const urlPrefix = mulLiveMode === 1 ? "https://mul.live/" : "https://stelcount.fans/multiview?streams=";
 	const link = `${urlPrefix}${mulLiveUrl}`;
 	const { onCopy } = useClipboard(link);
 	const toast = useToast();
@@ -970,7 +970,11 @@ function MultiView({ list, setList }: MultiViewProps) {
 			}
 			return [...a, value];
 		}, [] as string[]);
-		setMulLiveUrl(arr.join("/"));
+		if (mulLiveMode === 0) {
+			setMulLiveUrl(arr.join("--"));
+		} else if (mulLiveMode === 1) {
+			setMulLiveUrl(arr.join("/"));
+		}
 	}, [list]);
 
 	return (
