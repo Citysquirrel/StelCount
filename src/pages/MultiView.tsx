@@ -222,19 +222,19 @@ export function MultiView() {
 		}
 	};
 
-	const calcColumns = (len: number) => {
-		if (len <= 1) return 1;
-		else if (len <= 4) {
-			if (isInnerChatOpen && len === 2) return 1;
-			return 2;
-		} else if (len <= 9) {
-			if (isInnerChatOpen && (len === 5 || len === 6)) return 2;
-			return 3;
-		} else {
-			if (isInnerChatOpen && (len === 10 || len === 11 || len === 12)) return 3;
-			return 4;
-		}
-	};
+	// const calcColumns = (len: number) => {
+	// 	if (len <= 1) return 1;
+	// 	else if (len <= 4) {
+	// 		if (isInnerChatOpen && len === 2) return 1;
+	// 		return 2;
+	// 	} else if (len <= 9) {
+	// 		if (isInnerChatOpen && (len === 5 || len === 6)) return 2;
+	// 		return 3;
+	// 	} else {
+	// 		if (isInnerChatOpen && (len === 10 || len === 11 || len === 12)) return 3;
+	// 		return 4;
+	// 	}
+	// };
 
 	useEffect(() => {
 		handleFrameSize();
@@ -256,6 +256,8 @@ export function MultiView() {
 	useHotkeys("ctrl+alt+l", () => {
 		navigate("/login");
 	});
+
+	const streamContainerWidth = isInnerChatOpen ? `calc(100vw - 350px)` : "100vw";
 
 	return (
 		<HStack
@@ -293,13 +295,18 @@ export function MultiView() {
 				gap={0}
 				flexDirection={configState.chatToLeft ? "row-reverse" : "row"}
 			>
-				<SimpleGrid
+				<HStack
 					id="streams"
-					columns={calcColumns(len)}
 					sx={{
 						flexGrow: 1,
-						height: "100%",
-						gap: 0,
+						flexWrap: "wrap",
+						justifyContent: "center",
+						alignItems: "center",
+						alignContent: "center",
+						width: streamContainerWidth,
+						height: "100vh",
+						boxSizing: "border-box",
+						gap: "0",
 					}}
 				>
 					{streams.length > 0 ? (
@@ -331,11 +338,12 @@ export function MultiView() {
 										position="absolute"
 										bottom={"48px"}
 										right={"20px"}
-										backgroundColor={"gray.900"}
+										backgroundColor={"rgb(255,255,255,0.3)"}
 										borderRadius={".5rem"}
-										padding="12px 24px"
-										outline={"1px solid white"}
+										padding="8px 16px"
+										// outline={"1px solid white"}
 										transition="all .2s"
+										backdropFilter="blur(1px)"
 										opacity={isMenuOpen ? 1 : 0}
 										_hover={{ opacity: 1 }}
 									>
@@ -358,42 +366,54 @@ export function MultiView() {
 							);
 						})
 					) : (
-						<Stack color="white" justifyContent={"center"} width="100%">
-							<Text>
-								<Box as="span" fontWeight={"bold"}>
-									좌측 메뉴
-								</Box>
-								에서 스텔라를 선택해주세요
-							</Text>
-							{/* <Text>스텔라 이외의 타 스트리머에 대한 멀티뷰는 지원하지 않습니다!</Text> */}
-							{isExtensionInstalled ? (
-								isLatestVersion ? (
-									<Text>확장 프로그램이 성공적으로 실행되었습니다</Text>
-								) : (
-									<Text>확장 프로그램을 최신버전으로 업데이트 해주세요</Text>
-								)
-							) : (
+						<Stack color="white" justifyContent={"center"} alignItems="center" width="100%">
+							<Stack>
 								<Text>
-									네이버 계정으로 인증 및 채팅을 원하시면{" "}
-									<Link href={CHROME_EXTENSION_URL} isExternal color="blue.500">
-										확장 프로그램
-									</Link>
-									을 이용해보세요
+									<Box as="span" fontWeight={"bold"}>
+										좌측 메뉴
+									</Box>
+									에서 스텔라를 선택해주세요
 								</Text>
-							)}
-							<Spacing size={4} />
-							<Text fontSize="sm">
-								<Link href={CHROME_EXTENSION_GITHUB_URL} isExternal>
-									Extension Github
-								</Link>
-								&nbsp;|&nbsp;
-								<Link href={PRIVACY_POLICY_URL} isExternal>
-									개인정보처리방침
-								</Link>
-							</Text>
+								{isExtensionInstalled ? (
+									isLatestVersion ? (
+										<Text>확장 프로그램이 성공적으로 실행되었습니다</Text>
+									) : (
+										<Text>확장 프로그램을 최신버전으로 업데이트 해주세요</Text>
+									)
+								) : (
+									<Text>
+										네이버 계정으로 인증 및 채팅을 원하시면{" "}
+										<Link href={CHROME_EXTENSION_URL} isExternal color="blue.500">
+											확장 프로그램
+										</Link>
+										을 이용해보세요
+									</Text>
+								)}
+								<Spacing size={4} />
+								<Text fontSize="sm">
+									<Link href={CHROME_EXTENSION_GITHUB_URL} isExternal>
+										Extension Github
+									</Link>
+									&nbsp;|&nbsp;
+									<Link href={PRIVACY_POLICY_URL} isExternal>
+										개인정보처리방침
+									</Link>
+								</Text>
+							</Stack>
 						</Stack>
 					)}
-				</SimpleGrid>
+				</HStack>
+				{/* <SimpleGrid
+					id="streams"
+					columns={calcColumns(len)}
+					sx={{
+						flexGrow: 1,
+						height: "100%",
+						gap: 0,
+					}}
+				>
+					
+				</SimpleGrid> */}
 				{isInnerChatOpen ? (
 					<Box position="relative" userSelect={"none"} overflow="hidden">
 						{/* 채팅 컨트롤러 */}
