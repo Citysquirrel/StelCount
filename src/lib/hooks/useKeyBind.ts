@@ -12,8 +12,8 @@ export function useKeyBind(keyConfig: KeyConfig, ref: HTMLElement | null = null,
 		if (e.defaultPrevented) {
 			return;
 		}
-
-		if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
+		const target = e.target as HTMLElement;
+		if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
 			return;
 		}
 
