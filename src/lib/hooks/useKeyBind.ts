@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 export function useKeyBind(keyConfig: KeyConfig, ref: HTMLElement | null = null, eventType?: KeyBindEventType) {
 	const keyConfigRef = useRef(keyConfig);
+	const activeElement = document.activeElement;
 
 	useEffect(() => {
 		keyConfigRef.current = keyConfig;
@@ -9,6 +10,10 @@ export function useKeyBind(keyConfig: KeyConfig, ref: HTMLElement | null = null,
 
 	const handleKey = (e: KeyboardEvent) => {
 		if (e.defaultPrevented) {
+			return;
+		}
+
+		if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
 			return;
 		}
 
