@@ -11,6 +11,7 @@ export function useMultiView() {
 	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [isCustomLoading, setIsCustomLoading] = useState<boolean>(false);
+	const [statusCode, setStatusCode] = useState<StatusCode>({ main: 200, custom: 200 });
 
 	const [, setNow] = useRecoilState(nowState);
 
@@ -19,6 +20,7 @@ export function useMultiView() {
 
 		fetchServer(`/multiview`, "v1")
 			.then((res) => {
+				setStatusCode((prev) => ({ ...prev, main: res.status }));
 				if (res.status === 200) {
 					const applyType: MultiViewData[] = res.data;
 					const opens = applyType.filter((stream) => stream.openLive);
@@ -38,6 +40,7 @@ export function useMultiView() {
 		activeLoading && setIsCustomLoading(true);
 		fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams }) })
 			.then((res) => {
+				setStatusCode((prev) => ({ ...prev, custom: res.status }));
 				if (res.status === 200) {
 					const data: MultiViewData[] = res.data;
 					setCustomStreams(data.sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive)));
@@ -76,6 +79,7 @@ export function useMultiView() {
 		setCustomStreams,
 		isLoading,
 		isCustomLoading,
+		statusCode,
 		refetch,
 		refetchCustom,
 		intervalRef,
@@ -83,15 +87,8 @@ export function useMultiView() {
 	};
 }
 
-interface LiveStatusDict {
-	liveCount: number;
-	isLoaded: boolean;
-	justNowLiveList: JustNowLive[];
-}
+type StatusCodeKey = "main" | "custom" | (string & {});
 
-interface JustNowLive {
-	chzzkId: string | undefined;
-	uuid: string;
-	channelName?: string;
-	openDate?: string;
-}
+export type StatusCode = {
+	[K in StatusCodeKey]: number;
+};
