@@ -24,7 +24,7 @@ export const routeObj: RouteObject[] = [
 		errorElement: <ServerErrorPage isErrorComponent />,
 		children: [
 			{ path: "/home", element: <Home /> },
-			{ path: "/about", element: <About /> },
+			// { path: "/about", element: <About /> },
 			{ path: "/counter", element: <Counter /> },
 			{ path: "/admin", element: <Admin /> },
 			{ path: "/admin/:id", element: <AdminEdit /> },

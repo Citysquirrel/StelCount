@@ -83,7 +83,7 @@ function App() {
 						aria-label="multiview"
 					/>
 				</Tooltip>
-				<Tooltip label="사이트 설명">
+				{/* <Tooltip label="사이트 설명">
 					<IconButton
 						fontSize="1.125rem"
 						isRound
@@ -92,7 +92,7 @@ function App() {
 						onClick={nav("/about")}
 						aria-label="about"
 					/>
-				</Tooltip>
+				</Tooltip> */}
 				{isAdmin ? (
 					<Tooltip label="관리자">
 						<IconButton
