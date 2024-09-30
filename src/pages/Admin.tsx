@@ -701,7 +701,7 @@ function MusicPlaylist({ data, setData, inheritChannelId }: MusicPlaylistProps) 
 			title: title || "",
 			titleAlias: titleAlias || "",
 			tags,
-			publishedAt: publishedAt.slice(0, -1),
+			publishedAt,
 			isActive,
 			isInheritChannelId: !!inheritChannelId,
 		});
