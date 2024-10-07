@@ -17,6 +17,7 @@ import { useToast } from "@chakra-ui/react";
 import isMobile from "is-mobile";
 import { getLocale } from "../functions/etc";
 import { useImprovedInterval } from "./useInterval";
+import { MultiViewData } from "../types";
 
 export function useStellar() {
 	const toast = useToast();
@@ -89,6 +90,15 @@ export function useStellar() {
 				setIsLiveLoading(false);
 				setIsLiveFetching(false);
 			});
+
+		// fetchServer("/multiview","v1").then(res => {
+		// 	if(res.status === 200){
+		// 		const data:MultiViewData[] = res.data
+
+		// 		setLiveStatus(data)
+
+		// 	}
+		// })
 	};
 
 	const f = (isTimer?: boolean) => {

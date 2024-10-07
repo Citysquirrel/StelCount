@@ -55,13 +55,16 @@ export interface StellarState extends StellarInfo {
 }
 
 export interface LiveStatusState {
-	chzzkId: string;
+	chzzkId?: string | undefined;
 	liveStatus?: boolean;
 	uuid: string;
 	openDate?: string;
 	closeDate?: string;
-	liveTitle: string | null;
-	liveCategoryValue: string;
+	liveTitle?: string | null | undefined;
+	liveCategoryValue?: string | undefined;
+	liveImageUrl?: string | null;
+	openLive?: boolean;
+	adult?: boolean;
 }
 
 type FetchInfoKey = "stellar" | "liveStatus" | "liveDetail" | (string & {});
