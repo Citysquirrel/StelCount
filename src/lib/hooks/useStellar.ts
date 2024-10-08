@@ -62,43 +62,51 @@ export function useStellar() {
 
 	const getLiveStatus = () => {
 		setIsLiveFetching(true);
-		fetchServer("/live-status", "v1")
+		// fetchServer("/live-status", "v1")
+		// 	.then((res) => {
+		// 		if (res.status === 200) {
+		// 			const data = res.data as LiveStatusState[];
+		// 			setLiveStatus((prev) => {
+		// 				if (prev.length === 0) return data;
+		// 				const arr = [...prev];
+		// 				for (let item of arr) {
+		// 					const liveStatus = data.find((l) => l.uuid === item.uuid)?.liveStatus;
+		// 					const liveCategoryValue = data.find((l) => l.uuid === item.uuid)?.liveCategoryValue || "";
+		// 					const liveTitle = data.find((l) => l.uuid === item.uuid)?.liveTitle || null;
+		// 					const curIdx = arr.findIndex((a) => a.uuid === item.uuid);
+		// 					arr[curIdx] = { ...arr[curIdx], liveStatus, liveTitle, liveCategoryValue };
+		// 				}
+		// 				return arr;
+		// 			});
+		// 			setFetchInfo((prev) => {
+		// 				const obj = { ...prev };
+		// 				obj["liveStatus"] = { date: getLocale() };
+		// 				return obj;
+		// 			});
+		// 			getLiveDetail();
+		// 		}
+		// 	})
+		// 	.finally(() => {
+		// 		setIsLiveLoading(false);
+		// 		setIsLiveFetching(false);
+		// 	});
+
+		fetchServer("/multiview", "v1")
 			.then((res) => {
 				if (res.status === 200) {
-					const data = res.data as LiveStatusState[];
-					setLiveStatus((prev) => {
-						if (prev.length === 0) return data;
-						const arr = [...prev];
-						for (let item of arr) {
-							const liveStatus = data.find((l) => l.uuid === item.uuid)?.liveStatus;
-							const liveCategoryValue = data.find((l) => l.uuid === item.uuid)?.liveCategoryValue || "";
-							const liveTitle = data.find((l) => l.uuid === item.uuid)?.liveTitle || null;
-							const curIdx = arr.findIndex((a) => a.uuid === item.uuid);
-							arr[curIdx] = { ...arr[curIdx], liveStatus, liveTitle, liveCategoryValue };
-						}
-						return arr;
-					});
+					const data: MultiViewData[] = res.data;
+					setLiveStatus(data);
 					setFetchInfo((prev) => {
 						const obj = { ...prev };
 						obj["liveStatus"] = { date: getLocale() };
 						return obj;
 					});
-					getLiveDetail();
 				}
 			})
 			.finally(() => {
 				setIsLiveLoading(false);
 				setIsLiveFetching(false);
 			});
-
-		// fetchServer("/multiview","v1").then(res => {
-		// 	if(res.status === 200){
-		// 		const data:MultiViewData[] = res.data
-
-		// 		setLiveStatus(data)
-
-		// 	}
-		// })
 	};
 
 	const f = (isTimer?: boolean) => {
