@@ -49,5 +49,5 @@ export function useImprovedInterval(
 		};
 	}, [timeout]);
 
-	return { lastExecutionTime };
+	return { lastExecutionTime, intervalId };
 }

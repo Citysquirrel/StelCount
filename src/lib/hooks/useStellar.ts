@@ -165,7 +165,7 @@ export function useStellar() {
 		// };
 	}, []);
 
-	useImprovedInterval(
+	const { intervalId } = useImprovedInterval(
 		() => {
 			f(true);
 		},
@@ -173,5 +173,5 @@ export function useStellar() {
 		{ executeCallbackWhenWindowFocused: true }
 	);
 
-	return { data, setData, refetch: f, intervalRef };
+	return { data, setData, refetch: f, intervalRef: intervalId };
 }
