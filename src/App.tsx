@@ -4,8 +4,8 @@ import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, Divider, IconButton, Link, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
-import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdOndemandVideo, MdQuestionMark, MdSettings } from "react-icons/md";
+import { Button, Divider, IconButton, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
+import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdSettings } from "react-icons/md";
 import { GrMultiple } from "react-icons/gr";
 import { useRecoilState } from "recoil";
 import { serverErrorState, isStellarLoadingState, backgroundColorState, fetchInfoState, nowState } from "./lib/Atom";
@@ -26,7 +26,7 @@ function App() {
 	const [serverError] = useRecoilState(serverErrorState);
 	const [backgroundColor] = useRecoilState(backgroundColorState);
 	const [fetchInfo] = useRecoilState(fetchInfoState);
-	const [now, setNow] = useRecoilState(nowState);
+	const [now] = useRecoilState(nowState);
 	const { refetch, intervalRef } = useStellar();
 	const { isAdmin, isLoading } = useAuth();
 
@@ -126,7 +126,7 @@ function App() {
 						padding="0"
 						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
 						aria-label="write_"
-						onClick={(e) => {
+						onClick={() => {
 							window.open(CAFE_WRITE_URL);
 						}}
 					>

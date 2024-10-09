@@ -7,7 +7,6 @@ import {
 	Card,
 	CardBody,
 	Checkbox,
-	CheckboxIcon,
 	CloseButton,
 	Divider,
 	Drawer,
@@ -52,7 +51,6 @@ import { fetchServer } from "../lib/functions/fetch";
 import {
 	MdAdd,
 	MdCalendarMonth,
-	MdCheckCircle,
 	MdColorLens,
 	MdDelete,
 	MdEdit,

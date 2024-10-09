@@ -19,7 +19,6 @@ import {
 	NumberInputStepper,
 	NumberIncrementStepper,
 	NumberDecrementStepper,
-	SimpleGrid,
 	Stack,
 	Switch,
 	Text,
@@ -59,12 +58,11 @@ import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
-import { Search, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { lightenColor } from "../lib/functions/etc";
 import { LoadingCircle } from "../components/Loading";
 import { fetchServer } from "../lib/functions/fetch";
 import { createComponentMap } from "../lib/functions/createComponent";
-import { useConsole } from "../lib/hooks/useConsole";
 import { v4 } from "uuid";
 import { useAuth } from "../lib/hooks/useAuth";
 import { useHotkeys } from "react-hotkeys-hook";
