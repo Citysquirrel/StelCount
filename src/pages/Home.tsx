@@ -623,6 +623,9 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 
 	const handleAddMulView = (live: LiveData) => () => {
 		setMultiViewList((prev) => {
+			if (prev.findIndex((p) => p.uuid === live.uuid)) {
+				return prev;
+			}
 			const id = prev.length === 0 ? 1 : Math.max(...prev.map((p) => p.id)) + 1;
 			return [
 				...prev,
