@@ -925,6 +925,10 @@ function MultiView({ list, setList }: MultiViewProps) {
 	const { onCopy } = useClipboard(link);
 	const toast = useToast();
 
+	const handleChangeMode = () => {
+		setMulLiveMode((prev) => prev ^ 1);
+	};
+
 	const handleOpen = () => {
 		window.open(link, "_blank");
 	};
@@ -1000,7 +1004,7 @@ function MultiView({ list, setList }: MultiViewProps) {
 					</Tooltip> */}
 				</HStack>
 				<InputGroup size="sm">
-					<InputLeftAddon>{urlPrefix}</InputLeftAddon>
+					<InputLeftAddon onClick={handleChangeMode}>{urlPrefix}</InputLeftAddon>
 					<Input value={mulLiveUrl} isDisabled />
 				</InputGroup>
 				<HStack>
