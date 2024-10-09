@@ -626,7 +626,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 			const id = prev.length === 0 ? 1 : Math.max(...prev.map((p) => p.id)) + 1;
 			return [
 				...prev,
-				{ id, uuid: live.uuid, type: "chzzk", streamId: live.chzzkId, profileImage: live.profileImage || "" },
+				{ id, uuid: live.uuid, type: "chzzk", streamId: live.chzzkId || "", profileImage: live.profileImage || "" },
 			];
 		});
 	};
