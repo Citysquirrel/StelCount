@@ -50,9 +50,16 @@ import {
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
+import { MdCheck, MdClear, MdFilterList, MdHome, MdImage, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
 import { useLocalStorage } from "usehooks-ts";
-import { Statistics, Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
+import {
+	Statistics,
+	Tag as TagType,
+	Thumbnails,
+	UserSettingStorage,
+	VideoDetail,
+	YoutubeMusicData,
+} from "../lib/types";
 import { ColorText } from "../components/Text";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import isMobile from "is-mobile";
@@ -598,6 +605,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 		titleAlias,
 		videoId,
 		thumbnail,
+		thumbnails,
 		viewCount,
 		likeCount,
 		ownerId,
@@ -628,12 +636,18 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 	const titleText = titleAlias || title;
 	const viewCountNum = parseInt(viewCount || "0");
 	const [calc, dir] = remainingCount(viewCountNum);
+	const parsed: Thumbnails = JSON.parse(thumbnails);
+	const maxresUrl = parsed.maxres.url;
 
 	const handleMouseEnter = () => {};
 
 	const handleMouseLeave = () => {};
 
 	const handleMouseMove = () => {};
+
+	const handleClickMaxresThumbnail = () => {
+		window.open(maxresUrl!, "_blank");
+	};
 
 	return (
 		<Card
@@ -658,6 +672,12 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 			onMouseLeave={handleMouseLeave}
 			onMouseMove={handleMouseMove}
 		>
+			{maxresUrl ? (
+				<Stack position="absolute" top={"4px"} right={"4px"}>
+					<IconButton icon={<MdImage />} aria-label="link-maxres-thumbnail" onClick={handleClickMaxresThumbnail} />
+				</Stack>
+			) : null}
+
 			{false ? (
 				<Button
 					as={Link}
