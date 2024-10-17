@@ -76,7 +76,11 @@ export function MultiView() {
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
 	const [chatStream, setChatStream] = useState({ streamId: "", name: "" });
 	const [streams, setStreams] = useState<Stream[]>([]);
-	const [configState, setConfigState] = useState<ConfigState>({ chatToLeft: false, listOpenerWidth: "32" });
+	const [configState, setConfigState] = useState<ConfigState>({
+		chatToLeft: false,
+		listOpenerWidth: "32",
+		controllerPos: 1,
+	});
 	const {
 		data,
 		customStreams,
@@ -586,6 +590,7 @@ function SideMenu({
 			min: 24,
 			max: 120,
 		},
+		{ name: "controllerPos", label: "컨트롤러 위치", type: "list", defaultValue: 1 },
 	];
 
 	const onSearch = () => {
@@ -1373,6 +1378,10 @@ function createConfigComponent(
 				</Box>
 			</FormControl>
 		);
+	} else if (type === "list") {
+		const value = configState[name] as number; // default: 1, 1 ~ 4
+
+		return <></>;
 	} else return <></>;
 }
 
@@ -1480,6 +1489,7 @@ interface MenuCardCloseButtonProps extends IconButtonProps {}
 interface ConfigState {
 	chatToLeft: boolean;
 	listOpenerWidth: string;
+	controllerPos: number;
 }
 
 interface ConfigDict {
@@ -1492,7 +1502,7 @@ interface ConfigDict {
 	max?: number;
 }
 
-type ConfigType = "switch" | "number" | "slider" | (string & {});
+type ConfigType = "switch" | "number" | "slider" | "list" | (string & {});
 
 interface Streamer {
 	name: string;
