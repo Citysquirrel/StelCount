@@ -94,6 +94,7 @@ export function Admin() {
 		colorCode: "",
 		playlistIdForMusic: "",
 		justLive: false,
+		debut: "",
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const tagDefault = {
@@ -164,6 +165,7 @@ export function Admin() {
 					colorCode: "",
 					playlistIdForMusic: "",
 					justLive: false,
+					debut: "",
 				});
 			} else if (res.status === 500) {
 				toast({ description: `스텔라 등록 중 오류가 발생했습니다`, status: "error" });
@@ -268,6 +270,12 @@ export function Admin() {
 								value={inputValue.group}
 								onChange={handleInputValue("group")}
 							/>
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdCalendarMonth />
+							</InputLeftElement>
+							<Input type="datetime-local" value={inputValue.debut} onChange={handleInputValue("debut")} isDisabled />
 						</InputGroup>
 						<InputGroup>
 							<InputLeftElement>
@@ -464,6 +472,7 @@ export function AdminEdit() {
 		colorCode: "",
 		playlistIdForMusic: "",
 		justLive: false,
+		debut: "",
 	});
 	const [inheritChannelId, setInheritChannelId] = useState<string>("");
 	const [videoData, setVideoData] = useState<VideoAdminData[]>([]);
@@ -567,6 +576,12 @@ export function AdminEdit() {
 							value={inputValue.group}
 							onChange={handleInputValue("group")}
 						/>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<MdCalendarMonth />
+						</InputLeftElement>
+						<Input type="datetime-local" value={inputValue.debut} onChange={handleInputValue("debut")} isDisabled />
 					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
@@ -1239,6 +1254,7 @@ interface StellarInputValue {
 	colorCode: string;
 	playlistIdForMusic: string;
 	justLive: boolean;
+	debut: string;
 }
 
 interface StellarData extends StellarInputValue {
