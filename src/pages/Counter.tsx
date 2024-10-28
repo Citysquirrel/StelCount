@@ -672,11 +672,11 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 			onMouseLeave={handleMouseLeave}
 			onMouseMove={handleMouseMove}
 		>
-			{maxresUrl ? (
+			{/* {maxresUrl ? (
 				<Stack position="absolute" top={"4px"} right={"4px"}>
 					<IconButton icon={<MdImage />} aria-label="link-maxres-thumbnail" onClick={handleClickMaxresThumbnail} />
 				</Stack>
-			) : null}
+			) : null} */}
 
 			{false ? (
 				<Button
