@@ -647,6 +647,9 @@ function SideMenu({
 		const { name, imageUrl, streamId, platform, liveCategoryValue, liveTitle, liveImageUrl, openLive, openDate } =
 			selectedStreamer;
 		setCustomStreams((prev) => {
+			if (prev.length >= 50) {
+				return prev;
+			}
 			return [
 				...prev,
 				{
@@ -1059,11 +1062,12 @@ function SideMenu({
 									size="xs"
 									isDisabled={
 										!selectedStreamer.streamId ||
-										currentStreams.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1
+										currentStreams.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1 ||
+										customStreams.length >= 50
 									}
 									onClick={handleAddCustomStream}
 								>
-									추가
+									{customStreams.length >= 50 ? "개수 초과" : "추가"}
 								</Button>
 							</HStack>
 						</Stack>
