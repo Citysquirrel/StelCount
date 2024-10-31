@@ -60,6 +60,7 @@ type ServerAPI =
 	| "/live-detail"
 	| "/multiview"
 	| "/search-streamer"
+	| "/video-info"
 	| (string & {});
 
 interface FetchServerOption extends FetchOptions {
