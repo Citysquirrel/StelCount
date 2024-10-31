@@ -636,8 +636,8 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 	const titleText = titleAlias || title;
 	const viewCountNum = parseInt(viewCount || "0");
 	const [calc, dir] = remainingCount(viewCountNum);
-	const parsed: Thumbnails = JSON.parse(thumbnails);
-	const maxresUrl = parsed.maxres.url;
+	// const parsed: Thumbnails = JSON.parse(thumbnails);
+	// const maxresUrl = parsed.maxres.url;
 
 	const handleMouseEnter = () => {};
 
@@ -645,9 +645,9 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 
 	const handleMouseMove = () => {};
 
-	const handleClickMaxresThumbnail = () => {
-		window.open(maxresUrl!, "_blank");
-	};
+	// const handleClickMaxresThumbnail = () => {
+	// 	window.open(maxresUrl!, "_blank");
+	// };
 
 	return (
 		<Card
