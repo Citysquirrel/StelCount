@@ -236,12 +236,12 @@ export default function Home() {
 			...l,
 			profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
 			name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
-			gap: l.liveStatus
+			gap: l.openLive
 				? elapsedTimeTextForCard(new Date(l.openDate!), new Date(getLocale()))
 				: elapsedTimeTextForCard(new Date(l.closeDate!), new Date(getLocale())),
 		}));
-		const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
-		const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
+		const openArr = arr.filter((a) => a.openLive).sort((a, b) => a.gap[0] - b.gap[0]);
+		const closeArr = arr.filter((a) => !a.openLive).sort((a, b) => a.gap[0] - b.gap[0]);
 		setLiveData([...openArr, ...closeArr]);
 	}, [liveStatus]);
 
@@ -251,12 +251,12 @@ export default function Home() {
 			for (let v of arr) {
 				v.profileImage = stellar.find((s) => s.uuid === v.uuid)?.profileImage || "";
 				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
-				v.gap = v.liveStatus
+				v.gap = v.openLive
 					? elapsedTimeTextForCard(new Date(v.openDate!), new Date(getLocale()))
 					: elapsedTimeTextForCard(new Date(v.closeDate!), new Date(getLocale()));
 			}
-			const openArr = arr.filter((a) => a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
-			const closeArr = arr.filter((a) => !a.liveStatus).sort((a, b) => a.gap[0] - b.gap[0]);
+			const openArr = arr.filter((a) => a.openLive).sort((a, b) => a.gap[0] - b.gap[0]);
+			const closeArr = arr.filter((a) => !a.openLive).sort((a, b) => a.gap[0] - b.gap[0]);
 			return [...openArr, ...closeArr];
 		});
 	}, [stellar]);
@@ -756,7 +756,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										cursor: "pointer",
 										transition: "all .3s",
 										outline: "2px solid transparent",
-										outlineColor: live.liveStatus ? "green.400" : "red.400",
+										outlineColor: live.openLive ? "green.400" : "red.400",
 										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
 										"> .music-information": { opacity: isMobile() ? 1 : 0 },
 										_hover: {
@@ -805,7 +805,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										alt="thumbnail"
 										objectFit={"cover"}
 										transform={"scale(1.35)"}
-										filter={!live.liveStatus ? "grayscale(1)" : undefined}
+										filter={!live.openLive ? "grayscale(1)" : undefined}
 									/>
 									<Stack
 										className="music-information"
@@ -841,7 +841,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										cursor: "pointer",
 										transition: "all .3s",
 										outline: "2px solid transparent",
-										outlineColor: live.liveStatus ? "green.400" : "red.400",
+										outlineColor: live.openLive ? "green.400" : "red.400",
 										animation: `fadeIn 0.3s ease-in-out ${idx * 0.05}s 1 normal both`,
 										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
 										"> .music-information": { opacity: isMobile() ? 1 : 0 },
@@ -892,7 +892,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										alt="thumbnail"
 										objectFit={"cover"}
 										transform={"scale(1.35)"}
-										filter={!live.liveStatus ? "grayscale(1)" : undefined}
+										filter={!live.openLive ? "grayscale(1)" : undefined}
 									/>
 									<Stack
 										className="music-information"
