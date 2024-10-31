@@ -275,7 +275,12 @@ export function Admin() {
 							<InputLeftElement>
 								<MdCalendarMonth />
 							</InputLeftElement>
-							<Input type="datetime-local" value={inputValue.debut} onChange={handleInputValue("debut")} isDisabled />
+							<Input
+								type="datetime-local"
+								value={inputValue.debut}
+								onChange={handleInputValue("debut")}
+								width="280px"
+							/>
 						</InputGroup>
 						<InputGroup>
 							<InputLeftElement>
@@ -355,7 +360,18 @@ export function Admin() {
 							{stellarData.map((s, idx) => (
 								<Tr key={`${s.id}-${idx}`}>
 									<Td isNumeric>{s.id}</Td>
-									<Td>{s.name}</Td>
+									<Td>
+										{s.youtubeCustomUrl ? (
+											<Link
+												href={`https://www.youtube.com/${s.youtubeCustomUrl ? s.youtubeCustomUrl.split(",")[0] : ""}`}
+												isExternal
+											>
+												{s.name}
+											</Link>
+										) : (
+											s.name
+										)}
+									</Td>
 									<Td>
 										{s.group && Number(s.group) < stellarGroupName.length
 											? `${s.group}기 - ${stellarGroupName[s.group][0]}`
@@ -517,10 +533,32 @@ export function AdminEdit() {
 						if (!res.data) {
 							nav("/admin");
 						}
-						const { name, nameShort, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video, justLive } =
-							res.data;
+						const {
+							name,
+							nameShort,
+							group,
+							chzzkId,
+							youtubeId,
+							xId,
+							colorCode,
+							playlistIdForMusic,
+							video,
+							justLive,
+							debut,
+						} = res.data;
 						setInheritChannelId(youtubeId);
-						const obj = { name, nameShort, group, chzzkId, youtubeId, xId, colorCode, playlistIdForMusic, video };
+						const obj = {
+							name,
+							nameShort,
+							group,
+							chzzkId,
+							youtubeId,
+							xId,
+							colorCode,
+							playlistIdForMusic,
+							video,
+							debut: debut ? debut.slice(0, -1) : "",
+						};
 						const boolean = { justLive };
 						setInputValue((prev) => ({
 							...prev,
@@ -581,7 +619,7 @@ export function AdminEdit() {
 						<InputLeftElement>
 							<MdCalendarMonth />
 						</InputLeftElement>
-						<Input type="datetime-local" value={inputValue.debut} onChange={handleInputValue("debut")} isDisabled />
+						<Input type="datetime-local" value={inputValue.debut} onChange={handleInputValue("debut")} width="280px" />
 					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
@@ -714,7 +752,7 @@ function MusicPlaylist({ data, setData, inheritChannelId }: MusicPlaylistProps) 
 			title: title || "",
 			titleAlias: titleAlias || "",
 			tags,
-			publishedAt,
+			publishedAt: publishedAt ? publishedAt.slice(0, -1) : "",
 			isActive,
 			isInheritChannelId: !!inheritChannelId,
 		});
@@ -1259,6 +1297,7 @@ interface StellarInputValue {
 
 interface StellarData extends StellarInputValue {
 	id: number;
+	youtubeCustomUrl: string;
 }
 
 interface MPLInputValue {
