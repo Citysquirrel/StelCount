@@ -1263,6 +1263,29 @@ function HeadedDivider({ children }) {
 	);
 }
 
+function FloatingMenu() {
+	const nav = useNavigate();
+	const list = [
+		{ title: "", route: "/" },
+		{ title: "", route: "/" },
+	];
+	return (
+		<Box position="fixed" bottom={"12px"} width={"100%"}>
+			<HStack>
+				{list.map((l) => (
+					<Button
+						onClick={() => {
+							nav(l.route);
+						}}
+					>
+						{l.title}
+					</Button>
+				))}
+			</HStack>
+		</Box>
+	);
+}
+
 interface VideoAdminData {
 	id: number;
 	type: "music";
