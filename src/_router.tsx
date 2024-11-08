@@ -23,7 +23,16 @@ export const routeObj: RouteObject[] = [
 			{ path: "/home", element: <Home /> },
 			// { path: "/about", element: <About /> },
 			{ path: "/counter", element: <Counter /> },
-			{ path: "/admin", element: <Admin /> },
+			{
+				path: "/admin",
+				element: <Admin />,
+				children: [
+					{
+						path: "/sub",
+						element: <></>,
+					},
+				],
+			},
 			{ path: "/admin/:id", element: <AdminEdit /> },
 			...devRoutes,
 			{ path: "/", element: <NotExist /> },

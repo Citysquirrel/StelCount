@@ -1266,8 +1266,8 @@ function HeadedDivider({ children }) {
 function FloatingMenu() {
 	const nav = useNavigate();
 	const list = [
-		{ title: "", route: "/" },
-		{ title: "", route: "/" },
+		{ title: "Main", route: "/" },
+		{ title: "Sub", route: "/sub" },
 	];
 	return (
 		<Box position="fixed" bottom={"12px"} width={"100%"}>
