@@ -52,6 +52,8 @@ export interface StellarState extends StellarInfo {
 	chzzkFollowerCount: string;
 	youtubeSubscriberCount: string;
 	youtubeMusic: YoutubeMusicData[];
+	debut?: string | null | undefined;
+	graduation?: string | null | undefined;
 }
 
 export interface LiveStatusState {

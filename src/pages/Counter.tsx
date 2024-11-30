@@ -64,6 +64,7 @@ import { ColorText } from "../components/Text";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import isMobile from "is-mobile";
 import { Spacing } from "../components/Spacing";
+import { FaGraduationCap } from "react-icons/fa6";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -276,6 +277,8 @@ export function Counter() {
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
+										const graduated =
+											stellar.graduation && new Date(stellar.graduation.slice(0, -1)).getTime() < now.getTime();
 										return (
 											<Tooltip
 												key={stellar.uuid}
@@ -284,6 +287,7 @@ export function Counter() {
 												hasArrow
 											>
 												<Button
+													position="relative"
 													variant={"outline"}
 													leftIcon={
 														<Image
@@ -292,13 +296,19 @@ export function Counter() {
 															borderRadius={"full"}
 														/>
 													}
-													colorScheme={currentUuid === stellar.uuid ? "" : "blue"}
+													colorScheme={currentUuid === stellar.uuid ? "" : graduated ? "green" : "blue"}
 													backgroundColor="ButtonFace"
 													onClick={handleClickStellar(stellar.uuid)}
 													cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
 													iconSpacing={isUnder720 || isMobile() ? 0 : undefined}
 													boxSize={isMobile() ? "40px" : undefined}
 												>
+													{graduated ? (
+														<Text position="absolute" left={"4px"} top="2px" color="black">
+															<FaGraduationCap />
+														</Text>
+													) : null}
+
 													{isUnder720 || isMobile() ? null : <Text>{stellar.name}</Text>}
 												</Button>
 											</Tooltip>
