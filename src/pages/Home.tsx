@@ -623,13 +623,13 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 
 	const handleAddMulView = (live: LiveData) => () => {
 		setMultiViewList((prev) => {
-			if (prev.findIndex((p) => p.uuid === live.uuid)) {
+			if (prev.findIndex((p) => p.uuid === live.uuid) !== -1) {
 				return prev;
 			}
 			const id = prev.length === 0 ? 1 : Math.max(...prev.map((p) => p.id)) + 1;
 			return [
 				...prev,
-				{ id, uuid: live.uuid, type: "chzzk", streamId: live.chzzkId || "", profileImage: live.profileImage || "" },
+				{ id, uuid: live.uuid, type: "chzzk", streamId: live.chzzkId || "", profileImage: live.channelImageUrl || "" },
 			];
 		});
 	};
@@ -1007,9 +1007,14 @@ function MultiView({ list, setList }: MultiViewProps) {
 					</Tooltip> */}
 				</HStack>
 				<InputGroup size="sm">
-					<InputLeftAddon onClick={handleChangeMode}>{urlPrefix}</InputLeftAddon>
+					<InputLeftAddon onClick={handleChangeMode} sx={{ cursor: "pointer" }}>
+						{urlPrefix}
+					</InputLeftAddon>
 					<Input value={mulLiveUrl} isDisabled />
 				</InputGroup>
+				<Text fontSize="2xs" color="gray.600" pl="4px" userSelect={"none"}>
+					▲ 주소를 클릭해 대상 페이지 변경
+				</Text>
 				<HStack>
 					<Button colorScheme="teal" size="sm" leftIcon={<MdContentCopy />} aria-label="copy-url" onClick={handleCopy}>
 						주소복사
