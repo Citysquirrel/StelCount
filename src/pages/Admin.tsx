@@ -22,6 +22,7 @@ import {
 	Input,
 	InputGroup,
 	InputLeftElement,
+	InputRightAddon,
 	InputRightElement,
 	Link,
 	Modal,
@@ -95,6 +96,7 @@ export function Admin() {
 		playlistIdForMusic: "",
 		justLive: false,
 		debut: "",
+		graduation: "",
 	});
 	const [inputValueY, setInputValueY] = useState<string>("");
 	const tagDefault = {
@@ -166,6 +168,7 @@ export function Admin() {
 					playlistIdForMusic: "",
 					justLive: false,
 					debut: "",
+					graduation: "",
 				});
 			} else if (res.status === 500) {
 				toast({ description: `스텔라 등록 중 오류가 발생했습니다`, status: "error" });
@@ -281,6 +284,23 @@ export function Admin() {
 								onChange={handleInputValue("debut")}
 								width="280px"
 							/>
+							<InputRightAddon>
+								<Text>데뷔일</Text>
+							</InputRightAddon>
+						</InputGroup>
+						<InputGroup>
+							<InputLeftElement>
+								<MdCalendarMonth />
+							</InputLeftElement>
+							<Input
+								type="datetime-local"
+								value={inputValue.graduation}
+								onChange={handleInputValue("graduation")}
+								width="280px"
+							/>
+							<InputRightAddon>
+								<Text>졸업일</Text>
+							</InputRightAddon>
 						</InputGroup>
 						<InputGroup>
 							<InputLeftElement>
@@ -489,6 +509,7 @@ export function AdminEdit() {
 		playlistIdForMusic: "",
 		justLive: false,
 		debut: "",
+		graduation: "",
 	});
 	const [inheritChannelId, setInheritChannelId] = useState<string>("");
 	const [videoData, setVideoData] = useState<VideoAdminData[]>([]);
@@ -620,6 +641,23 @@ export function AdminEdit() {
 							<MdCalendarMonth />
 						</InputLeftElement>
 						<Input type="datetime-local" value={inputValue.debut} onChange={handleInputValue("debut")} width="280px" />
+						<InputRightAddon>
+							<Text>데뷔일</Text>
+						</InputRightAddon>
+					</InputGroup>
+					<InputGroup>
+						<InputLeftElement>
+							<MdCalendarMonth />
+						</InputLeftElement>
+						<Input
+							type="datetime-local"
+							value={inputValue.graduation}
+							onChange={handleInputValue("graduation")}
+							width="280px"
+						/>
+						<InputRightAddon>
+							<Text>졸업일</Text>
+						</InputRightAddon>
 					</InputGroup>
 					<InputGroup>
 						<InputLeftElement>
@@ -1316,6 +1354,7 @@ interface StellarInputValue {
 	playlistIdForMusic: string;
 	justLive: boolean;
 	debut: string;
+	graduation: string;
 }
 
 interface StellarData extends StellarInputValue {
