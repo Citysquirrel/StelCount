@@ -94,7 +94,7 @@ export function useStellar() {
 		fetchServer("/multiview", "v1")
 			.then((res) => {
 				if (res.status === 200) {
-					const data: MultiViewData[] = res.data;
+					const { data, upcoming } = res.data as { data: MultiViewData[]; upcoming: any[] }; //? 우선 upcoming은 본 기능에서 사용되지 않음
 					setLiveStatus(data);
 					setFetchInfo((prev) => {
 						const obj = { ...prev };
