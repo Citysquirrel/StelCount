@@ -234,7 +234,7 @@ export default function Home() {
 	useEffect(() => {
 		const arr = liveStatus.map((l) => ({
 			...l,
-			profileImage: stellar.find((s) => s.uuid === l.uuid)?.profileImage || "",
+			profileImage: l.channelImageUrl || "",
 			name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
 			gap: l.openLive
 				? elapsedTimeTextForCard(new Date(l.openDate!), new Date(getLocale()))
@@ -249,7 +249,7 @@ export default function Home() {
 		setLiveData((prev) => {
 			const arr = [...prev];
 			for (let v of arr) {
-				v.profileImage = stellar.find((s) => s.uuid === v.uuid)?.profileImage || "";
+				v.profileImage = v.channelImageUrl || "";
 				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
 				v.gap = v.openLive
 					? elapsedTimeTextForCard(new Date(v.openDate!), new Date(getLocale()))

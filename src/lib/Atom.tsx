@@ -56,6 +56,9 @@ export interface StellarState extends StellarInfo {
 
 export interface LiveStatusState {
 	chzzkId?: string | undefined;
+	channelImageUrl?: string | null | undefined;
+	channelName?: string;
+	name?: string;
 	liveStatus?: boolean;
 	uuid: string;
 	openDate?: string;
