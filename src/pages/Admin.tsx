@@ -566,6 +566,7 @@ export function AdminEdit() {
 							video,
 							justLive,
 							debut,
+							graduation,
 						} = res.data;
 						setInheritChannelId(youtubeId);
 						const obj = {
@@ -579,6 +580,7 @@ export function AdminEdit() {
 							playlistIdForMusic,
 							video,
 							debut: debut ? debut.slice(0, -1) : "",
+							graduation: graduation ? graduation.slice(0, -1) : "",
 						};
 						const boolean = { justLive };
 						setInputValue((prev) => ({
