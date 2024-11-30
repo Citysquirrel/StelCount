@@ -1385,8 +1385,8 @@ function createConfigComponent(
 	} else if (type === "list") {
 		const value = configState[name] as number; // default: 1, 1 ~ 4
 
-		return <></>;
-	} else return <></>;
+		return <Fragment key={name}></Fragment>;
+	} else return <Fragment key={name}></Fragment>;
 }
 
 //? Function
