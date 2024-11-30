@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../functions/fetch";
-import { MultiViewData } from "../types";
+import { MultiViewData, MultiViewDataData } from "../types";
 import { useRecoilState } from "recoil";
 import { nowState } from "../Atom";
 
@@ -22,7 +22,7 @@ export function useMultiView() {
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, main: res.status }));
 				if (res.status === 200) {
-					const applyType: MultiViewData[] = res.data;
+					const { data: applyType, upcoming } = res.data as MultiViewDataData;
 					const opens = applyType.filter((stream) => stream.openLive);
 					const closes = applyType.filter((stream) => !stream.openLive);
 					setData([

@@ -110,3 +110,8 @@ export interface MultiViewData {
 export interface ImprovedIntervalOptions {
 	executeCallbackWhenWindowFocused?: boolean;
 }
+
+export interface MultiViewDataData {
+	data: MultiViewData[];
+	upcoming: any[];
+}

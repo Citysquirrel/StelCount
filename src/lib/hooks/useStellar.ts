@@ -17,7 +17,7 @@ import { useToast } from "@chakra-ui/react";
 import isMobile from "is-mobile";
 import { getLocale } from "../functions/etc";
 import { useImprovedInterval } from "./useInterval";
-import { MultiViewData } from "../types";
+import { MultiViewData, MultiViewDataData } from "../types";
 
 export function useStellar() {
 	const toast = useToast();
@@ -94,7 +94,7 @@ export function useStellar() {
 		fetchServer("/multiview", "v1")
 			.then((res) => {
 				if (res.status === 200) {
-					const { data, upcoming } = res.data as { data: MultiViewData[]; upcoming: any[] }; //? 우선 upcoming은 본 기능에서 사용되지 않음
+					const { data, upcoming } = res.data as MultiViewDataData; //? 우선 upcoming은 본 기능에서 사용되지 않음
 					setLiveStatus(data);
 					setFetchInfo((prev) => {
 						const obj = { ...prev };
