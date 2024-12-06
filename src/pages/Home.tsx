@@ -606,6 +606,11 @@ function RecentNews({
 												</Text>
 											) : null}
 										</HStack>
+										<HStack>
+											<Text as={Link} href={youtube.musicUrl(v.videoId)} isExternal>
+												<SiYoutubemusic />
+											</Text>
+										</HStack>
 									</Stack>
 								</Stack>
 							</Stack>

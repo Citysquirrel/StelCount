@@ -65,6 +65,7 @@ import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import isMobile from "is-mobile";
 import { Spacing } from "../components/Spacing";
 import { FaGraduationCap } from "react-icons/fa6";
+import { SiYoutubemusic } from "react-icons/si";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -703,6 +704,9 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 					<MdOpenInNew />
 				</Button>
 			) : null}
+			<Text position="absolute" top={"4px"} right={"4px"} as={Link} href={youtube.musicUrl(videoId)} isExternal>
+				<SiYoutubemusic />
+			</Text>
 			<HStack position="absolute" top={"4px"} left={"4px"} gap={"4px"} userSelect={"none"} zIndex={1}>
 				{isUpcoming ? null : (
 					<Tag
