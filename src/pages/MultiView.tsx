@@ -1040,6 +1040,12 @@ function SideMenu({
 								)}
 							</Stack>
 							<Spacing size={2} />
+							<Stack>
+								<Text size="xs" color="gray.600">
+									0명
+								</Text>
+							</Stack>
+							<Spacing size={2} />
 							<HStack justifyContent={"space-between"} gap="4px">
 								<HStack paddingLeft="4px" gap={"4px"}>
 									{selectedStreamer.platform === "chzzk" ? <Image boxSize="18px" src="/images/i_chzzk_1.png" /> : null}
