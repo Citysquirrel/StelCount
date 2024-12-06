@@ -45,6 +45,7 @@ import { naver, youtube } from "../lib/functions/platforms";
 import { FaEye } from "react-icons/fa6";
 import isMobile from "is-mobile";
 import { MdClear, MdContentCopy, MdOpenInNew } from "react-icons/md";
+import { SiYoutubemusic } from "react-icons/si";
 import { FaArrowAltCircleDown } from "react-icons/fa";
 import { Spacing } from "../components/Spacing";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
