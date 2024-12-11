@@ -1,5 +1,10 @@
 import {
 	AbsoluteCenter,
+	Accordion,
+	AccordionButton,
+	AccordionIcon,
+	AccordionItem,
+	AccordionPanel,
 	Alert,
 	AlertIcon,
 	Box,
@@ -245,122 +250,145 @@ export function Admin() {
 			/>
 			<Stack padding="12px">
 				<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
-				<Box as="section">
-					<Stack as="form" onSubmit={handleSubmit}>
-						<InputGroup>
-							<InputLeftElement>
-								<MdPerson />
-							</InputLeftElement>
-							<Input
-								ref={firstRef}
-								placeholder="스텔라 이름"
-								value={inputValue.name}
-								onChange={handleInputValue("name")}
-							/>
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<MdGroup />
-							</InputLeftElement>
-							<InputRightElement width="72px" fontSize="0.875rem">
-								{Number(inputValue.group) > 0 && Number(inputValue.group) < stellarGroupName.length ? (
-									<Text>{stellarGroupName[inputValue.group][0]}</Text>
-								) : null}
-							</InputRightElement>
-							<Input
-								type="number"
-								placeholder="스텔라 기수"
-								value={inputValue.group}
-								onChange={handleInputValue("group")}
-							/>
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<MdCalendarMonth />
-							</InputLeftElement>
-							<Input
-								type="datetime-local"
-								value={inputValue.debut}
-								onChange={handleInputValue("debut")}
-								width="280px"
-							/>
-							<InputRightAddon>
-								<Text>데뷔일</Text>
-							</InputRightAddon>
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<MdCalendarMonth />
-							</InputLeftElement>
-							<Input
-								type="datetime-local"
-								value={inputValue.graduation}
-								onChange={handleInputValue("graduation")}
-								width="280px"
-							/>
-							<InputRightAddon>
-								<Text>졸업일</Text>
-							</InputRightAddon>
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<FaYoutube />
-							</InputLeftElement>
-							<Input placeholder="유튜브 ID" value={inputValue.youtubeId} onChange={handleInputValue("youtubeId")} />
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<Image boxSize={"16px"} src="/images/i_chzzk_1.png" />
-							</InputLeftElement>
-							<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<FaXTwitter />
-							</InputLeftElement>
-							<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<MdColorLens />
-							</InputLeftElement>
-							<Input
-								placeholder="컬러코드 HEX"
-								value={inputValue.colorCode}
-								onChange={handleInputValue("colorCode")}
-								isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
-							/>
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<MdPlaylistPlay />
-							</InputLeftElement>
-							<Input
-								placeholder="음악 재생목록 ID"
-								value={inputValue.playlistIdForMusic}
-								onChange={handleInputValue("playlistIdForMusic")}
-							/>
-						</InputGroup>
-						<InputGroup>
-							<Checkbox marginLeft="8px" isChecked={inputValue.justLive} onChange={handleInputValue("justLive")}>
-								라이브 현황만 게시합니다
-							</Checkbox>
-						</InputGroup>
-						<InputGroup>
-							<InputLeftElement>
-								<MdShortText />
-							</InputLeftElement>
-							<Input placeholder="짧은 이름" value={inputValue.nameShort} onChange={handleInputValue("nameShort")} />
-						</InputGroup>
-						<Button type="submit">등록</Button>
-					</Stack>
-				</Box>
-				<Box as="section">
-					<Stack as="form" onSubmit={handleGetYoutubeId}>
-						<Input placeholder="채널명 검색" value={inputValueY} onChange={handleInputValueY} />
-						<Button type="submit">검색</Button>
-					</Stack>
-				</Box>
+				<Accordion>
+					<AccordionItem>
+						<h2>
+							<AccordionButton>
+								<Box as="span" flex="1" textAlign="left">
+									새 스텔라 만들기
+								</Box>
+								<AccordionIcon></AccordionIcon>
+							</AccordionButton>
+						</h2>
+						<AccordionPanel>
+							<Box as="section">
+								<Stack as="form" onSubmit={handleSubmit}>
+									<InputGroup>
+										<InputLeftElement>
+											<MdPerson />
+										</InputLeftElement>
+										<Input
+											ref={firstRef}
+											placeholder="스텔라 이름"
+											value={inputValue.name}
+											onChange={handleInputValue("name")}
+										/>
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<MdGroup />
+										</InputLeftElement>
+										<InputRightElement width="72px" fontSize="0.875rem">
+											{Number(inputValue.group) > 0 && Number(inputValue.group) < stellarGroupName.length ? (
+												<Text>{stellarGroupName[inputValue.group][0]}</Text>
+											) : null}
+										</InputRightElement>
+										<Input
+											type="number"
+											placeholder="스텔라 기수"
+											value={inputValue.group}
+											onChange={handleInputValue("group")}
+										/>
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<MdCalendarMonth />
+										</InputLeftElement>
+										<Input
+											type="datetime-local"
+											value={inputValue.debut}
+											onChange={handleInputValue("debut")}
+											width="280px"
+										/>
+										<InputRightAddon>
+											<Text>데뷔일</Text>
+										</InputRightAddon>
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<MdCalendarMonth />
+										</InputLeftElement>
+										<Input
+											type="datetime-local"
+											value={inputValue.graduation}
+											onChange={handleInputValue("graduation")}
+											width="280px"
+										/>
+										<InputRightAddon>
+											<Text>졸업일</Text>
+										</InputRightAddon>
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<FaYoutube />
+										</InputLeftElement>
+										<Input
+											placeholder="유튜브 ID"
+											value={inputValue.youtubeId}
+											onChange={handleInputValue("youtubeId")}
+										/>
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<Image boxSize={"16px"} src="/images/i_chzzk_1.png" />
+										</InputLeftElement>
+										<Input placeholder="치지직 ID" value={inputValue.chzzkId} onChange={handleInputValue("chzzkId")} />
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<FaXTwitter />
+										</InputLeftElement>
+										<Input placeholder="X ID" value={inputValue.xId} onChange={handleInputValue("xId")} />
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<MdColorLens />
+										</InputLeftElement>
+										<Input
+											placeholder="컬러코드 HEX"
+											value={inputValue.colorCode}
+											onChange={handleInputValue("colorCode")}
+											isInvalid={inputValue.colorCode.length > 0 && !VALIDATION.hexCode(inputValue.colorCode)}
+										/>
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<MdPlaylistPlay />
+										</InputLeftElement>
+										<Input
+											placeholder="음악 재생목록 ID"
+											value={inputValue.playlistIdForMusic}
+											onChange={handleInputValue("playlistIdForMusic")}
+										/>
+									</InputGroup>
+									<InputGroup>
+										<Checkbox marginLeft="8px" isChecked={inputValue.justLive} onChange={handleInputValue("justLive")}>
+											라이브 현황만 게시합니다
+										</Checkbox>
+									</InputGroup>
+									<InputGroup>
+										<InputLeftElement>
+											<MdShortText />
+										</InputLeftElement>
+										<Input
+											placeholder="짧은 이름"
+											value={inputValue.nameShort}
+											onChange={handleInputValue("nameShort")}
+										/>
+									</InputGroup>
+									<Button type="submit">등록</Button>
+								</Stack>
+							</Box>
+							<Box as="section">
+								<Stack as="form" onSubmit={handleGetYoutubeId}>
+									<Input placeholder="채널명 검색" value={inputValueY} onChange={handleInputValueY} />
+									<Button type="submit">검색</Button>
+								</Stack>
+							</Box>
+						</AccordionPanel>
+					</AccordionItem>
+				</Accordion>
+
 				<TableContainer>
 					<Table variant="simple" size="sm">
 						<Thead>
