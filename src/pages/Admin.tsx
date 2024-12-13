@@ -250,7 +250,7 @@ export function Admin() {
 			/>
 			<Stack padding="12px">
 				<Button onClick={handleYoutubeData}>유튜브 데이터 불러오기</Button>
-				<Accordion>
+				<Accordion allowToggle>
 					<AccordionItem>
 						<h2>
 							<AccordionButton>
