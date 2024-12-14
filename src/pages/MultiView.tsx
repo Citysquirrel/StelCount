@@ -66,6 +66,7 @@ import { createComponentMap } from "../lib/functions/createComponent";
 import { v4 } from "uuid";
 import { useAuth } from "../lib/hooks/useAuth";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -179,6 +180,18 @@ export function MultiView() {
 		});
 	};
 
+	const handleOpenNewWindow = (uuid:string) => () => {
+		setStreams((prev) => {
+			const arr = [...prev];
+			const idx = arr.findIndex((a) => a.uuid === uuid);
+			arr.splice(idx, 1);
+			window.open(naver.chzzk.liveUrl(arr[idx].streamId),"_blank")
+			const value = arr.reduce((a, c) => (a.length === 0 ? c.streamId : a + PARAMS_DELIMITER + c.streamId), "");
+			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
+			return arr;
+		});
+	}
+
 	const handleOpenChat = (streamId: string, name: string, openInNewWindow?: boolean) => () => {
 		if (openInNewWindow) {
 			openChatInNewWindow(streamId);
@@ -258,6 +271,8 @@ export function MultiView() {
 	useHotkeys("ctrl+alt+l", () => {
 		navigate("/login");
 	});
+
+	useConfirmOnExit();
 
 	const streamContainerWidth = isInnerChatOpen ? `calc(100vw - 350px)` : "100vw";
 
@@ -362,6 +377,9 @@ export function MultiView() {
 										</Button>
 										<Button size="sm" colorScheme="red" onClick={handleDeleteStream(uuid)}>
 											방송 끄기
+										</Button>
+										<Button size="sm" colorScheme="orange" onClick={handleOpenNewWindow(uuid)}>
+											새창으로
 										</Button>
 									</Stack>
 								</Box>
