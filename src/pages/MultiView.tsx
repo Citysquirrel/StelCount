@@ -67,6 +67,7 @@ import { v4 } from "uuid";
 import { useAuth } from "../lib/hooks/useAuth";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
+import * as Hangul from "hangul-js";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -180,17 +181,17 @@ export function MultiView() {
 		});
 	};
 
-	const handleOpenNewWindow = (uuid:string) => () => {
+	const handleOpenNewWindow = (uuid: string) => () => {
 		setStreams((prev) => {
 			const arr = [...prev];
 			const idx = arr.findIndex((a) => a.uuid === uuid);
 			arr.splice(idx, 1);
-			window.open(naver.chzzk.liveUrl(arr[idx].streamId),"_blank")
+			window.open(naver.chzzk.liveUrl(arr[idx].streamId), "_blank");
 			const value = arr.reduce((a, c) => (a.length === 0 ? c.streamId : a + PARAMS_DELIMITER + c.streamId), "");
 			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
 			return arr;
 		});
-	}
+	};
 
 	const handleOpenChat = (streamId: string, name: string, openInNewWindow?: boolean) => () => {
 		if (openInNewWindow) {
@@ -592,6 +593,9 @@ function SideMenu({
 		platform: "",
 	});
 	const [searchResult, setSearchResult] = useState<SearchData[]>([]);
+	const [filteredData, setFilteredData] = useState<
+		typeof data & { liveTitleRange?: number[][]; channelNameRange?: number[][] }
+	>([]);
 
 	const configDict: ConfigDict[] = [
 		{
@@ -618,6 +622,27 @@ function SideMenu({
 				setSearchResult(data);
 			}
 		);
+	};
+
+	const handleChangeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setSearchInputValue(value);
+
+		const results = data
+			.map((item) => {
+				const { liveTitle, channelName } = item;
+				const liveTitleRange = Hangul.rangeSearch(liveTitle || "", value);
+				const channelNameRange = Hangul.rangeSearch(channelName || "", value);
+
+				return {
+					...item,
+					liveTitleRange,
+					channelNameRange,
+				};
+			})
+			.filter((item) => item.liveTitleRange.length > 0 || item.channelNameRange.length > 0);
+
+		setFilteredData(results);
 	};
 
 	const handleOpenRedefine = () => {
@@ -978,9 +1003,7 @@ function SideMenu({
 								<Input
 									size="sm"
 									value={searchInputValue}
-									onChange={(e) => {
-										setSearchInputValue(e.target.value);
-									}}
+									onChange={handleChangeSearchInput}
 									onKeyDown={(e) => {
 										if (e.key === "Enter") onSearch();
 									}}
