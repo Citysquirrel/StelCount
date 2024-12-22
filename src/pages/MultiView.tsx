@@ -332,10 +332,14 @@ export function MultiView() {
 							const { type, streamId, uuid, name } = stream;
 							const ref = refs.current[idx];
 							const src = createStreamSrc(type, streamId);
-							const handleRefresh = () => {
-								if (ref.current) {
-									ref.current.src = ref.current.src;
+							const handleRefresh = (isAll?: boolean) => () => {
+								if (isAll) {
+									refs.current.forEach((ref) => {
+										if (ref.current) ref.current.src = ref.current.src;
+									});
+									return;
 								}
+								if (ref.current) ref.current.src = ref.current.src;
 							};
 
 							if (!src) return <Fragment key={`${idx}-${streamId}`}></Fragment>;
@@ -373,9 +377,15 @@ export function MultiView() {
 												aria-label="open-chat-in-new-tab"
 											/>
 										</ButtonGroup>
-										<Button size="sm" colorScheme="blue" onClick={handleRefresh}>
-											새로고침
-										</Button>
+										<ButtonGroup size="sm" isAttached colorScheme="blue">
+											<Button onClick={handleRefresh()}>새로고침</Button>
+											<IconButton
+												onClick={handleRefresh(true)}
+												icon={<Image src="/images/refresh_all.svg" />}
+												aria-label="refresh-all-streams"
+											/>
+										</ButtonGroup>
+
 										<Button size="sm" colorScheme="red" onClick={handleDeleteStream(uuid)}>
 											방송 끄기
 										</Button>
