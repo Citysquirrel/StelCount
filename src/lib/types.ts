@@ -7,6 +7,7 @@ export interface UserSettingStorage {
 	chatToLeft?: boolean;
 	listOpenerWidth?: string;
 	customStreams?: CustomStreamsForUS[];
+	isCardCompact?: boolean;
 }
 
 interface CustomStreamsForUS {

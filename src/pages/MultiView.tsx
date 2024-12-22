@@ -40,7 +40,7 @@ import { useMultiView } from "../lib/hooks/useMultiView";
 import { MultiViewData, UserSettingStorage } from "../lib/types";
 import { MdClear, MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdSearch, MdStar } from "react-icons/md";
 import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
-import { TbForbid } from "react-icons/tb";
+import { TbForbid, TbResize } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { Image } from "../components/Image";
 import { IoHome, IoList, IoPeople, IoReload, IoSettings } from "react-icons/io5";
@@ -593,6 +593,7 @@ function SideMenu({
 		platform: "",
 	});
 	const [searchResult, setSearchResult] = useState<SearchData[]>([]);
+	const [isCardCompact, setIsCardCompact] = useState<boolean>(false);
 	const [filteredData, setFilteredData] = useState<
 		typeof data & { liveTitleRange?: number[][]; channelNameRange?: number[][] }
 	>([]);
@@ -653,6 +654,13 @@ function SideMenu({
 	const handleRefresh = () => {
 		refetch(true);
 		refetchCustom(true);
+	};
+
+	const handleResize = () => {
+		setIsCardCompact((prev) => {
+			setUserSetting((prevUS) => ({ ...prevUS, isCardCompact: !prev }));
+			return !prev;
+		});
 	};
 
 	const handleConfig = (name: keyof ConfigState, type: ConfigType) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -944,6 +952,24 @@ function SideMenu({
 							sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
 						/>
 					</Tooltip>
+					<Tooltip label={isCardCompact ? "카드 크게(V)" : "카드 작게(V)"}>
+						<IconButton
+							boxSize={"24px"}
+							minWidth="auto"
+							padding="0"
+							fontSize={"0.825rem"}
+							variant={"ghost"}
+							icon={<TbResize />}
+							aria-label="resize"
+							onClick={handleResize}
+							isActive={isCardCompact}
+							sx={{
+								color: "white",
+								_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+								_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+							}}
+						/>
+					</Tooltip>
 					<Tooltip label="목록 닫기(ESC)">
 						<CloseButton
 							size="sm"
@@ -1133,6 +1159,7 @@ function SideMenu({
 										handleAddStream={handleAddStream}
 										handleDeleteStream={handleDeleteStream}
 										handleDeleteCustomStream={handleDeleteCustomStream}
+										isCompact={isCardCompact}
 									/>
 								);
 						  })
@@ -1167,7 +1194,14 @@ function SideMenu({
 	);
 }
 
-function MenuCard({ item, itemIdx, handleAddStream, handleDeleteStream, handleDeleteCustomStream }: MenuCardProps) {
+function MenuCard({
+	item,
+	itemIdx,
+	handleAddStream,
+	handleDeleteStream,
+	handleDeleteCustomStream,
+	isCompact,
+}: MenuCardProps) {
 	const {
 		name,
 		chzzkId,
@@ -1527,6 +1561,7 @@ interface MenuCardProps {
 	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => void;
 	handleDeleteStream: (uuid: string) => () => void;
 	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
+	isCompact: boolean;
 }
 
 interface MenuCardImageProps {
