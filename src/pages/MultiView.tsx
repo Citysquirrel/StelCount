@@ -59,7 +59,7 @@ import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { lightenColor } from "../lib/functions/etc";
+import { confirmOnExit, lightenColor } from "../lib/functions/etc";
 import { LoadingCircle } from "../components/Loading";
 import { fetchServer } from "../lib/functions/fetch";
 import { createComponentMap } from "../lib/functions/createComponent";
@@ -125,7 +125,6 @@ export function MultiView() {
 				}
 			}
 		}
-
 		setStreams(storage);
 	};
 
@@ -243,7 +242,9 @@ export function MultiView() {
 	}, [windowWidth, windowHeight, streams, isInnerChatOpen]);
 
 	useEffect(() => {
-		if (streams.length === 0) setIsInnerChatOpen(false);
+		if (streams.length === 0) {
+			setIsInnerChatOpen(false);
+		}
 	}, [streams]);
 
 	useEffect(() => {
@@ -747,6 +748,10 @@ function SideMenu({
 	};
 
 	useEffect(() => {
+		if (userSetting.isCardCompact) {
+			const { isCardCompact } = userSetting;
+			setIsCardCompact(isCardCompact);
+		}
 		if (userSetting.chatToLeft) {
 			const { chatToLeft } = userSetting;
 			setConfigState((prev) => ({ ...prev, chatToLeft }));

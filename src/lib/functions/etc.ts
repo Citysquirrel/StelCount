@@ -195,3 +195,19 @@ export function lightenColor(hex: string, percent: number) {
 
 	return result;
 }
+
+export function confirmOnExit() {
+	const handleBeforeUnload = (event: any) => {
+		event.preventDefault();
+		event.returnValue = "";
+	};
+
+	const activeBeforeUnload = () => {
+		window.addEventListener("beforeunload", handleBeforeUnload);
+	};
+	const disableBeforeUnload = () => {
+		window.removeEventListener("beforeunload", handleBeforeUnload);
+	};
+
+	return { activeBeforeUnload, disableBeforeUnload };
+}
