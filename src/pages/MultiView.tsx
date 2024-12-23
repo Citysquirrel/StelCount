@@ -185,8 +185,8 @@ export function MultiView() {
 		setStreams((prev) => {
 			const arr = [...prev];
 			const idx = arr.findIndex((a) => a.uuid === uuid);
-			arr.splice(idx, 1);
 			window.open(naver.chzzk.liveUrl(arr[idx].streamId), "_blank");
+			arr.splice(idx, 1);
 			const value = arr.reduce((a, c) => (a.length === 0 ? c.streamId : a + PARAMS_DELIMITER + c.streamId), "");
 			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
 			return arr;
@@ -237,20 +237,6 @@ export function MultiView() {
 			chatRef.current.src = chatRef.current.src;
 		}
 	};
-
-	// const calcColumns = (len: number) => {
-	// 	if (len <= 1) return 1;
-	// 	else if (len <= 4) {
-	// 		if (isInnerChatOpen && len === 2) return 1;
-	// 		return 2;
-	// 	} else if (len <= 9) {
-	// 		if (isInnerChatOpen && (len === 5 || len === 6)) return 2;
-	// 		return 3;
-	// 	} else {
-	// 		if (isInnerChatOpen && (len === 10 || len === 11 || len === 12)) return 3;
-	// 		return 4;
-	// 	}
-	// };
 
 	useEffect(() => {
 		handleFrameSize();
@@ -378,10 +364,10 @@ export function MultiView() {
 											/>
 										</ButtonGroup>
 										<ButtonGroup size="sm" isAttached colorScheme="blue">
-											<Button onClick={handleRefresh()}>새로고침</Button>
+											<Button onClick={handleRefresh()}>갱신</Button>
 											<IconButton
 												onClick={handleRefresh(true)}
-												icon={<Image src="/images/refresh_all.svg" />}
+												icon={<RefreshAllIconSVG color="white" width="18px" height="18px" />}
 												aria-label="refresh-all-streams"
 											/>
 										</ButtonGroup>
@@ -390,7 +376,7 @@ export function MultiView() {
 											방송 끄기
 										</Button>
 										<Button size="sm" colorScheme="orange" onClick={handleOpenNewWindow(uuid)}>
-											새창으로
+											새탭으로
 										</Button>
 									</Stack>
 								</Box>
@@ -816,6 +802,9 @@ function SideMenu({
 		c: () => {
 			handleToggleSetting();
 		},
+		v: () => {
+			handleResize();
+		},
 	});
 
 	const currentStreams = getCurrentStreams(currentMode);
@@ -988,7 +977,7 @@ function SideMenu({
 						/>
 					</Tooltip>
 				</HStack>
-				<Stack ref={listRef} gap="12px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
+				<Stack ref={listRef} gap="8px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
 					{currentMode === 1 ? (
 						<Stack
 							width="100%"
@@ -1116,12 +1105,12 @@ function SideMenu({
 									</Text>
 								)}
 							</Stack>
-							<Spacing size={2} />
+							{/* <Spacing size={2} />
 							<Stack>
 								<Text size="xs" color="gray.600">
 									0명
 								</Text>
-							</Stack>
+							</Stack> */}
 							<Spacing size={2} />
 							<HStack justifyContent={"space-between"} gap="4px">
 								<HStack paddingLeft="4px" gap={"4px"}>
@@ -1254,8 +1243,14 @@ function MenuCard({
 					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
 				) : null}
 				<HStack>
-					<MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} adult={adult} />
-					<Stack flex="1 0 50%" height="100%">
+					{isCompact ? null : <MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} adult={adult} />}
+
+					<Stack
+						flex="1 0 50%"
+						height="100%"
+						direction={isCompact ? "row" : "column"}
+						justifyContent={isCompact ? "space-between" : undefined}
+					>
 						<HStack>
 							<Image
 								src={`${channelImageUrl}?type=f60_60_na` || ""}
@@ -1268,16 +1263,30 @@ function MenuCard({
 								{channelName}
 							</Text>
 						</HStack>
-						<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
-							{(openLive && liveCategoryValue) || "　"}
-						</Text>
-						<Text color="gray.500" fontSize="0.65em">
+						{isCompact ? null : (
+							<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
+								{(openLive && liveCategoryValue) || "　"}
+							</Text>
+						)}
+						<Text color="gray.500" fontSize="0.65em" paddingRight={isCompact ? "12px" : undefined}>
 							{openLive ? modDateText(openDate) + " 시작" : modDateText(closeDate) + " 종료"}
 						</Text>
 					</Stack>
 				</HStack>
 				<Stack>
-					<Text fontSize="0.825em" color={openLive ? undefined : "gray.500"}>
+					<Text
+						fontSize="0.825em"
+						color={openLive ? undefined : "gray.500"}
+						sx={
+							isCompact
+								? {
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+								  }
+								: undefined
+						}
+					>
 						{openLive ? liveTitle : "방송 종료됨"}
 					</Text>
 				</Stack>
@@ -1532,6 +1541,30 @@ function sortByChannelName(a: MultiViewData, b: MultiViewData): number {
 	const A = sortOrderDict.findIndex((k) => k === a.channelName);
 	const B = sortOrderDict.findIndex((k) => k === b.channelName);
 	return A - B;
+}
+
+function RefreshAllIconSVG({ ...props }) {
+	return (
+		<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+			<mask id="path-1-inside-1_20_2" fill="white">
+				<path d="M142.186 162.011C143.739 164.294 146.86 164.898 149.042 163.205C159.472 155.113 167.759 144.547 173.131 132.432C179.181 118.79 181.295 103.728 179.233 88.9476C177.171 74.1676 171.016 60.2589 161.464 48.7933C151.912 37.3278 139.344 28.7626 125.179 24.0657C111.014 19.3688 95.8183 18.7275 81.3082 22.2143C66.7981 25.701 53.5525 33.1768 43.0685 43.7968C32.5844 54.4168 25.2797 67.7575 21.9801 82.3113C19.0497 95.2362 19.3818 108.66 22.9101 121.381C23.6482 124.042 26.5118 125.423 29.1214 124.52L38.9146 121.132C41.5243 120.229 42.8861 117.385 42.205 114.709C39.885 105.593 39.7484 96.0332 41.8387 86.8136C44.2985 75.9643 49.7439 66.0192 57.5594 58.1024C65.375 50.1855 75.2491 44.6126 86.0659 42.0133C96.8827 39.4141 108.211 39.8921 118.77 43.3935C129.329 46.8949 138.699 53.2799 145.82 61.8271C152.94 70.3743 157.529 80.7428 159.065 91.7608C160.602 102.779 159.027 114.007 154.517 124.177C150.685 132.819 144.863 140.403 137.556 146.327C135.411 148.066 134.804 151.16 136.357 153.443L142.186 162.011Z" />
+			</mask>
+			<path
+				d="M142.186 162.011C143.739 164.294 146.86 164.898 149.042 163.205C159.472 155.113 167.759 144.547 173.131 132.432C179.181 118.79 181.295 103.728 179.233 88.9476C177.171 74.1676 171.016 60.2589 161.464 48.7933C151.912 37.3278 139.344 28.7626 125.179 24.0657C111.014 19.3688 95.8183 18.7275 81.3082 22.2143C66.7981 25.701 53.5525 33.1768 43.0685 43.7968C32.5844 54.4168 25.2797 67.7575 21.9801 82.3113C19.0497 95.2362 19.3818 108.66 22.9101 121.381C23.6482 124.042 26.5118 125.423 29.1214 124.52L38.9146 121.132C41.5243 120.229 42.8861 117.385 42.205 114.709C39.885 105.593 39.7484 96.0332 41.8387 86.8136C44.2985 75.9643 49.7439 66.0192 57.5594 58.1024C65.375 50.1855 75.2491 44.6126 86.0659 42.0133C96.8827 39.4141 108.211 39.8921 118.77 43.3935C129.329 46.8949 138.699 53.2799 145.82 61.8271C152.94 70.3743 157.529 80.7428 159.065 91.7608C160.602 102.779 159.027 114.007 154.517 124.177C150.685 132.819 144.863 140.403 137.556 146.327C135.411 148.066 134.804 151.16 136.357 153.443L142.186 162.011Z"
+				stroke="currentColor"
+				strokeWidth="48"
+				mask="url(#path-1-inside-1_20_2)"
+			/>
+			<path
+				d="M42.648 137.952C47.9387 137.952 50.584 140.768 50.584 146.4V180H41.624V166.112H35.16V180H26.2V146.4C26.2 140.768 28.8453 137.952 34.136 137.952H42.648ZM35.16 159.2H41.624V145.312C41.624 144.971 41.496 144.672 41.24 144.416C41.0267 144.16 40.7493 144.032 40.408 144.032H36.376C36.0347 144.032 35.736 144.16 35.48 144.416C35.2667 144.672 35.16 144.971 35.16 145.312V159.2ZM66.2225 172.448H76.0145V180H57.2625V138.592H66.2225V172.448ZM89.2225 172.448H99.0145V180H80.2625V138.592H89.2225V172.448Z"
+				fill="currentColor"
+			/>
+			<path
+				d="M126.653 137.651C128.569 134.278 133.431 134.278 135.347 137.651L153.602 169.78C155.496 173.113 153.089 177.25 149.255 177.25H112.745C108.911 177.25 106.504 173.113 108.398 169.78L126.653 137.651Z"
+				fill="currentColor"
+			/>
+		</svg>
+	);
 }
 
 type StreamType = "chzzk" | (string & {});
