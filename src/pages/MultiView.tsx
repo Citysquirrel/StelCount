@@ -158,6 +158,7 @@ export function MultiView() {
 	};
 
 	const handleAddStream = (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => {
+		console.log("streamId:", streamId);
 		if (!streamId) return;
 		setStreams((prev) => {
 			const result = [...prev, { streamId, type, uuid, name }];
@@ -692,9 +693,11 @@ function SideMenu({
 	};
 
 	const handleAddCustomStream = () => {
+		console.log("handleAddCustomStream called");
 		const { name, imageUrl, streamId, platform, liveCategoryValue, liveTitle, liveImageUrl, openLive, openDate } =
 			selectedStreamer;
 		const uuid = v4();
+		handleAddStream(streamId, "chzzk", uuid, name || "알 수 없음")();
 		setCustomStreams((prev) => {
 			if (prev.length >= 50) {
 				return prev;
@@ -716,7 +719,6 @@ function SideMenu({
 				},
 			].sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive));
 		});
-		handleAddStream(streamId, "chzzk", uuid, name || "알 수 없음");
 
 		setUserSetting((prev) => {
 			const newItem = { name, platform, streamId };
