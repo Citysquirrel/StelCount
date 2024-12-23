@@ -694,6 +694,7 @@ function SideMenu({
 	const handleAddCustomStream = () => {
 		const { name, imageUrl, streamId, platform, liveCategoryValue, liveTitle, liveImageUrl, openLive, openDate } =
 			selectedStreamer;
+		const uuid = v4();
 		setCustomStreams((prev) => {
 			if (prev.length >= 50) {
 				return prev;
@@ -705,7 +706,7 @@ function SideMenu({
 					channelName: name,
 					channelImageUrl: imageUrl,
 					chzzkId: streamId,
-					uuid: v4(),
+					uuid,
 					liveTitle,
 					liveImageUrl,
 					liveCategoryValue,
@@ -715,6 +716,7 @@ function SideMenu({
 				},
 			].sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive));
 		});
+		handleAddStream(streamId, "chzzk", uuid, name || "알 수 없음");
 
 		setUserSetting((prev) => {
 			const newItem = { name, platform, streamId };
@@ -1140,6 +1142,7 @@ function SideMenu({
 									isDisabled={
 										!selectedStreamer.streamId ||
 										currentStreams.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1 ||
+										data.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1 ||
 										customStreams.length >= 50
 									}
 									onClick={handleAddCustomStream}
