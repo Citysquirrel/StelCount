@@ -33,6 +33,11 @@ import {
 	Avatar,
 	AvatarBadge,
 	IconButtonProps,
+	BoxProps,
+	SimpleGrid,
+	SimpleGridProps,
+	BackgroundProps,
+	StackProps,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
@@ -356,13 +361,15 @@ export function MultiView() {
 										right={"20px"}
 										backgroundColor={"rgb(255,255,255,0.3)"}
 										borderRadius={".5rem"}
-										padding="8px 16px"
+										padding="4px 12px 8px 12px"
+										gap="4px"
 										// outline={"1px solid white"}
 										transition="all .2s"
 										backdropFilter="blur(1px)"
 										opacity={isMenuOpen ? 1 : 0}
 										_hover={{ opacity: 1 }}
 									>
+										<RemoteControlClicker dotColor="gray.300" alignSelf={"center"} />
 										<ButtonGroup size="sm" isAttached colorScheme="green">
 											<Button onClick={handleOpenChat(streamId, name)}>채팅</Button>
 											<IconButton
@@ -1549,6 +1556,22 @@ function createConfigComponent(
 	} else return <Fragment key={name}></Fragment>;
 }
 
+function RemoteControlClicker({ dotColor, ...props }: StackProps & { dotColor?: BackgroundProps["backgroundColor"] }) {
+	return (
+		<Stack alignItems={"center"} width="100%" paddingBlock={"6px 4px"} cursor="move" {...props}>
+			<SimpleGrid width={"fit-content"} columns={4} spacing={1} justifyItems={"center"}>
+				{Array.from({ length: 8 }, (_, i) => i).map((n, i) => (
+					<Dot key={i} backgroundColor={dotColor}></Dot>
+				))}
+			</SimpleGrid>
+		</Stack>
+	);
+}
+
+function Dot({ ...props }: BoxProps) {
+	return <Box boxSize="4px" borderRadius={"full"} backgroundColor="black" {...props}></Box>;
+}
+
 //? Function
 
 function createStreamSrc(type: StreamType, streamId: string) {
@@ -1649,6 +1672,7 @@ function applySearchHighlight(text: string | null | undefined, ranges: number[][
 	return <>{elements}</>;
 }
 
+//! 아마 앞으로 미사용
 function customRangeSearch(text: string, search: string): number[][] {
 	const disassembledText = Hangul.disassemble(text); // 결과는 배열
 	const disassembledSearch = Hangul.disassemble(search).join("");
