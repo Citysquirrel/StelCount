@@ -68,6 +68,7 @@ import { useAuth } from "../lib/hooks/useAuth";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import * as Hangul from "hangul-js";
+import { useConsole } from "../lib/hooks/useConsole";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -619,6 +620,7 @@ function SideMenu({
 			(res) => {
 				const data: SearchData[] = res.data;
 				setSearchResult(data);
+				setSearchInputValue("");
 			}
 		);
 	};
@@ -627,7 +629,7 @@ function SideMenu({
 		const value = e.target.value;
 		setSearchInputValue(value);
 
-		const results = data
+		const results = customStreams
 			.map((item) => {
 				const { liveTitle, channelName } = item;
 				const liveTitleRange = Hangul.rangeSearch(liveTitle || "", value);
@@ -815,6 +817,8 @@ function SideMenu({
 			handleResize();
 		},
 	});
+
+	useConsole(filteredData);
 
 	const currentStreams = getCurrentStreams(currentMode);
 
@@ -1575,6 +1579,31 @@ function RefreshAllIconSVG({ ...props }) {
 			/>
 		</svg>
 	);
+}
+
+function customRangeSearch(text: string, search: string): number[][] {
+	const disassembledText = Hangul.disassemble(text); // 결과는 배열
+	const disassembledSearch = Hangul.disassemble(search).join("");
+
+	const ranges: number[][] = [];
+	let startIndex = 0;
+
+	while (startIndex < disassembledText.length) {
+		// 배열을 문자열로 변환 후 검색
+		const index = disassembledText.join("").indexOf(disassembledSearch, startIndex);
+		if (index === -1) break;
+
+		const endIndex = index + disassembledSearch.length - 1;
+
+		// 원래 배열에서 범위를 가져옴
+		const originalStart = Hangul.assemble(disassembledText.slice(0, index)).length;
+		const originalEnd = Hangul.assemble(disassembledText.slice(0, endIndex + 1)).length - 1;
+
+		ranges.push([originalStart, originalEnd]);
+		startIndex = index + 1;
+	}
+
+	return ranges;
 }
 
 type StreamType = "chzzk" | (string & {});
