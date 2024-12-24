@@ -252,6 +252,11 @@ export function MultiView() {
 	useEffect(() => {
 		document.title = "StelCount - Multiview";
 		if (streamsParam) setIsMenuOpen(false);
+
+		return () => {
+			clearInterval(intervalRef.current);
+			clearInterval(customIntervalRef.current);
+		};
 	}, []);
 
 	useEffect(() => {
@@ -581,6 +586,7 @@ function SideMenu({
 	const OPENER_WIDTH = 32;
 	const CONFIG_HEIGHT = 180;
 	const listRef = useRef<HTMLDivElement>(null);
+	const searchInputRef = useRef<HTMLInputElement>(null);
 	const { isAdmin, isLoading: isAuthLoading } = useAuth();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [currentMode, setCurrentMode] = useState(0);
@@ -618,7 +624,6 @@ function SideMenu({
 			(res) => {
 				const data: SearchData[] = res.data;
 				setSearchResult(data);
-				setSearchInputValue("");
 			}
 		);
 	};
@@ -693,7 +698,6 @@ function SideMenu({
 	};
 
 	const handleAddCustomStream = () => {
-		console.log("handleAddCustomStream called");
 		const { name, imageUrl, streamId, platform, liveCategoryValue, liveTitle, liveImageUrl, openLive, openDate } =
 			selectedStreamer;
 		const uuid = v4();
@@ -719,6 +723,7 @@ function SideMenu({
 				},
 			].sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive));
 		});
+		setSearchInputValue("");
 
 		setUserSetting((prev) => {
 			const newItem = { name, platform, streamId };
@@ -815,9 +820,13 @@ function SideMenu({
 		v: () => {
 			handleResize();
 		},
+		// f: (e) => {
+		// 	if (document.activeElement !== searchInputRef.current) {
+		// 		// e.preventDefault();
+		// 		searchInputRef.current?.focus();
+		// 	}
+		// },
 	});
-
-	useConsole(filteredData);
 
 	const currentStreams = getCurrentStreams(currentMode);
 
@@ -1038,11 +1047,13 @@ function SideMenu({
 
 							<InputGroup gap="4px">
 								<Input
+									ref={searchInputRef}
 									size="sm"
 									value={searchInputValue}
 									onChange={handleChangeSearchInput}
 									onKeyDown={(e) => {
 										if (e.key === "Enter") onSearch();
+										if (e.key === "Escape") searchInputRef.current?.blur();
 									}}
 								/>
 								<IconButton
@@ -1172,6 +1183,7 @@ function SideMenu({
 										handleDeleteStream={handleDeleteStream}
 										handleDeleteCustomStream={handleDeleteCustomStream}
 										isCompact={isCardCompact}
+										isFiltered={filteredData.length > 0}
 									/>
 								);
 						  })
@@ -1213,6 +1225,7 @@ function MenuCard({
 	handleDeleteStream,
 	handleDeleteCustomStream,
 	isCompact,
+	isFiltered,
 }: MenuCardProps) {
 	const {
 		name,
@@ -1254,7 +1267,7 @@ function MenuCard({
 		>
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
 				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
-				{isCustom ? (
+				{isCustom && !isFiltered ? (
 					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
 				) : null}
 				<HStack>
@@ -1275,7 +1288,7 @@ function MenuCard({
 								filter={openLive ? undefined : "grayscale(1)"}
 							/>
 							<Text fontSize="0.75em" fontWeight={"bold"} color={openLive ? undefined : "gray.400"}>
-								{channelName}
+								{applySearchHighlight(channelName, channelNameRange)}
 							</Text>
 						</HStack>
 						{isCompact ? null : (
@@ -1302,7 +1315,7 @@ function MenuCard({
 								: undefined
 						}
 					>
-						{openLive ? liveTitle : "방송 종료됨"}
+						{openLive ? applySearchHighlight(liveTitle, liveTitleRange) : "방송 종료됨"}
 					</Text>
 				</Stack>
 			</CardBody>
@@ -1582,6 +1595,28 @@ function RefreshAllIconSVG({ ...props }) {
 	);
 }
 
+function applySearchHighlight(text: string | null | undefined, ranges: number[][] | undefined): JSX.Element {
+	if (!text) return <></>;
+	if (!ranges || ranges.length === 0) return <>{text}</>;
+	const elements: JSX.Element[] = [];
+	let lastIndex = 0;
+
+	ranges.forEach(([start, end], idx) => {
+		elements.push(<span key={`${idx}-normal`}>{text.slice(lastIndex, start)}</span>);
+		// 하이라이트된 텍스트
+		elements.push(
+			<Box as="span" key={`${idx}-highlight`} backgroundColor="yellow.600">
+				{text.slice(start, end + 1)}
+			</Box>
+		);
+		lastIndex = end + 1;
+	});
+
+	elements.push(<span key="remaining">{text.slice(lastIndex)}</span>);
+
+	return <>{elements}</>;
+}
+
 function customRangeSearch(text: string, search: string): number[][] {
 	const disassembledText = Hangul.disassemble(text); // 결과는 배열
 	const disassembledSearch = Hangul.disassemble(search).join("");
@@ -1645,6 +1680,7 @@ interface MenuCardProps {
 	handleDeleteStream: (uuid: string) => () => void;
 	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
 	isCompact: boolean;
+	isFiltered: boolean;
 }
 
 interface MenuCardImageProps {

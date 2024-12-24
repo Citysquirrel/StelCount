@@ -35,7 +35,7 @@ export function useKeyBind(keyConfig: KeyConfig, ref: HTMLElement | null = null,
 }
 
 interface KeyConfig {
-	[key: string]: () => void;
+	[key: string]: (event?: any) => void;
 }
 
 type KeyBindEventType = "keydown" | "keypress" | "keyup" | (string & {});
