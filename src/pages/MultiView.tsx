@@ -161,7 +161,6 @@ export function MultiView() {
 				fitHeight = maxHeight;
 			}
 		}
-		// if (len === 2) fitWidth = fitWidth - 38;
 		setFrameSize({ width: fitWidth, height: fitHeight });
 	};
 
@@ -716,6 +715,8 @@ function SideMenu({
 		handleClose();
 		setCurrentMode(0);
 		setSearchInputValue("");
+		setFilteredData([]);
+
 		setSelectedStreamer({ name: "", imageUrl: "", streamId: "", platform: "" });
 		setSearchResult([]);
 	};
@@ -1106,6 +1107,7 @@ function SideMenu({
 										}}
 										onClick={(e) => {
 											setSearchInputValue("");
+											setFilteredData([]);
 										}}
 									>
 										<IconButton
