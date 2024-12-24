@@ -593,9 +593,7 @@ function SideMenu({
 	});
 	const [searchResult, setSearchResult] = useState<SearchData[]>([]);
 	const [isCardCompact, setIsCardCompact] = useState<boolean>(false);
-	const [filteredData, setFilteredData] = useState<
-		typeof data & { liveTitleRange?: number[][]; channelNameRange?: number[][] }
-	>([]);
+	const [filteredData, setFilteredData] = useState<FilteredData[]>([]);
 
 	const configDict: ConfigDict[] = [
 		{
@@ -785,12 +783,13 @@ function SideMenu({
 		}
 	}, []);
 
-	const getCurrentStreams = (currentMode: number) => {
+	const getCurrentStreams = (currentMode: number): FilteredData[] => {
 		switch (currentMode) {
 			case 0:
 				return data;
 			case 1:
-				return customStreams;
+				if (filteredData.length > 0) return filteredData;
+				else return customStreams;
 			default:
 				return [];
 		}
@@ -1221,9 +1220,11 @@ function MenuCard({
 		uuid,
 		colorCode,
 		channelName,
+		channelNameRange,
 		channelImageUrl,
 		liveCategoryValue,
 		liveTitle,
+		liveTitleRange,
 		liveImageUrl,
 		openLive,
 		openDate,
@@ -1638,7 +1639,7 @@ interface SideMenuProps {
 }
 
 interface MenuCardProps {
-	item: MultiViewData;
+	item: FilteredData;
 	itemIdx: number;
 	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => void;
 	handleDeleteStream: (uuid: string) => () => void;
@@ -1688,6 +1689,8 @@ interface SearchData {
 	channel: SearchDataChannel;
 	live?: SearchDataLive;
 }
+
+type FilteredData = MultiViewData & { liveTitleRange?: number[][]; channelNameRange?: number[][] };
 
 interface SearchDataChannel {
 	channelId: string;
