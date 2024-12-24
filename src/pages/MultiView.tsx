@@ -109,6 +109,8 @@ export function MultiView() {
 	const { isOpen: isSettingOpen, onToggle: handleToggleSetting, onClose: handleCloseSetting } = useDisclosure();
 	const len = streams.length;
 
+	const [remotePos, setRemotePos] = useState({ x: 0, y: 0 });
+
 	const handleStreamsParam = (params: string | null) => {
 		if (!params) return;
 		if (data.length === 0) return;
@@ -244,6 +246,20 @@ export function MultiView() {
 		}
 	};
 
+	const handleRemoteDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+		const { offsetX, offsetY } = e.nativeEvent;
+		e.dataTransfer.setData("text/plain", JSON.stringify({ offsetX, offsetY }));
+	};
+	const handleRemoteDrop = (e: React.DragEvent<HTMLDivElement>) => {
+		e.preventDefault();
+	};
+	const handleRemoteDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+		const { offsetX, offsetY } = JSON.parse(e.dataTransfer.getData("text/plain"));
+		const x = e.clientX - offsetX;
+		const y = e.clientY - offsetY;
+		setRemotePos({ x, y });
+	};
+
 	useEffect(() => {
 		handleFrameSize();
 	}, [windowWidth, windowHeight, streams, isInnerChatOpen]);
@@ -343,7 +359,12 @@ export function MultiView() {
 
 							if (!src) return <Fragment key={`${idx}-${streamId}`}></Fragment>;
 							return (
-								<Box position="relative" key={`${streamId}`}>
+								<Box
+									position="relative"
+									key={`${streamId}`}
+									// onDragOver={handleRemoteDragOver}
+									// onDrop={handleRemoteDrop}
+								>
 									<Box
 										as="iframe"
 										ref={ref}
@@ -356,12 +377,15 @@ export function MultiView() {
 										frameBorder={"0"}
 									/>
 									<Stack
+										// draggable
 										position="absolute"
+										// top={remotePos.y}
+										// left={remotePos.x}
 										bottom={"48px"}
 										right={"20px"}
 										backgroundColor={"rgb(255,255,255,0.3)"}
 										borderRadius={".5rem"}
-										padding="4px 12px 8px 12px"
+										padding="8px 12px 8px 12px"
 										gap="4px"
 										// outline={"1px solid white"}
 										transition="all .2s"
@@ -369,7 +393,11 @@ export function MultiView() {
 										opacity={isMenuOpen ? 1 : 0}
 										_hover={{ opacity: 1 }}
 									>
-										<RemoteControlClicker dotColor="gray.300" alignSelf={"center"} />
+										{/* <RemoteControlClicker
+											dotColor="gray.300"
+											alignSelf={"center"}
+											// onDragStart={handleRemoteDragStart}
+										/> */}
 										<ButtonGroup size="sm" isAttached colorScheme="green">
 											<Button onClick={handleOpenChat(streamId, name)}>채팅</Button>
 											<IconButton
