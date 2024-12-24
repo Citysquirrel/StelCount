@@ -1056,6 +1056,38 @@ function SideMenu({
 										if (e.key === "Escape") searchInputRef.current?.blur();
 									}}
 								/>
+								{searchInputValue.length > 0 ? (
+									<Stack
+										sx={{
+											position: "absolute",
+											right: "39px",
+											bottom: "3px",
+											boxSize: "26px",
+											borderRadius: "2px",
+											alignItems: "center",
+											justifyContent: "center",
+											cursor: "pointer",
+											zIndex: 1,
+										}}
+										onClick={(e) => {
+											setSearchInputValue("");
+										}}
+									>
+										<IconButton
+											variant={"ghost"}
+											icon={<MdClear />}
+											colorScheme="white"
+											sx={{
+												boxSize: "16px",
+												minW: 0,
+												borderRadius: "full",
+												backgroundColor: "gray.700",
+											}}
+											aria-label="delete-input"
+										/>
+									</Stack>
+								) : null}
+
 								<IconButton
 									icon={<MdSearch />}
 									aria-label="search-chzzk-stream"
