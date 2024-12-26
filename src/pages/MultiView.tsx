@@ -1360,14 +1360,15 @@ function MenuCard({
 								{applySearchHighlight(channelName, channelNameRange)}
 							</Text>
 						</HStack>
+
+						<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
+							{(openLive && liveCategoryValue) || "　"}
+						</Text>
 						{isCompact ? null : (
-							<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
-								{(openLive && liveCategoryValue) || "　"}
+							<Text color="gray.500" fontSize="0.65em" paddingRight={isCompact ? "12px" : undefined}>
+								{openLive ? modDateText(openDate) + " 시작" : modDateText(closeDate) + " 종료"}
 							</Text>
 						)}
-						<Text color="gray.500" fontSize="0.65em" paddingRight={isCompact ? "12px" : undefined}>
-							{openLive ? modDateText(openDate) + " 시작" : modDateText(closeDate) + " 종료"}
-						</Text>
 					</Stack>
 				</HStack>
 				<Stack>
