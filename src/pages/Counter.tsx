@@ -704,7 +704,15 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 					<MdOpenInNew />
 				</Button>
 			) : null}
-			<Text position="absolute" top={"4px"} right={"4px"} as={Link} href={youtube.musicUrl(videoId)} isExternal>
+			<Text
+				position="absolute"
+				top={"6px"}
+				right={"6px"}
+				as={Link}
+				href={youtube.musicUrl(videoId)}
+				isExternal
+				color="red.500"
+			>
 				<SiYoutubemusic />
 			</Text>
 			<HStack position="absolute" top={"4px"} left={"4px"} gap={"4px"} userSelect={"none"} zIndex={1}>

@@ -564,26 +564,41 @@ function RecentNews({
 										>
 											{v.titleAlias || v.title}
 										</Text>
-										{v.details.length > 0 ? (
-											<HStack paddingLeft="8px" animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}>
-												<Text fontSize="xs">부가 영상</Text>
-												{v.details.map((detail) => {
-													const { id, type, videoId } = detail;
-													return (
-														<Text
-															as={Link}
-															href={youtube.videoUrl(videoId)}
-															key={`${id}_${videoId}`}
-															color="blue.800"
-															fontSize="sm"
-															isExternal
-														>
-															{type}
-														</Text>
-													);
-												})}
-											</HStack>
-										) : null}
+
+										<HStack paddingLeft="8px" animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}>
+											<Text
+												as={Link}
+												href={youtube.musicUrl(v.videoId)}
+												isExternal
+												color="red.600"
+												sx={{ display: "flex", flexDir: "row", gap: "4px" }}
+											>
+												<SiYoutubemusic />
+												<Text fontSize="xs" fontFamily={"Consolas"}>
+													Youtube Music
+												</Text>
+											</Text>
+											{v.details.length > 0 ? (
+												<>
+													<Text fontSize="xs">부가 영상</Text>
+													{v.details.map((detail) => {
+														const { id, type, videoId } = detail;
+														return (
+															<Text
+																as={Link}
+																href={youtube.videoUrl(videoId)}
+																key={`${id}_${videoId}`}
+																color="blue.800"
+																fontSize="sm"
+																isExternal
+															>
+																{type}
+															</Text>
+														);
+													})}
+												</>
+											) : null}
+										</HStack>
 										<HStack
 											alignItems={"center"}
 											justifyContent={"space-between"}
@@ -605,11 +620,6 @@ function RecentNews({
 													{timeText.value} 달성
 												</Text>
 											) : null}
-										</HStack>
-										<HStack>
-											<Text as={Link} href={youtube.musicUrl(v.videoId)} isExternal>
-												<SiYoutubemusic />
-											</Text>
 										</HStack>
 									</Stack>
 								</Stack>
