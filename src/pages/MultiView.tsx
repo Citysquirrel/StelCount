@@ -73,7 +73,6 @@ import { useAuth } from "../lib/hooks/useAuth";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import * as Hangul from "hangul-js";
-import { useConsole } from "../lib/hooks/useConsole";
 
 export function MultiView() {
 	const navigate = useNavigate();

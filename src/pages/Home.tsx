@@ -97,34 +97,6 @@ export default function Home() {
 			? data.approach
 			: data.mostViews;
 
-	//! 이것도 미사용
-	const condition =
-		data.upcoming.length > 0
-			? -1
-			: data.mostPopular.length > 0
-			? 0
-			: data.recent.length > 0
-			? 1
-			: data.approach.length > 0
-			? 2
-			: 3;
-
-	//! firstMusic is DEPRECATED
-	const firstMusic: YoutubeMusicData = !isNewsLoading
-		? arr[0]
-		: {
-				title: "",
-				titleAlias: "",
-				channelId: "",
-				thumbnail: "",
-				thumbnails: "",
-				videoId: "",
-				mostPopular: -1,
-				mostPopularMusic: -1,
-				details: [],
-				statistics: [],
-		  };
-
 	useEffect(() => {
 		if (arr[0]) setIsNewsLoading(false);
 	}, [arr]);
@@ -272,9 +244,7 @@ export default function Home() {
 			>
 				{/* 최상단에 최근 이벤트 크게 렌더 */}
 				<RecentNews
-					data={firstMusic}
 					isLoading={isNewsLoading}
-					condition={condition}
 					isDataLoading={isDataLoading}
 					now={now}
 					recent={data.recent}
@@ -309,9 +279,7 @@ export default function Home() {
 }
 
 function RecentNews({
-	data,
 	isLoading,
-	condition,
 	isDataLoading,
 	now,
 	recent,
@@ -1005,22 +973,6 @@ function MultiView({ list, setList }: MultiViewProps) {
 			<Stack border="1px solid" borderColor="blue.500" borderRadius={".5rem"} padding="12px">
 				<HStack padding="2px" overflowX={"auto"}>
 					{list.map((item, i) => renderItem(item, i))}
-					{/* <Tooltip label="다른 방송도 볼래요" hasArrow>
-						<Button
-							boxSize="50px"
-							minWidth="50px"
-							borderRadius={"full"}
-							overflow="hidden"
-							cursor="pointer"
-							alignItems={"center"}
-							justifyContent={"center"}
-							onClick={() => {
-								setIsOtherOn(true);
-							}}
-						>
-							<MdAdd />
-						</Button>
-					</Tooltip> */}
 				</HStack>
 				<InputGroup size="sm">
 					<InputLeftAddon onClick={handleChangeMode} sx={{ cursor: "pointer" }}>
@@ -1150,7 +1102,7 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 	);
 }
 
-// Functions
+//! Functions
 
 function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
 	if (type === "recent") {
@@ -1185,10 +1137,8 @@ interface LiveData extends LiveStatusState {
 }
 
 interface RecentNewsProps {
-	data: YoutubeMusicData;
 	isLoading: boolean;
 	isDataLoading: boolean;
-	condition: number;
 	now: Date;
 
 	recent: YoutubeMusicData[];
