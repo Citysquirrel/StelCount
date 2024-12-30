@@ -18,6 +18,7 @@ import { CAFE_WRITE_URL } from "./lib/constant";
 import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useEffect } from "react";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -38,6 +39,14 @@ function App() {
 			if (second === 0 && import.meta.env.PROD) refetch(true);
 		}, 1000);
 	};
+
+	useEffect(() => {
+		const ws = new WebSocket(import.meta.env.VITE_WS_URL);
+
+		return () => {
+			ws.close();
+		};
+	}, []);
 
 	useNow();
 	useHotkeys("ctrl+alt+l", () => {
