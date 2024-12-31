@@ -56,6 +56,7 @@ import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { useLocalStorage } from "usehooks-ts";
 
+//TODO: 메인화면에서 응답완료 메시지(Toast)가 두 번 중복되어 팝업되는 현상 원인 파악 필요
 export default function Home() {
 	useBackgroundColor("white");
 	const [stellar] = useRecoilState(stellarState);
