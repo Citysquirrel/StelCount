@@ -25,9 +25,14 @@ export function useMultiView() {
 					const { data: applyType, upcoming } = res.data as MultiViewDataData;
 					const opens = applyType.filter((stream) => stream.openLive);
 					const closes = applyType.filter((stream) => !stream.openLive);
+					const defaultDate = "2000-01-01";
 					setData([
-						...opens.sort((a, b) => new Date(b.openDate!).getTime() - new Date(a.openDate!).getTime()),
-						...closes.sort((a, b) => new Date(b.closeDate!).getTime() - new Date(a.closeDate!).getTime()),
+						...opens.sort(
+							(a, b) => new Date(b.openDate || defaultDate).getTime() - new Date(a.openDate || defaultDate).getTime()
+						),
+						...closes.sort(
+							(a, b) => new Date(b.closeDate || defaultDate).getTime() - new Date(a.closeDate || defaultDate).getTime()
+						),
 					]);
 					setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
 				}
