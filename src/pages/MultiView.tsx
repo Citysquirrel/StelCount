@@ -667,17 +667,21 @@ function SideMenu({
 
 		const results = customStreams
 			.map((item) => {
-				const { liveTitle, channelName } = item;
+				const { liveTitle, channelName, liveCategoryValue } = item;
 				const liveTitleRange = Hangul.rangeSearch(liveTitle || "", value);
 				const channelNameRange = Hangul.rangeSearch(channelName || "", value);
+				const categoryRange = Hangul.rangeSearch(liveCategoryValue || "", value);
 
 				return {
 					...item,
 					liveTitleRange,
 					channelNameRange,
+					categoryRange,
 				};
 			})
-			.filter((item) => item.liveTitleRange.length > 0 || item.channelNameRange.length > 0);
+			.filter(
+				(item) => item.liveTitleRange.length > 0 || item.channelNameRange.length > 0 || item.categoryRange.length > 0
+			);
 
 		setFilteredData(results);
 	};
@@ -1299,6 +1303,7 @@ function MenuCard({
 		name,
 		chzzkId,
 		uuid,
+		categoryRange,
 		colorCode,
 		channelName,
 		channelNameRange,
@@ -1361,7 +1366,7 @@ function MenuCard({
 						</HStack>
 
 						<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
-							{(openLive && liveCategoryValue) || "　"}
+							{openLive ? applySearchHighlight(liveCategoryValue, categoryRange) : "　"}
 						</Text>
 						{isCompact ? null : (
 							<Text color="gray.500" fontSize="0.65em" paddingRight={isCompact ? "12px" : undefined}>
@@ -1812,7 +1817,11 @@ interface SearchData {
 	live?: SearchDataLive;
 }
 
-type FilteredData = MultiViewData & { liveTitleRange?: number[][]; channelNameRange?: number[][] };
+type FilteredData = MultiViewData & {
+	liveTitleRange?: number[][];
+	channelNameRange?: number[][];
+	categoryRange?: number[][];
+};
 
 interface SearchDataChannel {
 	channelId: string;
