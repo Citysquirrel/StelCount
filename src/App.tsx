@@ -18,6 +18,7 @@ import { CAFE_WRITE_URL } from "./lib/constant";
 import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useWebSocket } from "./lib/hooks/useWebSocket";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -43,6 +44,8 @@ function App() {
 	useHotkeys("ctrl+alt+l", () => {
 		nav("/login")();
 	});
+
+	useWebSocket();
 
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 
