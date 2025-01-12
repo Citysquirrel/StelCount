@@ -1691,6 +1691,9 @@ function applySearchHighlight(text: string | null | undefined, ranges: number[][
 	const elements: JSX.Element[] = [];
 	let lastIndex = 0;
 
+	//TODO: 찾은 검색어가 특정 상황에서 문자가 복사되는 문제 발생
+	//TODO: 원인 분석 필요
+
 	ranges.forEach(([start, end], idx) => {
 		elements.push(<span key={`${idx}-normal`}>{text.slice(lastIndex, start)}</span>);
 		// 하이라이트된 텍스트
