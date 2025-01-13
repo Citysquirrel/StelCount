@@ -28,7 +28,9 @@ export function useWebSocket() {
 			// console.log(msg);
 
 			setMessages((prev) => {
-				return [...prev, msg];
+				const STANDARD_TIME_SECOND = 30;
+				const recentThreshold = new Date().getTime() - STANDARD_TIME_SECOND * 1000;
+				return [...prev.filter((p) => new Date(p.timestamp).getTime() > recentThreshold), msg];
 			});
 		};
 
@@ -43,5 +45,5 @@ export function useWebSocket() {
 interface SocketMessage {
 	type: "message" | "data" | "multiview" | (string & {});
 	data: any;
-	createdAt: string;
+	timestamp: string;
 }
