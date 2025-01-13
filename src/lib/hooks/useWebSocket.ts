@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 
 export function useWebSocket() {
 	const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
-	const [messages, setMessages] = useState<SocketMessage[]>([]);
+	const [socketMessages, setSocketMessages] = useState<SocketMessage[]>([]);
+	//TODO: 메시지 상태를 전역상태로 바꾸는 방안 검토
+
 	//TODO: 로컬스토리지를 통해 웹소켓의 중복 소통을 방지
 	//TODO: useMultiView, useStellar와의 소통:
 	//TODO: 웹소켓이 정상 연결상태일 때는 setInterval을 멈춤춤
@@ -12,6 +14,14 @@ export function useWebSocket() {
 			webSocket.send(msg);
 		}
 	};
+
+	function setMessages(msg: SocketMessage) {
+		setSocketMessages((prev) => {
+			const STANDARD_TIME_SECOND = 30;
+			const recentThreshold = new Date().getTime() - STANDARD_TIME_SECOND * 1000;
+			return [...prev.filter((p) => new Date(p.timestamp).getTime() > recentThreshold), msg];
+		});
+	}
 
 	useEffect(() => {
 		const ws = new WebSocket(import.meta.env.VITE_WS_URL);
@@ -27,11 +37,7 @@ export function useWebSocket() {
 			const msg: SocketMessage = JSON.parse(e.data);
 			// console.log(msg);
 
-			setMessages((prev) => {
-				const STANDARD_TIME_SECOND = 30;
-				const recentThreshold = new Date().getTime() - STANDARD_TIME_SECOND * 1000;
-				return [...prev.filter((p) => new Date(p.timestamp).getTime() > recentThreshold), msg];
-			});
+			setMessages(msg);
 		};
 
 		return () => {
@@ -39,7 +45,7 @@ export function useWebSocket() {
 		};
 	}, []);
 
-	return { sendMessage, messages, setMessages };
+	return { sendMessage, messages: socketMessages, setMessages };
 }
 
 interface SocketMessage {
