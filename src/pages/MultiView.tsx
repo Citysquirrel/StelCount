@@ -38,6 +38,8 @@ import {
 	SimpleGridProps,
 	BackgroundProps,
 	StackProps,
+	RadioGroup,
+	Radio,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
@@ -1593,7 +1595,18 @@ function createConfigComponent(
 	} else if (type === "radio") {
 		const value = configState[name] as string;
 		const { defaultValue } = config as ConfigDict<"radio">;
-		return <Fragment key={name}></Fragment>;
+		//TODO: ConfigDict에 새로운 값 지정 필요 -- 구조? structure?
+
+		return (
+			<FormControl key={name}>
+				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
+					{label}
+				</FormLabel>
+				<RadioGroup onChange={() => {}} value="">
+					<HStack>{/* {structure.map(s => <Radio value={s.value}>{s.name}</Radio>)} */}</HStack>
+				</RadioGroup>
+			</FormControl>
+		);
 	} else return <Fragment key={name}></Fragment>;
 }
 
