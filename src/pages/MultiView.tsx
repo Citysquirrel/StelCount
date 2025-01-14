@@ -136,6 +136,9 @@ export function MultiView() {
 	};
 
 	const handleFrameSize = () => {
+		//TODO: iframe에 영향을 덜 주기 위해 직접 크기를 조정하는 방식을 버리고
+		//TODO: grid를 이용해 자동으로 크기 조절이 되도록 하는 방식 고려
+		//TODO: custom grid 방식을 이용해 각 화면 크기가 통일되지 않고 자유자재로 변할 수 있도록 하는 방식 고려
 		const WIDTH_PADDING = 4;
 		const HEIGHT_PADDING = 4;
 		const width = windowWidth - WIDTH_PADDING - (isInnerChatOpen ? 350 : 0);
@@ -164,7 +167,6 @@ export function MultiView() {
 	};
 
 	const handleAddStream = (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => {
-		console.log("streamId:", streamId);
 		if (!streamId) return;
 		setStreams((prev) => {
 			const result = [...prev, { streamId, type, uuid, name }];
@@ -649,7 +651,7 @@ function SideMenu({
 			min: 24,
 			max: 120,
 		},
-		{ name: "controllerPos", label: "컨트롤러 위치", type: "list", defaultValue: 1 },
+		{ name: "controllerPos", label: "컨트롤러 위치", type: "radio", defaultValue: "right-bottom" },
 	];
 
 	const onSearch = () => {
@@ -1527,7 +1529,7 @@ function createConfigComponent(
 		const value = configState[name] as string;
 		const format = (val: string) => (suffix ? `${val}${suffix}` : `${val}`);
 		const parse = (val: string) => (suffix ? val.replace(suffix, "") : val);
-		const { defaultValue, min, max } = config;
+		const { defaultValue, min, max } = config as ConfigDict<"number">;
 		return (
 			<FormControl key={name} display="flex" alignItems="center" justifyContent={"space-between"} gap={0}>
 				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
@@ -1556,7 +1558,7 @@ function createConfigComponent(
 	} else if (type === "slider") {
 		const value = configState[name] as string;
 		const numVal = parseInt(value);
-		const { defaultValue, min, max } = config;
+		const { defaultValue, min, max } = config as ConfigDict<"slider">;
 		return (
 			<FormControl key={name}>
 				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
@@ -1587,6 +1589,10 @@ function createConfigComponent(
 	} else if (type === "list") {
 		const value = configState[name] as number; // default: 1, 1 ~ 4
 
+		return <Fragment key={name}></Fragment>;
+	} else if (type === "radio") {
+		const value = configState[name] as string;
+		const { defaultValue } = config as ConfigDict<"radio">;
 		return <Fragment key={name}></Fragment>;
 	} else return <Fragment key={name}></Fragment>;
 }
@@ -1791,17 +1797,24 @@ interface ConfigState {
 	controllerPos: number;
 }
 
-interface ConfigDict {
+interface ConfigDict<T extends ConfigType = ConfigType> {
 	name: keyof ConfigState;
 	label: string;
 	type: ConfigType;
 	suffix?: string;
-	defaultValue?: number;
+	defaultValue?: DefaultValueType<T>;
 	min?: number;
 	max?: number;
 }
 
-type ConfigType = "switch" | "number" | "slider" | "list" | (string & {});
+type ConfigType = "switch" | "number" | "slider" | "list" | "radio" | (string & {});
+type DefaultValueType<T> = T extends "list" | "radio"
+	? string
+	: T extends "number" | "slider"
+	? number
+	: T extends "switch"
+	? boolean
+	: never;
 
 interface Streamer {
 	name: string;
