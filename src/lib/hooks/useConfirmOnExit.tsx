@@ -17,5 +17,8 @@ export function useConfirmOnExit() {
 		disableConfirmOnExit: () => {
 			window.removeEventListener("beforeunload", handleBeforeUnload);
 		},
+		enableConfirmOnExit: () => {
+			window.addEventListener("beforeunload", handleBeforeUnload);
+		},
 	};
 }

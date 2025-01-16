@@ -290,7 +290,7 @@ export function MultiView() {
 		navigate("/login");
 	});
 
-	useConfirmOnExit();
+	const { enableConfirmOnExit, disableConfirmOnExit } = useConfirmOnExit();
 
 	const streamContainerWidth = isInnerChatOpen ? `calc(100vw - 350px)` : "100vw";
 
