@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function useWebSocket() {
-	const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
+	const socket = useRef<WebSocket | null>(null);
 	const [socketMessages, setSocketMessages] = useState<SocketMessage[]>([]);
 	//!: 메시지 상태를 전역상태로 바꾸는 방안 검토 => 예상치 못한 렌더링 발생 예상. 바람직하지 않음
 
@@ -12,8 +12,8 @@ export function useWebSocket() {
 	//TODO: reconnectWebsocket 메서드 추가
 
 	const sendMessage = (msg: string) => {
-		if (webSocket && webSocket.readyState === WebSocket.OPEN) {
-			webSocket.send(msg);
+		if (socket.current && socket.current.readyState === WebSocket.OPEN) {
+			socket.current.send(msg);
 		}
 	};
 
@@ -27,8 +27,7 @@ export function useWebSocket() {
 
 	useEffect(() => {
 		const ws = new WebSocket(import.meta.env.VITE_WS_URL);
-
-		setWebSocket(ws);
+		socket.current = ws;
 
 		ws.onopen = () => {
 			// console.log("웹소켓 연결성공");
