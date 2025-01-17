@@ -41,12 +41,36 @@ export function useWebSocket() {
 			setMessages(msg);
 		};
 
+		ws.onclose = () => {
+			reconnectWebSocket();
+		};
+
+		function reconnectWebSocket() {
+			const newWs = new WebSocket(import.meta.env.VITE_WS_URL);
+			socketRef.current = newWs;
+
+			newWs.onopen = () => {
+				newWs.send(JSON.stringify({ type: "message", data: "클라이언트 연결 완료" } as SocketMessage));
+			};
+
+			newWs.onmessage = (e) => {
+				const msg: SocketMessage = JSON.parse(e.data);
+				// console.log(msg);
+
+				setMessages(msg);
+			};
+
+			newWs.onclose = () => {
+				reconnectWebSocket();
+			};
+		}
+
 		return () => {
 			ws.close();
 		};
 	}, []);
 
-	return { sendMessage, messages: socketMessages, setMessages };
+	return { socketRef, sendMessage, messages: socketMessages, setMessages };
 }
 
 interface SocketMessage {
