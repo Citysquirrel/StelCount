@@ -1,12 +1,15 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
-export function useConfirmOnExit() {
-	const handleBeforeUnload = (event: any) => {
+export function useConfirmOnExit(disableOnRender?: boolean) {
+	const handleBeforeUnload = useCallback((event: any) => {
 		event.preventDefault();
 		event.returnValue = "";
-	};
+	}, []);
+
 	useEffect(() => {
-		window.addEventListener("beforeunload", handleBeforeUnload);
+		if (!disableOnRender) {
+			window.addEventListener("beforeunload", handleBeforeUnload);
+		}
 
 		return () => {
 			window.removeEventListener("beforeunload", handleBeforeUnload);

@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 export function useWebSocket() {
 	const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
 	const [socketMessages, setSocketMessages] = useState<SocketMessage[]>([]);
-	//TODO: 메시지 상태를 전역상태로 바꾸는 방안 검토
+	//!: 메시지 상태를 전역상태로 바꾸는 방안 검토 => 예상치 못한 렌더링 발생 예상. 바람직하지 않음
 
 	//TODO: 로컬스토리지를 통해 웹소켓의 중복 소통을 방지
 	//TODO: useMultiView, useStellar와의 소통:
-	//TODO: 웹소켓이 정상 연결상태일 때는 setInterval을 멈춤춤
+	//TODO: 웹소켓이 정상 연결상태일 때는 setInterval을 멈춤
+
+	//TODO: reconnectWebsocket 메서드 추가
 
 	const sendMessage = (msg: string) => {
 		if (webSocket && webSocket.readyState === WebSocket.OPEN) {

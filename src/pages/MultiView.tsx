@@ -66,7 +66,7 @@ import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { confirmOnExit, lightenColor } from "../lib/functions/etc";
+import { lightenColor } from "../lib/functions/etc";
 import { LoadingCircle } from "../components/Loading";
 import { fetchServer } from "../lib/functions/fetch";
 import { createComponentMap } from "../lib/functions/createComponent";
@@ -101,6 +101,7 @@ export function MultiView() {
 		refetchCustom,
 		customIntervalRef,
 	} = useMultiView();
+	const { enableConfirmOnExit, disableConfirmOnExit } = useConfirmOnExit(true);
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -269,6 +270,9 @@ export function MultiView() {
 	useEffect(() => {
 		if (streams.length === 0) {
 			setIsInnerChatOpen(false);
+			disableConfirmOnExit();
+		} else {
+			enableConfirmOnExit();
 		}
 	}, [streams]);
 
@@ -289,8 +293,6 @@ export function MultiView() {
 	useHotkeys("ctrl+alt+l", () => {
 		navigate("/login");
 	});
-
-	const { enableConfirmOnExit, disableConfirmOnExit } = useConfirmOnExit();
 
 	const streamContainerWidth = isInnerChatOpen ? `calc(100vw - 350px)` : "100vw";
 
