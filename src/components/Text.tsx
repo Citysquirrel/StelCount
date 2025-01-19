@@ -1,4 +1,4 @@
-import { Box, BoxProps } from "@chakra-ui/react";
+import { Box, BoxProps, Text, TextProps } from "@chakra-ui/react";
 
 export function ColorText({ value, children, ...props }: ColorTextProps) {
 	return (
@@ -8,6 +8,18 @@ export function ColorText({ value, children, ...props }: ColorTextProps) {
 	);
 }
 
+export function MarqueeText({ isMouseOver, children, ...props }: MarqueeTextProps) {
+	return (
+		<Text whiteSpace={"nowrap"} textOverflow={"ellipsis"} overflow="hidden" {...props}>
+			{children}
+		</Text>
+	);
+}
+
 interface ColorTextProps extends BoxProps {
 	value?: string;
+}
+
+interface MarqueeTextProps extends TextProps {
+	isMouseOver?: boolean;
 }
