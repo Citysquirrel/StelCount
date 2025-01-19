@@ -55,6 +55,7 @@ import { MIN_DATE, USER_SETTING_STORAGE } from "../lib/constant";
 import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { useLocalStorage } from "usehooks-ts";
+import { Carousel } from "../components/Carousel";
 
 //TODO: 메인화면에서 응답완료 메시지(Toast)가 두 번 중복되어 팝업되는 현상 원인 파악 필요
 export default function Home() {
@@ -405,7 +406,7 @@ function RecentNews({
 				},
 			}}
 		>
-			{/* 캐로셀 페이징 부분 */}
+			{/* 캐로셀 페이징 부분*/}
 			{reOgData.length > 1 && !isLoading ? (
 				<HStack
 					position="absolute"
@@ -469,25 +470,19 @@ function RecentNews({
 					</Stack>
 				</Stack>
 			) : (
-				<HStack
-					minWidth="100%"
-					alignItems={["center", "center", "flex-end", "flex-end", "flex-end"]}
-					padding="16px"
-					gap="32px"
-					transform={`translateX(-${100 * currentPageIdx}%)`}
-					transition="all .3s"
-				>
-					{reOgData.map((v, idx) => {
-						const isUpcoming = v.liveBroadcastContent === "upcoming";
-						const isLive = v.liveBroadcastContent === "live";
-						const headingText = createHeadingText(v, v.condition, isLive);
-						const timeTextDate = isLive ? v.scheduledStartTime || MIN_DATE : v.publishedAt || MIN_DATE;
-						const timeText = createTimeText(v, conditionDict[v.condition]);
+				<Carousel
+					list={reOgData}
+					SlideComponent={(item, idx) => {
+						const isUpcoming = item.liveBroadcastContent === "upcoming";
+						const isLive = item.liveBroadcastContent === "live";
+						const headingText = createHeadingText(item, item.condition, isLive);
+						const timeTextDate = isLive ? item.scheduledStartTime || MIN_DATE : item.publishedAt || MIN_DATE;
+						const timeText = createTimeText(item, conditionDict[item.condition]);
 						return (
-							<Stack key={`${idx}-${v.videoId}`} direction={["column", "column", "row", "row", "row"]} minWidth="100%">
+							<Stack key={idx} direction={["column", "column", "row", "row", "row"]} minWidth="100%">
 								<Stack flex={1} direction={["column", "column", "row", "row", "row"]} alignItems={"center"} gap="12px">
 									<Link
-										href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
+										href={isLoading ? undefined : youtube.videoUrl(item.videoId)}
 										isExternal
 										transition="all .3s"
 										_hover={{
@@ -500,7 +495,7 @@ function RecentNews({
 									>
 										<Image
 											className="news-thumbnail"
-											src={v.thumbnail}
+											src={item.thumbnail}
 											alt="thumbnail"
 											width={["300px", "432px", "360px", "360px", "360px"]}
 											height={["150px", "216px", "180px", "180px", "180px"]}
@@ -525,14 +520,14 @@ function RecentNews({
 										alignSelf={[null, null, "flex-end", "flex-end", "flex-end"]}
 									>
 										<Heading
-											fontSize={v.condition === -1 ? "3xl" : "lg"}
+											fontSize={item.condition === -1 ? "3xl" : "lg"}
 											animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}
 										>
 											{headingText}
 										</Heading>
 										<Text
 											as={Link}
-											href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
+											href={isLoading ? undefined : youtube.videoUrl(item.videoId)}
 											isExternal
 											overflow="hidden"
 											textOverflow={"ellipsis"}
@@ -541,13 +536,13 @@ function RecentNews({
 											maxHeight="3rem"
 											animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}
 										>
-											{v.titleAlias || v.title}
+											{item.titleAlias || item.title}
 										</Text>
 
 										<HStack paddingLeft="8px" animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}>
 											<Text
 												as={Link}
-												href={youtube.musicUrl(v.videoId)}
+												href={youtube.musicUrl(item.videoId)}
 												isExternal
 												color="red.600"
 												sx={{ display: "flex", flexDir: "row", gap: "4px" }}
@@ -557,10 +552,10 @@ function RecentNews({
 													Youtube Music
 												</Text>
 											</Text>
-											{v.details.length > 0 ? (
+											{item.details.length > 0 ? (
 												<>
 													<Text fontSize="xs">부가 영상</Text>
-													{v.details.map((detail) => {
+													{item.details.map((detail) => {
 														const { id, type, videoId } = detail;
 														return (
 															<Text
@@ -586,7 +581,7 @@ function RecentNews({
 											{isUpcoming ? null : (
 												<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
 													<FaEye />
-													<Text fontWeight={"bold"}>{numberToLocaleString(v.viewCount)}</Text>
+													<Text fontWeight={"bold"}>{numberToLocaleString(item.viewCount)}</Text>
 												</HStack>
 											)}
 											{isUpcoming || timeText.value ? null : (
@@ -604,8 +599,146 @@ function RecentNews({
 								</Stack>
 							</Stack>
 						);
-					})}
-				</HStack>
+					}}
+					currentPageIdx={currentPageIdx}
+				/>
+				// <HStack
+				// 	minWidth="100%"
+				// 	alignItems={["center", "center", "flex-end", "flex-end", "flex-end"]}
+				// 	padding="16px"
+				// 	gap="32px"
+				// 	transform={`translateX(-${100 * currentPageIdx}%)`}
+				// 	transition="all .3s"
+				// >
+				// 	{reOgData.map((v, idx) => {
+				// 		const isUpcoming = v.liveBroadcastContent === "upcoming";
+				// 		const isLive = v.liveBroadcastContent === "live";
+				// 		const headingText = createHeadingText(v, v.condition, isLive);
+				// 		const timeTextDate = isLive ? v.scheduledStartTime || MIN_DATE : v.publishedAt || MIN_DATE;
+				// 		const timeText = createTimeText(v, conditionDict[v.condition]);
+				// 		return (
+				// 			<Stack key={`${idx}-${v.videoId}`} direction={["column", "column", "row", "row", "row"]} minWidth="100%">
+				// 				<Stack flex={1} direction={["column", "column", "row", "row", "row"]} alignItems={"center"} gap="12px">
+				// 					<Link
+				// 						href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
+				// 						isExternal
+				// 						transition="all .3s"
+				// 						_hover={{
+				// 							"> .news-thumbnail": {
+				// 								filter: "grayscale(0.5)",
+				// 								borderRadius: 0,
+				// 								boxShadow: "2px 4px 6px black",
+				// 							},
+				// 						}}
+				// 					>
+				// 						<Image
+				// 							className="news-thumbnail"
+				// 							src={v.thumbnail}
+				// 							alt="thumbnail"
+				// 							width={["300px", "432px", "360px", "360px", "360px"]}
+				// 							height={["150px", "216px", "180px", "180px", "180px"]}
+				// 							minWidth={["300px", "360px", "360px", "360px", "360px"]}
+				// 							objectFit={"cover"}
+				// 							transition="all .3s"
+				// 							borderRadius={[
+				// 								".5rem .5rem 0 0",
+				// 								".5rem .5rem 0 0",
+				// 								".5rem .5rem 0 .5rem",
+				// 								".5rem .5rem 0 .5rem",
+				// 								".5rem .5rem 0 .5rem",
+				// 							]}
+				// 							outline="1px solid"
+				// 							outlineColor="blue.50"
+				// 							animation={`fadeIn 0.3s ease-in-out 0.1s 1 normal both`}
+				// 						/>
+				// 					</Link>
+				// 					<Stack
+				// 						gap="4px"
+				// 						width={[null, null, null, "100%", "100%"]}
+				// 						alignSelf={[null, null, "flex-end", "flex-end", "flex-end"]}
+				// 					>
+				// 						<Heading
+				// 							fontSize={v.condition === -1 ? "3xl" : "lg"}
+				// 							animation={`fadeIn 0.3s ease-in-out 0s 1 normal both`}
+				// 						>
+				// 							{headingText}
+				// 						</Heading>
+				// 						<Text
+				// 							as={Link}
+				// 							href={isLoading ? undefined : youtube.videoUrl(v.videoId)}
+				// 							isExternal
+				// 							overflow="hidden"
+				// 							textOverflow={"ellipsis"}
+				// 							whiteSpace={"normal"}
+				// 							lineHeight="1.5rem"
+				// 							maxHeight="3rem"
+				// 							animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}
+				// 						>
+				// 							{v.titleAlias || v.title}
+				// 						</Text>
+
+				// 						<HStack paddingLeft="8px" animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}>
+				// 							<Text
+				// 								as={Link}
+				// 								href={youtube.musicUrl(v.videoId)}
+				// 								isExternal
+				// 								color="red.600"
+				// 								sx={{ display: "flex", flexDir: "row", gap: "4px" }}
+				// 							>
+				// 								<SiYoutubemusic />
+				// 								<Text fontSize="xs" fontFamily={"Consolas"}>
+				// 									Youtube Music
+				// 								</Text>
+				// 							</Text>
+				// 							{v.details.length > 0 ? (
+				// 								<>
+				// 									<Text fontSize="xs">부가 영상</Text>
+				// 									{v.details.map((detail) => {
+				// 										const { id, type, videoId } = detail;
+				// 										return (
+				// 											<Text
+				// 												as={Link}
+				// 												href={youtube.videoUrl(videoId)}
+				// 												key={`${id}_${videoId}`}
+				// 												color="blue.800"
+				// 												fontSize="sm"
+				// 												isExternal
+				// 											>
+				// 												{type}
+				// 											</Text>
+				// 										);
+				// 									})}
+				// 								</>
+				// 							) : null}
+				// 						</HStack>
+				// 						<HStack
+				// 							alignItems={"center"}
+				// 							justifyContent={"space-between"}
+				// 							animation={`fadeIn 0.3s ease-in-out 0.3s 1 normal both`}
+				// 						>
+				// 							{isUpcoming ? null : (
+				// 								<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
+				// 									<FaEye />
+				// 									<Text fontWeight={"bold"}>{numberToLocaleString(v.viewCount)}</Text>
+				// 								</HStack>
+				// 							)}
+				// 							{isUpcoming || timeText.value ? null : (
+				// 								<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
+				// 									{elapsedTimeTextForCard(new Date(new Date(timeTextDate)), new Date(getLocale()))[1]}
+				// 								</Text>
+				// 							)}
+				// 							{timeText.value ? (
+				// 								<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
+				// 									{timeText.value} 달성
+				// 								</Text>
+				// 							) : null}
+				// 						</HStack>
+				// 					</Stack>
+				// 				</Stack>
+				// 			</Stack>
+				// 		);
+				// 	})}
+				// </HStack>
 			)}
 		</Stack>
 	);
