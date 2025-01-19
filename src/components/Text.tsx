@@ -8,9 +8,24 @@ export function ColorText({ value, children, ...props }: ColorTextProps) {
 	);
 }
 
-export function MarqueeText({ isMouseOver, children, ...props }: MarqueeTextProps) {
+export function MarqueeText({
+	isMouseOver,
+	enableMarqueeOnMouseOver,
+	enableMarquee,
+	children,
+	...props
+}: MarqueeTextProps) {
+	const marqueeAni: TextProps = { animation: "marquee 5s linear infinite", textOverflow: "clip" };
+	const marqueeAniOnOver: TextProps = { _hover: { animation: "marquee 5s linear infinite", textOverflow: "clip" } };
 	return (
-		<Text whiteSpace={"nowrap"} textOverflow={"ellipsis"} overflow="hidden" {...props}>
+		<Text
+			whiteSpace={"nowrap"}
+			textOverflow={"ellipsis"}
+			overflow="hidden"
+			{...(enableMarqueeOnMouseOver ? marqueeAniOnOver : {})}
+			{...(isMouseOver || enableMarquee ? marqueeAni : {})}
+			{...props}
+		>
 			{children}
 		</Text>
 	);
@@ -22,4 +37,6 @@ interface ColorTextProps extends BoxProps {
 
 interface MarqueeTextProps extends TextProps {
 	isMouseOver?: boolean;
+	enableMarqueeOnMouseOver?: boolean;
+	enableMarquee?: boolean;
 }

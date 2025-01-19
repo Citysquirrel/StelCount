@@ -49,6 +49,15 @@ html[data-theme*="dark"] .default-text-color {
 	}
 }
 
+@keyframes marquee {
+	from {
+		transform: translateX(100%);
+	}
+	to {
+		transform: translateX(-100%);
+	}
+}
+
 /* Font */
 @font-face {
 	font-family: "Spoqa Han Sans Neo";
