@@ -304,19 +304,29 @@ function RecentNews({
 		const scheduledStartTimeDate = new Date(data.scheduledStartTime || MIN_DATE);
 		const [startTimeGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
 
-		if (condition === -1) {
-			return `최초 공개 ${isLive ? "진행중" : startTimeGap <= 0 ? "곧 시작" : remainingDateText}`;
-		} else if (condition === 0) {
-			return `인기 급상승 동영상 #${data.mostPopular}`;
-		} else if (condition === 1) {
-			return `${elapsedDateText} 게시된 새 영상`;
-		} else if (condition === 2) {
-			return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
-		} else if (condition === 3) {
-			return `인기 급상승 음악 #${data.mostPopularMusic}`;
-		} else {
-			return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
-		}
+		const messages = {
+			"-1": `최초 공개 ${isLive ? "진행중" : startTimeGap <= 0 ? "곧 시작" : remainingDateText}`,
+			"0": `인기 급상승 동영상 #${data.mostPopular}`,
+			"1": `${elapsedDateText} 게시된 새 영상`,
+			"2": `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`,
+			"3": `인기 급상승 음악 #${data.mostPopularMusic}`,
+			default: `최다 조회수: ${numberToLocaleString(data.viewCount)}`,
+		};
+
+		return messages[condition] || messages.default;
+		// if (condition === -1) {
+		// 	return `최초 공개 ${isLive ? "진행중" : startTimeGap <= 0 ? "곧 시작" : remainingDateText}`;
+		// } else if (condition === 0) {
+		// 	return `인기 급상승 동영상 #${data.mostPopular}`;
+		// } else if (condition === 1) {
+		// 	return `${elapsedDateText} 게시된 새 영상`;
+		// } else if (condition === 2) {
+		// 	return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
+		// } else if (condition === 3) {
+		// 	return `인기 급상승 음악 #${data.mostPopularMusic}`;
+		// } else {
+		// 	return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
+		// }
 	}
 
 	const autoPagingTime = 6500;
