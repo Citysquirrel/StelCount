@@ -82,6 +82,7 @@ export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
 	const chatRef = useRef<HTMLIFrameElement>(null);
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
+	const [frameColumns, setFrameColumns] = useState(1);
 	const [isInnerChatOpen, setIsInnerChatOpen] = useState(false);
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
 	const [chatStream, setChatStream] = useState({ streamId: "", name: "" });
@@ -108,6 +109,7 @@ export function MultiView() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const STREAMS_PARAM_NAME = "streams";
 	const PARAMS_DELIMITER = "--";
+	const INNER_CHAT_WIDTH = 350;
 	const streamsParam = searchParams.get(STREAMS_PARAM_NAME);
 	const {
 		isOpen: isSettingOpen,
@@ -149,8 +151,8 @@ export function MultiView() {
 		//TODO: iframe에 영향을 덜 주기 위해 직접 크기를 조정하는 방식을 버리고
 		//TODO: grid를 이용해 자동으로 크기 조절이 되도록 하는 방식 고려
 		//TODO: custom grid 방식을 이용해 각 화면 크기가 통일되지 않고 자유자재로 변할 수 있도록 하는 방식 고려
-		const WIDTH_PADDING = 4;
-		const HEIGHT_PADDING = 4;
+		const WIDTH_PADDING = 4; // padding은 그대로 유지
+		const HEIGHT_PADDING = 4; // padding은 그대로 유지
 		const width = windowWidth - WIDTH_PADDING - (isInnerChatOpen ? 350 : 0);
 		const height = windowHeight - HEIGHT_PADDING;
 
@@ -272,6 +274,8 @@ export function MultiView() {
 
 	useEffect(() => {
 		handleFrameSize();
+		const columnCount = calculateColumnCount(isInnerChatOpen, INNER_CHAT_WIDTH);
+		setFrameColumns(columnCount);
 	}, [windowWidth, windowHeight, streams, isInnerChatOpen]);
 
 	useEffect(() => {
@@ -1776,6 +1780,18 @@ function customRangeSearch(text: string, search: string): number[][] {
 	}
 
 	return ranges;
+}
+
+function calculateColumnCount(isInnerChatOpen: boolean, chatWidth: number) {
+	const viewportWidth = window.innerWidth;
+	const viewportHeight = window.innerHeight;
+	const ASPECT_RATIO = 16 / 9; // 스트리밍 화면 비율 지정
+
+	const availableWidth = isInnerChatOpen ? viewportWidth - chatWidth : viewportWidth; // 채팅창 여부에 따른 가용 너비
+	const maxColumn = Math.floor(availableWidth / (viewportHeight / ASPECT_RATIO)); // 칼럼수 계산
+	const columns = Math.max(1, maxColumn); // 칼럼수를 최소 1개로 지정함
+
+	return columns;
 }
 
 type StreamType = "chzzk" | (string & {});
