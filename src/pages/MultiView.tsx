@@ -75,6 +75,7 @@ import { useAuth } from "../lib/hooks/useAuth";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import * as Hangul from "hangul-js";
+import { UserSettingModal } from "./MultiView/UserSetting";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -108,9 +109,15 @@ export function MultiView() {
 	const STREAMS_PARAM_NAME = "streams";
 	const PARAMS_DELIMITER = "--";
 	const streamsParam = searchParams.get(STREAMS_PARAM_NAME);
-	const { isOpen: isSettingOpen, onToggle: handleToggleSetting, onClose: handleCloseSetting } = useDisclosure();
+	const {
+		isOpen: isSettingOpen,
+		onToggle: handleToggleSetting,
+		onClose: handleCloseSetting,
+		onOpen: handleOpenSetting,
+	} = useDisclosure();
 	const len = streams.length;
 
+	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [remotePos, setRemotePos] = useState({ x: 0, y: 0 });
 
 	const handleStreamsParam = (params: string | null) => {
@@ -319,12 +326,15 @@ export function MultiView() {
 				setCustomStreams={setCustomStreams}
 				handleToggleSetting={handleToggleSetting}
 				handleCloseSetting={handleCloseSetting}
+				handleOpenSetting={handleOpenSetting}
 				refetch={refetch}
 				refetchCustom={refetchCustom}
 				customIntervalRef={customIntervalRef}
 				isLoading={isLoading}
 				isCustomLoading={isCustomLoading}
 				streams={streams}
+				userSetting={userSetting}
+				setUserSetting={setUserSetting}
 			/>
 			<HStack
 				alignItems={"center"}
@@ -614,12 +624,15 @@ function SideMenu({
 	setCustomStreams,
 	handleToggleSetting,
 	handleCloseSetting,
+	handleOpenSetting,
 	refetch,
 	refetchCustom,
 	customIntervalRef,
 	isLoading,
 	isCustomLoading,
 	streams,
+	userSetting,
+	setUserSetting,
 }: SideMenuProps) {
 	const WIDTH = 320;
 	const OPENER_WIDTH = 32;
@@ -627,7 +640,7 @@ function SideMenu({
 	const listRef = useRef<HTMLDivElement>(null);
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const { isAdmin, isLoading: isAuthLoading } = useAuth();
-	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
+
 	const [currentMode, setCurrentMode] = useState(0);
 	const [searchInputValue, setSearchInputValue] = useState<string>("");
 	const [selectedStreamer, setSelectedStreamer] = useState<Streamer>({
@@ -877,6 +890,13 @@ function SideMenu({
 
 	return (
 		<>
+			<UserSettingModal
+				isOpen={isSettingOpen}
+				onClose={handleCloseSetting}
+				body={configDict.map((config) => {
+					return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
+				})}
+			/>
 			<Stack
 				sx={{
 					position: "absolute",
@@ -1267,7 +1287,8 @@ function SideMenu({
 						  })
 						: null}
 				</Stack>
-				<Stack
+				{/* 여기부터 사용자 설정 */}
+				{/* <Stack
 					position="relative"
 					backgroundColor={"rgba(7,7,7,0.9)"}
 					zIndex={1}
@@ -1290,7 +1311,7 @@ function SideMenu({
 							return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
 						})}
 					</Stack>
-				</Stack>
+				</Stack> */}
 			</Stack>
 		</>
 	);
@@ -1780,12 +1801,15 @@ interface SideMenuProps {
 	setCustomStreams: Dispatch<SetStateAction<MultiViewData[]>>;
 	handleToggleSetting: () => void;
 	handleCloseSetting: () => void;
+	handleOpenSetting: () => void;
 	refetch: (isTimer?: boolean) => void;
 	refetchCustom: (isTimer?: boolean) => void;
 	customIntervalRef: React.MutableRefObject<number | undefined>;
 	isLoading: boolean;
 	isCustomLoading: boolean;
 	streams: Stream[];
+	userSetting: UserSettingStorage;
+	setUserSetting: Dispatch<SetStateAction<UserSettingStorage>>;
 }
 
 interface MenuCardProps {
