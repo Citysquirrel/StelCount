@@ -78,6 +78,7 @@ import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import * as Hangul from "hangul-js";
 import { UserSettingModal } from "./MultiView/UserSetting";
 import { useConsoleAdmin } from "../lib/hooks/useConsole";
+import { useWebSocket } from "../lib/hooks/useWebSocket";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -906,6 +907,8 @@ function SideMenu({
 		// 	}
 		// },
 	});
+
+	useWebSocket();
 
 	const currentStreams = getCurrentStreams(currentMode);
 
@@ -1900,6 +1903,7 @@ interface ConfigDict<T extends ConfigType = ConfigType> {
 	min?: number;
 	max?: number;
 	radioList?: ConfigDictRadioList[];
+	hoverComponent?: () => React.ReactNode;
 }
 
 interface ConfigDictRadioList {
