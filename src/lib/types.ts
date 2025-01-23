@@ -8,6 +8,7 @@ export interface UserSettingStorage {
 	listOpenerWidth?: string;
 	customStreams?: CustomStreamsForUS[];
 	isCardCompact?: boolean;
+	controllerPos?: string;
 }
 
 interface CustomStreamsForUS {

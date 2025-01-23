@@ -9,7 +9,13 @@ export function UserSettingModal({ isOpen, onClose, body }: UserSettingModalProp
 				title: "사용자 개인 설정",
 				body,
 			}}
-			customProps={{ ModalContent: { backgroundColor: "gray.900", color: "white" } }}
+			customProps={{
+				ModalContent: {
+					backgroundColor: "gray.900",
+					color: "white",
+					sx: { label: { color: "gray.300" } },
+				},
+			}}
 		/>
 	);
 }

@@ -40,6 +40,7 @@ import {
 	StackProps,
 	RadioGroup,
 	Radio,
+	StackDivider,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
@@ -76,6 +77,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import * as Hangul from "hangul-js";
 import { UserSettingModal } from "./MultiView/UserSetting";
+import { useConsoleAdmin } from "../lib/hooks/useConsole";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -90,7 +92,7 @@ export function MultiView() {
 	const [configState, setConfigState] = useState<ConfigState>({
 		chatToLeft: false,
 		listOpenerWidth: "32",
-		controllerPos: 1,
+		controllerPos: "right-bottom",
 	});
 	const {
 		data,
@@ -672,7 +674,18 @@ function SideMenu({
 			min: 24,
 			max: 120,
 		},
-		{ name: "controllerPos", label: "컨트롤러 위치", type: "radio", defaultValue: "right-bottom" },
+		{
+			name: "controllerPos",
+			label: "컨트롤러 위치",
+			type: "radio",
+			defaultValue: "right-bottom",
+			radioList: [
+				{ name: "우측 하단", value: "right-bottom" },
+				{ name: "좌측 하단", value: "left-bottom" },
+				{ name: "우측 상단", value: "right-top" },
+				{ name: "좌측 상단", value: "left-top" },
+			],
+		},
 	];
 
 	const onSearch = () => {
@@ -831,6 +844,10 @@ function SideMenu({
 			const { listOpenerWidth } = userSetting;
 			setConfigState((prev) => ({ ...prev, listOpenerWidth }));
 		}
+		if (userSetting.controllerPos) {
+			const { controllerPos } = userSetting;
+			setConfigState((prev) => ({ ...prev, controllerPos }));
+		}
 		if (userSetting.customStreams) {
 			const { customStreams } = userSetting;
 			const temp: MultiViewData[] = customStreams.map((s) => ({
@@ -897,9 +914,13 @@ function SideMenu({
 			<UserSettingModal
 				isOpen={isSettingOpen}
 				onClose={handleCloseSetting}
-				body={configDict.map((config) => {
-					return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
-				})}
+				body={
+					<Stack spacing={2} paddingBottom="4px" divider={<StackDivider borderColor="gray.600" />}>
+						{configDict.map((config) => {
+							return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
+						})}
+					</Stack>
+				}
 			/>
 			<Stack
 				sx={{
@@ -1548,7 +1569,7 @@ function createConfigComponent(
 		const isChecked = configState[name] as boolean;
 		return (
 			<FormControl key={name} display="flex" alignItems="center" justifyContent={"space-between"} gap={0}>
-				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
+				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px" cursor={"pointer"}>
 					{label}
 				</FormLabel>
 				<Switch id={name} isChecked={isChecked} onChange={handleConfig(name, type)} />
@@ -1596,7 +1617,7 @@ function createConfigComponent(
 						{numVal}px
 					</Text>
 				</FormLabel>
-				<Box p={4} pt={0}>
+				<Box pt={0}>
 					<Slider
 						defaultValue={defaultValue}
 						min={min}
@@ -1616,21 +1637,37 @@ function createConfigComponent(
 			</FormControl>
 		);
 	} else if (type === "list") {
-		const value = configState[name] as number; // default: 1, 1 ~ 4
+		// const value = configState[name] as number; // default: 1, 1 ~ 4
 
 		return <Fragment key={name}></Fragment>;
 	} else if (type === "radio") {
 		const value = configState[name] as string;
-		const { defaultValue } = config as ConfigDict<"radio">;
+		const { defaultValue, radioList } = config as ConfigDict<"radio">;
 		//TODO: ConfigDict에 새로운 값 지정 필요 -- 구조? structure?
-
+		if (!radioList) {
+			useConsoleAdmin(`개발자 경고: ${name}항목에 대해 radioList가 지정되지 않음`);
+			return <Fragment key={name}></Fragment>;
+		}
 		return (
 			<FormControl key={name}>
 				<FormLabel htmlFor={name} mb="0" flexGrow={1} margin={0} paddingRight="8px">
 					{label}
 				</FormLabel>
-				<RadioGroup onChange={() => {}} value="">
-					<HStack>{/* {structure.map(s => <Radio value={s.value}>{s.name}</Radio>)} */}</HStack>
+				<RadioGroup
+					onChange={(val) => {
+						setConfigState((prev) => ({ ...prev, [name]: val }));
+						setUserSetting((prev) => ({ ...prev, [name]: val }));
+					}}
+					value={value}
+					defaultValue={defaultValue}
+				>
+					<HStack>
+						{radioList.map((s, idx) => (
+							<Radio key={idx} value={s.value}>
+								{s.name}
+							</Radio>
+						))}
+					</HStack>
 				</RadioGroup>
 			</FormControl>
 		);
@@ -1849,8 +1886,10 @@ interface MenuCardCloseButtonProps extends IconButtonProps {}
 interface ConfigState {
 	chatToLeft: boolean;
 	listOpenerWidth: string;
-	controllerPos: number;
+	controllerPos: ConfigStateControllerPos;
 }
+
+type ConfigStateControllerPos = "right-bottom" | "left-bottom" | "right-top" | "left-top" | (string & {});
 
 interface ConfigDict<T extends ConfigType = ConfigType> {
 	name: keyof ConfigState;
@@ -1860,6 +1899,12 @@ interface ConfigDict<T extends ConfigType = ConfigType> {
 	defaultValue?: DefaultValueType<T>;
 	min?: number;
 	max?: number;
+	radioList?: ConfigDictRadioList[];
+}
+
+interface ConfigDictRadioList {
+	name: string;
+	value: string;
 }
 
 type ConfigType = "switch" | "number" | "slider" | "list" | "radio" | (string & {});
