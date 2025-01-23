@@ -42,7 +42,9 @@ export function useWebSocket() {
 		};
 
 		ws.onclose = () => {
-			reconnectWebSocket();
+			setTimeout(() => {
+				reconnectWebSocket();
+			}, 1000);
 		};
 
 		function reconnectWebSocket() {
@@ -61,12 +63,14 @@ export function useWebSocket() {
 			};
 
 			newWs.onclose = () => {
-				reconnectWebSocket();
+				setTimeout(() => {
+					reconnectWebSocket();
+				}, 1000);
 			};
 		}
 
 		return () => {
-			ws.close();
+			socketRef.current && socketRef.current.close();
 		};
 	}, []);
 
