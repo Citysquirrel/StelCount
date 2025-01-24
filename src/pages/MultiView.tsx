@@ -45,7 +45,7 @@ import {
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
-import { MultiViewData, UserSettingStorage } from "../lib/types";
+import { CustomStreamsForUS, MultiViewData, UserSettingStorage } from "../lib/types";
 import { MdClear, MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdSearch, MdStar } from "react-icons/md";
 import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
 import { TbForbid, TbResize } from "react-icons/tb";
@@ -802,7 +802,7 @@ function SideMenu({
 		setSearchInputValue("");
 
 		setUserSetting((prev) => {
-			const newItem = { name, platform, streamId };
+			const newItem: CustomStreamsForUS = { name, platform, streamId, isBookmarked: false };
 			const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
 			return { ...prev, customStreams: arr };
 		});
@@ -857,6 +857,7 @@ function SideMenu({
 				chzzkId: s.streamId,
 				uuid: v4(),
 				isCustom: true,
+				isBookmarked: !!s.isBookmarked,
 			}));
 			setCustomStreams(temp);
 			fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams: temp }) }).then((res) => {
@@ -911,6 +912,21 @@ function SideMenu({
 	useWebSocket();
 
 	const currentStreams = getCurrentStreams(currentMode);
+
+	const { streamsBookmarked, streamsOrdinary } = currentStreams.reduce<{
+		streamsBookmarked: FilteredData[];
+		streamsOrdinary: FilteredData[];
+	}>(
+		(acc, cur) => {
+			if (cur.isBookmarked) {
+				acc.streamsBookmarked.push(cur);
+			} else {
+				acc.streamsOrdinary.push(cur);
+			}
+			return acc;
+		},
+		{ streamsBookmarked: [], streamsOrdinary: [] }
+	);
 
 	return (
 		<>
@@ -1294,8 +1310,30 @@ function SideMenu({
 							</HStack>
 						</Stack>
 					) : null}
-					{currentStreams.length > 0
-						? currentStreams.map((item, idx) => {
+					{/* 여기에 이름이 '즐겨찾기'인 Divider 추가 */}
+					{streamsBookmarked.length > 0
+						? streamsBookmarked.map((item, idx) => {
+								const chzzkId = item.chzzkId;
+								const uuid = item.uuid;
+								const itemIdx = streams.findIndex((a) => a.uuid === uuid);
+								if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
+								return (
+									<MenuCard
+										key={`${idx}-${chzzkId}`}
+										item={item}
+										itemIdx={itemIdx}
+										handleAddStream={handleAddStream}
+										handleDeleteStream={handleDeleteStream}
+										handleDeleteCustomStream={handleDeleteCustomStream}
+										isCompact={isCardCompact}
+										isFiltered={filteredData.length > 0}
+									/>
+								);
+						  })
+						: null}
+					{/* 여기에 Divider 추가 */}
+					{streamsOrdinary.length > 0
+						? streamsOrdinary.map((item, idx) => {
 								const chzzkId = item.chzzkId;
 								const uuid = item.uuid;
 								const itemIdx = streams.findIndex((a) => a.uuid === uuid);

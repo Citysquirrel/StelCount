@@ -11,10 +11,11 @@ export interface UserSettingStorage {
 	controllerPos?: string;
 }
 
-interface CustomStreamsForUS {
+export interface CustomStreamsForUS {
 	name: string;
 	streamId: string;
 	platform: "chzzk" | (string & {});
+	isBookmarked?: boolean;
 }
 
 export interface Tag extends DefaultDateFields {
@@ -107,6 +108,7 @@ export interface MultiViewData {
 	closeDate?: string;
 	adult?: boolean;
 	isCustom?: boolean;
+	isBookmarked?: boolean;
 }
 
 export interface ImprovedIntervalOptions {
