@@ -156,17 +156,24 @@ export function Counter() {
 	};
 
 	const handleTagFilter = (tagId: number) => () => {
-		setFilter((prev) => {
-			const obj = { ...prev };
-			const tags = [...obj.tag];
-			if (tags.includes(tagId)) {
-				tags.splice(tags.indexOf(tagId), 1);
-			} else {
-				tags.push(tagId);
-			}
-			obj.tag = tags;
-			return obj;
-		});
+		setFilter((prev) => ({
+			...prev,
+			tag: prev.tag.includes(tagId)
+				? prev.tag.filter((id) => id !== tagId) // 태그 제거
+				: [...prev.tag, tagId], // 태그 추가
+		}));
+
+		// setFilter((prev) => {
+		// 	const obj = { ...prev };
+		// 	const tags = [...obj.tag];
+		// 	if (tags.includes(tagId)) {
+		// 		tags.splice(tags.indexOf(tagId), 1);
+		// 	} else {
+		// 		tags.push(tagId);
+		// 	}
+		// 	obj.tag = tags;
+		// 	return obj;
+		// });
 	};
 
 	const handleResetFilter = (key: keyof Filter) => () => {

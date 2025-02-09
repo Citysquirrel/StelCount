@@ -1039,9 +1039,10 @@ function MusicDrawer({
 
 	const handleDeleteAdditionalInput = (idx: number) => () => {
 		setAdditionalInputValue((prev) => {
-			const arr = [...prev];
-			arr.splice(idx, 1);
-			return arr;
+			return prev.filter((_, itemIndex) => itemIndex !== idx);
+			// const arr = [...prev];
+			// arr.splice(idx, 1);
+			// return arr;
 		});
 	};
 
@@ -1141,12 +1142,17 @@ function MusicDrawer({
 											<TagCloseButton
 												onClick={() => {
 													const numVal = tag.id;
-													setInputValue((prev) => {
-														const newTags = [...prev.tags];
-														const idx = prev.tags.findIndex((t) => t.id === numVal);
-														newTags.splice(idx, 1);
-														return { ...prev, tags: newTags };
-													});
+													setInputValue((prev) => ({
+														...prev,
+														tags: prev.tags.filter((t) => t.id !== numVal),
+													}));
+
+													// setInputValue((prev) => {
+													// 	const newTags = [...prev.tags];
+													// 	const idx = prev.tags.findIndex((t) => t.id === numVal);
+													// 	newTags.splice(idx, 1);
+													// 	return { ...prev, tags: newTags };
+													// });
 												}}
 											/>
 										</Tag>

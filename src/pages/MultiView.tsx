@@ -195,10 +195,8 @@ export function MultiView() {
 
 	const handleDeleteStream = (uuid: string) => () => {
 		setStreams((prev) => {
-			const arr = [...prev];
-			const idx = arr.findIndex((a) => a.uuid === uuid);
-			arr.splice(idx, 1);
-			const value = arr.reduce((a, c) => (a.length === 0 ? c.streamId : a + PARAMS_DELIMITER + c.streamId), "");
+			const arr = prev.filter((a) => a.uuid !== uuid);
+			const value = arr.map((c) => c.streamId).join(PARAMS_DELIMITER);
 			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
 			return arr;
 		});
@@ -206,11 +204,15 @@ export function MultiView() {
 
 	const handleOpenNewWindow = (uuid: string) => () => {
 		setStreams((prev) => {
-			const arr = [...prev];
-			const idx = arr.findIndex((a) => a.uuid === uuid);
-			window.open(naver.chzzk.liveUrl(arr[idx].streamId), "_blank");
-			arr.splice(idx, 1);
-			const value = arr.reduce((a, c) => (a.length === 0 ? c.streamId : a + PARAMS_DELIMITER + c.streamId), "");
+			const arr = prev.filter((a) => {
+				if (a.uuid === uuid) {
+					window.open(naver.chzzk.liveUrl(a.streamId), "_blank");
+					return false;
+				}
+				return true;
+			});
+			const value = arr.map((c) => c.streamId).join(PARAMS_DELIMITER);
+
 			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
 			return arr;
 		});
