@@ -96,6 +96,7 @@ export function MultiView() {
 		listOpenerWidth: "32",
 		controllerPos: "right-bottom",
 	});
+	const [isBukiUsingFirefox, setIsBukiUsingFirefox] = useState(true);
 	const {
 		data,
 		customStreams,
@@ -297,6 +298,11 @@ export function MultiView() {
 		document.title = "StelCount - Multiview";
 		if (streamsParam) setIsMenuOpen(false);
 
+		if (userSetting.isFoxUsingFirefox !== undefined) {
+			const { isFoxUsingFirefox } = userSetting;
+			setIsBukiUsingFirefox(isFoxUsingFirefox);
+		}
+
 		return () => {
 			clearInterval(intervalRef.current);
 			clearInterval(customIntervalRef.current);
@@ -325,6 +331,35 @@ export function MultiView() {
 			alignItems={"center"}
 			justifyContent={"center"}
 		>
+			{isBukiUsingFirefox ? (
+				<Stack
+					animation="fadeIn 0.3s .25s both"
+					position="fixed"
+					left={0}
+					top={"4px"}
+					width="100%"
+					alignItems={"center"}
+				>
+					<Text color="gray.400">
+						부키가 파폭을 사용해서 효과를 봤다니 기념으로 파폭{" "}
+						<Link href={FIREFOX_EXTENSION_URL} isExternal color="blue.500">
+							부가 기능
+						</Link>
+						도 추가했습니다
+						<CloseButton
+							color="red.400"
+							float="right"
+							boxSize="22px"
+							marginLeft="2px"
+							onClick={() => {
+								setIsBukiUsingFirefox(false);
+								setUserSetting((prev) => ({ ...prev, isFoxUsingFirefox: false }));
+							}}
+						/>
+					</Text>
+				</Stack>
+			) : null}
+
 			<SideMenu
 				isOpen={isMenuOpen}
 				data={data}
@@ -453,7 +488,7 @@ export function MultiView() {
 							);
 						})
 					) : (
-						<Stack color="white" justifyContent={"center"} alignItems="center" width="100%">
+						<Stack color="white" justifyContent={"center"} alignItems="center" width="100%" transition="all .3s">
 							<Stack>
 								<Text>
 									<Box as="span" fontWeight={"bold"}>
@@ -476,6 +511,7 @@ export function MultiView() {
 										을 이용해보세요
 									</Text>
 								)}
+
 								<Spacing size={4} />
 								<Text fontSize="sm">
 									<Link href={CHROME_EXTENSION_GITHUB_URL} isExternal>

@@ -9,6 +9,7 @@ export interface UserSettingStorage {
 	customStreams?: CustomStreamsForUS[];
 	isCardCompact?: boolean;
 	controllerPos?: string;
+	isFoxUsingFirefox?: boolean;
 }
 
 export interface CustomStreamsForUS {
