@@ -471,7 +471,7 @@ export function MultiView() {
 									<Text>
 										네이버 계정으로 인증 및 채팅을 원하시면{" "}
 										<Link href={extensionUrl} isExternal color="blue.500">
-											{isFirefox ? "추가 기능" : "확장 프로그램"}
+											{isFirefox ? "부가 기능" : "확장 프로그램"}
 										</Link>
 										을 이용해보세요
 									</Text>
