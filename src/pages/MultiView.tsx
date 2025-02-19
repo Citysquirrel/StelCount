@@ -915,7 +915,7 @@ function SideMenu({
 		// },
 	});
 
-	useWebSocket();
+	// useWebSocket();
 
 	const currentStreams = getCurrentStreams(currentMode);
 
