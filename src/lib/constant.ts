@@ -23,6 +23,8 @@ const PRIVACY_POLICY_URL = "https://citysquirrel.notion.site/8ab0732adabe416c862
 const CHROME_EXTENSION_GITHUB_URL = "https://github.com/Citysquirrel/stelcount-mulview-extension";
 const CHROME_EXTENSION_ID = "aldeieecngphbbepbpljdafgibcfmima";
 const CHROME_EXTENSION_URL = `https://chromewebstore.google.com/detail/stelcount-multiview-exten/${CHROME_EXTENSION_ID}`;
+const FIREFOX_EXTENSION_ID = "stelcount-multiview-extension";
+const FIREFOX_EXTENSION_URL = `https://addons.mozilla.org/ko/firefox/addon/${FIREFOX_EXTENSION_ID}/`;
 
 const MIN_DATE = "1000-01-01T09:00:00.000Z";
 
@@ -66,6 +68,8 @@ export {
 	CHROME_EXTENSION_GITHUB_URL,
 	CHROME_EXTENSION_ID,
 	CHROME_EXTENSION_URL,
+	FIREFOX_EXTENSION_ID,
+	FIREFOX_EXTENSION_URL,
 	CAFE_WRITE_URL,
 	CHAKRA_COLOR_SCHEME,
 	stellarGroupName,

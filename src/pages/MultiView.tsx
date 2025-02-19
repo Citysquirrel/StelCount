@@ -61,13 +61,14 @@ import {
 	CHROME_EXTENSION_ID,
 	CHROME_EXTENSION_GITHUB_URL,
 	USER_SETTING_STORAGE,
+	FIREFOX_EXTENSION_URL,
 } from "../lib/constant";
 import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { lightenColor } from "../lib/functions/etc";
+import { getBrowserInfo, lightenColor } from "../lib/functions/etc";
 import { LoadingCircle } from "../components/Loading";
 import { fetchServer } from "../lib/functions/fetch";
 import { createComponentMap } from "../lib/functions/createComponent";
@@ -311,6 +312,9 @@ export function MultiView() {
 	});
 
 	const streamContainerWidth = isInnerChatOpen ? `calc(100vw - 350px)` : "100vw";
+	const browser = getBrowserInfo();
+	const isFirefox = browser === "Firefox";
+	const extensionUrl = isFirefox ? FIREFOX_EXTENSION_URL : CHROME_EXTENSION_URL;
 
 	return (
 		<HStack
@@ -466,8 +470,8 @@ export function MultiView() {
 								) : (
 									<Text>
 										네이버 계정으로 인증 및 채팅을 원하시면{" "}
-										<Link href={CHROME_EXTENSION_URL} isExternal color="blue.500">
-											확장 프로그램
+										<Link href={extensionUrl} isExternal color="blue.500">
+											{isFirefox ? "추가 기능" : "확장 프로그램"}
 										</Link>
 										을 이용해보세요
 									</Text>
