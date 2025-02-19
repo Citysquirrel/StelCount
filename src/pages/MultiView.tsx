@@ -322,6 +322,8 @@ export function MultiView() {
 	const isFirefox = browser === "Firefox";
 	const extensionUrl = isFirefox ? FIREFOX_EXTENSION_URL : CHROME_EXTENSION_URL;
 
+	configState.controllerPos; // top bottom left right
+
 	return (
 		<HStack
 			position="relative"
@@ -443,8 +445,10 @@ export function MultiView() {
 										position="absolute"
 										// top={remotePos.y}
 										// left={remotePos.x}
-										bottom={"48px"}
-										right={"20px"}
+										top={configState.controllerPos.includes("top") ? "48px" : undefined}
+										left={configState.controllerPos.includes("left") ? "20px" : undefined}
+										bottom={configState.controllerPos.includes("bottom") ? "48px" : undefined}
+										right={configState.controllerPos.includes("right") ? "60px" : undefined}
 										backgroundColor={"rgb(255,255,255,0.3)"}
 										borderRadius={".5rem"}
 										padding="8px 12px 8px 12px"
