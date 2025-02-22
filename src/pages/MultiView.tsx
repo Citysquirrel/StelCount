@@ -974,6 +974,28 @@ function SideMenu({
 		{ streamsBookmarked: [], streamsOrdinary: [] }
 	);
 
+	const renderStreams = (streamsList: FilteredData[]) =>
+		streamsList.length > 0
+			? streamsList.map((item, idx) => {
+					const chzzkId = item.chzzkId;
+					const uuid = item.uuid;
+					const itemIdx = streams.findIndex((a) => a.uuid === uuid);
+					if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
+					return (
+						<MenuCard
+							key={`${idx}-${chzzkId}`}
+							item={item}
+							itemIdx={itemIdx}
+							handleAddStream={handleAddStream}
+							handleDeleteStream={handleDeleteStream}
+							handleDeleteCustomStream={handleDeleteCustomStream}
+							isCompact={isCardCompact}
+							isFiltered={filteredData.length > 0}
+						/>
+					);
+			  })
+			: null;
+
 	return (
 		<>
 			<UserSettingModal
@@ -1357,47 +1379,9 @@ function SideMenu({
 						</Stack>
 					) : null}
 					{/* 여기에 이름이 '즐겨찾기'인 Divider 추가 */}
-					{streamsBookmarked.length > 0
-						? streamsBookmarked.map((item, idx) => {
-								const chzzkId = item.chzzkId;
-								const uuid = item.uuid;
-								const itemIdx = streams.findIndex((a) => a.uuid === uuid);
-								if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
-								return (
-									<MenuCard
-										key={`${idx}-${chzzkId}`}
-										item={item}
-										itemIdx={itemIdx}
-										handleAddStream={handleAddStream}
-										handleDeleteStream={handleDeleteStream}
-										handleDeleteCustomStream={handleDeleteCustomStream}
-										isCompact={isCardCompact}
-										isFiltered={filteredData.length > 0}
-									/>
-								);
-						  })
-						: null}
+					{renderStreams(streamsBookmarked)}
 					{/* 여기에 Divider 추가 */}
-					{streamsOrdinary.length > 0
-						? streamsOrdinary.map((item, idx) => {
-								const chzzkId = item.chzzkId;
-								const uuid = item.uuid;
-								const itemIdx = streams.findIndex((a) => a.uuid === uuid);
-								if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
-								return (
-									<MenuCard
-										key={`${idx}-${chzzkId}`}
-										item={item}
-										itemIdx={itemIdx}
-										handleAddStream={handleAddStream}
-										handleDeleteStream={handleDeleteStream}
-										handleDeleteCustomStream={handleDeleteCustomStream}
-										isCompact={isCardCompact}
-										isFiltered={filteredData.length > 0}
-									/>
-								);
-						  })
-						: null}
+					{renderStreams(streamsOrdinary)}
 				</Stack>
 				{/* 여기부터 사용자 설정 */}
 				{/* <Stack
