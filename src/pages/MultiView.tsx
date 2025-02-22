@@ -41,6 +41,8 @@ import {
 	RadioGroup,
 	Radio,
 	StackDivider,
+	PositionProps,
+	ResponsiveValue,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
@@ -979,6 +981,7 @@ function SideMenu({
 			? streamsList.map((item, idx) => {
 					const chzzkId = item.chzzkId;
 					const uuid = item.uuid;
+					const isBookmarked = !!item.isBookmarked;
 					const itemIdx = streams.findIndex((a) => a.uuid === uuid);
 					if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
 					return (
@@ -991,6 +994,7 @@ function SideMenu({
 							handleDeleteCustomStream={handleDeleteCustomStream}
 							isCompact={isCardCompact}
 							isFiltered={filteredData.length > 0}
+							isBookmarked={isBookmarked}
 						/>
 					);
 			  })
@@ -1421,6 +1425,7 @@ function MenuCard({
 	handleDeleteCustomStream,
 	isCompact,
 	isFiltered,
+	isBookmarked,
 }: MenuCardProps) {
 	const {
 		name,
@@ -1462,6 +1467,7 @@ function MenuCard({
 			}
 		>
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
+				{isBookmarked ? <MenuCardBookmark isBookmarked={isBookmarked} /> : null}
 				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
 				{isCustom && !isFiltered ? (
 					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
@@ -1613,6 +1619,15 @@ function MenuCardCloseButton({ ...props }: MenuCardCloseButtonProps) {
 			sx={{ position: "absolute", right: "4px", bottom: "4px", boxSize: "18px", minW: 0, borderRadius: "full" }}
 			{...props}
 		/>
+	);
+}
+
+function MenuCardBookmark({ isBookmarked, ...props }: MenuCardBookmarkProps) {
+	// 본 컴포넌트는 부모(카드) 컴포넌트에 mouseover 되었을 경우 나타나도록 할것
+	return (
+		<Stack position="absolute" {...props}>
+			{/* star svg image isBookmarked 상태에 따라 색이 채워짐짐*/}
+		</Stack>
 	);
 }
 
@@ -1944,6 +1959,7 @@ interface MenuCardProps {
 	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
 	isCompact: boolean;
 	isFiltered: boolean;
+	isBookmarked: boolean;
 }
 
 interface MenuCardImageProps {
@@ -1953,6 +1969,10 @@ interface MenuCardImageProps {
 }
 
 interface MenuCardCloseButtonProps extends IconButtonProps {}
+
+interface MenuCardBookmarkProps extends StackProps {
+	isBookmarked: boolean;
+}
 
 interface ConfigState {
 	chatToLeft: boolean;
