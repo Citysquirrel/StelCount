@@ -48,7 +48,15 @@ import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useSt
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { CustomStreamsForUS, MultiViewData, UserSettingStorage } from "../lib/types";
-import { MdClear, MdKeyboardDoubleArrowRight, MdOpenInNew, MdRefresh, MdSearch, MdStar } from "react-icons/md";
+import {
+	MdClear,
+	MdKeyboardDoubleArrowRight,
+	MdOpenInNew,
+	MdRefresh,
+	MdSearch,
+	MdStar,
+	MdStarOutline,
+} from "react-icons/md";
 import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
 import { TbForbid, TbResize } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
@@ -101,6 +109,7 @@ export function MultiView() {
 	const [isBukiUsingFirefox, setIsBukiUsingFirefox] = useState(true);
 	const {
 		data,
+		setData,
 		customStreams,
 		setCustomStreams,
 		isLoading,
@@ -367,6 +376,7 @@ export function MultiView() {
 			<SideMenu
 				isOpen={isMenuOpen}
 				data={data}
+				setData={setData}
 				handleAddStream={handleAddStream}
 				handleDeleteStream={handleDeleteStream}
 				handleOpen={handleOpenMenu}
@@ -668,6 +678,7 @@ export function MultiView() {
 function SideMenu({
 	isOpen,
 	data,
+	setData,
 	handleAddStream,
 	handleDeleteStream,
 	handleOpen,
@@ -982,6 +993,7 @@ function SideMenu({
 					const chzzkId = item.chzzkId;
 					const uuid = item.uuid;
 					const isBookmarked = !!item.isBookmarked;
+					const handleBookmark = () => {};
 					const itemIdx = streams.findIndex((a) => a.uuid === uuid);
 					if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
 					return (
@@ -992,6 +1004,7 @@ function SideMenu({
 							handleAddStream={handleAddStream}
 							handleDeleteStream={handleDeleteStream}
 							handleDeleteCustomStream={handleDeleteCustomStream}
+							handleBookmark={handleBookmark}
 							isCompact={isCardCompact}
 							isFiltered={filteredData.length > 0}
 							isBookmarked={isBookmarked}
@@ -1423,6 +1436,7 @@ function MenuCard({
 	handleAddStream,
 	handleDeleteStream,
 	handleDeleteCustomStream,
+	handleBookmark,
 	isCompact,
 	isFiltered,
 	isBookmarked,
@@ -1467,7 +1481,7 @@ function MenuCard({
 			}
 		>
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
-				{isBookmarked ? <MenuCardBookmark isBookmarked={isBookmarked} /> : null}
+				{isBookmarked ? <MenuCardBookmark isBookmarked={isBookmarked} onClick={handleBookmark} /> : null}
 				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
 				{isCustom && !isFiltered ? (
 					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
@@ -1626,6 +1640,7 @@ function MenuCardBookmark({ isBookmarked, ...props }: MenuCardBookmarkProps) {
 	// 본 컴포넌트는 부모(카드) 컴포넌트에 mouseover 되었을 경우 나타나도록 할것
 	return (
 		<Stack position="absolute" {...props}>
+			{isBookmarked ? <MdStar /> : <MdStarOutline />}
 			{/* star svg image isBookmarked 상태에 따라 색이 채워짐짐*/}
 		</Stack>
 	);
@@ -1929,6 +1944,7 @@ interface Stream {
 interface SideMenuProps {
 	isOpen: boolean;
 	data: MultiViewData[];
+	setData: Dispatch<SetStateAction<MultiViewData[]>>;
 	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => void;
 	handleDeleteStream: (uuid: string) => () => void;
 	handleOpen: () => void;
@@ -1957,6 +1973,7 @@ interface MenuCardProps {
 	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => void;
 	handleDeleteStream: (uuid: string) => () => void;
 	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
+	handleBookmark: () => void;
 	isCompact: boolean;
 	isFiltered: boolean;
 	isBookmarked: boolean;
