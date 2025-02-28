@@ -987,13 +987,16 @@ function SideMenu({
 		{ streamsBookmarked: [], streamsOrdinary: [] }
 	);
 
-	const renderStreams = (streamsList: FilteredData[]) =>
+	const renderStreams = (streamsList: FilteredData[], streamType: number) =>
 		streamsList.length > 0
 			? streamsList.map((item, idx) => {
 					const chzzkId = item.chzzkId;
 					const uuid = item.uuid;
 					const isBookmarked = !!item.isBookmarked;
-					const handleBookmark = () => {};
+					const handleBookmark = (uuid: string) => () => {
+						// streamType - 1: ordinary, 2: bookmarked
+						// streamType을 따로 지정할 필요가 없음. currentMode 상태를 사용할 것
+					};
 					const itemIdx = streams.findIndex((a) => a.uuid === uuid);
 					if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
 					return (
@@ -1396,9 +1399,9 @@ function SideMenu({
 						</Stack>
 					) : null}
 					{/* 여기에 이름이 '즐겨찾기'인 Divider 추가 */}
-					{renderStreams(streamsBookmarked)}
+					{renderStreams(streamsBookmarked, 2)}
 					{/* 여기에 Divider 추가 */}
-					{renderStreams(streamsOrdinary)}
+					{renderStreams(streamsOrdinary, 1)}
 				</Stack>
 				{/* 여기부터 사용자 설정 */}
 				{/* <Stack
@@ -1481,7 +1484,7 @@ function MenuCard({
 			}
 		>
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
-				{isBookmarked ? <MenuCardBookmark isBookmarked={isBookmarked} onClick={handleBookmark} /> : null}
+				{isBookmarked ? <MenuCardBookmark isBookmarked={isBookmarked} onClick={handleBookmark(uuid)} /> : null}
 				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
 				{isCustom && !isFiltered ? (
 					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
@@ -1973,7 +1976,7 @@ interface MenuCardProps {
 	handleAddStream: (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => void;
 	handleDeleteStream: (uuid: string) => () => void;
 	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
-	handleBookmark: () => void;
+	handleBookmark: (uuid: string) => () => void;
 	isCompact: boolean;
 	isFiltered: boolean;
 	isBookmarked: boolean;
