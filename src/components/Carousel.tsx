@@ -29,6 +29,7 @@ export function Carousel<T>({ list, SlideComponent, currentPageIdx, timeout }: C
 		} else if (deltaX < -50 && currentIndex < list.length - 1) {
 			setCurrentIndex((prev) => prev + 1);
 		}
+		setIsDragging(false);
 	};
 	return (
 		<HStack
@@ -39,13 +40,13 @@ export function Carousel<T>({ list, SlideComponent, currentPageIdx, timeout }: C
 			gap="32px"
 			transform={`translateX(calc(-${100 * currentPageIdx}% + ${deltaX}px))`}
 			transition={transition}
-			onMouseDown={handleDragStart}
-			onMouseMove={handleDragMove}
-			onMouseUp={handleDragEnd}
-			onMouseLeave={handleDragEnd}
-			onTouchStart={handleDragStart}
-			onTouchMove={handleDragMove}
-			onTouchEnd={handleDragEnd}
+			// onMouseDown={handleDragStart}
+			// onMouseMove={handleDragMove}
+			// onMouseUp={handleDragEnd}
+			// onMouseLeave={handleDragEnd}
+			// onTouchStart={handleDragStart}
+			// onTouchMove={handleDragMove}
+			// onTouchEnd={handleDragEnd}
 		>
 			{list.map(SlideComponent)}
 		</HStack>
