@@ -70,6 +70,8 @@ export interface LiveStatusState {
 	liveImageUrl?: string | null;
 	openLive?: boolean;
 	adult?: boolean;
+	graduation?: string | null | undefined;
+	debut?: string | null | undefined;
 }
 
 type FetchInfoKey = "stellar" | "liveStatus" | "liveDetail" | (string & {});

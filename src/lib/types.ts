@@ -110,6 +110,8 @@ export interface MultiViewData {
 	adult?: boolean;
 	isCustom?: boolean;
 	isBookmarked?: boolean;
+	graduation?: string | null | undefined;
+	debut?: string | null | undefined;
 }
 
 export interface ImprovedIntervalOptions {
