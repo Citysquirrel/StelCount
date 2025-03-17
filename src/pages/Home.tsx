@@ -216,7 +216,9 @@ export default function Home() {
 				: elapsedTimeTextForCard(new Date(l.closeDate!), new Date(getLocale())),
 		}));
 		const openArr = arr.filter((a) => a.openLive).sort((a, b) => a.gap[0] - b.gap[0]);
-		const closeArr = arr.filter((a) => !a.openLive).sort((a, b) => a.gap[0] - b.gap[0]);
+		const closeArr = arr
+			.filter((a) => !a.openLive && (a.graduation == null || new Date(a.graduation) >= new Date()))
+			.sort((a, b) => a.gap[0] - b.gap[0]);
 		setLiveData([...openArr, ...closeArr]);
 	}, [liveStatus]);
 
