@@ -625,7 +625,12 @@ export function MultiView() {
 										}}
 									>
 										{data
-											.filter((s) => s.chzzkId && s.chzzkId !== chatStream.streamId)
+											.filter(
+												(s) =>
+													s.chzzkId &&
+													s.chzzkId !== chatStream.streamId &&
+													(s.graduation == null || new Date(s.graduation) >= new Date())
+											)
 											.sort(sortByChannelName)
 											.map((s) => (
 												<MenuItem
@@ -931,7 +936,7 @@ function SideMenu({
 	const getCurrentStreams = (currentMode: number): FilteredData[] => {
 		switch (currentMode) {
 			case 0:
-				return data;
+				return data.filter(s => (s.graduation == null || new Date(s.graduation) >= new Date()));
 			case 1:
 				if (filteredData.length > 0) return filteredData;
 				else return customStreams;
