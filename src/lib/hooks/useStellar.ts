@@ -10,6 +10,7 @@ import {
 	isLiveFetchingState,
 	fetchInfoState,
 	isLiveDetailFetchingState,
+	StellarState,
 } from "../Atom";
 import { useEffect, useRef } from "react";
 import { fetchServer } from "../functions/fetch";
@@ -20,6 +21,12 @@ import { useImprovedInterval } from "./useInterval";
 import { MultiViewData, MultiViewDataData } from "../types";
 
 export function useStellar() {
+	const fbImages = [
+		{
+			name: "아이리 칸나",
+			profileImage: "images/fb/airi_kanna.png",
+		},
+	];
 	const toast = useToast();
 	const intervalRef = useRef<number>();
 	const [data, setData] = useRecoilState(stellarState);
@@ -32,64 +39,8 @@ export function useStellar() {
 	const [, setIsLiveDetailFetching] = useRecoilState(isLiveDetailFetchingState);
 	const [, setFetchInfo] = useRecoilState(fetchInfoState);
 
-	const getLiveDetail = () => {
-		setIsLiveDetailFetching(true);
-		fetchServer("/live-detail", "v1")
-			.then((res) => {
-				if (res.status === 200) {
-					const data = res.data as LiveStatusState[];
-					setLiveStatus((prev) => {
-						if (prev.length === 0) return data;
-						const arr = [...prev];
-						for (let item of arr) {
-							// const liveTitle = data.find((l) => l.uuid === item.uuid)?.liveTitle || "";
-							const openDate = data.find((l) => l.uuid === item.uuid)?.openDate || "";
-							const closeDate = data.find((l) => l.uuid === item.uuid)?.closeDate || "";
-							const curIdx = arr.findIndex((a) => a.uuid === item.uuid);
-							arr[curIdx] = { ...arr[curIdx], openDate, closeDate };
-						}
-						return arr;
-					});
-					setFetchInfo((prev) => {
-						const obj = { ...prev };
-						obj["liveDetail"] = { date: getLocale() };
-						return obj;
-					});
-				}
-			})
-			.finally(() => setIsLiveDetailFetching(false));
-	};
-
 	const getLiveStatus = () => {
 		setIsLiveFetching(true);
-		// fetchServer("/live-status", "v1")
-		// 	.then((res) => {
-		// 		if (res.status === 200) {
-		// 			const data = res.data as LiveStatusState[];
-		// 			setLiveStatus((prev) => {
-		// 				if (prev.length === 0) return data;
-		// 				const arr = [...prev];
-		// 				for (let item of arr) {
-		// 					const liveStatus = data.find((l) => l.uuid === item.uuid)?.liveStatus;
-		// 					const liveCategoryValue = data.find((l) => l.uuid === item.uuid)?.liveCategoryValue || "";
-		// 					const liveTitle = data.find((l) => l.uuid === item.uuid)?.liveTitle || null;
-		// 					const curIdx = arr.findIndex((a) => a.uuid === item.uuid);
-		// 					arr[curIdx] = { ...arr[curIdx], liveStatus, liveTitle, liveCategoryValue };
-		// 				}
-		// 				return arr;
-		// 			});
-		// 			setFetchInfo((prev) => {
-		// 				const obj = { ...prev };
-		// 				obj["liveStatus"] = { date: getLocale() };
-		// 				return obj;
-		// 			});
-		// 			getLiveDetail();
-		// 		}
-		// 	})
-		// 	.finally(() => {
-		// 		setIsLiveLoading(false);
-		// 		setIsLiveFetching(false);
-		// 	});
 
 		fetchServer("/multiview", "v1")
 			.then((res) => {
@@ -117,7 +68,22 @@ export function useStellar() {
 			.then((res) => {
 				if (res) {
 					if (res.status === 200) {
-						setData(res.data.current || []);
+						const data: StellarState[] = res.data.current;
+
+						const fbImageMap = fbImages.reduce((acc, cur) => {
+							acc[cur.name] = cur.profileImage;
+							return acc;
+						}, {} as Record<string, string>);
+
+						const mod = data.map((s) => ({
+							...s,
+							profileImage:
+								(!s.profileImage || s.profileImage.trim() === "") && fbImageMap[s.name]
+									? fbImageMap[s.name]
+									: s.profileImage,
+						}));
+
+						setData(mod || []);
 						isTimer &&
 							toast({
 								description: "데이터를 새로 불러왔습니다.",
