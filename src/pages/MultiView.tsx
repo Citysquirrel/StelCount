@@ -728,7 +728,7 @@ function SideMenu({
 		fetchServer("/search-streamer", "v1", { body: JSON.stringify({ keyword: searchInputValue }), method: "POST" }).then(
 			(res) => {
 				const data: SearchData[] = res.data;
-				setSearchResult(data);
+				setSearchResult(data || []);
 			}
 		);
 	};
