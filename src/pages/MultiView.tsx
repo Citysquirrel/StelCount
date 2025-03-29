@@ -344,35 +344,6 @@ export function MultiView() {
 			alignItems={"center"}
 			justifyContent={"center"}
 		>
-			{isBukiUsingFirefox ? (
-				<Stack
-					animation="fadeIn 0.3s .25s both"
-					position="fixed"
-					left={0}
-					top={"4px"}
-					width="100%"
-					alignItems={"center"}
-				>
-					<Text color="gray.400">
-						부키가 파폭을 사용해서 효과를 봤다니 기념으로 파폭{" "}
-						<Link href={FIREFOX_EXTENSION_URL} isExternal color="blue.500">
-							부가 기능
-						</Link>
-						도 추가했습니다
-						<CloseButton
-							color="red.400"
-							float="right"
-							boxSize="22px"
-							marginLeft="2px"
-							onClick={() => {
-								setIsBukiUsingFirefox(false);
-								setUserSetting((prev) => ({ ...prev, isFoxUsingFirefox: false }));
-							}}
-						/>
-					</Text>
-				</Stack>
-			) : null}
-
 			<SideMenu
 				isOpen={isMenuOpen}
 				data={data}
@@ -936,7 +907,7 @@ function SideMenu({
 	const getCurrentStreams = (currentMode: number): FilteredData[] => {
 		switch (currentMode) {
 			case 0:
-				return data.filter(s => (s.graduation == null || new Date(s.graduation) >= new Date()));
+				return data.filter((s) => s.graduation == null || new Date(s.graduation) >= new Date());
 			case 1:
 				if (filteredData.length > 0) return filteredData;
 				else return customStreams;
