@@ -228,3 +228,52 @@ export function getBrowserInfo() {
 	}
 	return "Unknown";
 }
+
+type Diff<T> = { key: keyof T; before: any; after: any };
+interface GetDiffArrayOptions {
+	excludeUnchanged?: boolean;
+	includeOnlyChangedFields?: boolean;
+	includeDiffDetail?: boolean;
+}
+
+/** 두 객체배열 비교 후 변경된 사항 추적하여 리턴. 비교를 위해 변화하지 않는 값을 key(third parameter)에 할당 */
+export function getDiffArray<T extends object = Record<string, any>>(
+	beforeArr: T[],
+	afterArr: T[],
+	key: keyof T,
+	options: GetDiffArrayOptions = {}
+) {
+	const { excludeUnchanged = false } = options;
+	const beforeMap = new Map(beforeArr.map((obj) => [obj[key], obj]));
+
+	return afterArr.reduce((acc, afterObj) => {
+		const id = afterObj[key];
+		const beforeObj = beforeMap.get(id);
+
+		const diffKeys: string[] = [];
+
+		if (beforeObj) {
+			for (const k of Object.keys(afterObj) as (keyof T)[]) {
+				if (k === "diff") continue;
+				if (JSON.stringify(afterObj[k]) !== JSON.stringify(beforeObj[k])) {
+					diffKeys.push(k as string);
+				}
+			}
+		} else {
+			// 새로 생긴 객체라면 모든 키가 변화한 것으로 간주
+			diffKeys.push(...Object.keys(afterObj).filter((k) => k !== "diff"));
+		}
+
+		// 변화 없으면 제외할 수 있음
+		if (excludeUnchanged && diffKeys.length === 0) {
+			return acc;
+		}
+
+		acc.push({
+			...afterObj,
+			...(diffKeys.length > 0 ? { diff: diffKeys } : {}),
+		});
+
+		return acc;
+	}, [] as (T & { diff?: string[] | Diff<T>[] })[]);
+}
