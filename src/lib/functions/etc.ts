@@ -232,8 +232,6 @@ export function getBrowserInfo() {
 type Diff<T> = { key: keyof T; before: any; after: any };
 interface GetDiffArrayOptions {
 	excludeUnchanged?: boolean;
-	includeOnlyChangedFields?: boolean;
-	includeDiffDetail?: boolean;
 }
 
 /** 두 객체배열 비교 후 변경된 사항 추적하여 리턴. 비교를 위해 변화하지 않는 값을 key(third parameter)에 할당 */
