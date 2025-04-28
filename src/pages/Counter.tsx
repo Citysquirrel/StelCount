@@ -75,10 +75,10 @@ const stellarSymbols = {
 	"네네코 마시로": "/images/symbol/symbol_mashiro.png",
 	"시라유키 히나": "/images/symbol/symbol_hina.png",
 	"아카네 리제": "/images/symbol/symbol_lize.png",
-	"텐코 시부키": "",
-	"하나코 나나": "",
-	"아오쿠모 린": "",
-	"유즈하 리코": "",
+	"텐코 시부키": "/images/symbol/symbol_shibuki.svg",
+	"하나코 나나": "/images/symbol/symbol_nana.svg",
+	"아오쿠모 린": "/images/symbol/symbol_rin.svg",
+	"유즈하 리코": "/images/symbol/symbol_riko.svg",
 };
 
 const customTagColorScheme = {
