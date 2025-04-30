@@ -39,7 +39,7 @@ export function useMultiView() {
 							),
 						];
 						// console.log(getDiffArray(prev, parsed, "chzzkId"));
-						return parsed;
+						return parsed || [];
 					});
 					setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
 				}
