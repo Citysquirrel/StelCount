@@ -3,6 +3,7 @@ import { fetchServer } from "../functions/fetch";
 import { MultiViewData, MultiViewDataData } from "../types";
 import { useRecoilState } from "recoil";
 import { nowState } from "../Atom";
+import { getDiffArray } from "../functions/etc";
 
 export function useMultiView() {
 	const intervalRef = useRef<number>();
@@ -26,14 +27,20 @@ export function useMultiView() {
 					const opens = applyType.filter((stream) => stream.openLive);
 					const closes = applyType.filter((stream) => !stream.openLive);
 					const defaultDate = "2000-01-01";
-					setData([
-						...opens.sort(
-							(a, b) => new Date(b.openDate || defaultDate).getTime() - new Date(a.openDate || defaultDate).getTime()
-						),
-						...closes.sort(
-							(a, b) => new Date(b.closeDate || defaultDate).getTime() - new Date(a.closeDate || defaultDate).getTime()
-						),
-					]);
+
+					setData((prev) => {
+						const parsed = [
+							...opens.sort(
+								(a, b) => new Date(b.openDate || defaultDate).getTime() - new Date(a.openDate || defaultDate).getTime()
+							),
+							...closes.sort(
+								(a, b) =>
+									new Date(b.closeDate || defaultDate).getTime() - new Date(a.closeDate || defaultDate).getTime()
+							),
+						];
+						// console.log(getDiffArray(prev, parsed, "chzzkId"));
+						return parsed;
+					});
 					setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
 				}
 			})
