@@ -118,15 +118,19 @@ export function MultiView() {
 		intervalRef,
 		refetchCustom,
 		customIntervalRef,
+		diffRef,
+		prevDataRef,
 	} = useMultiView();
 	const { enableConfirmOnExit, disableConfirmOnExit } = useConfirmOnExit(true);
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
 	const [searchParams, setSearchParams] = useSearchParams();
 	const STREAMS_PARAM_NAME = "streams";
+	const CHAT_PARAM_NAME = "chat";
 	const PARAMS_DELIMITER = "--";
 	const INNER_CHAT_WIDTH = 350;
 	const streamsParam = searchParams.get(STREAMS_PARAM_NAME);
+	const chatParam = searchParams.get(CHAT_PARAM_NAME);
 	const {
 		isOpen: isSettingOpen,
 		onToggle: handleToggleSetting,
@@ -297,15 +301,6 @@ export function MultiView() {
 	}, [windowWidth, windowHeight, streams, isInnerChatOpen]);
 
 	useEffect(() => {
-		if (streams.length === 0) {
-			setIsInnerChatOpen(false);
-			disableConfirmOnExit();
-		} else {
-			enableConfirmOnExit();
-		}
-	}, [streams]);
-
-	useEffect(() => {
 		document.title = "StelCount - Multiview";
 		if (streamsParam) setIsMenuOpen(false);
 
@@ -321,8 +316,23 @@ export function MultiView() {
 	}, []);
 
 	useEffect(() => {
+		if (chatParam) {
+			setChatStream({ streamId: chatParam, name: data.find((s) => s.chzzkId === chatParam)?.channelName || "" });
+		}
+	}, [chatParam]);
+
+	useEffect(() => {
 		if (streamsParam) handleStreamsParam(streamsParam);
 	}, [data, streamsParam]);
+
+	useEffect(() => {
+		if (streams.length === 0) {
+			setIsInnerChatOpen(false);
+			disableConfirmOnExit();
+		} else {
+			enableConfirmOnExit();
+		}
+	}, [streams]);
 
 	useHotkeys("ctrl+alt+l", () => {
 		navigate("/login");
