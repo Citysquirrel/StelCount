@@ -80,11 +80,11 @@ export interface DefaultDateFields {
 }
 
 export interface Thumbnails {
-	maxres: ThumbnailScheme;
-	standard: ThumbnailScheme;
-	high: ThumbnailScheme;
-	medium: ThumbnailScheme;
-	default: ThumbnailScheme;
+	maxres?: ThumbnailScheme;
+	standard?: ThumbnailScheme;
+	high?: ThumbnailScheme;
+	medium?: ThumbnailScheme;
+	default?: ThumbnailScheme;
 }
 
 interface ThumbnailScheme {

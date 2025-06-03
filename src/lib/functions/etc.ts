@@ -143,7 +143,7 @@ export function getThumbnails(thumbnails: string): Thumbnails {
 	try {
 		return JSON.parse(thumbnails);
 	} catch (err) {
-		return { maxres: {}, standard: {}, high: {}, medium: {}, default: {} };
+		return {};
 	}
 }
 
@@ -229,7 +229,7 @@ export function getBrowserInfo() {
 	return "Unknown";
 }
 
-type Diff<T> = { key: keyof T; before: any; after: any };
+export type Diff<T> = { key: keyof T; before: any; after: any };
 interface GetDiffArrayOptions {
 	excludeUnchanged?: boolean;
 }
