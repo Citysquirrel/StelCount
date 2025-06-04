@@ -838,7 +838,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 								>
 									<Image
 										boxSize="100px"
-										src={getThumbnails(c.thumbnails).medium?.url || ""}
+										src={getThumbnails(c.thumbnails).medium?.url || "/images/no_thb.png"}
 										alt="thumbnail"
 										objectFit={"cover"}
 										transform={"scale(1.35)"}
