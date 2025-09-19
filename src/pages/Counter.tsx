@@ -142,7 +142,7 @@ export function Counter() {
 	const cliche = data.filter((s) => s.group === 3 && !s.justLive);
 	const everys = data.filter((s) => s.group === 4 && !s.justLive);
 	const unclassified = data.filter((s) => !s.group && s.group !== 0 && !s.justLive);
-	const total = [stellive, everys, universe, cliche, unclassified];
+	const total = [stellive, everys, universe, cliche, mystic, unclassified];
 
 	const renewal = data.filter((s) => s.group != null);
 
