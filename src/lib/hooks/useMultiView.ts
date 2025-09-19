@@ -3,11 +3,13 @@ import { fetchServer } from "../functions/fetch";
 import { MultiViewData, MultiViewDataData } from "../types";
 import { useRecoilState } from "recoil";
 import { nowState } from "../Atom";
-import { getDiffArray } from "../functions/etc";
+import { getDiffArray, Diff } from "../functions/etc";
 
 export function useMultiView() {
 	const intervalRef = useRef<number>();
 	const customIntervalRef = useRef<number>();
+	const prevDataRef = useRef<MultiViewData[]>([]);
+	const diffRef = useRef<(MultiViewData & { diff?: string[] | Diff<MultiViewData>[] })[]>([]);
 	const [data, setData] = useState<MultiViewData[]>([]);
 	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -41,6 +43,9 @@ export function useMultiView() {
 						// console.log(getDiffArray(prev, parsed, "chzzkId"));
 						return parsed || [];
 					});
+					diffRef.current = getDiffArray(prevDataRef.current, applyType, "uuid");
+					prevDataRef.current = applyType;
+
 					setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
 				}
 			})
@@ -48,6 +53,7 @@ export function useMultiView() {
 				setIsLoading(false);
 			});
 	};
+
 	const refetchCustom = (activeLoading?: boolean) => {
 		activeLoading && setIsCustomLoading(true);
 		fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams }) })
@@ -96,6 +102,8 @@ export function useMultiView() {
 		refetchCustom,
 		intervalRef,
 		customIntervalRef,
+		diffRef,
+		prevDataRef,
 	};
 }
 

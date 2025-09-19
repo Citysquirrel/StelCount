@@ -94,6 +94,7 @@ export function Admin() {
 		name: "",
 		nameShort: "",
 		group: "",
+		formerGroups: [],
 		youtubeId: "",
 		chzzkId: "",
 		xId: "",
@@ -166,6 +167,7 @@ export function Admin() {
 					name: "",
 					nameShort: "",
 					group: "",
+					formerGroups: [],
 					youtubeId: "",
 					chzzkId: "",
 					xId: "",
@@ -230,6 +232,16 @@ export function Admin() {
 		onModalOpen();
 	};
 
+	const handleChangeGroups = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = e.target.value;
+		e.target.value = "";
+		setInputValue((prev) => {
+			const arr = [...prev.formerGroups];
+			if (!arr.includes(value)) arr.push(value);
+			return { ...prev, formerGroups: [...arr] };
+		});
+	};
+
 	useEffect(() => {
 		getStellarData();
 		getTagData();
@@ -290,6 +302,29 @@ export function Admin() {
 											onChange={handleInputValue("group")}
 										/>
 									</InputGroup>
+									<InputGroup>
+										<Select placeholder="이전그룹" onChange={handleChangeGroups}>
+											{stellarGroupName.map((s, i) => (
+												<Box as="option" key={i} value={s[1]}>{`${s[0]}-${s[1]}`}</Box>
+											))}
+										</Select>
+									</InputGroup>
+									<HStack>
+										{inputValue.formerGroups.map((g, i) => (
+											<Tag key={i}>
+												{g}
+												<TagCloseButton
+													onClick={() => {
+														setInputValue((prev) => {
+															const arr = [...prev.formerGroups];
+															arr.splice(i, 1);
+															return { ...prev, formerGroups: [...arr] };
+														});
+													}}
+												/>
+											</Tag>
+										))}
+									</HStack>
 									<InputGroup>
 										<InputLeftElement>
 											<MdCalendarMonth />
@@ -402,6 +437,7 @@ export function Admin() {
 								<Th>치지직 ID</Th>
 								<Th>유튜브 ID</Th>
 								<Th>X ID</Th>
+								<Th>이전기수</Th>
 							</Tr>
 						</Thead>
 						<Tbody>
@@ -467,6 +503,7 @@ export function Admin() {
 									<Td>
 										<CopyText>{s.xId}</CopyText>
 									</Td>
+									<Td>{String(s.formerGroups || "")}</Td>
 								</Tr>
 							))}
 						</Tbody>
@@ -530,6 +567,7 @@ export function AdminEdit() {
 		name: "",
 		nameShort: "",
 		group: "",
+		formerGroups: [],
 		youtubeId: "",
 		chzzkId: "",
 		xId: "",
@@ -574,6 +612,16 @@ export function AdminEdit() {
 			});
 	};
 
+	const handleChangeGroups = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = e.target.value;
+		e.target.value = "";
+		setInputValue((prev) => {
+			const arr = [...prev.formerGroups];
+			if (!arr.includes(value)) arr.push(value);
+			return { ...prev, formerGroups: [...arr] };
+		});
+	};
+
 	useEffect(() => {
 		fetchServer(`/stellar/${id}`, "v1")
 			.then((res) => {
@@ -586,6 +634,7 @@ export function AdminEdit() {
 							name,
 							nameShort,
 							group,
+							formerGroups,
 							chzzkId,
 							youtubeId,
 							xId,
@@ -601,6 +650,7 @@ export function AdminEdit() {
 							name,
 							nameShort,
 							group,
+							formerGroups: formerGroups ? JSON.parse(formerGroups) : [],
 							chzzkId,
 							youtubeId,
 							xId,
@@ -631,6 +681,10 @@ export function AdminEdit() {
 				setIsLoading(false);
 			});
 	}, []);
+
+	useEffect(() => {
+		console.log(JSON.stringify(inputValue));
+	}, [inputValue]);
 
 	if (isAuthLoading) return <Loading options={{ mode: "fullscreen" }} />;
 	if (!isLogin) return <NotExist />;
@@ -666,6 +720,29 @@ export function AdminEdit() {
 							onChange={handleInputValue("group")}
 						/>
 					</InputGroup>
+					<InputGroup>
+						<Select placeholder="이전그룹" onChange={handleChangeGroups}>
+							{stellarGroupName.map((s, i) => (
+								<Box as="option" key={i} value={s[1]}>{`${s[0]}-${s[1]}`}</Box>
+							))}
+						</Select>
+					</InputGroup>
+					<HStack>
+						{inputValue.formerGroups.map((g, i) => (
+							<Tag key={i}>
+								{g}
+								<TagCloseButton
+									onClick={() => {
+										setInputValue((prev) => {
+											const arr = [...prev.formerGroups];
+											arr.splice(i, 1);
+											return { ...prev, formerGroups: [...arr] };
+										});
+									}}
+								/>
+							</Tag>
+						))}
+					</HStack>
 					<InputGroup>
 						<InputLeftElement>
 							<MdCalendarMonth />
@@ -1383,6 +1460,7 @@ interface StellarInputValue {
 	name: string;
 	nameShort: string;
 	group: string;
+	formerGroups: string[];
 	youtubeId: string;
 	chzzkId: string;
 	xId: string;

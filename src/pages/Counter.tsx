@@ -28,6 +28,7 @@ import {
 	SkeletonCircle,
 	Stack,
 	StackDivider,
+	SystemStyleObject,
 	Tag,
 	TagLabel,
 	TagProps,
@@ -50,7 +51,17 @@ import {
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { CAFE_WRITE_URL, MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdCheck, MdClear, MdFilterList, MdHome, MdImage, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
+import {
+	MdCheck,
+	MdClear,
+	MdFilterList,
+	MdHome,
+	MdImage,
+	MdOpenInNew,
+	MdSettings,
+	MdTag,
+	MdViewList,
+} from "react-icons/md";
 import { useLocalStorage } from "usehooks-ts";
 import {
 	Statistics,
@@ -108,6 +119,7 @@ export function Counter() {
 	});
 	const [isFilterOn, setIsFilterOn] = useState(false);
 	const [isFuncLoading, setIsFuncLoading] = useState(true);
+	const [isLegacyView, setIsLegacyView] = useState(true);
 
 	const currentStellar = data.find((s) => s.uuid === currentUuid);
 	const currentYoutubeData = modYoutubeData(
@@ -128,8 +140,11 @@ export function Counter() {
 	const mystic = data.filter((s) => s.group === 1 && !s.justLive);
 	const universe = data.filter((s) => s.group === 2 && !s.justLive);
 	const cliche = data.filter((s) => s.group === 3 && !s.justLive);
+	const everys = data.filter((s) => s.group === 4 && !s.justLive);
 	const unclassified = data.filter((s) => !s.group && s.group !== 0 && !s.justLive);
-	const total = [stellive, mystic, universe, cliche, unclassified];
+	const total = [stellive, everys, universe, cliche, unclassified];
+
+	const renewal = data.filter((s) => s.group != null);
 
 	const gridWidth = gridRef.current?.clientWidth || 0;
 	const imageHeightOffset = 4;
@@ -141,6 +156,12 @@ export function Counter() {
 		`${gridWidth / 3 - 16}px`,
 	];
 	const thumbWidth = ["108px", "108px", `${(gridWidth / 2 - 8) / imageHeightOffset}px`, "108px", "108px"];
+
+	const stellarInfoWrapperStyle: SystemStyleObject = {
+		backgroundColor: "rgba(255,255,255,0.9)",
+		borderRadius: "4px",
+		padding: "4px",
+	};
 
 	const handleClickStellar = (uuid: string) => () => {
 		setFilter((prev) => {
@@ -155,6 +176,10 @@ export function Counter() {
 		setUserSetting((prev) => ({ ...prev, homeStellar: currentUuid }));
 	};
 
+	const handleLegacy = () => {
+		setIsLegacyView((prev) => !prev);
+	};
+
 	const handleTagFilter = (tagId: number) => () => {
 		setFilter((prev) => ({
 			...prev,
@@ -162,18 +187,6 @@ export function Counter() {
 				? prev.tag.filter((id) => id !== tagId) // 태그 제거
 				: [...prev.tag, tagId], // 태그 추가
 		}));
-
-		// setFilter((prev) => {
-		// 	const obj = { ...prev };
-		// 	const tags = [...obj.tag];
-		// 	if (tags.includes(tagId)) {
-		// 		tags.splice(tags.indexOf(tagId), 1);
-		// 	} else {
-		// 		tags.push(tagId);
-		// 	}
-		// 	obj.tag = tags;
-		// 	return obj;
-		// });
 	};
 
 	const handleResetFilter = (key: keyof Filter) => () => {
@@ -280,7 +293,7 @@ export function Counter() {
 											{isUnder720 || isMobile()
 												? idx
 												: typeof s[0].group === "number"
-												? stellarGroupName[idx][1]
+												? stellarGroupName[s[0].group][1]
 												: "Unclassified"}
 										</Tag>
 									) : null}
@@ -347,197 +360,216 @@ export function Counter() {
 						<MenuItem height="28px" fontSize="0.875rem" icon={<MdHome size="1.125rem" />} onClick={handleSetHome}>
 							방문시 첫화면으로
 						</MenuItem>
+						{/* <MenuItem height="28px" fontSize="0.875rem" icon={<MdViewList size="1.125rem" />} onClick={handleLegacy}>
+							{isLegacyView ? "업데이트 된 화면 보기" : "레거시 화면 보기"}
+						</MenuItem> */}
 					</MenuList>
 				</Menu>
 
-				<Stack margin="12px" marginTop="24px" marginBottom="64px" divider={<StackDivider />} spacing={"4"}>
-					<Stack
-						position="relative"
-						direction={"row"}
-						alignItems={"center"}
-						spacing={"4"}
-						flexWrap={"wrap"}
-						backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
-						backgroundRepeat={"no-repeat"}
-						backgroundPosition={"top 50% right 12px"}
-						backgroundSize={
-							currentStellar?.name === "스텔라이브"
-								? "48px"
-								: currentStellar?.name === "아라하시 타비"
-								? "70px"
-								: "72px"
-						}
-					>
-						<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
-							{isLoading || isFuncLoading ? (
-								<SkeletonCircle boxSize="72px" />
-							) : currentStellar?.chzzkId ? (
-								<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || "/images/logo.png"}>
-									<AvatarBadge
-										boxSize="28px"
-										bg={isLiveLoading ? "orange.400" : currentLiveStatus ? "green.400" : "red.400"}
-									/>
-								</Avatar>
-							) : null}
-						</Link>
-						{currentStellar?.chzzkId ? (
-							<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
-						) : null}
+				{isLegacyView ? (
+					<Stack margin="12px" marginTop="24px" marginBottom="64px" divider={<StackDivider />} spacing={"4"}>
 						<Stack
-							direction={windowWidth <= 840 ? "column" : "row"}
-							maxWidth={windowWidth <= 840 ? undefined : `${windowWidth - 240 - 72 - 80}px`}
-							maxHeight="120px"
-							overflow="auto"
+							position="relative"
+							direction={"row"}
+							alignItems={"center"}
+							spacing={"4"}
+							flexWrap={"wrap"}
+							backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
+							backgroundRepeat={"no-repeat"}
+							backgroundPosition={"top 50% right 12px"}
+							backgroundSize={
+								currentStellar?.name === "스텔라이브"
+									? "48px"
+									: currentStellar?.name === "아라하시 타비"
+									? "70px"
+									: "72px"
+							}
 						>
-							{isLoading || isFuncLoading ? (
-								Array.from({ length: 2 }, (_) => 1).map((_, idx) => (
-									<Skeleton key={idx} width={"240px"} height="54px" borderRadius={"0.375rem"} />
-								))
-							) : (
-								<>
-									{currentYoutubeData.map((y, idx) =>
-										y.subscriberCount ? (
-											<FollowerCard
-												key={y.id}
-												href={youtubeAPI.channelUrl(y.customUrl) || youtubeAPI.channelUrlByYoutubeId(y.id)}
-												icon={"/images/i_youtube_1.png"}
-												text={`구독자 ${numberToLocaleString(y.subscriberCount)}`}
-												currentColorCode={currentColorCode}
-												subText={idx === 1 ? "Music Channel" : undefined}
-											/>
-										) : null
-									)}
-									{currentStellar?.chzzkFollowerCount ? (
-										<FollowerCard
-											href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
-											icon={"/images/i_chzzk_1.png"}
-											text={`팔로워 ${numberToLocaleString(currentStellar.chzzkFollowerCount)}`}
-											currentColorCode={currentColorCode}
+							<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
+								{isLoading || isFuncLoading ? (
+									<SkeletonCircle boxSize="72px" />
+								) : currentStellar?.chzzkId ? (
+									<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || "/images/logo.png"}>
+										<AvatarBadge
+											boxSize="28px"
+											bg={isLiveLoading ? "orange.400" : currentLiveStatus ? "green.400" : "red.400"}
 										/>
-									) : null}
-								</>
-							)}
-						</Stack>
-					</Stack>
-					<Stack>
-						<HStack alignItems={"flex-start"}>
-							{/* 솔팅 컴포넌트 시작 */}
-							<HStack>
-								{isLoading ? null : (
+									</Avatar>
+								) : null}
+							</Link>
+							{currentStellar?.chzzkId ? (
+								<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
+							) : null}
+							<Stack
+								direction={windowWidth <= 840 ? "column" : "row"}
+								maxWidth={windowWidth <= 840 ? undefined : `${windowWidth - 240 - 72 - 80}px`}
+								maxHeight="120px"
+								overflow="auto"
+							>
+								{isLoading || isFuncLoading ? (
+									Array.from({ length: 2 }, (_) => 1).map((_, idx) => (
+										<Skeleton key={idx} width={"240px"} height="54px" borderRadius={"0.375rem"} />
+									))
+								) : (
 									<>
-										<Tooltip label="정렬 기준">
-											<Button onClick={handleSort("sortBy")} height="24px" fontSize={"sm"} padding="0 8px">
-												{sort.sortName[sort.current[0]]}
-											</Button>
-										</Tooltip>
-										<Tooltip label="정렬 방향">
-											<Button onClick={handleSort("direction")} height="24px" fontSize={"sm"} padding="0 8px">
-												{sort.current[1] === 0
-													? sort.current[0] === 2
-														? "과거"
-														: "오름"
-													: sort.current[0] === 2
-													? "최신"
-													: "내림"}
-											</Button>
-										</Tooltip>
+										{currentYoutubeData.map((y, idx) =>
+											y.subscriberCount ? (
+												<FollowerCard
+													key={y.id}
+													href={youtubeAPI.channelUrl(y.customUrl) || youtubeAPI.channelUrlByYoutubeId(y.id)}
+													icon={"/images/i_youtube_1.png"}
+													text={`구독자 ${numberToLocaleString(y.subscriberCount)}`}
+													currentColorCode={currentColorCode}
+													subText={idx === 1 ? "Music Channel" : undefined}
+												/>
+											) : null
+										)}
+										{currentStellar?.chzzkFollowerCount ? (
+											<FollowerCard
+												href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
+												icon={"/images/i_chzzk_1.png"}
+												text={`팔로워 ${numberToLocaleString(currentStellar.chzzkFollowerCount)}`}
+												currentColorCode={currentColorCode}
+											/>
+										) : null}
 									</>
 								)}
-							</HStack>
-							{/* 필터링 컴포넌트 시작 */}
-							{currentExistTags.length > 0 ? (
-								<Stack
-									bg="rgba(245,245,245)"
-									borderRadius={"0.375rem"}
-									width={isFilterOn ? "100%" : "24px"}
-									height={isFilterOn ? `auto` : "24px"}
-									overflow="hidden"
-									gap="2px"
-								>
-									<IconButton
-										onClick={() => {
-											setIsFilterOn((prev) => {
-												setUserSetting((prevSetting) => ({ ...prevSetting, isFilterOn: String(!prev) }));
-												return !prev;
-											});
-										}}
-										boxSize="24px"
-										minHeight="24px"
-										minW={0}
-										icon={isFilterOn ? <MdClear /> : <MdFilterList />}
-										aria-label="filterButton"
-									/>
-									<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="2px" flexWrap={"wrap"}>
+							</Stack>
+						</Stack>
+						<Stack>
+							<HStack alignItems={"flex-start"}>
+								{/* 솔팅 컴포넌트 시작 */}
+								<HStack>
+									{isLoading ? null : (
+										<>
+											<Tooltip label="정렬 기준">
+												<Button onClick={handleSort("sortBy")} height="24px" fontSize={"sm"} padding="0 8px">
+													{sort.sortName[sort.current[0]]}
+												</Button>
+											</Tooltip>
+											<Tooltip label="정렬 방향">
+												<Button onClick={handleSort("direction")} height="24px" fontSize={"sm"} padding="0 8px">
+													{sort.current[1] === 0
+														? sort.current[0] === 2
+															? "과거"
+															: "오름"
+														: sort.current[0] === 2
+														? "최신"
+														: "내림"}
+												</Button>
+											</Tooltip>
+										</>
+									)}
+								</HStack>
+								{/* 필터링 컴포넌트 시작 */}
+								{currentExistTags.length > 0 ? (
+									<Stack
+										bg="rgba(245,245,245)"
+										borderRadius={"0.375rem"}
+										width={isFilterOn ? "100%" : "24px"}
+										height={isFilterOn ? `auto` : "24px"}
+										overflow="hidden"
+										gap="2px"
+									>
 										<IconButton
-											colorScheme="blackAlpha"
-											variant={filter.tag.length > 0 ? "solid" : "ghost"}
+											onClick={() => {
+												setIsFilterOn((prev) => {
+													setUserSetting((prevSetting) => ({ ...prevSetting, isFilterOn: String(!prev) }));
+													return !prev;
+												});
+											}}
 											boxSize="24px"
-											minHeight={"24px"}
-											icon={filter.tag.length > 0 ? <MdClear /> : <MdTag />}
+											minHeight="24px"
 											minW={0}
-											aria-label="clear-tag-filter"
-											onClick={handleResetFilter("tag")}
+											icon={isFilterOn ? <MdClear /> : <MdFilterList />}
+											aria-label="filterButton"
 										/>
+										<HStack bg="rgba(245,245,245)" padding="4px" borderRadius={"0.375rem"} gap="2px" flexWrap={"wrap"}>
+											<IconButton
+												colorScheme="blackAlpha"
+												variant={filter.tag.length > 0 ? "solid" : "ghost"}
+												boxSize="24px"
+												minHeight={"24px"}
+												icon={filter.tag.length > 0 ? <MdClear /> : <MdTag />}
+												minW={0}
+												aria-label="clear-tag-filter"
+												onClick={handleResetFilter("tag")}
+											/>
 
-										<Spacing direction="horizontal" size={4} />
-										{currentExistTags.map((t, idx) => (
-											<FilterTag
-												key={`${t.id}-${idx}`}
-												tagId={t.id}
-												name={t.name}
-												color={t.colorCode}
-												tagFilter={filter.tag}
-												onClick={handleTagFilter(t.id)}
-												minWidth="76px"
-												height="24px"
-												wordBreak={"keep-all"}
-											>
-												{t.name}
-											</FilterTag>
-										))}
-									</HStack>
-								</Stack>
-							) : null}
-						</HStack>
-						<SimpleGrid
-							ref={gridRef}
-							columns={(musics !== undefined && musics.length > 0) || isLoading || isFuncLoading ? [1, 1, 2, 2, 3] : 1}
-							spacing={"8px"}
-							placeItems={"center"}
-						>
-							{isLoading || isFuncLoading ? (
-								Array.from({ length: 3 }, (_) => 1).map((_, idx) => (
-									<Skeleton key={idx} width={cardWidth} height="212px" borderRadius={"0.375rem"} />
-								))
-							) : musics !== undefined && musics.length > 0 ? (
-								musics.map((m) => (
-									<MusicCard
-										key={m.videoId}
-										data={m}
-										currentColorCode={currentColorCode}
-										width={cardWidth}
-										thumbWidth={thumbWidth}
-										now={now}
-									/>
-								))
-							) : (
-								<Stack
-									alignItems={"center"}
-									justifyContent={"center"}
-									width={["100%", "100%", "200%", "200%", "300%"]}
-									height="240px"
-									userSelect={"none"}
-									gap={0}
-								>
-									<NoDataImage color="#444" />
-									<Text fontSize="1.25rem" fontWeight={"bold"} color="#444">
-										데이터가 없습니다
-									</Text>
-								</Stack>
-							)}
-						</SimpleGrid>
+											<Spacing direction="horizontal" size={4} />
+											{currentExistTags.map((t, idx) => (
+												<FilterTag
+													key={`${t.id}-${idx}`}
+													tagId={t.id}
+													name={t.name}
+													color={t.colorCode}
+													tagFilter={filter.tag}
+													onClick={handleTagFilter(t.id)}
+													minWidth="76px"
+													height="24px"
+													wordBreak={"keep-all"}
+												>
+													{t.name}
+												</FilterTag>
+											))}
+										</HStack>
+									</Stack>
+								) : null}
+							</HStack>
+							<SimpleGrid
+								ref={gridRef}
+								columns={
+									(musics !== undefined && musics.length > 0) || isLoading || isFuncLoading ? [1, 1, 2, 2, 3] : 1
+								}
+								spacing={"8px"}
+								placeItems={"center"}
+							>
+								{isLoading || isFuncLoading || (cardWidth && cardWidth[0]) === "0px" ? (
+									Array.from({ length: 3 }, (_) => 1).map((_, idx) => (
+										<Skeleton
+											key={idx}
+											width={(cardWidth && cardWidth[0]) === "0px" ? "100%" : cardWidth}
+											height="212px"
+											borderRadius={"0.375rem"}
+										/>
+									))
+								) : musics !== undefined && musics.length > 0 ? (
+									musics.map((m) => (
+										<MusicCard
+											key={m.videoId}
+											data={m}
+											currentColorCode={currentColorCode}
+											width={cardWidth}
+											thumbWidth={thumbWidth}
+											now={now}
+										/>
+									))
+								) : (
+									<Stack
+										alignItems={"center"}
+										justifyContent={"center"}
+										width={["100%", "100%", "200%", "200%", "300%"]}
+										height="240px"
+										userSelect={"none"}
+										gap={0}
+									>
+										<NoDataImage color="#444" />
+										<Text fontSize="1.25rem" fontWeight={"bold"} color="#444">
+											데이터가 없습니다
+										</Text>
+									</Stack>
+								)}
+							</SimpleGrid>
+						</Stack>
 					</Stack>
-				</Stack>
+				) : (
+					<Stack className="stellar-info-whole-container" padding="24px 12px" marginBottom="64px">
+						<Stack className="stellar-infos-wrapper" sx={stellarInfoWrapperStyle}>
+							<Text>아</Text>
+						</Stack>
+						<Stack className="stellar-mv-wrapper" sx={stellarInfoWrapperStyle}></Stack>
+					</Stack>
+				)}
 			</Box>
 		</Stack>
 	);

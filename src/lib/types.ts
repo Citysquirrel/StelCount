@@ -112,6 +112,12 @@ export interface MultiViewData {
 	isBookmarked?: boolean;
 	graduation?: string | null | undefined;
 	debut?: string | null | undefined;
+	party: Party | null;
+}
+
+interface Party {
+	partyNo: number;
+	memberCount: number;
 }
 
 export interface ImprovedIntervalOptions {

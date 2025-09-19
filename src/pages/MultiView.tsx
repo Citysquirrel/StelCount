@@ -841,6 +841,7 @@ function SideMenu({
 					openLive,
 					openDate,
 					isCustom: true,
+					party: null,
 				},
 			].sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive));
 		});
@@ -903,6 +904,7 @@ function SideMenu({
 				uuid: v4(),
 				isCustom: true,
 				isBookmarked: !!s.isBookmarked,
+				party: null,
 			}));
 			setCustomStreams(temp);
 			fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams: temp }) }).then((res) => {
@@ -1044,7 +1046,7 @@ function SideMenu({
 					height: "100%",
 					color: "white",
 					backgroundColor: "rgb(7,7,7)",
-					transform: isOpen ? `translateX(0px)` : `translateX(-${WIDTH}px)`,
+					transform: isOpen ? `translateX(0px)` : `translateX(-${WIDTH + 1}px)`,
 					transition: "all .3s",
 					gap: "0",
 					zIndex: 11,

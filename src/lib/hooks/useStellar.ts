@@ -84,13 +84,13 @@ export function useStellar() {
 						}));
 
 						setData(mod || []);
-						isTimer &&
-							toast({
-								description: "데이터를 새로 불러왔습니다.",
-								status: "info",
-								duration: isMobile() ? 1500 : 3000,
-								isClosable: true,
-							});
+						// isTimer &&
+						// 	toast({
+						// 		description: "데이터를 새로 불러왔습니다.",
+						// 		status: "info",
+						// 		duration: isMobile() ? 1500 : 3000,
+						// 		isClosable: true,
+						// 	});
 						setFetchInfo((prev) => {
 							const obj = { ...prev };
 							obj["stellar"] = { date: getLocale() };
