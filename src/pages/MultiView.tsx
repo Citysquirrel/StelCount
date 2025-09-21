@@ -205,7 +205,11 @@ export function MultiView() {
 			const value = result.reduce((a, c) => {
 				return !a ? c.streamId : a + PARAMS_DELIMITER + c.streamId;
 			}, "");
-			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
+			setSearchParams((prev) => {
+				const newParams = new URLSearchParams(prev);
+				newParams.set(STREAMS_PARAM_NAME, value);
+				return newParams;
+			});
 			return result;
 		});
 	};
@@ -214,7 +218,17 @@ export function MultiView() {
 		setStreams((prev) => {
 			const arr = prev.filter((a) => a.uuid !== uuid);
 			const value = arr.map((c) => c.streamId).join(PARAMS_DELIMITER);
-			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
+			setSearchParams((prev) => {
+				if (value) {
+					const newParams = new URLSearchParams(prev);
+					newParams.set(STREAMS_PARAM_NAME, value);
+					return newParams;
+				} else {
+					const newParams = new URLSearchParams(prev);
+					newParams.delete(STREAMS_PARAM_NAME);
+					return newParams;
+				}
+			});
 			return arr;
 		});
 	};
@@ -230,7 +244,11 @@ export function MultiView() {
 			});
 			const value = arr.map((c) => c.streamId).join(PARAMS_DELIMITER);
 
-			setSearchParams((prev) => ({ ...prev, [STREAMS_PARAM_NAME]: value }));
+			setSearchParams((prev) => {
+				const newParams = new URLSearchParams(prev);
+				newParams.set(STREAMS_PARAM_NAME, value);
+				return newParams;
+			});
 			return arr;
 		});
 	};
@@ -241,6 +259,9 @@ export function MultiView() {
 		} else {
 			setIsInnerChatOpen(true);
 			setChatStream({ streamId, name });
+			const newParams = new URLSearchParams(searchParams);
+			newParams.set(CHAT_PARAM_NAME, streamId);
+			setSearchParams(newParams);
 		}
 	};
 
@@ -268,10 +289,16 @@ export function MultiView() {
 		openChatInNewWindow(streamId);
 		setIsInnerChatOpen(false);
 		setChatStream({ streamId: "", name: "" });
+		const newParams = new URLSearchParams(searchParams);
+		newParams.delete(CHAT_PARAM_NAME);
+		setSearchParams(newParams);
 	};
 
 	const handleChangeChatStream = (streamId: string, name: string) => () => {
 		setChatStream({ streamId, name });
+		const newParams = new URLSearchParams(searchParams);
+		newParams.set(CHAT_PARAM_NAME, streamId);
+		setSearchParams(newParams);
 	};
 
 	const handleChatRefresh = () => {
@@ -318,16 +345,18 @@ export function MultiView() {
 	useEffect(() => {
 		if (chatParam) {
 			setChatStream({ streamId: chatParam, name: data.find((s) => s.chzzkId === chatParam)?.channelName || "" });
-		}
+			setIsInnerChatOpen(true);
+		} else setIsInnerChatOpen(false);
 	}, [chatParam]);
 
 	useEffect(() => {
 		if (streamsParam) handleStreamsParam(streamsParam);
+		else setStreams([]);
 	}, [data, streamsParam]);
 
 	useEffect(() => {
 		if (streams.length === 0) {
-			setIsInnerChatOpen(false);
+			// setIsInnerChatOpen(false);
 			disableConfirmOnExit();
 		} else {
 			enableConfirmOnExit();
@@ -555,6 +584,9 @@ export function MultiView() {
 								sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
 								onClick={() => {
 									setIsInnerChatOpen(false);
+									const newParams = new URLSearchParams(searchParams);
+									newParams.delete(CHAT_PARAM_NAME);
+									setSearchParams(newParams);
 								}}
 							/>
 							<IconButton
@@ -928,32 +960,23 @@ function SideMenu({
 		}
 	};
 
-	useKeyBind({
-		Escape: handleCloseMenu,
-		"1": () => {
-			setCurrentMode(0);
-		},
-		"2": () => {
-			setCurrentMode(1);
-		},
-		r: () => {
-			handleRefresh();
-		},
-		h: () => {
-			handleOpenHome();
-		},
-		c: () => {
-			handleToggleSetting();
-		},
-		v: () => {
-			handleResize();
-		},
-		// f: (e) => {
-		// 	if (document.activeElement !== searchInputRef.current) {
-		// 		// e.preventDefault();
-		// 		searchInputRef.current?.focus();
-		// 	}
-		// },
+	useHotkeys("1", () => {
+		setCurrentMode(0);
+	});
+	useHotkeys("2", () => {
+		setCurrentMode(1);
+	});
+	useHotkeys("r", () => {
+		handleRefresh();
+	});
+	useHotkeys("h", () => {
+		handleOpenHome();
+	});
+	useHotkeys("c", () => {
+		handleToggleSetting();
+	});
+	useHotkeys("v", () => {
+		handleResize();
 	});
 
 	// useWebSocket();
