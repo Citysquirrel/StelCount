@@ -880,6 +880,10 @@ function SideMenu({
 		setSearchInputValue("");
 
 		setUserSetting((prev) => {
+			// 중복검사
+			const exists = prev.customStreams?.some((item) => item.platform === platform && item.streamId === streamId);
+			if (exists) return prev;
+			// 추가
 			const newItem: CustomStreamsForUS = { name, platform, streamId, isBookmarked: false };
 			const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
 			return { ...prev, customStreams: arr };
