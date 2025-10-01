@@ -90,6 +90,7 @@ const stellarSymbols = {
 	"하나코 나나": "/images/symbol/symbol_nana.svg",
 	"아오쿠모 린": "/images/symbol/symbol_rin.svg",
 	"유즈하 리코": "/images/symbol/symbol_riko.svg",
+	"사키하네 후야": "/images/symbol/symbol_huya.png",
 };
 
 const customTagColorScheme = {

@@ -344,10 +344,15 @@ export function MultiView() {
 
 	useEffect(() => {
 		if (chatParam) {
-			setChatStream({ streamId: chatParam, name: data.find((s) => s.chzzkId === chatParam)?.channelName || "" });
+			// TODO: name에다가 customStream 정보도 필터링해서 넣어야함
+
+			setChatStream({
+				streamId: chatParam,
+				name: [...data, ...customStreams].find((s) => s.chzzkId === chatParam)?.channelName || "",
+			});
 			setIsInnerChatOpen(true);
 		} else setIsInnerChatOpen(false);
-	}, [chatParam]);
+	}, []); // 글고 여기 chatParam 빠지는게 맞을듯? 채팅창 정보 바뀔때마다 렌더링 2번씩 함
 
 	useEffect(() => {
 		if (streamsParam) handleStreamsParam(streamsParam);
