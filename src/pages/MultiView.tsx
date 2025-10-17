@@ -348,7 +348,10 @@ export function MultiView() {
 
 			setChatStream({
 				streamId: chatParam,
-				name: [...data, ...customStreams].find((s) => s.chzzkId === chatParam)?.channelName || "",
+				name:
+					data.find((s) => s.chzzkId === chatParam)?.channelName ||
+					customStreams.find((s) => s.chzzkId === chatParam)?.name ||
+					"",
 			});
 			setIsInnerChatOpen(true);
 		} else setIsInnerChatOpen(false);
@@ -986,6 +989,9 @@ function SideMenu({
 	});
 	useHotkeys("v", () => {
 		handleResize();
+	});
+	useHotkeys("Escape", () => {
+		handleCloseMenu();
 	});
 
 	// useWebSocket();
