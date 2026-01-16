@@ -82,7 +82,8 @@ export async function fetchServer(api: ServerAPI, version: Version, options?: Fe
 				Expires: "0",
 				...options?.headers,
 			},
-			credentials: import.meta.env.DEV ? "include" : "same-origin",
+			credentials: "include",
+			// credentials: import.meta.env.DEV ? "include" : "same-origin",
 			...options,
 		}
 	);
