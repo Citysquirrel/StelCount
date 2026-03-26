@@ -560,17 +560,6 @@ export function MultiView() {
 						</Stack>
 					)}
 				</HStack>
-				{/* <SimpleGrid
-					id="streams"
-					columns={calcColumns(len)}
-					sx={{
-						flexGrow: 1,
-						height: "100%",
-						gap: 0,
-					}}
-				>
-					
-				</SimpleGrid> */}
 				{isInnerChatOpen ? (
 					<Box position="relative" userSelect={"none"} overflow="hidden">
 						{/* 채팅 컨트롤러 */}
@@ -578,10 +567,10 @@ export function MultiView() {
 							flexDir={"row-reverse"}
 							position="absolute"
 							top={"6px"}
-							left={"24px"}
-							width="280px"
+							left={"4px"}
+							// width="280px"
 							justifyContent={"center"}
-							backgroundColor={"#141517"}
+							// backgroundColor={"#141517"}
 							borderRadius={".5rem"}
 							padding="4px 12px"
 							zIndex={1}
@@ -589,7 +578,7 @@ export function MultiView() {
 						>
 							<CloseButton
 								size="sm"
-								sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+								sx={{ color: "white", borderRadius: "8px", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
 								onClick={() => {
 									setIsInnerChatOpen(false);
 									const newParams = new URLSearchParams(searchParams);
@@ -603,6 +592,7 @@ export function MultiView() {
 								padding="0"
 								fontSize={"0.825rem"}
 								variant={"ghost"}
+								borderRadius={"8px"}
 								icon={<MdOpenInNew />}
 								aria-label="chat-open-in-new"
 								onClick={handleOpenChatInNewWindow(chatStream.streamId)}
@@ -611,13 +601,11 @@ export function MultiView() {
 									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
 								}}
 							/>
-							<Spacing size={8} direction="horizontal" />
-							<Stack>
+							{/* <Stack>
 								<Text color={COLOR_CHZZK} fontWeight={"bold"}>
 									{chatStream.name}
 								</Text>
-							</Stack>
-							<Spacing size={8} direction="horizontal" />
+							</Stack> */}
 							{data.length > 0 ? (
 								<Menu>
 									<MenuButton
@@ -629,6 +617,7 @@ export function MultiView() {
 										minWidth="auto"
 										padding="0"
 										fontSize={"0.825rem"}
+										borderRadius={"8px"}
 										sx={{
 											color: "white",
 											_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
@@ -650,7 +639,7 @@ export function MultiView() {
 												(s) =>
 													s.chzzkId &&
 													s.chzzkId !== chatStream.streamId &&
-													(s.graduation == null || new Date(s.graduation) >= new Date())
+													(s.graduation == null || new Date(s.graduation) >= new Date()),
 											)
 											.sort(sortByChannelName)
 											.map((s) => (
@@ -675,6 +664,7 @@ export function MultiView() {
 								padding="0"
 								fontSize={"0.825rem"}
 								variant={"ghost"}
+								borderRadius={"8px"}
 								icon={<MdRefresh />}
 								aria-label="chat-refresh"
 								onClick={handleChatRefresh}
@@ -779,7 +769,7 @@ function SideMenu({
 			(res) => {
 				const data: SearchData[] = res.data;
 				setSearchResult(data || []);
-			}
+			},
 		);
 	};
 
@@ -802,7 +792,7 @@ function SideMenu({
 				};
 			})
 			.filter(
-				(item) => item.liveTitleRange.length > 0 || item.channelNameRange.length > 0 || item.categoryRange.length > 0
+				(item) => item.liveTitleRange.length > 0 || item.channelNameRange.length > 0 || item.categoryRange.length > 0,
 			);
 
 		setFilteredData(results);
@@ -1010,7 +1000,7 @@ function SideMenu({
 			}
 			return acc;
 		},
-		{ streamsBookmarked: [], streamsOrdinary: [] }
+		{ streamsBookmarked: [], streamsOrdinary: [] },
 	);
 
 	const renderStreams = (streamsList: FilteredData[], streamType: number) =>
@@ -1039,7 +1029,7 @@ function SideMenu({
 							isBookmarked={isBookmarked}
 						/>
 					);
-			  })
+				})
 			: null;
 
 	return (
@@ -1381,7 +1371,7 @@ function SideMenu({
 
 									<Text fontSize={"sm"} textAlign={"center"} color="gray.400" userSelect={"none"}>
 										검색결과없음
-									</Text>
+									</Text>,
 								)}
 							</Stack>
 							{/* <Spacing size={2} />
@@ -1557,7 +1547,7 @@ function MenuCard({
 										overflow: "hidden",
 										textOverflow: "ellipsis",
 										whiteSpace: "nowrap",
-								  }
+									}
 								: undefined
 						}
 					>
@@ -1692,7 +1682,7 @@ function createConfigComponent(
 	configState: ConfigState,
 	setConfigState: Dispatch<SetStateAction<ConfigState>>,
 	handleConfig: (name: keyof ConfigState, type: ConfigType) => (e: React.ChangeEvent<HTMLInputElement>) => void,
-	setUserSetting: Dispatch<SetStateAction<UserSettingStorage>>
+	setUserSetting: Dispatch<SetStateAction<UserSettingStorage>>,
 ) {
 	const { type, name, label, suffix } = config;
 	if (type === "switch") {
@@ -1913,7 +1903,7 @@ function applySearchHighlight(text: string | null | undefined, ranges: number[][
 		elements.push(
 			<Box as="span" key={`${idx}-highlight`} backgroundColor="yellow.600">
 				{text.slice(start, end + 1)}
-			</Box>
+			</Box>,
 		);
 		lastIndex = end + 1;
 	});
@@ -2049,10 +2039,10 @@ type ConfigType = "switch" | "number" | "slider" | "list" | "radio" | (string & 
 type DefaultValueType<T> = T extends "list" | "radio"
 	? string
 	: T extends "number" | "slider"
-	? number
-	: T extends "switch"
-	? boolean
-	: never;
+		? number
+		: T extends "switch"
+			? boolean
+			: never;
 
 interface Streamer {
 	name: string;
