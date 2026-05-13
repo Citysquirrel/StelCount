@@ -438,7 +438,7 @@ export function MultiView() {
 				>
 					{streams.length > 0 ? (
 						streams.map((stream, idx) => {
-							const [scrolling, setScrolling] = useState<"yes" | "no" | "auto" | (string & {})>("no");
+							// const [scrolling, setScrolling] = useState<"yes" | "no" | "auto" | (string & {})>("no"); 미친왜 여기들어가있어
 							const { type, streamId, uuid, name } = stream;
 							const ref = refs.current[idx];
 							const src = createStreamSrc(type, streamId);
@@ -468,7 +468,7 @@ export function MultiView() {
 										height={`${frameSize.height}px`}
 										aspectRatio={"16 / 9"}
 										allowFullScreen
-										scrolling={scrolling}
+										scrolling={"no"}
 										frameBorder={"0"}
 									/>
 									<Stack
