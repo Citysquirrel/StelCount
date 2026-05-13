@@ -216,7 +216,7 @@ export function Admin() {
 	};
 
 	const handleYoutubeData = () => {
-		fetchServer("/renew", "v1")
+		fetchServer("/renew", "v1", { timeout: 60000 })
 			.then((res) => {
 				if (res.status === 200) toast({ description: "데이터 갱신에 성공했습니다", status: "success" });
 				else toast({ description: "데이터 갱신 중 오류가 발생했습니다", status: "error" });
@@ -910,7 +910,7 @@ function MusicPlaylist({ data, setData, inheritChannelId }: MusicPlaylistProps) 
 				viewCount,
 				likeCount,
 				countUpdatedAt,
-			}))
+			})),
 		);
 		onOpen();
 	};
