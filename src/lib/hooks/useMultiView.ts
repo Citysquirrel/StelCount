@@ -21,7 +21,7 @@ export function useMultiView() {
 	const refetch = (activeLoading?: boolean) => {
 		activeLoading && setIsLoading(true);
 
-		fetchServer(`/multiview`, "v1")
+		fetchServer("v1", `/multiview`)
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, main: res.status }));
 				if (res.status === 200) {
@@ -33,11 +33,11 @@ export function useMultiView() {
 					setData((prev) => {
 						const parsed = [
 							...opens.sort(
-								(a, b) => new Date(b.openDate || defaultDate).getTime() - new Date(a.openDate || defaultDate).getTime()
+								(a, b) => new Date(b.openDate || defaultDate).getTime() - new Date(a.openDate || defaultDate).getTime(),
 							),
 							...closes.sort(
 								(a, b) =>
-									new Date(b.closeDate || defaultDate).getTime() - new Date(a.closeDate || defaultDate).getTime()
+									new Date(b.closeDate || defaultDate).getTime() - new Date(a.closeDate || defaultDate).getTime(),
 							),
 						];
 						// console.log(getDiffArray(prev, parsed, "chzzkId"));
@@ -56,7 +56,7 @@ export function useMultiView() {
 
 	const refetchCustom = (activeLoading?: boolean) => {
 		activeLoading && setIsCustomLoading(true);
-		fetchServer(`/multiview`, "v1", { method: "POST", body: JSON.stringify({ customStreams }) })
+		fetchServer("v1", `/multiview`, { method: "POST", body: JSON.stringify({ customStreams }) })
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, custom: res.status }));
 				if (res.status === 200) {

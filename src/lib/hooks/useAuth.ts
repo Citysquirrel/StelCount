@@ -7,7 +7,7 @@ export function useAuth() {
 	const [isLogin, setIsLogin] = useRecoilState(isLoginState);
 	const [isAdmin, setIsAdmin] = useRecoilState(isAdminState);
 	const [isLoading, setIsLoading] = useState(true);
-	const query = () => fetchServer("/user/me", "v1");
+	const query = () => fetchServer("v1", "/user/me");
 
 	useEffect(() => {
 		if (import.meta.env.DEV) {

@@ -119,7 +119,7 @@ export function Admin() {
 	const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
 
 	const getStellarData = () => {
-		fetchServer("/stellars", "v1").then((res) => {
+		fetchServer("v1", "/stellars").then((res) => {
 			if (res) {
 				if (res.status === 200) setStellarData(res.data);
 			}
@@ -127,7 +127,7 @@ export function Admin() {
 	};
 
 	const getTagData = () => {
-		fetchServer("/tags", "v1").then((res) => {
+		fetchServer("v1", "/tags").then((res) => {
 			if (res) {
 				if (res.status === 200) {
 					setTagData(res.data.map((t) => objectNullCheck(t)));
@@ -158,7 +158,7 @@ export function Admin() {
 			toast({ description: "스텔라 이름을 입력해주세요", status: "error" });
 			return;
 		}
-		fetchServer("/stellar", "v1", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
+		fetchServer("v1", "/stellar", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
 			if (res.status === 201) {
 				getStellarData();
 
@@ -189,7 +189,7 @@ export function Admin() {
 			alert("빈값");
 			return;
 		}
-		fetchServer(`/yid?username=${inputValueY}`, "v1").then((res) => {
+		fetchServer("v1", `/yid?username=${inputValueY}`).then((res) => {
 			if (res && res.data.items) {
 				if (inputValue.youtubeId.length === 0) {
 					setInputValue((prev) => ({ ...prev, youtubeId: res.data.items[0].id }));
@@ -209,14 +209,14 @@ export function Admin() {
 	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
 		if (!confirm(`${stellarData.find((s) => s.id === id)?.name} 항목을 삭제하시겠습니까?`)) {
 		} else {
-			fetchServer(`/stellar/${id}`, "v1", { method: "DELETE", body: JSON.stringify({ id }) }).then(() => {
+			fetchServer("v1", `/stellar/${id}`, { method: "DELETE", body: JSON.stringify({ id }) }).then(() => {
 				getStellarData();
 			});
 		}
 	};
 
 	const handleYoutubeData = () => {
-		fetchServer("/renew", "v1", { timeout: 0 })
+		fetchServer("v1", "/renew", { timeout: 0 })
 			.then((res) => {
 				if (res.status === 200) toast({ description: "데이터 갱신에 성공했습니다", status: "success" });
 				else toast({ description: "데이터 갱신 중 오류가 발생했습니다", status: "error" });
@@ -596,7 +596,7 @@ export function AdminEdit() {
 		e.preventDefault();
 		setIsLoading(true);
 		setAlertStatus("loading");
-		fetchServer(`/stellar/${id}`, "v1", { method: "PATCH", body: JSON.stringify(inputValue) })
+		fetchServer("v1", `/stellar/${id}`, { method: "PATCH", body: JSON.stringify(inputValue) })
 			.then((res) => {
 				if (res) {
 					if (res.status === 204) {
@@ -623,7 +623,7 @@ export function AdminEdit() {
 	};
 
 	useEffect(() => {
-		fetchServer(`/stellar/${id}`, "v1")
+		fetchServer("v1", `/stellar/${id}`)
 			.then((res) => {
 				if (res) {
 					if (res.status === 200) {
@@ -1022,7 +1022,7 @@ function MusicDrawer({
 			toast({ description: "태그 이름을 입력해주세요", status: "warning" });
 		} else {
 			setIsSaveLoading(true);
-			fetchServer("/tag", "v1", { method: "POST", body: JSON.stringify({ name: tagName, colorCode, isCover }) })
+			fetchServer("v1", "/tag", { method: "POST", body: JSON.stringify({ name: tagName, colorCode, isCover }) })
 				.then((res) => {
 					if (res.status === 200) {
 						onTagClose();
@@ -1053,7 +1053,7 @@ function MusicDrawer({
 		// if (inputValue.title === "") {
 		// 	toast({ description: "제목을 입력해 주세요", status: "warning" });
 		// } else
-		fetchServer(`/y/${inputValue.id}`, "v1", {
+		fetchServer("v1", `/y/${inputValue.id}`, {
 			method: "POST",
 			body: JSON.stringify({
 				titleAlias: inputValue.titleAlias,
@@ -1124,7 +1124,7 @@ function MusicDrawer({
 	};
 
 	useEffect(() => {
-		fetchServer("/tags", "v1").then((res) => {
+		fetchServer("v1", "/tags").then((res) => {
 			if (res.status === 200) setTags(res.data);
 		});
 	}, []);
@@ -1337,7 +1337,7 @@ function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagMo
 			return;
 		}
 
-		fetchServer(`/tag/${inputValue.id}`, "v1", { method: "PATCH", body: JSON.stringify(inputValue) })
+		fetchServer("v1", `/tag/${inputValue.id}`, { method: "PATCH", body: JSON.stringify(inputValue) })
 			.then((res) => {
 				if (res.status === 200) {
 					toast({ description: TOAST_MESSAGE.edit("태그"), status: "success" });

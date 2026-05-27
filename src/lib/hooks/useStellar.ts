@@ -42,7 +42,7 @@ export function useStellar() {
 	const getLiveStatus = () => {
 		setIsLiveFetching(true);
 
-		fetchServer("/multiview", "v1")
+		fetchServer("v1", "/multiview")
 			.then((res) => {
 				if (res.status === 200) {
 					const { data, upcoming } = res.data as MultiViewDataData; //? 우선 upcoming은 본 기능에서 사용되지 않음
@@ -64,16 +64,19 @@ export function useStellar() {
 		if (isTimer) {
 			setIsStellarLoading(true);
 		}
-		fetchServer("/current", "v1")
+		fetchServer("v1", "/current")
 			.then((res) => {
 				if (res) {
 					if (res.status === 200) {
 						const data: StellarState[] = res.data.current;
 
-						const fbImageMap = fbImages.reduce((acc, cur) => {
-							acc[cur.name] = cur.profileImage;
-							return acc;
-						}, {} as Record<string, string>);
+						const fbImageMap = fbImages.reduce(
+							(acc, cur) => {
+								acc[cur.name] = cur.profileImage;
+								return acc;
+							},
+							{} as Record<string, string>,
+						);
 
 						const mod = data.map((s) => ({
 							...s,
@@ -136,7 +139,7 @@ export function useStellar() {
 			f(true);
 		},
 		60000,
-		{ executeCallbackWhenWindowFocused: true }
+		{ executeCallbackWhenWindowFocused: true },
 	);
 
 	return { data, setData, refetch: f, intervalRef: intervalId };
