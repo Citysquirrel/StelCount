@@ -12,13 +12,14 @@ interface FetchResponse {
 
 export async function fetch_(input: RequestInfo | URL, options?: FetchOptions): Promise<FetchResponse> {
 	try {
+		const timeout = options?.timeout ?? 20000;
 		const controller = new AbortController();
-		const id = setTimeout(() => controller.abort(), options?.timeout || 20000);
+		const id = timeout > 0 ? setTimeout(() => controller.abort(), timeout) : undefined;
 		const res = await fetch(input, {
 			...options,
 			signal: controller.signal,
 		});
-		clearTimeout(id);
+		if (id) clearTimeout(id);
 		const { headers, status, statusText } = res;
 
 		const response = {
@@ -85,6 +86,6 @@ export async function fetchServer(api: ServerAPI, version: Version, options?: Fe
 			credentials: "include",
 			// credentials: import.meta.env.DEV ? "include" : "same-origin",
 			...options,
-		}
+		},
 	);
 }
