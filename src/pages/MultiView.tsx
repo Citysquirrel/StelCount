@@ -44,7 +44,7 @@ import {
 	PositionProps,
 	ResponsiveValue,
 } from "@chakra-ui/react";
-import { Dispatch, Fragment, SetStateAction, createRef, useEffect, useRef, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, createRef, useCallback, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
 import { CustomStreamsForUS, MultiViewData, UserSettingStorage } from "../lib/types";
@@ -167,36 +167,49 @@ export function MultiView() {
 		setStreams(storage);
 	};
 
-	const handleFrameSize = () => {
-		//TODO: iframe에 영향을 덜 주기 위해 직접 크기를 조정하는 방식을 버리고
-		//TODO: grid를 이용해 자동으로 크기 조절이 되도록 하는 방식 고려
-		//TODO: custom grid 방식을 이용해 각 화면 크기가 통일되지 않고 자유자재로 변할 수 있도록 하는 방식 고려
-		const WIDTH_PADDING = 4; // padding은 그대로 유지
-		const HEIGHT_PADDING = 4; // padding은 그대로 유지
-		const width = windowWidth - WIDTH_PADDING - (isInnerChatOpen ? 350 : 0);
-		const height = windowHeight - HEIGHT_PADDING;
+	const handleFrameSize = useCallback(() => {
+		// 프레임이 없을 경우
+		if (len === 0) {
+			setFrameSize({ width: 0, height: 0 });
+			return;
+		}
 
-		let fitWidth = 0;
-		let fitHeight = 0;
+		const WIDTH_PADDING = 4;
+		const HEIGHT_PADDING = 4;
+		const GAP = 0; // iframe 간의 간격 (필요시 조절)
 
-		for (let frame = 1; frame <= len; frame++) {
-			const row = Math.ceil(len / frame);
-			let maxWidth = Math.floor(width / frame);
-			let maxHeight = Math.floor(height / row);
+		// 컨테이너의 실제 가용 영역
+		const containerWidth = windowWidth - WIDTH_PADDING - (isInnerChatOpen ? 350 : 0);
+		const containerHeight = windowHeight - HEIGHT_PADDING;
 
-			// aspect-ratio: 16 / 9
+		let bestWidth = 0;
+		let bestHeight = 0;
+
+		// cols: 배치할 열(Column)의 수
+		for (let cols = 1; cols <= len; cols++) {
+			const rows = Math.ceil(len / cols);
+
+			// Gap을 고려한 최대 너비 및 높이 계산
+			// ex) 열이 3개면 간격은 2개 생기므로: (cols - 1) * GAP
+			let maxWidth = Math.floor((containerWidth - (cols - 1) * GAP) / cols);
+			let maxHeight = Math.floor((containerHeight - (rows - 1) * GAP) / rows);
+
+			// aspect-ratio: 16 / 9 비율 강제 적용
 			if ((maxWidth * 9) / 16 < maxHeight) {
 				maxHeight = Math.floor((maxWidth * 9) / 16);
 			} else {
 				maxWidth = Math.floor((maxHeight * 16) / 9);
 			}
-			if (maxWidth > fitWidth) {
-				fitWidth = maxWidth;
-				fitHeight = maxHeight;
+
+			// 가장 큰 화면 크기를 갱신
+			if (maxWidth > bestWidth) {
+				bestWidth = maxWidth;
+				bestHeight = maxHeight;
 			}
 		}
-		setFrameSize({ width: fitWidth, height: fitHeight });
-	};
+
+		setFrameSize({ width: bestWidth, height: bestHeight });
+	}, [windowWidth, windowHeight, isInnerChatOpen, len]); // 외부 의존성 명시
 
 	const handleAddStream = (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => {
 		if (!streamId) return;
