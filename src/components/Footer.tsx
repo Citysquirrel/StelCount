@@ -8,6 +8,7 @@ export function Footer() {
 	const values = useColorModeValues();
 	return (
 		<HStack
+			id="footer"
 			sx={{
 				width: "100%",
 				height: "60px",

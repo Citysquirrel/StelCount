@@ -24,7 +24,7 @@ export function Header({ children }: HeaderProps) {
 				width: "calc(100%)",
 				alignItems: "center",
 				backgroundColor: colorValues.bgOpacity,
-				borderBottom: `1px solid var(--chakra-colors-gray-200)`,
+				boxShadow: "0 1px 0px 0px var(--chakra-colors-gray-200)",
 				backdropFilter: "blur(1.5px)",
 				zIndex: 999,
 			}}

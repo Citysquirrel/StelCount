@@ -19,6 +19,7 @@ import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useWebSocket } from "./lib/hooks/useWebSocket";
+import { NetworkDock } from "./lib/DevDock";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -51,42 +52,43 @@ function App() {
 
 	if (serverError.isError) return <ServerErrorPage />;
 	return (
-		<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">
-			{isLoading ? <LoadingAtCorner /> : null}
-			<Header>
-				<Tooltip label="메인화면">
-					<IconButton
-						fontSize="1.375rem"
-						isRound
-						icon={<MdHome />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={nav("/home")}
-						aria-label="home"
-					/>
-				</Tooltip>
-				<Tooltip label="카운터">
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						icon={<ImListNumbered />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={nav("/counter")}
-						aria-label="counter"
-					/>
-				</Tooltip>
-				<Tooltip label="멀티뷰">
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						icon={<GrMultiple />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={() => {
-							window.open("/multiview", "_blank");
-						}}
-						aria-label="multiview"
-					/>
-				</Tooltip>
-				{/* <Tooltip label="사이트 설명">
+		<>
+			<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">
+				{isLoading ? <LoadingAtCorner /> : null}
+				<Header>
+					<Tooltip label="메인화면">
+						<IconButton
+							fontSize="1.375rem"
+							isRound
+							icon={<MdHome />}
+							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+							onClick={nav("/home")}
+							aria-label="home"
+						/>
+					</Tooltip>
+					<Tooltip label="카운터">
+						<IconButton
+							fontSize="1.125rem"
+							isRound
+							icon={<ImListNumbered />}
+							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+							onClick={nav("/counter")}
+							aria-label="counter"
+						/>
+					</Tooltip>
+					<Tooltip label="멀티뷰">
+						<IconButton
+							fontSize="1.125rem"
+							isRound
+							icon={<GrMultiple />}
+							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+							onClick={() => {
+								window.open("/multiview", "_blank");
+							}}
+							aria-label="multiview"
+						/>
+					</Tooltip>
+					{/* <Tooltip label="사이트 설명">
 					<IconButton
 						fontSize="1.125rem"
 						isRound
@@ -96,69 +98,81 @@ function App() {
 						aria-label="about"
 					/>
 				</Tooltip> */}
-				{isAdmin ? (
-					<Tooltip label="관리자">
+					{isAdmin ? (
+						<>
+							<Tooltip label="관리자">
+								<IconButton
+									fontSize="1.125rem"
+									isRound
+									icon={<MdSettings />}
+									colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+									onClick={nav("/admin")}
+									aria-label="admin"
+								/>
+							</Tooltip>
+							<Tooltip label="관리자">
+								<IconButton
+									fontSize="1.125rem"
+									isRound
+									icon={<MdSettings />}
+									colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+									onClick={nav("/new-admin")}
+									aria-label="admin"
+								/>
+							</Tooltip>
+						</>
+					) : null}
+					<Divider orientation="vertical" height="32px" margin="4px" />
+					<Tooltip label="새로고침">
+						<Button
+							fontSize="1.125rem"
+							borderRadius={"full"}
+							padding="0"
+							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+							onClick={handleReload}
+							aria-label="reload"
+							isLoading={isStellarLoading}
+						>
+							<IoReload />
+						</Button>
+					</Tooltip>
+					<Tooltip label="축하 글쓰러 가기">
+						<Button
+							fontSize="1.125rem"
+							borderRadius={"full"}
+							padding="0"
+							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
+							aria-label="write_"
+							onClick={() => {
+								window.open(CAFE_WRITE_URL);
+							}}
+						>
+							<MdCreate />
+						</Button>
+					</Tooltip>
+					{import.meta.env.DEV ? (
 						<IconButton
 							fontSize="1.125rem"
 							isRound
-							icon={<MdSettings />}
+							onClick={toggleColorMode}
 							colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-							onClick={nav("/admin")}
-							aria-label="admin"
+							icon={colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
+							aria-label="color-mode"
 						/>
-					</Tooltip>
-				) : null}
-				<Divider orientation="vertical" height="32px" margin="4px" />
-				<Tooltip label="새로고침">
-					<Button
-						fontSize="1.125rem"
-						borderRadius={"full"}
-						padding="0"
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={handleReload}
-						aria-label="reload"
-						isLoading={isStellarLoading}
-					>
-						<IoReload />
-					</Button>
-				</Tooltip>
-				<Tooltip label="축하 글쓰러 가기">
-					<Button
-						fontSize="1.125rem"
-						borderRadius={"full"}
-						padding="0"
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						aria-label="write_"
-						onClick={() => {
-							window.open(CAFE_WRITE_URL);
-						}}
-					>
-						<MdCreate />
-					</Button>
-				</Tooltip>
-				{import.meta.env.DEV ? (
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						onClick={toggleColorMode}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						icon={colorMode === "light" ? <MdLightMode /> : <MdDarkMode />}
-						aria-label="color-mode"
-					/>
-				) : null}
-				{timeGap > 30 && timeGap < 12345678900 ? (
-					<Text position="absolute" right="2px" bottom="2px" fontSize="0.75rem" color="gray.500">
-						{timeText} 데이터
-					</Text>
-				) : null}
-			</Header>
-			<Container>
-				<Outlet />
-			</Container>
-			<Footer />
-		</Stack>
+					) : null}
+					{timeGap > 30 && timeGap < 12345678900 ? (
+						<Text position="absolute" right="2px" bottom="2px" fontSize="0.75rem" color="gray.500">
+							{timeText} 데이터
+						</Text>
+					) : null}
+				</Header>
+				<Container>
+					<Outlet />
+				</Container>
+				<Footer />
+			</Stack>
+		</>
 	);
 }
 
 export default App;
-

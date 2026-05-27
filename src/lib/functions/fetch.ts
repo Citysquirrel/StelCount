@@ -1,8 +1,5 @@
 interface ServerAPIMap {
-	// 기존에 있던 'none' 버전 (인증 등 버전이 없는 공통 API용. 불필요하시면 비워두셔도 됩니다)
 	none: "";
-
-	// 📌 제공해주신 v1 API 전체 매핑
 	v1:
 		| "/debug-sentry"
 		| "/user/me"
@@ -30,12 +27,10 @@ interface ServerAPIMap {
 		| `/ypat/${string}` // GET /ypat/:videoId
 		| `/tag/${number}`; // GET, PATCH, DELETE /tag/:id
 
-	// 📌 제공해주신 v2 API 매핑
-	v2: "/settings"; // GET, POST /settings
+	v2: "/settings" | "/dashboard"; // GET, POST /settings
 }
 
 type Version = keyof ServerAPIMap;
-type AllAPIs = ServerAPIMap[Version];
 
 export interface FetchOptions extends RequestInit {
 	method?: "GET" | "POST" | "DELETE" | "PATCH" | "PUT" | (string & {});
@@ -49,7 +44,45 @@ interface FetchResponse<T = any> {
 	statusText: string;
 }
 
+// ==========================================
+// UI Dock으로 보낼 로그 타입 및 이벤트 함수
+// ==========================================
+export type NetworkLog = {
+	id: string;
+	url: string;
+	method: string;
+	status: "pending" | "success" | "error";
+	statusCode?: number;
+	reqBody?: any;
+	resBody?: any;
+	time: string;
+	duration?: number;
+};
+
+const dispatchNetworkLog = (log: NetworkLog) => {
+	if (typeof window !== "undefined") {
+		window.dispatchEvent(new CustomEvent("network-log", { detail: log }));
+	}
+};
+// ==========================================
+
 export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchOptions): Promise<FetchResponse> {
+	// 로깅을 위한 고유 ID 및 시간 측정, URL 파싱
+	const logId = Math.random().toString(36).substring(7);
+	const startTime = performance.now();
+	const urlStr = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+	const method = options?.method || "GET";
+
+	// 로그 통신 시작 알림
+	dispatchNetworkLog({
+		id: logId,
+		url: urlStr,
+		method,
+		status: "pending",
+		reqBody: options?.body,
+		time: new Date().toLocaleTimeString(),
+	});
+
 	const timeout = options?.timeout ?? 20000;
 	const controller = new AbortController();
 	const id = timeout > 0 ? setTimeout(() => controller.abort(), timeout) : undefined;
@@ -66,10 +99,35 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 			statusText: res.statusText,
 		};
 
+		// 성공(또는 HTTP 에러 응답) 알림
+		dispatchNetworkLog({
+			id: logId,
+			url: urlStr,
+			method,
+			status: res.ok ? "success" : "error", // 4xx, 5xx 에러 보기 쉽게 분리
+			statusCode: res.status,
+			resBody: response.data,
+			time: new Date().toLocaleTimeString(),
+			duration: Math.round(performance.now() - startTime),
+		});
+
 		return response;
 	} catch (err: any) {
 		// 에러 관련
 		const errorMessage = err instanceof Error ? err.message : String(err);
+
+		// 네트워크 단절 및 타임아웃 캐치 알림
+		dispatchNetworkLog({
+			id: logId,
+			url: urlStr,
+			method,
+			status: "error",
+			statusCode: err.name === "AbortError" ? 408 : 500,
+			resBody: errorMessage,
+			time: new Date().toLocaleTimeString(),
+			duration: Math.round(performance.now() - startTime),
+		});
+
 		return {
 			data: undefined,
 			status: err.name === "AbortError" ? 408 : 500, // 타임아웃 시 408 Request Timeout 센스
@@ -86,7 +144,7 @@ interface FetchServerOption<B = any> extends Omit<FetchOptions, "body"> {
 	isNotAPI?: boolean;
 }
 
-export async function fetchServer<V extends Version, TData = any, TBody = any>(
+export async function fetchServer<TData = any, V extends Version = Version, TBody = any>(
 	version: V,
 	api: ServerAPIMap[V] | (string & {}),
 	options?: FetchServerOption<TBody>,
@@ -120,24 +178,3 @@ export async function fetchServer<V extends Version, TData = any, TBody = any>(
 		credentials: "include",
 	});
 }
-
-// export async function fetchServer(api: ServerAPI, version: Version, options?: FetchServerOption) {
-// 	return await fetch_(
-// 		`${import.meta.env.VITE_SERVER_URL}/${options?.isNotAPI === true ? "" : "api/"}${
-// 			version === "none" ? "" : version + ""
-// 		}${api}`,
-// 		{
-// 			body: options?.body,
-// 			headers: {
-// 				"Content-Type": "application/json",
-// 				"Cache-Control": "no-cache, no-store, must-revalidate",
-// 				Pragma: "no-cache",
-// 				Expires: "0",
-// 				...options?.headers,
-// 			},
-// 			credentials: "include",
-// 			// credentials: import.meta.env.DEV ? "include" : "same-origin",
-// 			...options,
-// 		},
-// 	);
-// }
