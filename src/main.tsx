@@ -4,6 +4,7 @@ import "./index.css";
 import { RouterProvider } from "react-router-dom";
 import { MainProvider } from "./lib/Provider";
 import { router } from "./_router";
+import { useMaintenance } from "./lib/hooks/useMaintenance";
 
 const DevComponents = import.meta.env.DEV
 	? React.lazy(() =>
@@ -25,6 +26,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 				<DevComponents />
 			</Suspense>
 		)}
+		<MaintenanceComponent />
 		<RouterProvider router={router} />
 	</MainProvider>,
 );
+
+function MaintenanceComponent({}) {
+	useMaintenance();
+	return <></>;
+}

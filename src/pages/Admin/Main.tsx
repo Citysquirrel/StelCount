@@ -3,12 +3,14 @@ import { fetchServer } from "../../lib/functions/fetch";
 import { Box, HStack, Stack, useColorModeValue, Text, Flex, IconButton, VStack, useMediaQuery } from "@chakra-ui/react";
 import { FiHome, FiSettings, FiUsers, FiMenu, FiBook } from "react-icons/fi";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../../lib/hooks/useAuth";
+import { NotExist } from "../NotExist";
 
 const ROUTE_NAME = "/new-admin";
 const PAGE_TITLES: Record<string, string> = {
 	"/": "대시보드",
 	"/dashboard": "대시보드",
-	"/users": "사용자 관리",
+	"/stellar": "스텔라 관리",
 	"/songbook": "노래책 관리",
 	"/settings": "시스템 설정",
 };
@@ -17,6 +19,7 @@ export function NewAdmin() {
 	const location = useLocation();
 	const [isExpanded, setIsExpanded] = useState(true);
 	const [isMobile] = useMediaQuery("(max-width: 1280px)");
+	const { isLoading: isAuthLoading, isLogin, isAdmin } = useAuth();
 
 	const subPath = location.pathname.replace(ROUTE_NAME, "") || "/";
 	const currentTitle = PAGE_TITLES[subPath] || "어드민 페이지";
@@ -26,9 +29,7 @@ export function NewAdmin() {
 	const borderColor = useColorModeValue("gray.200", "gray.700");
 	useEffect(() => {
 		const footer = document.getElementById("footer");
-		fetchServer("v1", "/stellars").then(() => {});
-		fetchServer("v1", "/tags").then(() => {});
-		fetchServer("v2", "/settings").then(() => {});
+
 		const originalDisplay = footer ? footer.style.display : "";
 		if (footer) footer.style.display = "none";
 		return () => {
@@ -77,7 +78,9 @@ export function NewAdmin() {
 			)}
 		</HStack>
 	);
-
+	if (isAuthLoading) return <></>;
+	if (!isLogin) return <NotExist />;
+	if (!isAdmin) return <NotExist />;
 	return (
 		<Flex h="calc(100vh - 64px)" w="100%" bg="gray.50" overflow="hidden">
 			{/* 1. 사이드바 영역 */}
@@ -127,8 +130,8 @@ export function NewAdmin() {
 				</Flex>
 
 				{/* 실제 내용이 들어갈 부분 */}
-				<Box p={2} overflowY="auto" h="full">
-					<Box bg="white" p={4} borderRadius="lg" shadow="sm" h="full">
+				<Box p={2} overflowY="auto" h="full" position="relative">
+					<Box bg="white" p={4} borderRadius="lg" shadow="sm" h="full" overflowY="auto">
 						<Outlet />
 					</Box>
 				</Box>

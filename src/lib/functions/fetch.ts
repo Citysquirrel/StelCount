@@ -27,7 +27,12 @@ interface ServerAPIMap {
 		| `/ypat/${string}` // GET /ypat/:videoId
 		| `/tag/${number}`; // GET, PATCH, DELETE /tag/:id
 
-	v2: "/settings" | "/dashboard"; // GET, POST /settings
+	v2:
+		| "/maintenance"
+		| "/settings" // GET, POST /settings
+		| "/dashboard"
+		| "/songbook"
+		| "/songbook/import";
 }
 
 type Version = keyof ServerAPIMap;

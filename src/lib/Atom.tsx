@@ -94,6 +94,7 @@ export const isLoginState = atom<boolean>({
 	key: createAtomKey("isLogin"),
 	default: false,
 });
+
 export const isLoadingState = atom<boolean>({
 	key: createAtomKey("isLoading"),
 	default: true,
@@ -142,4 +143,9 @@ export const errorStorageState = atom<string>({
 export const serverErrorState = atom<{ isError: boolean; statusCode: number }>({
 	key: createAtomKey("serverError"),
 	default: { isError: false, statusCode: 500 },
+});
+
+export const isMaintenanceState = atom<boolean>({
+	key: createAtomKey("isMaintenance"),
+	default: false,
 });
