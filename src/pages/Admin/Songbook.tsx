@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
 	Box,
 	Heading,
@@ -29,6 +29,7 @@ import {
 	Checkbox,
 	VStack,
 	Divider,
+	Stack,
 } from "@chakra-ui/react";
 import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiRotateCcw, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -36,7 +37,8 @@ import { fetchServer } from "../../lib/functions/fetch";
 import { normalizeKeyword } from "../../lib/functions/normalized";
 
 // --- [타입 정의] ---
-export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED" | "DELETED" | "DISABLED";
+export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
+export type ActionStatus = "ACTIVE" | "DELETED" | "DISABLED";
 export type Cheese = "잘몰라" | "일반곡" | "피토곡" | "우엑곡" | "숙제곡" | (string & {});
 export type Genre = "K-POP" | "J-POP" | "POP" | (string & {});
 
@@ -51,7 +53,22 @@ export interface SongData {
 	notes: string;
 	cheese: Cheese;
 	isOfficial: boolean;
-	status: SyncStatus;
+	syncStatus: SyncStatus;
+	actionStatus: ActionStatus;
+}
+
+interface SyncDataData {
+	id: string;
+	genre: "jpop" | "kpop" | "pop";
+	artist: string;
+	title: string;
+	notes: string;
+	cheese: "일반" | "잘몰라" | "피토" | "우엑";
+}
+
+interface SyncData {
+	msg: string;
+	data: SyncDataData[];
 }
 
 export function Songbook() {
@@ -81,6 +98,7 @@ export function Songbook() {
 	const headerBg = useColorModeValue("gray.50", "gray.800");
 	const greenColor = useColorModeValue("green.50", "rgba(72, 187, 120, 0.1)");
 	const redColor = useColorModeValue("red.50", "rgba(245, 101, 101, 0.1)");
+	const blueColor = useColorModeValue("blue.50", "rgb(101, 101, 245,0.1)");
 	const grayColor = useColorModeValue("gray.100", "rgba(160, 174, 192, 0.2)");
 	const yellowColor = useColorModeValue("yellow.50", "rgba(236, 201, 75, 0.1)");
 	const fieldHoverBgColor = useColorModeValue("blue.50", "blue.600");
@@ -102,7 +120,7 @@ export function Songbook() {
 					title: "데이터 불러오기 실패",
 					description: error instanceof Error ? error.message : "서버와 통신하는 중 문제가 발생했습니다.",
 					status: "error",
-					duration: 5000,
+					duration: 3000,
 					isClosable: true,
 					position: "top-right",
 				});
@@ -130,6 +148,8 @@ export function Songbook() {
 	}, []);
 
 	// --- [검색 및 필터링 적용 (파생 상태)] ---
+
+	//TODO 필터를 드롭다운 + 체크박스 형태로 변경하기
 	const filteredSongs = useMemo(() => {
 		return songs.filter((song) => {
 			const normalizedQuery = normalizeKeyword(searchQuery);
@@ -138,7 +158,7 @@ export function Songbook() {
 				normalizeKeyword(song.artist).includes(normalizedQuery);
 			const matchGenre = filterGenre ? song.genre === filterGenre : true;
 			const matchOfficial = filterOfficial !== "" ? song.isOfficial === (filterOfficial === "true") : true;
-			const matchStatus = filterStatus ? song.status === filterStatus : true;
+			const matchStatus = filterStatus ? song.syncStatus === filterStatus : true;
 
 			return matchSearch && matchGenre && matchOfficial && matchStatus;
 		});
@@ -153,21 +173,139 @@ export function Songbook() {
 	});
 
 	// --- [핸들러 함수] ---
-	const toggleStatus = (e: React.MouseEvent, index: number, newStatus: SyncStatus) => {
+	const toggleStatus = (e: React.MouseEvent, index: number, newStatus: ActionStatus) => {
 		e.stopPropagation(); // 행 클릭(모달 열기) 이벤트 방지
 
 		// filteredSongs의 index를 통해 원본 songs 배열의 실제 index를 찾아 업데이트
 		const targetSong = filteredSongs[index];
-		setSongs((prev) => prev.map((s) => (s === targetSong ? { ...s, status: newStatus } : s)));
+		setSongs((prev) => prev.map((s) => (s === targetSong ? { ...s, actionStatus: newStatus } : s)));
 	};
+
+	const parseSheetData = useCallback(
+		function (syncData: SyncDataData[], existingSongs: SongData[]): SongData[] {
+			const mapping = {
+				genre: {
+					jpop: "J-POP",
+					kpop: "K-POP",
+					pop: "POP",
+				},
+				cheese: {
+					일반: "일반곡",
+					잘몰라: "잘몰라",
+					피토: "피토곡",
+					우엑: "우엑곡",
+				},
+			} as const;
+
+			// 1. 저장된 songs 배열 상태 가져와서 대조해보기.
+			// 2. sync 배열을 돌며 title과 artist 두 개가 모두 같은 객체가 있는지 검증
+			// 3. 검증 후 두개가 같으면 나머지 값들을 마저 검증하여 다른 값이 있을 경우 덮어씌운 후 MODIFIED로 기록
+			// 4. 검증 후 하나라도 다르면 새 곡으로 push 하고 NEW로 기록
+			// (5. NEW와 MODIFIED가 위로 오도록 정렬)
+
+			// 2. 기존 곡들을 Map으로 변환 (검색 속도 최적화)
+			const oldSongsMap = new Map<string, SongData>();
+			existingSongs.forEach((song) => {
+				oldSongsMap.set(`${song.title}::${song.artist}`, song);
+			});
+
+			const updatedSongs: SongData[] = [];
+			// 처리된 곡의 Key를 기록해둘 Set (Map에서 delete하지 않기 위함)
+			const processedKeys = new Set<string>();
+
+			// 3. syncData를 순회하며 검증 및 병합
+			syncData.forEach((syncItem) => {
+				const key = `${syncItem.title}::${syncItem.artist}`;
+				processedKeys.add(key); // 처리됨을 기록
+
+				const oldSong = oldSongsMap.get(key);
+
+				// mapping 객체를 통해 안전하게 타입 변환
+				const mappedGenre = mapping.genre[syncItem.genre] as Genre;
+				const mappedCheese = mapping.cheese[syncItem.cheese] as Cheese;
+
+				if (oldSong) {
+					// [기존에 존재하는 곡]
+					// 비교할 핵심 필드들이 변경되었는지 확인
+					const isModified =
+						oldSong.genre !== mappedGenre || oldSong.cheese !== mappedCheese || oldSong.notes !== syncItem.notes;
+
+					if (isModified) {
+						// 값이 다르면 MODIFIED
+						updatedSongs.push({
+							...oldSong,
+							genre: mappedGenre,
+							cheese: mappedCheese,
+							notes: syncItem.notes,
+							syncStatus: "MODIFIED",
+						});
+					} else {
+						// 완전히 같으면 UNCHANGED
+						updatedSongs.push({
+							...oldSong,
+							syncStatus: "UNCHANGED",
+						});
+					}
+				} else {
+					// [완전히 새로운 곡]
+
+					// 행 계산식
+					const START_COLUMN = 6;
+					const id = syncItem.id;
+					const dashIndex = id.indexOf("-");
+					const num = +id.substring(dashIndex + 1);
+					const columnData = String(num + START_COLUMN);
+					//
+					updatedSongs.push({
+						columnData,
+						title: syncItem.title,
+						artist: syncItem.artist,
+						genre: mappedGenre,
+						notes: syncItem.notes,
+						cheese: mappedCheese,
+						synonyms: [],
+						lyric: "",
+						isOfficial: true,
+						syncStatus: "NEW",
+						actionStatus: "ACTIVE",
+					});
+				}
+			});
+
+			// 삭제된 곡(DELETED) 판별 로직
+			// 기존 배열을 순회하며 processedKeys Set에 없는 녀석들만 골라냄
+			existingSongs.forEach((oldSong) => {
+				const key = `${oldSong.title}::${oldSong.artist}`;
+				if (!processedKeys.has(key)) {
+					updatedSongs.push({
+						...oldSong,
+						actionStatus: "DELETED",
+					});
+				}
+			});
+
+			return updatedSongs;
+		},
+		[songs],
+	);
 
 	// 시트 동기화
 	const handleSyncSheet = async () => {
 		setIsSyncing(true);
 		fetchServer("v2", "/songbook/import")
 			.then((res) => {
-				if (res.data) {
-					console.log(res.data);
+				const syncData: SyncData = res.data;
+				if (syncData) {
+					const parsed = parseSheetData(syncData.data, songs);
+					setSongs(parsed);
+					toast({
+						title: "데이터 불러오기 성공",
+						description: syncData.msg,
+						status: "success",
+						duration: 3000,
+						isClosable: true,
+						position: "top-right",
+					});
 				} else {
 					throw new Error("데이터 형식이 올바르지 않거나 비어있습니다.");
 				}
@@ -179,7 +317,7 @@ export function Songbook() {
 					title: "데이터 불러오기 실패",
 					description: error instanceof Error ? error.message : "서버와 통신하는 중 문제가 발생했습니다.",
 					status: "error",
-					duration: 5000,
+					duration: 3000,
 					isClosable: true,
 					position: "top-right",
 				});
@@ -187,35 +325,6 @@ export function Songbook() {
 			.finally(() => {
 				setIsSyncing(false);
 			});
-		try {
-			// TODO: 서버의 POST /songbook/sync API 호출
-			// await new Promise((resolve) => setTimeout(resolve, 1500));
-
-			// [Mock] 서버에서 시트를 파싱하고 기존 DB와 비교한 결과를 보내줬다고 가정
-			// const mockSyncedData: SongData[] = [
-			// 	...songs, // 기존에 있던 150개 데이터 유지
-			// 	{
-			// 		id: 999,
-			// 		columnData: "",
-			// 		title: "Supernova",
-			// 		artist: "aespa",
-			// 		genre: "K-POP",
-			// 		synonyms: ["에스파"],
-			// 		lyric: "Su su su Supernova...",
-			// 		notes: "시트에서 방금 긁어옴",
-			// 		cheese: "일반곡",
-			// 		isOfficial: true,
-			// 		status: "NEW",
-			// 	},
-			// ];
-
-			// setSongs(mockSyncedData);
-			toast({ title: "시트 동기화 완료", description: "시트의 최신 변경사항이 반영되었습니다.", status: "info" });
-		} catch (error) {
-			toast({ title: "동기화 실패", status: "error" });
-		} finally {
-			setIsSyncing(false);
-		}
 	};
 
 	// 수동 추가 버튼
@@ -229,7 +338,8 @@ export function Songbook() {
 			notes: "",
 			cheese: "잘몰라",
 			isOfficial: false,
-			status: "NEW",
+			syncStatus: "NEW",
+			actionStatus: "ACTIVE",
 		};
 		setEditingSong(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
@@ -257,8 +367,8 @@ export function Songbook() {
 				prev.map((s) => {
 					if (s === targetOriginalSong) {
 						// 상태가 UNCHANGED 였다면 MODIFIED로 변경 (NEW, DELETED 등은 유지)
-						const newStatus = s.status === "UNCHANGED" ? "MODIFIED" : s.status;
-						return { ...editingSong, status: newStatus };
+						const newStatus = s.syncStatus === "UNCHANGED" ? "MODIFIED" : s.syncStatus;
+						return { ...editingSong, syncStatus: newStatus };
 					}
 					return s;
 				}),
@@ -399,13 +509,16 @@ export function Songbook() {
 						{/* 가상화된 행 렌더링 */}
 						{rowVirtualizer.getVirtualItems().map((virtualRow) => {
 							const song = filteredSongs[virtualRow.index];
-							const isFaded = song.status === "DELETED" || song.status === "DISABLED";
+							const isFaded = song.actionStatus === "DELETED" || song.actionStatus === "DISABLED";
 							const rowColorMap = {
 								NEW: greenColor,
-								DELETED: redColor,
-								DISABLED: grayColor,
 								MODIFIED: yellowColor,
 								UNCHANGED: "transparent",
+							};
+							const borderColorMap = {
+								ACTIVE: blueColor,
+								DELETED: redColor,
+								DISABLED: grayColor,
 							};
 
 							return (
@@ -419,37 +532,44 @@ export function Songbook() {
 									h={`${virtualRow.size}px`}
 									px={4}
 									align="center"
-									bg={rowColorMap[song.status]}
+									bg={rowColorMap[song.syncStatus]}
 									borderBottom={`1px solid ${borderColor}`}
+									// outline={song.actionStatus === "ACTIVE" ? undefined : "1px solid"}
+									// outlineColor={borderColorMap[song.actionStatus] || undefined}
 									cursor="pointer"
 									_hover={{ bg: fieldHoverBgColor }}
 									onClick={() => handleRowClick(virtualRow.index)} // 행 클릭 시 수정 모달 오픈
 								>
-									<Box w="60px">{song.id}</Box>
-									<Box w="100px">
+									<Box w="60px">{song.columnData}</Box>
+									<Stack w="100px" alignItems={"flex-start"}>
 										<Badge
 											colorScheme={
-												song.status === "NEW"
-													? "green"
-													: song.status === "DELETED"
-														? "red"
-														: song.status === "MODIFIED"
-															? "yellow"
-															: song.status === "DISABLED"
-																? "orange"
-																: "gray"
+												song.syncStatus === "NEW" ? "green" : song.syncStatus === "MODIFIED" ? "yellow" : "gray"
 											}
 										>
-											{song.status}
+											{song.syncStatus}
 										</Badge>
-									</Box>
+										<Badge
+											colorScheme={
+												song.actionStatus === "ACTIVE"
+													? "blue"
+													: song.actionStatus === "DELETED"
+														? "red"
+														: song.actionStatus === "DISABLED"
+															? "orange"
+															: "gray"
+											}
+										>
+											{song.actionStatus}
+										</Badge>
+									</Stack>
 									<Box w="60px" textAlign="center">
 										{song.isOfficial && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
 									</Box>
 									<Box
 										flex={1}
 										opacity={isFaded ? 0.5 : 1}
-										textDecoration={song.status === "DELETED" ? "line-through" : "none"}
+										textDecoration={song.actionStatus === "DELETED" ? "line-through" : "none"}
 									>
 										<Text fontWeight="bold">
 											{song.title}{" "}
@@ -474,7 +594,7 @@ export function Songbook() {
 													icon={<FiRotateCcw />}
 													size="md"
 													variant="ghost"
-													onClick={(e) => toggleStatus(e, virtualRow.index, "UNCHANGED")}
+													onClick={(e) => toggleStatus(e, virtualRow.index, "ACTIVE")}
 												/>
 											) : (
 												<>
@@ -608,12 +728,26 @@ export function Songbook() {
 								</FormControl>
 
 								<FormControl display="flex" alignItems="center" mt={2}>
-									<FormLabel mb="0">공식 곡 여부 (시트 동기화)</FormLabel>
+									<FormLabel mb="0">공식 등록 곡</FormLabel>
 									<Checkbox
 										isChecked={editingSong.isOfficial}
 										onChange={(e) => setEditingSong({ ...editingSong, isOfficial: e.target.checked })}
 									/>
 								</FormControl>
+								<Flex gap={4}>
+									<FormControl flex={1}>
+										<FormLabel>활성 상태</FormLabel>
+										<Select
+											value={editingSong.actionStatus}
+											onChange={(e) => setEditingSong({ ...editingSong, actionStatus: e.target.value as ActionStatus })}
+										>
+											<option value="ACTIVE">활성</option>
+											<option value="DISABLED">비활성</option>
+											<option value="DELETED">삭제 대기</option>
+										</Select>
+									</FormControl>
+									<Box flex={2}></Box>
+								</Flex>
 							</VStack>
 						</ModalBody>
 					)}
@@ -630,4 +764,9 @@ export function Songbook() {
 			</Modal>
 		</Box>
 	);
+}
+
+interface Mapping {
+	genre: { [key: string]: Genre };
+	cheese: { [key: string]: Cheese };
 }
