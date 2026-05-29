@@ -534,6 +534,18 @@ export const ConsoleDock: React.FC = () => {
 		}
 	};
 
+	// 너무 긴 응답 자르는 핸들러
+	const formatForDisplay = (data: any, maxLength = 2000) => {
+		const str = safeStringify(data);
+		if (str.length > maxLength) {
+			return (
+				str.slice(0, maxLength) +
+				`\n\n... ⚠️ [데이터가 너무 깁니다 (${str.length} bytes). 프리징 방지를 위해 생략되었습니다. 전체 데이터는 'Copy' 버튼을 이용하세요.]`
+			);
+		}
+		return str;
+	};
+
 	const handleCopy = (e: React.MouseEvent, data: any) => {
 		e.stopPropagation();
 		navigator.clipboard.writeText(safeStringify(data));
@@ -694,7 +706,7 @@ export const ConsoleDock: React.FC = () => {
 																	overflowY="auto"
 																	whiteSpace="pre-wrap"
 																>
-																	{safeStringify(arg)}
+																	{formatForDisplay(arg)}
 																</Box>
 															</AccordionPanel>
 														</AccordionItem>
