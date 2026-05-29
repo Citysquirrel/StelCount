@@ -166,18 +166,37 @@ export async function fetchServer<TData = any, V extends Version = Version, TBod
 	let serializedBody: BodyInit | undefined = options?.body as unknown as BodyInit;
 
 	// 객체이면서 FormData가 아닐 때만 JSON 문자열로 직렬화 (string은 BodyInit에 포함되므로 에러 통과)
-	if (options?.body && typeof options.body === "object" && !(options.body instanceof FormData)) {
-		serializedBody = JSON.stringify(options.body);
+	// +
+	// FormData일 때는 브라우저가 boundary를 포함한 Content-Type을 알아서 세팅하도록
+	// 우리가 수동으로 "Content-Type"을 덮어쓰면 안 됩니다.
+	let isFormData = false;
+	if (options?.body && typeof options.body === "object") {
+		if (options.body instanceof FormData) {
+			isFormData = true;
+		} else {
+			serializedBody = JSON.stringify(options.body);
+		}
+	}
+
+	const defaultHeaders: Record<string, string> = {
+		// ✨ 핵심: CSRF 방어용 커스텀 헤더 (Axios의 기본 동작과 동일하게 세팅)
+		"X-Requested-With": "XMLHttpRequest",
+
+		"Cache-Control": "no-cache, no-store, must-revalidate",
+		Pragma: "no-cache",
+		Expires: "0",
+	};
+
+	// FormData가 아닐 때만 application/json 강제 주입
+	if (!isFormData) {
+		defaultHeaders["Content-Type"] = "application/json";
 	}
 
 	return await fetch_<TData>(fullUrl, {
 		...options,
 		body: serializedBody, // ✅ 에러 없이 안전하게 주입됨
 		headers: {
-			"Content-Type": "application/json",
-			"Cache-Control": "no-cache, no-store, must-revalidate",
-			Pragma: "no-cache",
-			Expires: "0",
+			...defaultHeaders,
 			...options?.headers,
 		},
 		credentials: "include",
