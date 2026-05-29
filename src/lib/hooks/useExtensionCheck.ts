@@ -10,7 +10,6 @@ export function useExtensionCheck(extensionId: string, correctVersion: string) {
 			window.chrome.runtime.sendMessage(extensionId, { message: "isInstalled" }, (res) => {
 				if (res && res.installed) {
 					setIsExtensionInstalled(true);
-					console.log("installed");
 				}
 			});
 			window.chrome.runtime.sendMessage(extensionId, { message: "versionInfo" }, (res) => {
