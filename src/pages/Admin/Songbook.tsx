@@ -45,6 +45,7 @@ export type Genre = "K-POP" | "J-POP" | "POP" | (string & {});
 export interface SongData {
 	id?: number;
 	columnData?: string;
+	syncId: string;
 	title: string;
 	artist: string;
 	genre: Genre;
@@ -59,7 +60,8 @@ export interface SongData {
 
 interface SyncDataData {
 	id: string;
-	genre: "jpop" | "kpop" | "pop";
+	syncId: string;
+	genre: "J-POP" | "K-POP" | "POP";
 	artist: string;
 	title: string;
 	notes: string;
@@ -71,11 +73,37 @@ interface SyncData {
 	data: SyncDataData[];
 }
 
+type RawSongData = Omit<SongData, "synonyms" | "actionStatus" | "syncStatus"> & {
+	synonyms: string;
+	isActive: boolean;
+	searchBase: string;
+	searchChosung: string;
+	searchJamo: string;
+	createdAt?: string | null;
+	updatedAt?: string | null;
+	deletedAt?: string | null;
+};
+//?: 백엔드에서의 버킷팅 순서
+//?: 1. UNCHAGED일 경우는 무조건 건너뛴다
+//?: 2. DELETED일 경우 삭제처리로 넘긴다
+//?: 3. 나머지 데이터(ACTIVE, DISABLED) 수집한다
+//?: 4. 한꺼번에 bulkCreate로 upsert 한다
+//TODO: 그러므로 프론트엔드에서는 정보가 변하거나 actionStatus(중요)가 변하는 경우 무조건 MODIFIED 표시되어야 한다.
+
+//TODO: 신규 데이터 직접 생성 시 NEW, syncId 할당
+//TODO: NEW 상태인 데이터를 삭제할 때의 최적화
+//TODO: 	>> 관리자가 직접 새곡 추가를 했다가 마음이 바뀌어 삭제버튼을 누르는 경우. 아예 그자리에서 DROP하는 형태로..
+//TODO:	>> 이건 대신 UNDO를 못하는 대신 확인창 한번 띄워주면 좋을듯
+//TODO: DB에 저장 동기화 API 호출 성공 후 로컬 상태 초기화 해주기
+//TODO:	>> DELETED 항목은 제거
+//TODO:	>> NEW, MODIFIED 항목은 UNCHANGED로 리셋
+
 export function Songbook() {
 	// --- [상태 관리] ---
 	const [songs, setSongs] = useState<SongData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSyncing, setIsSyncing] = useState(false);
+	const [isDBSaving, setIsDBSaving] = useState(false);
 
 	// 검색 및 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
@@ -90,6 +118,7 @@ export function Songbook() {
 
 	const toast = useToast();
 	const parentRef = useRef<HTMLDivElement>(null);
+	const rawSongRef = useRef<SongData[]>([]);
 	const TABLE_HEADER_HEIGHT = 44;
 
 	// 테마 색상
@@ -108,7 +137,28 @@ export function Songbook() {
 		fetchServer("v2", "/songbook")
 			.then((res) => {
 				if (res.data) {
-					setSongs(res.data.data);
+					const data: RawSongData[] = res.data.data;
+
+					const parsed: SongData[] = data.map((song) => {
+						const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
+						const [syncType, rawSyncValue] = restSong.syncId.split("::");
+
+						const columnData =
+							syncType === "SHEET" && rawSyncValue?.includes("-") ? String(Number(rawSyncValue.split("-")[1]) + 6) : "";
+
+						//TODO: searchBase searchChosung searchJamo 설정
+						return {
+							...restSong,
+							columnData,
+							synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
+							actionStatus: isActive ? "ACTIVE" : "DISABLED",
+							syncStatus: "UNCHANGED",
+						};
+					});
+					setSongs(parsed);
+
+					// 비교를 위한 원본 저장
+					rawSongRef.current = structuredClone(parsed);
 				} else {
 					throw new Error("데이터 형식이 올바르지 않거나 비어있습니다.");
 				}
@@ -128,23 +178,6 @@ export function Songbook() {
 			.finally(() => {
 				setIsLoading(false);
 			});
-		// setTimeout(() => {
-		// 	const mockData: SongData[] = Array.from({ length: 150 }).map((_, i) => ({
-		// 		id: i + 1,
-		// 		columnData: "1-1",
-		// 		title: i % 5 === 0 ? `밤양갱 ${i}` : `테스트 곡 ${i}`,
-		// 		artist: i % 2 === 0 ? "비비" : "아이유",
-		// 		genre: i % 3 === 0 ? "K-POP" : i % 3 === 1 ? "J-POP" : "POP",
-		// 		synonyms: i % 4 === 0 ? ["별칭1", "별칭2"] : [],
-		// 		lyric: "가사 시작 부분입니다...\n줄바꿈 테스트",
-		// 		notes: i % 10 === 0 ? "어려움" : "",
-		// 		cheese: "일반곡",
-		// 		isOfficial: i % 5 !== 0,
-		// 		status: i === 1 ? "DELETED" : i === 2 ? "DISABLED" : "UNCHANGED",
-		// 	}));
-		// 	setSongs(mockData);
-		// 	setIsLoading(false);
-		// }, 800);
 	}, []);
 
 	// --- [검색 및 필터링 적용 (파생 상태)] ---
@@ -184,11 +217,6 @@ export function Songbook() {
 	const parseSheetData = useCallback(
 		function (syncData: SyncDataData[], existingSongs: SongData[]): SongData[] {
 			const mapping = {
-				genre: {
-					jpop: "J-POP",
-					kpop: "K-POP",
-					pop: "POP",
-				},
 				cheese: {
 					일반: "일반곡",
 					잘몰라: "잘몰라",
@@ -206,7 +234,7 @@ export function Songbook() {
 			// 2. 기존 곡들을 Map으로 변환 (검색 속도 최적화)
 			const oldSongsMap = new Map<string, SongData>();
 			existingSongs.forEach((song) => {
-				oldSongsMap.set(`${song.title}::${song.artist}`, song);
+				oldSongsMap.set(song.syncId, song);
 			});
 
 			const updatedSongs: SongData[] = [];
@@ -215,26 +243,26 @@ export function Songbook() {
 
 			// 3. syncData를 순회하며 검증 및 병합
 			syncData.forEach((syncItem) => {
-				const key = `${syncItem.title}::${syncItem.artist}`;
+				const key = syncItem.syncId;
 				processedKeys.add(key); // 처리됨을 기록
 
 				const oldSong = oldSongsMap.get(key);
 
 				// mapping 객체를 통해 안전하게 타입 변환
-				const mappedGenre = mapping.genre[syncItem.genre] as Genre;
+				// const mappedGenre = mapping.genre[syncItem.genre] as Genre;
 				const mappedCheese = mapping.cheese[syncItem.cheese] as Cheese;
 
 				if (oldSong) {
 					// [기존에 존재하는 곡]
 					// 비교할 핵심 필드들이 변경되었는지 확인
 					const isModified =
-						oldSong.genre !== mappedGenre || oldSong.cheese !== mappedCheese || oldSong.notes !== syncItem.notes;
+						oldSong.genre !== syncItem.genre || oldSong.cheese !== mappedCheese || oldSong.notes !== syncItem.notes;
 
 					if (isModified) {
 						// 값이 다르면 MODIFIED
 						updatedSongs.push({
 							...oldSong,
-							genre: mappedGenre,
+							genre: syncItem.genre,
 							cheese: mappedCheese,
 							notes: syncItem.notes,
 							syncStatus: "MODIFIED",
@@ -258,9 +286,10 @@ export function Songbook() {
 					//
 					updatedSongs.push({
 						columnData,
+						syncId: syncItem.syncId,
 						title: syncItem.title,
 						artist: syncItem.artist,
-						genre: mappedGenre,
+						genre: syncItem.genre,
 						notes: syncItem.notes,
 						cheese: mappedCheese,
 						synonyms: [],
@@ -275,7 +304,7 @@ export function Songbook() {
 			// 삭제된 곡(DELETED) 판별 로직
 			// 기존 배열을 순회하며 processedKeys Set에 없는 녀석들만 골라냄
 			existingSongs.forEach((oldSong) => {
-				const key = `${oldSong.title}::${oldSong.artist}`;
+				const key = oldSong.syncId;
 				if (!processedKeys.has(key)) {
 					updatedSongs.push({
 						...oldSong,
@@ -329,7 +358,9 @@ export function Songbook() {
 
 	// 수동 추가 버튼
 	const handleAddNewSong = () => {
+		const syncId = `MANUAL::${Date.now()}::${crypto.randomUUID()}`;
 		const newSong: SongData = {
+			syncId,
 			title: "",
 			artist: "",
 			genre: "K-POP",
@@ -344,6 +375,54 @@ export function Songbook() {
 		setEditingSong(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
 		setIsModalOpen(true);
+	};
+
+	// DB 최종 저장 핸들러
+	const handleSaveDB = () => {
+		setIsDBSaving(true);
+		fetchServer("v2", "/songbook", { method: "POST", body: songs })
+			.then((res) => {
+				if (res.status >= 200 && res.status < 300) {
+					if (res.data) {
+						const upsertedMsg = res.data.stats ? `\n업로드 ${res.data.stats.upserted}건` : "";
+						const deletedMsg = res.data.stats ? `\n삭제 ${res.data.stats.deleted}건` : "";
+						toast({
+							title: "데이터 동기화 성공",
+							description: `${res.data.msg}${upsertedMsg}${deletedMsg}`,
+							status: "success",
+							duration: 3000,
+							isClosable: true,
+							position: "top-right",
+						});
+					} else {
+						throw new Error("데이터 형식이 올바르지 않거나 비어있습니다.");
+					}
+				} else {
+					toast({
+						title: "데이터 동기화 실패",
+						description: `${res.status}: ${res.statusText}`,
+						status: "error",
+						duration: 3000,
+						isClosable: true,
+						position: "top-right",
+					});
+				}
+			})
+			.catch((error) => {
+				console.error("대시보드 데이터 로드 실패:", error);
+
+				toast({
+					title: "데이터 동기화 실패",
+					description: error instanceof Error ? error.message : "서버와 통신하는 중 문제가 발생했습니다.",
+					status: "error",
+					duration: 3000,
+					isClosable: true,
+					position: "top-right",
+				});
+			})
+			.finally(() => {
+				setIsDBSaving(false);
+			});
 	};
 
 	// 행 클릭 시 상세 모달 열기
@@ -396,7 +475,7 @@ export function Songbook() {
 					<Spinner size="xl" />
 				</Center>
 			)}
-			<Heading size="lg" mb={6}>
+			<Heading size="lg" mb={2}>
 				노래책 관리 에디터
 			</Heading>
 
@@ -469,7 +548,13 @@ export function Songbook() {
 					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewSong}>
 						직접 추가
 					</Button>
-					<Button leftIcon={<FiSave />} colorScheme="blue">
+					<Button
+						leftIcon={<FiSave />}
+						colorScheme="blue"
+						onClick={handleSaveDB}
+						isLoading={isDBSaving}
+						loadingText="저장 중"
+					>
 						DB에 최종 저장
 					</Button>
 				</Flex>
