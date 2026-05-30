@@ -158,7 +158,7 @@ export function Admin() {
 			toast({ description: "스텔라 이름을 입력해주세요", status: "error" });
 			return;
 		}
-		fetchServer("v1", "/stellar", { method: "POST", body: JSON.stringify(inputValue) }).then((res) => {
+		fetchServer("v1", "/stellar", { method: "POST", body: inputValue }).then((res) => {
 			if (res.status === 201) {
 				getStellarData();
 
@@ -209,7 +209,7 @@ export function Admin() {
 	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
 		if (!confirm(`${stellarData.find((s) => s.id === id)?.name} 항목을 삭제하시겠습니까?`)) {
 		} else {
-			fetchServer("v1", `/stellar/${id}`, { method: "DELETE", body: JSON.stringify({ id }) }).then(() => {
+			fetchServer("v1", `/stellar/${id}`, { method: "DELETE", body: { id } }).then(() => {
 				getStellarData();
 			});
 		}
@@ -596,7 +596,7 @@ export function AdminEdit() {
 		e.preventDefault();
 		setIsLoading(true);
 		setAlertStatus("loading");
-		fetchServer("v1", `/stellar/${id}`, { method: "PATCH", body: JSON.stringify(inputValue) })
+		fetchServer("v1", `/stellar/${id}`, { method: "PATCH", body: inputValue })
 			.then((res) => {
 				if (res) {
 					if (res.status === 204) {
@@ -1022,7 +1022,7 @@ function MusicDrawer({
 			toast({ description: "태그 이름을 입력해주세요", status: "warning" });
 		} else {
 			setIsSaveLoading(true);
-			fetchServer("v1", "/tag", { method: "POST", body: JSON.stringify({ name: tagName, colorCode, isCover }) })
+			fetchServer("v1", "/tag", { method: "POST", body: { name: tagName, colorCode, isCover } })
 				.then((res) => {
 					if (res.status === 200) {
 						onTagClose();
@@ -1055,14 +1055,14 @@ function MusicDrawer({
 		// } else
 		fetchServer("v1", `/y/${inputValue.id}`, {
 			method: "POST",
-			body: JSON.stringify({
+			body: {
 				titleAlias: inputValue.titleAlias,
 				tags: inputValue.tags,
 				details: additionalInputValue,
 				isActive: inputValue.isActive,
 				isInheritChannelId: inputValue.isInheritChannelId,
 				inheritChannelId,
-			}),
+			},
 		})
 			.then((res) => {
 				if (res.status === 200) {
@@ -1337,7 +1337,7 @@ function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagMo
 			return;
 		}
 
-		fetchServer("v1", `/tag/${inputValue.id}`, { method: "PATCH", body: JSON.stringify(inputValue) })
+		fetchServer("v1", `/tag/${inputValue.id}`, { method: "PATCH", body: inputValue })
 			.then((res) => {
 				if (res.status === 200) {
 					toast({ description: TOAST_MESSAGE.edit("태그"), status: "success" });

@@ -56,7 +56,7 @@ export function useMultiView() {
 
 	const refetchCustom = (activeLoading?: boolean) => {
 		activeLoading && setIsCustomLoading(true);
-		fetchServer("v1", `/multiview`, { method: "POST", body: JSON.stringify({ customStreams }) })
+		fetchServer("v1", `/multiview`, { method: "POST", body: { customStreams } })
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, custom: res.status }));
 				if (res.status === 200) {

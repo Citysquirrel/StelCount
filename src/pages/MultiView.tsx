@@ -779,12 +779,10 @@ function SideMenu({
 	];
 
 	const onSearch = () => {
-		fetchServer("v1", "/search-streamer", { body: JSON.stringify({ keyword: searchInputValue }), method: "POST" }).then(
-			(res) => {
-				const data: SearchData[] = res.data;
-				setSearchResult(data || []);
-			},
-		);
+		fetchServer("v1", "/search-streamer", { body: { keyword: searchInputValue }, method: "POST" }).then((res) => {
+			const data: SearchData[] = res.data;
+			setSearchResult(data || []);
+		});
 	};
 
 	const handleChangeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -955,7 +953,7 @@ function SideMenu({
 				party: null,
 			}));
 			setCustomStreams(temp);
-			fetchServer("v1", `/multiview`, { method: "POST", body: JSON.stringify({ customStreams: temp }) }).then((res) => {
+			fetchServer("v1", `/multiview`, { method: "POST", body: { customStreams: temp } }).then((res) => {
 				if (res.status === 200) {
 					const data: MultiViewData[] = res.data;
 					setCustomStreams(data.sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive)));

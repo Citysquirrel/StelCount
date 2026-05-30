@@ -102,7 +102,7 @@ export function Setting() {
 
 	// 저장 버튼 핸들러
 	const handleSave = () => {
-		fetchServer("v2", "/settings", { method: "POST", body: JSON.stringify(configs) })
+		fetchServer("v2", "/settings", { method: "POST", body: configs })
 			.then((res) => {
 				toast({
 					title: "설정 저장 완료",

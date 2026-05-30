@@ -162,7 +162,7 @@ export async function fetchServer<TData = any, V extends Version = Version, TBod
 	const urlPath = [apiSegment, versionSegment].filter(Boolean).join("/");
 	const fullUrl = `${baseUrl}/${urlPath}${cleanApi}`.replace(/\/+/g, "/").replace(":/", "://");
 
-	// ✅ 수정된 부분: serializedBody의 타입을 명시적으로 BodyInit | undefined로 지정합니다.
+	// serializedBody의 타입을 명시적으로 BodyInit | undefined로 지정
 	let serializedBody: BodyInit | undefined = options?.body as unknown as BodyInit;
 
 	// 객체이면서 FormData가 아닐 때만 JSON 문자열로 직렬화 (string은 BodyInit에 포함되므로 에러 통과)
@@ -194,7 +194,7 @@ export async function fetchServer<TData = any, V extends Version = Version, TBod
 
 	return await fetch_<TData>(fullUrl, {
 		...options,
-		body: serializedBody, // ✅ 에러 없이 안전하게 주입됨
+		body: serializedBody,
 		headers: {
 			...defaultHeaders,
 			...options?.headers,
