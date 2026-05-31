@@ -52,7 +52,6 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
 import { MIN_DATE, USER_SETTING_STORAGE } from "../lib/constant";
-import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import { useLocalStorage } from "usehooks-ts";
 import { Carousel } from "../components/Carousel";
@@ -92,12 +91,12 @@ export default function Home() {
 		data.upcoming.length > 0
 			? data.upcoming
 			: data.mostPopular.length > 0
-			? data.mostPopular
-			: data.recent.length > 0
-			? data.recent
-			: data.approach.length > 0
-			? data.approach
-			: data.mostViews;
+				? data.mostPopular
+				: data.recent.length > 0
+					? data.recent
+					: data.approach.length > 0
+						? data.approach
+						: data.mostViews;
 
 	useEffect(() => {
 		if (arr[0]) setIsNewsLoading(false);
@@ -129,16 +128,16 @@ export default function Home() {
 									liveBroadcastContent: c.liveBroadcastContent,
 									details: [],
 								})),
-						  ]
+							]
 						: [...a, c],
-				[] as YoutubeMusicData[]
+				[] as YoutubeMusicData[],
 			);
 
 			obj.upcoming = videos
 				.filter((v) => v.liveBroadcastContent === "upcoming" || v.liveBroadcastContent === "live")
 				.sort(
 					(a, b) =>
-						new Date(a.scheduledStartTime || MIN_DATE).getTime() - new Date(b.scheduledStartTime || MIN_DATE).getTime()
+						new Date(a.scheduledStartTime || MIN_DATE).getTime() - new Date(b.scheduledStartTime || MIN_DATE).getTime(),
 				);
 			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1).sort((a, b) => a.mostPopular - b.mostPopular);
 			obj.mostPopularMusic = videos
@@ -148,12 +147,12 @@ export default function Home() {
 				.filter(
 					(v) =>
 						v.liveBroadcastContent === "none" &&
-						currentTime - new Date(v.publishedAt || MIN_DATE).getTime() < config.recent.period // 2 months
+						currentTime - new Date(v.publishedAt || MIN_DATE).getTime() < config.recent.period, // 2 months
 				)
 				.sort(
 					(a, b) =>
 						(b.publishedAt ? new Date(b.publishedAt).getTime() : 0) -
-						(a.publishedAt ? new Date(a.publishedAt).getTime() : 0)
+						(a.publishedAt ? new Date(a.publishedAt).getTime() : 0),
 				);
 			obj.mostViews = videos
 				.sort((a, b) => {
@@ -172,8 +171,8 @@ export default function Home() {
 					(v) =>
 						v.liveBroadcastContent === "none" &&
 						v.statistics.filter(
-							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approach.period // 5 days
-						).length > 0
+							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approach.period, // 5 days
+						).length > 0,
 				)
 				.sort((a, b) => {
 					return (
@@ -188,8 +187,8 @@ export default function Home() {
 					(v) =>
 						v.liveBroadcastContent === "none" &&
 						v.statistics.filter(
-							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approachForNews.period // 5 days
-						).length > 0
+							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approachForNews.period, // 5 days
+						).length > 0,
 				)
 				.sort((a, b) => {
 					return (
@@ -202,9 +201,6 @@ export default function Home() {
 			return obj;
 		});
 	}, [stellar]);
-
-	useConsoleAdmin(data.approach, "Approached");
-	useConsoleAdmin(data, "Whole Data");
 
 	useEffect(() => {
 		const arr = liveStatus.map((l) => ({
@@ -375,7 +371,7 @@ function RecentNews({
 		...mostPopular.map((v) => ({ ...v, condition: 0 })),
 		...recent
 			.filter(
-				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 7 // 1 weeks
+				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 7, // 1 weeks
 			)
 			.map((v) => ({ ...v, condition: 1 })),
 		...approach.slice(0, 3).map((v) => ({ ...v, condition: 2 })),
@@ -811,7 +807,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 				{musics && isDataLoading
 					? [1, 2, 3].map((_, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"8px"} />)
 					: musics &&
-					  musics.map((c, idx) => {
+						musics.map((c, idx) => {
 							const timeText = createTimeText(c, type);
 							return (
 								<Stack
@@ -865,181 +861,181 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 									</Stack>
 								</Stack>
 							);
-					  })}
+						})}
 				{lives && isDataLoading
 					? [1, 2, 3].map((_, i) => <Skeleton key={i} height="100px" width="100px" borderRadius={"32px"} />)
 					: isMultiViewMode
-					? lives &&
-					  lives.map((live) => {
-							// 멀티뷰 ON
-							return live.chzzkId ? (
-								<Stack
-									as={Link}
-									key={live.uuid}
-									onClick={handleAddMulView(live)}
-									sx={{
-										position: "relative",
-										minWidth: "100px",
-										maxHeight: "100px",
-										borderRadius: "32px",
-										overflow: "hidden",
-										cursor: "pointer",
-										transition: "all .3s",
-										outline: "2px solid transparent",
-										outlineColor: live.openLive ? "green.400" : "red.400",
-										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
-										"> .music-information": { opacity: isMobile() ? 1 : 0 },
-										_hover: {
-											"> img": { opacity: 0.2 },
-											"> .music-information": { opacity: 1 },
-										},
-									}}
-								>
-									{live.liveCategoryValue ? (
-										<Stack position="absolute" top={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
-											<Text
-												fontSize={"0.675rem"}
-												backgroundColor="rgb(255,255,255,.66)"
-												padding="1px 6px"
-												borderRadius={"4px"}
-												textAlign={"center"}
-												maxWidth="84px"
-												wordBreak="keep-all"
-												lineHeight={1.25}
-											>
-												{live.liveCategoryValue}
-											</Text>
-										</Stack>
-									) : null}
-									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
-										{isNaN(live.gap[0]) ? (
-											<LoadingThreeDot
-												backgroundColor="rgb(255,255,255,.66)"
-												borderRadius={"4px"}
-												sx={{ height: "20px", ">svg": { boxSize: "20px", transform: "translateY(2px)" } }}
-											/>
-										) : (
-											<Text
-												fontSize="0.75rem"
-												backgroundColor="rgb(255,255,255,.66)"
-												padding="1px 6px"
-												borderRadius={"4px"}
-											>
-												{live.gap[1]}
-											</Text>
-										)}
-									</Stack>
-									<Image
-										boxSize="100px"
-										src={`${live.profileImage}?type=f120_120_na`}
-										alt="thumbnail"
-										objectFit={"cover"}
-										transform={"scale(1.35)"}
-										filter={!live.openLive ? "grayscale(1)" : undefined}
-									/>
+						? lives &&
+							lives.map((live) => {
+								// 멀티뷰 ON
+								return live.chzzkId ? (
 									<Stack
-										className="music-information"
-										position="absolute"
-										boxSize="100px"
-										alignItems={"center"}
-										justifyContent={"center"}
-										userSelect={"none"}
-										transition="all .3s"
-										gap="0"
-										sx={{ "> svg": { boxSize: "32px" } }}
+										as={Link}
+										key={live.uuid}
+										onClick={handleAddMulView(live)}
+										sx={{
+											position: "relative",
+											minWidth: "100px",
+											maxHeight: "100px",
+											borderRadius: "32px",
+											overflow: "hidden",
+											cursor: "pointer",
+											transition: "all .3s",
+											outline: "2px solid transparent",
+											outlineColor: live.openLive ? "green.400" : "red.400",
+											"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
+											"> .music-information": { opacity: isMobile() ? 1 : 0 },
+											_hover: {
+												"> img": { opacity: 0.2 },
+												"> .music-information": { opacity: 1 },
+											},
+										}}
 									>
-										<FaArrowAltCircleDown />
-									</Stack>
-								</Stack>
-							) : null;
-					  })
-					: lives &&
-					  lives.map((live, idx) => {
-							// 멀티뷰 OFF
-							return live.chzzkId ? (
-								<Stack
-									as={Link}
-									href={naver.chzzk.liveUrl(live.chzzkId)}
-									isExternal
-									key={live.uuid}
-									sx={{
-										position: "relative",
-										minWidth: "100px",
-										maxHeight: "100px",
-										borderRadius: "32px",
-										overflow: "hidden",
-										cursor: "pointer",
-										transition: "all .3s",
-										outline: "2px solid transparent",
-										outlineColor: live.openLive ? "green.400" : "red.400",
-										animation: `fadeIn 0.3s ease-in-out ${idx * 0.05}s 1 normal both`,
-										"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
-										"> .music-information": { opacity: isMobile() ? 1 : 0 },
-										_hover: {
-											"> img": { opacity: 0.2 },
-											"> .music-information": { opacity: 1 },
-										},
-									}}
-								>
-									{live.liveCategoryValue ? (
-										<Stack position="absolute" top={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
-											<Text
-												fontSize="0.675rem"
-												backgroundColor="rgb(255,255,255,.66)"
-												padding="1px 6px"
-												borderRadius={"4px"}
-												textAlign={"center"}
-												maxWidth="84px"
-												wordBreak="keep-all"
-												lineHeight={1.25}
-											>
-												{live.liveCategoryValue}
-											</Text>
+										{live.liveCategoryValue ? (
+											<Stack position="absolute" top={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+												<Text
+													fontSize={"0.675rem"}
+													backgroundColor="rgb(255,255,255,.66)"
+													padding="1px 6px"
+													borderRadius={"4px"}
+													textAlign={"center"}
+													maxWidth="84px"
+													wordBreak="keep-all"
+													lineHeight={1.25}
+												>
+													{live.liveCategoryValue}
+												</Text>
+											</Stack>
+										) : null}
+										<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+											{isNaN(live.gap[0]) ? (
+												<LoadingThreeDot
+													backgroundColor="rgb(255,255,255,.66)"
+													borderRadius={"4px"}
+													sx={{ height: "20px", ">svg": { boxSize: "20px", transform: "translateY(2px)" } }}
+												/>
+											) : (
+												<Text
+													fontSize="0.75rem"
+													backgroundColor="rgb(255,255,255,.66)"
+													padding="1px 6px"
+													borderRadius={"4px"}
+												>
+													{live.gap[1]}
+												</Text>
+											)}
 										</Stack>
-									) : null}
+										<Image
+											boxSize="100px"
+											src={`${live.profileImage}?type=f120_120_na`}
+											alt="thumbnail"
+											objectFit={"cover"}
+											transform={"scale(1.35)"}
+											filter={!live.openLive ? "grayscale(1)" : undefined}
+										/>
+										<Stack
+											className="music-information"
+											position="absolute"
+											boxSize="100px"
+											alignItems={"center"}
+											justifyContent={"center"}
+											userSelect={"none"}
+											transition="all .3s"
+											gap="0"
+											sx={{ "> svg": { boxSize: "32px" } }}
+										>
+											<FaArrowAltCircleDown />
+										</Stack>
+									</Stack>
+								) : null;
+							})
+						: lives &&
+							lives.map((live, idx) => {
+								// 멀티뷰 OFF
+								return live.chzzkId ? (
+									<Stack
+										as={Link}
+										href={naver.chzzk.liveUrl(live.chzzkId)}
+										isExternal
+										key={live.uuid}
+										sx={{
+											position: "relative",
+											minWidth: "100px",
+											maxHeight: "100px",
+											borderRadius: "32px",
+											overflow: "hidden",
+											cursor: "pointer",
+											transition: "all .3s",
+											outline: "2px solid transparent",
+											outlineColor: live.openLive ? "green.400" : "red.400",
+											animation: `fadeIn 0.3s ease-in-out ${idx * 0.05}s 1 normal both`,
+											"> img": { transition: "all .3s", opacity: isMobile() ? 0.35 : 1 },
+											"> .music-information": { opacity: isMobile() ? 1 : 0 },
+											_hover: {
+												"> img": { opacity: 0.2 },
+												"> .music-information": { opacity: 1 },
+											},
+										}}
+									>
+										{live.liveCategoryValue ? (
+											<Stack position="absolute" top={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+												<Text
+													fontSize="0.675rem"
+													backgroundColor="rgb(255,255,255,.66)"
+													padding="1px 6px"
+													borderRadius={"4px"}
+													textAlign={"center"}
+													maxWidth="84px"
+													wordBreak="keep-all"
+													lineHeight={1.25}
+												>
+													{live.liveCategoryValue}
+												</Text>
+											</Stack>
+										) : null}
 
-									<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
-										{isNaN(live.gap[0]) ? (
-											<LoadingThreeDot
-												backgroundColor="rgb(255,255,255,.66)"
-												borderRadius={"4px"}
-												sx={{ height: "20px", ">svg": { boxSize: "20px", transform: "translateY(2px)" } }}
-											/>
-										) : (
-											<Text
-												fontSize="0.75rem"
-												backgroundColor="rgb(255,255,255,.66)"
-												padding="1px 6px"
-												borderRadius={"4px"}
-											>
-												{live.gap[1]}
-											</Text>
-										)}
+										<Stack position="absolute" bottom={"4px"} left="0" zIndex={1} alignItems={"center"} width="100%">
+											{isNaN(live.gap[0]) ? (
+												<LoadingThreeDot
+													backgroundColor="rgb(255,255,255,.66)"
+													borderRadius={"4px"}
+													sx={{ height: "20px", ">svg": { boxSize: "20px", transform: "translateY(2px)" } }}
+												/>
+											) : (
+												<Text
+													fontSize="0.75rem"
+													backgroundColor="rgb(255,255,255,.66)"
+													padding="1px 6px"
+													borderRadius={"4px"}
+												>
+													{live.gap[1]}
+												</Text>
+											)}
+										</Stack>
+										<Image
+											boxSize="100px"
+											src={`${live.profileImage}?type=f120_120_na`}
+											alt="thumbnail"
+											objectFit={"cover"}
+											transform={"scale(1.35)"}
+											filter={!live.openLive ? "grayscale(1)" : undefined}
+										/>
+										<Stack
+											className="music-information"
+											position="absolute"
+											boxSize="100px"
+											alignItems={"center"}
+											justifyContent={"center"}
+											userSelect={"none"}
+											transition="all .3s"
+											gap="0"
+											sx={{ "> svg": { boxSize: "32px" } }}
+										>
+											<MdOpenInNew />
+										</Stack>
 									</Stack>
-									<Image
-										boxSize="100px"
-										src={`${live.profileImage}?type=f120_120_na`}
-										alt="thumbnail"
-										objectFit={"cover"}
-										transform={"scale(1.35)"}
-										filter={!live.openLive ? "grayscale(1)" : undefined}
-									/>
-									<Stack
-										className="music-information"
-										position="absolute"
-										boxSize="100px"
-										alignItems={"center"}
-										justifyContent={"center"}
-										userSelect={"none"}
-										transition="all .3s"
-										gap="0"
-										sx={{ "> svg": { boxSize: "32px" } }}
-									>
-										<MdOpenInNew />
-									</Stack>
-								</Stack>
-							) : null;
-					  })}
+								) : null;
+							})}
 			</HStack>
 			<Collapse in={isMultiViewMode} animateOpacity>
 				<Spacing size={8} />
@@ -1078,7 +1074,7 @@ function MultiView({ list, setList }: MultiViewProps) {
 					[dragIndex, 1],
 					[hoverIndex, 0, prev[dragIndex]],
 				],
-			})
+			}),
 		);
 	}, []);
 	const renderItem = useCallback((item: IMultiViewItem, index: number) => {
@@ -1259,7 +1255,7 @@ function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
 		return {
 			value: elapsedTimeTextForCard(
 				new Date(new Date(data.statistics.at(-1)?.updatedAt || MIN_DATE)),
-				new Date(getLocale())
+				new Date(getLocale()),
 			)[1],
 			unit: data.statistics.at(-1)?.unit,
 		};

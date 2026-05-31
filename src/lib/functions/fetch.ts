@@ -194,7 +194,7 @@ export async function fetchServer<TData = any, V extends Version = Version, TBod
 
 	return await fetch_<TData>(fullUrl, {
 		...options,
-		body: serializedBody,
+		body: serializedBody, // ✅ 에러 없이 안전하게 주입됨
 		headers: {
 			...defaultHeaders,
 			...options?.headers,

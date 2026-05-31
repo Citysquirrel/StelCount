@@ -10,7 +10,6 @@ import {
 	Badge,
 	HStack,
 	IconButton,
-	Tooltip,
 	Spinner,
 	Center,
 	Icon,
@@ -31,10 +30,12 @@ import {
 	Divider,
 	Stack,
 } from "@chakra-ui/react";
-import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiRotateCcw, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
+import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { fetchServer } from "../../lib/functions/fetch";
 import { normalizeKeyword } from "../../lib/functions/normalized";
+import { SiGooglesheets } from "react-icons/si";
+import { isEqual } from "lodash";
 
 // --- [타입 정의] ---
 export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
@@ -89,11 +90,25 @@ type RawSongData = Omit<SongData, "synonyms" | "actionStatus" | "syncStatus"> & 
 //?: 3. 나머지 데이터(ACTIVE, DISABLED) 수집한다
 //?: 4. 한꺼번에 bulkCreate로 upsert 한다
 //TODO: 그러므로 프론트엔드에서는 정보가 변하거나 actionStatus(중요)가 변하는 경우 무조건 MODIFIED 표시되어야 한다.
+//!: 아래부터 이번 TODO에 대한 의사코드 작성
+// # DB에서 불러온 첫 rawData로부터 비교 실행. 고유키인 syncId를 기준으로 비교할 것.
+// 1. 기존에 없던 데이터를 NEW 처리
+//		>> 수정되더라도 NEW를 유지해야함. DELETE시 테이블에서 DROP하고 휴지통에 넣는다. 휴지통은 계정과 관계없이 로컬에 저장된다.
+// 2. actionStatus가 포함된 모든 데이터를 비교하여 하나라도 변경점이 있을 경우 MODIFIED 표시되어야 한다.
+//		>> 기존 DB에서 불러온 데이터에 한정됨
+// 2-a. 파생. 편집 모달로 들어가면 어디서 데이터가 변경된 것인지 표시되어야 함
+// 3. 나머지는 UNCHANGED 표시한다.
+//		>> 값을 바꾸었다가 원복했을 경우 다시 UNCHANGED로 표시되어야 함
+
+// * 예외사항: 이미 있던 곡이 들어왔을 경우 actionStatus는 변하지 말아야함. (csv 기준이기 때문에 hiddenrows를 직접 따져야함)
+
+// "UNCHANGED" | "NEW" | "MODIFIED";
+// "ACTIVE" | "DELETED" | "DISABLED";
 
 //TODO: 신규 데이터 직접 생성 시 NEW, syncId 할당
-//TODO: NEW 상태인 데이터를 삭제할 때의 최적화
-//TODO: 	>> 관리자가 직접 새곡 추가를 했다가 마음이 바뀌어 삭제버튼을 누르는 경우. 아예 그자리에서 DROP하는 형태로..
-//TODO:	>> 이건 대신 UNDO를 못하는 대신 확인창 한번 띄워주면 좋을듯
+/////TODO: NEW 상태인 데이터를 삭제할 때의 최적화
+/////TODO: 	>> 관리자가 직접 새곡 추가를 했다가 마음이 바뀌어 삭제버튼을 누르는 경우. 아예 그자리에서 DROP하는 형태로..
+/////TODO:	>> 이건 대신 UNDO를 못하는 대신 확인창 한번 띄워주면 좋을듯
 //TODO: DB에 저장 동기화 API 호출 성공 후 로컬 상태 초기화 해주기
 //TODO:	>> DELETED 항목은 제거
 //TODO:	>> NEW, MODIFIED 항목은 UNCHANGED로 리셋
@@ -119,6 +134,7 @@ export function Songbook() {
 	const toast = useToast();
 	const parentRef = useRef<HTMLDivElement>(null);
 	const rawSongRef = useRef<SongData[]>([]);
+	const sheetUrlRef = useRef<string>("");
 	const TABLE_HEADER_HEIGHT = 44;
 
 	// 테마 색상
@@ -132,29 +148,53 @@ export function Songbook() {
 	const yellowColor = useColorModeValue("yellow.50", "rgba(236, 201, 75, 0.1)");
 	const fieldHoverBgColor = useColorModeValue("blue.50", "blue.600");
 
+	const parseRawData = (rawData: RawSongData[]): SongData[] => {
+		return rawData.map((song) => {
+			const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
+			const [syncType, rawSyncValue] = restSong.syncId.split("::");
+
+			const columnData =
+				song.columnData || (syncType === "SHEET" && rawSyncValue?.includes("-"))
+					? String(Number(rawSyncValue.split("-")[1]) + 6)
+					: "";
+
+			//TODO: searchBase searchChosung searchJamo 설정
+			return {
+				...restSong,
+				columnData,
+				synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
+				actionStatus: isActive ? "ACTIVE" : "DISABLED",
+				syncStatus: "UNCHANGED",
+			};
+		});
+	};
+
 	useEffect(() => {
 		setIsLoading(true);
 		fetchServer("v2", "/songbook")
 			.then((res) => {
 				if (res.data) {
 					const data: RawSongData[] = res.data.data;
+					sheetUrlRef.current = res.data.sheetUrl;
 
-					const parsed: SongData[] = data.map((song) => {
-						const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
-						const [syncType, rawSyncValue] = restSong.syncId.split("::");
+					const parsed = parseRawData(data);
 
-						const columnData =
-							syncType === "SHEET" && rawSyncValue?.includes("-") ? String(Number(rawSyncValue.split("-")[1]) + 6) : "";
+					// const parsed: SongData[] = data.map((song) => {
+					// 	const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
+					// 	const [syncType, rawSyncValue] = restSong.syncId.split("::");
 
-						//TODO: searchBase searchChosung searchJamo 설정
-						return {
-							...restSong,
-							columnData,
-							synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
-							actionStatus: isActive ? "ACTIVE" : "DISABLED",
-							syncStatus: "UNCHANGED",
-						};
-					});
+					// 	const columnData =
+					// 		syncType === "SHEET" && rawSyncValue?.includes("-") ? String(Number(rawSyncValue.split("-")[1]) + 6) : "";
+
+					// 	//TODO: searchBase searchChosung searchJamo 설정
+					// 	return {
+					// 		...restSong,
+					// 		columnData,
+					// 		synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
+					// 		actionStatus: isActive ? "ACTIVE" : "DISABLED",
+					// 		syncStatus: "UNCHANGED",
+					// 	};
+					// });
 					setSongs(parsed);
 
 					// 비교를 위한 원본 저장
@@ -206,12 +246,24 @@ export function Songbook() {
 	});
 
 	// --- [핸들러 함수] ---
-	const toggleStatus = (e: React.MouseEvent, index: number, newStatus: ActionStatus) => {
+	const toggleStatus = (e: React.MouseEvent, syncId: string, newStatus: ActionStatus) => {
 		e.stopPropagation(); // 행 클릭(모달 열기) 이벤트 방지
 
 		// filteredSongs의 index를 통해 원본 songs 배열의 실제 index를 찾아 업데이트
-		const targetSong = filteredSongs[index];
-		setSongs((prev) => prev.map((s) => (s === targetSong ? { ...s, actionStatus: newStatus } : s)));
+		const r = rawSongRef.current.find((rs) => rs.syncId === syncId);
+		if (!r) {
+			toast({
+				title: "데이터 변경 실패",
+				description: "raw data에 해당 데이터가 없습니다. 코드에 문제가 있는 경우입니다.",
+				status: "error",
+				duration: 3000,
+				isClosable: true,
+				position: "top-right",
+			});
+			return;
+		}
+		const syncStatus: SyncStatus = r.actionStatus === newStatus ? "UNCHANGED" : "MODIFIED";
+		setSongs((prev) => prev.map((s) => (s.syncId === syncId ? { ...s, syncStatus, actionStatus: newStatus } : s)));
 	};
 
 	const parseSheetData = useCallback(
@@ -394,6 +446,22 @@ export function Songbook() {
 							isClosable: true,
 							position: "top-right",
 						});
+
+						const upsertedData = parseRawData(res.data.upsertedData);
+						const deletedSyncIds: string[] = res.data.deletedSyncIds;
+
+						const clone = structuredClone(songs);
+
+						const parsed = clone
+							.filter((song) => !deletedSyncIds.includes(song.syncId))
+							.map((song) => {
+								const upserted = upsertedData.find((up) => up.syncId === song.syncId);
+								if (upserted) return upserted;
+								return song;
+							});
+
+						setSongs(parsed);
+						rawSongRef.current = parsed;
 					} else {
 						throw new Error("데이터 형식이 올바르지 않거나 비어있습니다.");
 					}
@@ -445,8 +513,10 @@ export function Songbook() {
 			setSongs((prev) =>
 				prev.map((s) => {
 					if (s === targetOriginalSong) {
-						// 상태가 UNCHANGED 였다면 MODIFIED로 변경 (NEW, DELETED 등은 유지)
-						const newStatus = s.syncStatus === "UNCHANGED" ? "MODIFIED" : s.syncStatus;
+						const r = rawSongRef.current.find((rs) => rs.syncId === s.syncId);
+
+						// r과 s를 비교해 달라진 것이 있다면 MODIFIED로 지정함.
+						const newStatus: SyncStatus = !r ? "NEW" : isEqual(r, s) ? "MODIFIED" : "UNCHANGED";
 						return { ...editingSong, syncStatus: newStatus };
 					}
 					return s;
@@ -476,7 +546,18 @@ export function Songbook() {
 				</Center>
 			)}
 			<Heading size="lg" mb={2}>
-				노래책 관리 에디터
+				노래책 관리 에디터{" "}
+				{sheetUrlRef.current.length > 0 ? (
+					<IconButton
+						aria-label="sheetUrl"
+						icon={<SiGooglesheets />}
+						size="md"
+						variant={"ghost"}
+						onClick={() => {
+							window.open(sheetUrlRef.current, "_blank");
+						}}
+					/>
+				) : null}
 			</Heading>
 
 			{/* 검색 및 필터 컨트롤 바 */}
@@ -673,34 +754,38 @@ export function Songbook() {
 									{/* 조작 버튼 구역 */}
 									<Box w="100px" textAlign="center">
 										<HStack spacing={1} justify="center">
-											{isFaded ? (
+											{song.actionStatus === "ACTIVE" ? null : (
 												<IconButton
-													aria-label="Undo"
-													icon={<FiRotateCcw />}
+													aria-label="Active"
+													icon={<FiCheckCircle />}
 													size="md"
 													variant="ghost"
-													onClick={(e) => toggleStatus(e, virtualRow.index, "ACTIVE")}
+													colorScheme="green"
+													onClick={(e) => toggleStatus(e, song.syncId, "ACTIVE")}
 												/>
-											) : (
-												<>
+											)}
+											<>
+												{song.actionStatus === "DISABLED" ? null : (
 													<IconButton
 														aria-label="Disable"
 														icon={<FiEyeOff />}
 														size="md"
 														variant="ghost"
 														colorScheme="orange"
-														onClick={(e) => toggleStatus(e, virtualRow.index, "DISABLED")}
+														onClick={(e) => toggleStatus(e, song.syncId, "DISABLED")}
 													/>
+												)}
+												{song.actionStatus === "DELETED" ? null : (
 													<IconButton
 														aria-label="Delete"
 														icon={<FiTrash2 />}
 														size="md"
 														variant="ghost"
 														colorScheme="red"
-														onClick={(e) => toggleStatus(e, virtualRow.index, "DELETED")}
+														onClick={(e) => toggleStatus(e, song.syncId, "DELETED")}
 													/>
-												</>
-											)}
+												)}
+											</>
 										</HStack>
 									</Box>
 								</Flex>
@@ -714,7 +799,13 @@ export function Songbook() {
 			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="xl">
 				<ModalOverlay />
 				<ModalContent>
-					<ModalHeader>{editingIndex === -1 ? "새 곡 직접 추가" : "노래 상세 정보 수정"}</ModalHeader>
+					<ModalHeader>
+						{editingIndex === -1 ? "새 곡 직접 추가" : "노래 상세 정보 수정"}
+						<Text fontSize="xs" color="gray" fontWeight="400">
+							{editingSong?.syncId || ""}
+						</Text>
+					</ModalHeader>
+
 					<ModalCloseButton />
 
 					{editingSong && (
@@ -778,7 +869,7 @@ export function Songbook() {
 
 								<FormControl>
 									<Flex justify="space-between" align="center" mb={2}>
-										<FormLabel m={0}>별칭 (동의어)</FormLabel>
+										<FormLabel m={0}>별칭 (검색어)</FormLabel>
 										<Button size="xs" leftIcon={<FiPlus />} onClick={handleAddSynonym}>
 											별칭 추가
 										</Button>

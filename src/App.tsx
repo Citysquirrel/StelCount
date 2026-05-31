@@ -18,8 +18,6 @@ import { CAFE_WRITE_URL } from "./lib/constant";
 import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useWebSocket } from "./lib/hooks/useWebSocket";
-import { NetworkDock } from "./lib/DevDock";
 
 function App() {
 	const nav = useNavigateEvent();
