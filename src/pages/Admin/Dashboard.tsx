@@ -192,7 +192,7 @@ export function Dashboard() {
 	}, [data]);
 
 	useEffect(() => {
-		fetchServer<DashboardResponse>("v2", "/dashboard")
+		fetchServer<DashboardResponse>("admin", "/dashboard")
 			.then((res) => {
 				if (res.data) {
 					const formattedData = transformToWeeklyData(res.data.data);

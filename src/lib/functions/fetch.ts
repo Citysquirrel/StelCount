@@ -27,8 +27,8 @@ interface ServerAPIMap {
 		| `/ypat/${string}` // GET /ypat/:videoId
 		| `/tag/${number}`; // GET, PATCH, DELETE /tag/:id
 
-	v2:
-		| "/maintenance"
+	v2: "/maintenance" | "/songbook";
+	admin:
 		| "/settings" // GET, POST /settings
 		| "/dashboard"
 		| "/songbook"

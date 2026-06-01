@@ -58,7 +58,7 @@ export function Setting() {
 	);
 
 	useEffect(() => {
-		fetchServer<SettingResponse>("v2", "/settings")
+		fetchServer<SettingResponse>("admin", "/settings")
 			.then((res) => {
 				if (res.data) {
 					const mergedConfigs: Record<string, string> = { ...res.data.data };
@@ -102,7 +102,7 @@ export function Setting() {
 
 	// 저장 버튼 핸들러
 	const handleSave = () => {
-		fetchServer("v2", "/settings", { method: "POST", body: configs })
+		fetchServer("admin", "/settings", { method: "POST", body: configs })
 			.then((res) => {
 				toast({
 					title: "설정 저장 완료",

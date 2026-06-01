@@ -171,7 +171,7 @@ export function Songbook() {
 
 	useEffect(() => {
 		setIsLoading(true);
-		fetchServer("v2", "/songbook")
+		fetchServer("admin", "/songbook")
 			.then((res) => {
 				if (res.data) {
 					const data: RawSongData[] = res.data.data;
@@ -373,7 +373,7 @@ export function Songbook() {
 	// 시트 동기화
 	const handleSyncSheet = async () => {
 		setIsSyncing(true);
-		fetchServer("v2", "/songbook/import")
+		fetchServer("admin", "/songbook/import")
 			.then((res) => {
 				const syncData: SyncData = res.data;
 				if (syncData) {
@@ -432,7 +432,7 @@ export function Songbook() {
 	// DB 최종 저장 핸들러
 	const handleSaveDB = () => {
 		setIsDBSaving(true);
-		fetchServer("v2", "/songbook", { method: "POST", body: songs })
+		fetchServer("admin", "/songbook", { method: "POST", body: songs })
 			.then((res) => {
 				if (res.status >= 200 && res.status < 300) {
 					if (res.data) {
