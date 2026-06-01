@@ -36,6 +36,7 @@ import { fetchServer } from "../../lib/functions/fetch";
 import { normalizeKeyword } from "../../lib/functions/normalized";
 import { SiGooglesheets } from "react-icons/si";
 import { isEqual } from "lodash";
+import { MdSearch } from "react-icons/md";
 
 // --- [타입 정의] ---
 export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
@@ -662,6 +663,9 @@ export function Songbook() {
 					<Box w="60px" textAlign="center">
 						공식
 					</Box>
+					<Box w="60px" textAlign="center">
+						가사
+					</Box>
 					<Box flex={1}>곡 제목 / 아티스트</Box>
 					<Box w="100px" textAlign="center">
 						조작
@@ -731,6 +735,9 @@ export function Songbook() {
 									</Stack>
 									<Box w="60px" textAlign="center">
 										{song.isOfficial && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
+									</Box>
+									<Box w="60px" textAlign="center">
+										{!!song.lyric && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
 									</Box>
 									<Box
 										flex={1}
@@ -859,6 +866,7 @@ export function Songbook() {
 									<FormLabel>
 										가사{" "}
 										<IconButton
+											size="sm"
 											aria-label="open-lyric-search"
 											onClick={() => {
 												const query = `${editingSong.artist} ${editingSong.title} 가사`;
@@ -868,7 +876,9 @@ export function Songbook() {
 													"noopener,width=540,height=600",
 												);
 											}}
-										></IconButton>
+										>
+											<MdSearch />
+										</IconButton>
 									</FormLabel>
 									{/* 여러 줄 입력 가능한 Textarea */}
 									<Textarea
