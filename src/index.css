@@ -28,6 +28,10 @@ html[data-theme*="dark"] .default-text-color {
 	color: white;
 }
 
+.textarea-resizing {
+	field-sizing: content;
+}
+
 #root {
 	position: relative;
 }

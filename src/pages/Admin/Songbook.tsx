@@ -856,10 +856,24 @@ export function Songbook() {
 								</Flex>
 
 								<FormControl>
-									<FormLabel>가사</FormLabel>
+									<FormLabel>
+										가사{" "}
+										<IconButton
+											aria-label="open-lyric-search"
+											onClick={() => {
+												const query = `${editingSong.artist} ${editingSong.title} 가사`;
+												window.open(
+													`https://www.google.com/search?q=${encodeURIComponent(query)}&udm=14`,
+													"lyrics",
+													"noopener,width=540,height=600",
+												);
+											}}
+										></IconButton>
+									</FormLabel>
 									{/* 여러 줄 입력 가능한 Textarea */}
 									<Textarea
-										rows={5}
+										className="textarea-resizing"
+										rows={12}
 										value={editingSong.lyric}
 										onChange={(e) => setEditingSong({ ...editingSong, lyric: e.target.value })}
 									/>
