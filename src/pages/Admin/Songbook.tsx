@@ -29,14 +29,20 @@ import {
 	VStack,
 	Divider,
 	Stack,
+	Menu,
+	MenuButton,
+	MenuList,
+	MenuItem,
 } from "@chakra-ui/react";
 import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { fetchServer } from "../../lib/functions/fetch";
 import { normalizeKeyword } from "../../lib/functions/normalized";
 import { SiGooglesheets } from "react-icons/si";
-import { isEqual } from "lodash";
+import { isEqual, omit } from "lodash";
 import { MdSearch } from "react-icons/md";
+import { IoIosArrowDown } from "react-icons/io";
+import { useConsole } from "../../lib/hooks/useConsole";
 
 // --- [타입 정의] ---
 export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
@@ -123,9 +129,10 @@ export function Songbook() {
 
 	// 검색 및 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
-	const [filterGenre, setFilterGenre] = useState("");
+	const [filterGenre, setFilterGenre] = useState<Genre[]>([]);
 	const [filterOfficial, setFilterOfficial] = useState("");
-	const [filterStatus, setFilterStatus] = useState("");
+	const [filterLyric, setFilterLyric] = useState("");
+	const [filterStatus, setFilterStatus] = useState<(ActionStatus | SyncStatus)[]>([]);
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -137,6 +144,9 @@ export function Songbook() {
 	const rawSongRef = useRef<SongData[]>([]);
 	const sheetUrlRef = useRef<string>("");
 	const TABLE_HEADER_HEIGHT = 44;
+
+	const genres: Genre[] = ["K-POP", "J-POP", "POP"];
+	const statuses: (ActionStatus | SyncStatus)[] = ["ACTIVE", "DELETED", "DISABLED", "MODIFIED", "NEW", "UNCHANGED"];
 
 	// 테마 색상
 	const bgCard = useColorModeValue("white", "gray.700");
@@ -230,13 +240,15 @@ export function Songbook() {
 			const matchSearch =
 				normalizeKeyword(song.title).includes(normalizedQuery) ||
 				normalizeKeyword(song.artist).includes(normalizedQuery);
-			const matchGenre = filterGenre ? song.genre === filterGenre : true;
+			const matchGenre = filterGenre.length > 0 ? filterGenre.includes(song.genre) : true;
 			const matchOfficial = filterOfficial !== "" ? song.isOfficial === (filterOfficial === "true") : true;
-			const matchStatus = filterStatus ? song.syncStatus === filterStatus : true;
+			const matchLyric = filterLyric !== "" ? !!song.lyric === (filterLyric === "true") : true;
+			const matchSyncStatus = filterStatus.length > 0 ? filterStatus.includes(song.syncStatus) : true;
+			const matchActionStatus = filterStatus.length > 0 ? filterStatus.includes(song.actionStatus) : true;
 
-			return matchSearch && matchGenre && matchOfficial && matchStatus;
+			return matchSearch && matchGenre && matchOfficial && matchLyric && (matchSyncStatus || matchActionStatus);
 		});
-	}, [songs, searchQuery, filterGenre, filterOfficial, filterStatus]);
+	}, [songs, searchQuery, filterGenre, filterOfficial, filterStatus, filterLyric]);
 
 	// --- [가상화 스크롤 설정] ---
 	const rowVirtualizer = useVirtualizer({
@@ -514,10 +526,14 @@ export function Songbook() {
 			setSongs((prev) =>
 				prev.map((s) => {
 					if (s === targetOriginalSong) {
-						const r = rawSongRef.current.find((rs) => rs.syncId === s.syncId);
+						const raw = rawSongRef.current.find((rs) => rs.syncId === s.syncId);
 
-						// r과 s를 비교해 달라진 것이 있다면 MODIFIED로 지정함.
-						const newStatus: SyncStatus = !r ? "NEW" : isEqual(r, s) ? "MODIFIED" : "UNCHANGED";
+						const newStatus: SyncStatus = !raw
+							? "NEW"
+							: isEqual(omit(raw, ["syncStatus"]), omit(editingSong, ["syncStatus"]))
+								? "UNCHANGED"
+								: "MODIFIED";
+
 						return { ...editingSong, syncStatus: newStatus };
 					}
 					return s;
@@ -538,6 +554,32 @@ export function Songbook() {
 			newSynonyms[idx] = val;
 			return { ...p, synonyms: newSynonyms };
 		});
+
+	const handleCheckboxChange = (value, type: "genre" | "status") => {
+		if (type === "genre")
+			setFilterGenre((prev) => (prev.includes(value) ? prev.filter((g) => g !== value) : [...prev, value]));
+		else if (type === "status")
+			setFilterStatus((prev) => (prev.includes(value) ? prev.filter((g) => g !== value) : [...prev, value]));
+	};
+
+	// 수정 여부 검사
+	useEffect(() => {
+		const hasModifiedSongs = songs.some((song) => song.syncStatus === "MODIFIED");
+
+		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+			if (hasModifiedSongs) {
+				event.preventDefault();
+
+				event.returnValue = "";
+			}
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	}, [songs]);
 
 	return (
 		<Box>
@@ -578,11 +620,24 @@ export function Songbook() {
 					onChange={(e) => setSearchQuery(e.target.value)}
 					w="300px"
 				/>
-				<Select placeholder="모든 장르" value={filterGenre} onChange={(e) => setFilterGenre(e.target.value)} w="150px">
-					<option value="K-POP">K-POP</option>
-					<option value="J-POP">J-POP</option>
-					<option value="POP">POP</option>
-				</Select>
+				<Menu closeOnSelect={false}>
+					<MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="150px">
+						{filterGenre.length > 0 ? `${filterGenre.length}개 선택됨` : "모든 장르"}
+					</MenuButton>
+					<MenuList minW="150px">
+						{genres.map((genre) => (
+							<MenuItem key={genre} as="label">
+								<Checkbox
+									isChecked={filterGenre.includes(genre)}
+									onChange={() => handleCheckboxChange(genre, "genre")}
+									w="100%"
+								>
+									{genre}
+								</Checkbox>
+							</MenuItem>
+						))}
+					</MenuList>
+				</Menu>
 				<Select
 					placeholder="공식 여부"
 					value={filterOfficial}
@@ -592,25 +647,37 @@ export function Songbook() {
 					<option value="true">공식 곡만</option>
 					<option value="false">수동 추가 곡만</option>
 				</Select>
-				<Select
-					placeholder="모든 상태"
-					value={filterStatus}
-					onChange={(e) => setFilterStatus(e.target.value)}
-					w="150px"
-				>
-					<option value="UNCHANGED">유지됨</option>
-					<option value="NEW">신규 추가</option>
-					<option value="MODIFIED">수정됨</option>
-					<option value="DELETED">삭제 대기</option>
-					<option value="DISABLED">비활성</option>
+				<Select placeholder="가사 여부" value={filterLyric} onChange={(e) => setFilterLyric(e.target.value)} w="150px">
+					<option value="true">있음</option>
+					<option value="false">없음</option>
 				</Select>
+				<Menu closeOnSelect={false}>
+					<MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="150px">
+						{filterStatus.length > 0 ? `${filterStatus.length}개 선택됨` : "모든 상태"}
+					</MenuButton>
+					<MenuList minW="150px">
+						{statuses.map((status) => (
+							<MenuItem key={status} as="label">
+								<Checkbox
+									isChecked={filterStatus.includes(status)}
+									onChange={() => handleCheckboxChange(status, "status")}
+									w="100%"
+								>
+									{status}
+								</Checkbox>
+							</MenuItem>
+						))}
+					</MenuList>
+				</Menu>
+
 				<Button
 					colorScheme="orange"
 					onClick={() => {
 						setSearchQuery("");
-						setFilterGenre("");
+						setFilterGenre([]);
 						setFilterOfficial("");
-						setFilterStatus("");
+						setFilterStatus([]);
+						setFilterLyric("");
 					}}
 				>
 					초기화
