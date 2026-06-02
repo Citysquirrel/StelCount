@@ -37,14 +37,16 @@
 		"@types/uuid": "^9.0.8",
 		"@typescript-eslint/eslint-plugin": "^7.2.0",
 		"@typescript-eslint/parser": "^7.2.0",
-		"@vitejs/plugin-basic-ssl": "^1.1.0",
+		"@vitejs/plugin-basic-ssl": "^1.2.0",
 		"@vitejs/plugin-react": "^4.2.1",
 		"cross-env": "^7.0.3",
 		"eslint": "^8.57.0",
 		"eslint-plugin-react-hooks": "^4.6.0",
 		"eslint-plugin-react-refresh": "^0.4.6",
+		"rollup-plugin-visualizer": "^7.0.1",
 		"typescript": "^5.4.5",
-		"vite": "^5.2.0"
+		"vite": "^5.2.0",
+		"vite-plugin-compression": "^0.5.1"
 	},
 	"description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
 	"main": "index.js",
