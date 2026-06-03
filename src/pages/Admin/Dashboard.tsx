@@ -135,11 +135,17 @@ const transformToWeeklyData = (logs: LogData[]): WeeklyMetricData[] => {
 
 				if (rawValue) {
 					try {
-						// 1. JSON 형태라고 가정하고 파싱 시도 (예: "{\"Anonymous\":279, \"192.168.0.1\":12}")
+						// 1. JSON 형태 파싱 시도
 						const parsed = JSON.parse(rawValue);
 
-						// 2. 객체의 값(value)들만 뽑아서 모두 합산
-						totalSum = Object.values(parsed).reduce((sum: number, val: any) => sum + Number(val), 0);
+						// 2. 파싱된 값이 null이 아닌 순수 '객체(Object)'일 경우 합산 로직 실행
+						if (typeof parsed === "object" && parsed !== null) {
+							totalSum = Object.values(parsed).reduce((sum: number, val: any) => sum + Number(val), 0);
+						}
+						// 3. 파싱된 값이 단순 숫자(또는 다른 원시 타입)인 경우
+						else {
+							totalSum = Number(parsed) || 0;
+						}
 					} catch (error) {
 						// 3. 파싱에 실패했다면(JSON 형식이 아님), 일반 숫자 문자열로 간주
 						totalSum = Number(rawValue) || 0;
