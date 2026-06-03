@@ -239,39 +239,87 @@ export function getDiffArray<T extends object = Record<string, any>>(
 	beforeArr: T[],
 	afterArr: T[],
 	key: keyof T,
-	options: GetDiffArrayOptions = {}
+	options: GetDiffArrayOptions = {},
 ) {
 	const { excludeUnchanged = false } = options;
 	const beforeMap = new Map(beforeArr.map((obj) => [obj[key], obj]));
 
-	return afterArr.reduce((acc, afterObj) => {
-		const id = afterObj[key];
-		const beforeObj = beforeMap.get(id);
+	return afterArr.reduce(
+		(acc, afterObj) => {
+			const id = afterObj[key];
+			const beforeObj = beforeMap.get(id);
 
-		const diffKeys: string[] = [];
+			const diffKeys: string[] = [];
 
-		if (beforeObj) {
-			for (const k of Object.keys(afterObj) as (keyof T)[]) {
-				if (k === "diff") continue;
-				if (JSON.stringify(afterObj[k]) !== JSON.stringify(beforeObj[k])) {
-					diffKeys.push(k as string);
+			if (beforeObj) {
+				for (const k of Object.keys(afterObj) as (keyof T)[]) {
+					if (k === "diff") continue;
+					if (JSON.stringify(afterObj[k]) !== JSON.stringify(beforeObj[k])) {
+						diffKeys.push(k as string);
+					}
 				}
+			} else {
+				// 새로 생긴 객체라면 모든 키가 변화한 것으로 간주
+				diffKeys.push(...Object.keys(afterObj).filter((k) => k !== "diff"));
 			}
-		} else {
-			// 새로 생긴 객체라면 모든 키가 변화한 것으로 간주
-			diffKeys.push(...Object.keys(afterObj).filter((k) => k !== "diff"));
-		}
 
-		// 변화 없으면 제외할 수 있음
-		if (excludeUnchanged && diffKeys.length === 0) {
+			// 변화 없으면 제외할 수 있음
+			if (excludeUnchanged && diffKeys.length === 0) {
+				return acc;
+			}
+
+			acc.push({
+				...afterObj,
+				...(diffKeys.length > 0 ? { diff: diffKeys } : {}),
+			});
+
 			return acc;
-		}
-
-		acc.push({
-			...afterObj,
-			...(diffKeys.length > 0 ? { diff: diffKeys } : {}),
-		});
-
-		return acc;
-	}, [] as (T & { diff?: string[] | Diff<T>[] })[]);
+		},
+		[] as (T & { diff?: string[] | Diff<T>[] })[],
+	);
 }
+
+export const formatTime = (totalSeconds?: number | null): string => {
+	if (totalSeconds === undefined || totalSeconds === null || isNaN(totalSeconds) || totalSeconds < 0) return "";
+
+	const h = Math.floor(totalSeconds / 3600);
+	const m = Math.floor((totalSeconds % 3600) / 60);
+	const s = Math.floor(totalSeconds % 60);
+
+	if (h > 0) {
+		return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+	}
+	return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+};
+
+export const parseTimeToSeconds = (timeStr: string): number | null => {
+	if (!timeStr.trim()) return null;
+
+	const parts = timeStr.split(":").map(Number);
+	if (parts.some(isNaN)) return 0;
+
+	if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+	if (parts.length === 2) return parts[0] * 60 + parts[1];
+	if (parts.length === 1) return parts[0];
+	return 0;
+};
+
+export const formatDateToYYYYMMDD = (dateString?: string): string => {
+	if (!dateString) return "";
+
+	// 이미 YYYY-MM-DD 형식으로 입력된 상태라면 그대로 반환
+	if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+		return dateString;
+	}
+
+	const date = new Date(dateString);
+
+	// 유효하지 않은 날짜인 경우 빈 문자열 반환
+	if (isNaN(date.getTime())) return "";
+
+	const yyyy = date.getFullYear();
+	const mm = String(date.getMonth() + 1).padStart(2, "0");
+	const dd = String(date.getDate()).padStart(2, "0");
+
+	return `${yyyy}-${mm}-${dd}`;
+};

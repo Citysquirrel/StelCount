@@ -26,12 +26,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 				<DevComponents />
 			</Suspense>
 		)}
-		<MaintenanceComponent />
+		{/* <MaintenanceComponent /> */}
 		<RouterProvider router={router} />
 	</MainProvider>,
 );
 
-function MaintenanceComponent({}) {
-	useMaintenance();
-	return <></>;
-}
+// function MaintenanceComponent({}) {
+// 	useMaintenance();
+// 	return <></>;
+// }

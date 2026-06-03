@@ -33,6 +33,16 @@ import {
 	MenuButton,
 	MenuList,
 	MenuItem,
+	useDisclosure,
+	Grid,
+	Spacer,
+	Switch,
+	NumberInput,
+	NumberInputField,
+	NumberInputStepper,
+	NumberIncrementStepper,
+	NumberDecrementStepper,
+	ButtonGroup,
 } from "@chakra-ui/react";
 import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -40,8 +50,9 @@ import { fetchServer } from "../../lib/functions/fetch";
 import { normalizeKeyword } from "../../lib/functions/normalized";
 import { SiGooglesheets } from "react-icons/si";
 import { isEqual, omit } from "lodash";
-import { MdSearch } from "react-icons/md";
+import { MdAdd, MdClose, MdOpenInNew, MdSearch } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
+import { formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
 import { useConsole } from "../../lib/hooks/useConsole";
 
 // --- [타입 정의] ---
@@ -64,6 +75,23 @@ export interface SongData {
 	isOfficial: boolean;
 	syncStatus: SyncStatus;
 	actionStatus: ActionStatus;
+
+	song_histories: SongHistory[];
+}
+
+interface SongHistory {
+	id?: number;
+	historyId: string;
+	sungAt: string;
+	youtubeVideoId: string;
+	start: number;
+	end: number | null;
+	memo: string;
+	priority: number | null;
+	hamkubby_id?: number;
+	createdAt?: string | null;
+	updatedAt?: string | null;
+	deletedAt?: string | null;
 }
 
 interface SyncDataData {
@@ -362,6 +390,7 @@ export function Songbook() {
 						isOfficial: true,
 						syncStatus: "NEW",
 						actionStatus: "ACTIVE",
+						song_histories: [],
 					});
 				}
 			});
@@ -436,6 +465,7 @@ export function Songbook() {
 			isOfficial: false,
 			syncStatus: "NEW",
 			actionStatus: "ACTIVE",
+			song_histories: [],
 		};
 		setEditingSong(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
@@ -473,6 +503,7 @@ export function Songbook() {
 								return song;
 							});
 
+						console.log(parsed);
 						setSongs(parsed);
 						rawSongRef.current = parsed;
 					} else {
@@ -554,6 +585,18 @@ export function Songbook() {
 			newSynonyms[idx] = val;
 			return { ...p, synonyms: newSynonyms };
 		});
+
+	// const handleAddHistory = () =>
+	// 	setEditingSong((p) =>
+	// 		p
+	// 			? {
+	// 					...p,
+	// 					song_histories: [...p.song_histories, { sungAt: "", youtubeVideoId: "", start: 0, end: 0, memo: "" }],
+	// 				}
+	// 			: null,
+	// 	);
+	// const handleRemoveHistory = (idx: number) =>
+	// 	setEditingSong((p) => (p ? { ...p, song_histories: p.song_histories.filter((_, i) => i !== idx) } : null));
 
 	const handleCheckboxChange = (value, type: "genre" | "status") => {
 		if (type === "genre")
@@ -648,8 +691,8 @@ export function Songbook() {
 					<option value="false">수동 추가 곡만</option>
 				</Select>
 				<Select placeholder="가사 여부" value={filterLyric} onChange={(e) => setFilterLyric(e.target.value)} w="150px">
-					<option value="true">있음</option>
-					<option value="false">없음</option>
+					<option value="true">가사 있음</option>
+					<option value="false">가사 없음</option>
 				</Select>
 				<Menu closeOnSelect={false}>
 					<MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="150px">
@@ -870,7 +913,7 @@ export function Songbook() {
 			</Box>
 
 			{/* --- [수정/추가 다이얼로그 (모달)] --- */}
-			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="xl">
+			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
 				<ModalOverlay />
 				<ModalContent>
 					<ModalHeader>
@@ -884,138 +927,170 @@ export function Songbook() {
 
 					{editingSong && (
 						<ModalBody>
-							<VStack spacing={4} align="stretch">
-								<Flex gap={4}>
-									<FormControl flex={2}>
-										<FormLabel>곡 제목</FormLabel>
-										<Input
-											value={editingSong.title}
-											onChange={(e) => setEditingSong({ ...editingSong, title: e.target.value })}
-										/>
-									</FormControl>
-									<FormControl flex={1}>
-										<FormLabel>아티스트</FormLabel>
-										<Input
-											value={editingSong.artist}
-											onChange={(e) => setEditingSong({ ...editingSong, artist: e.target.value })}
-										/>
-									</FormControl>
-								</Flex>
-
-								<Flex gap={4}>
-									<FormControl>
-										<FormLabel>장르</FormLabel>
-										<Select
-											value={editingSong.genre}
-											onChange={(e) => setEditingSong({ ...editingSong, genre: e.target.value as Genre })}
-										>
-											<option value="K-POP">K-POP</option>
-											<option value="J-POP">J-POP</option>
-											<option value="POP">POP</option>
-										</Select>
-									</FormControl>
-									<FormControl>
-										<FormLabel>치즈 (난이도/성향)</FormLabel>
-										<Select
-											value={editingSong.cheese}
-											onChange={(e) => setEditingSong({ ...editingSong, cheese: e.target.value as Cheese })}
-										>
-											<option value="잘몰라">잘몰라</option>
-											<option value="일반곡">일반곡</option>
-											<option value="피토곡">피토곡</option>
-											<option value="우엑곡">우엑곡</option>
-											<option value="숙제곡">숙제곡</option>
-										</Select>
-									</FormControl>
-								</Flex>
-
-								<FormControl>
-									<FormLabel>
-										가사{" "}
-										<IconButton
-											size="sm"
-											aria-label="open-lyric-search"
-											onClick={() => {
-												const query = `${editingSong.artist} ${editingSong.title} 가사`;
-												window.open(
-													`https://www.google.com/search?q=${encodeURIComponent(query)}&udm=14`,
-													"lyrics",
-													"noopener,width=540,height=600",
-												);
-											}}
-										>
-											<MdSearch />
-										</IconButton>
-									</FormLabel>
-									{/* 여러 줄 입력 가능한 Textarea */}
-									<Textarea
-										className="textarea-resizing"
-										rows={12}
-										value={editingSong.lyric}
-										onChange={(e) => setEditingSong({ ...editingSong, lyric: e.target.value })}
-									/>
-								</FormControl>
-
-								<Divider />
-
-								<FormControl>
-									<Flex justify="space-between" align="center" mb={2}>
-										<FormLabel m={0}>별칭 (검색어)</FormLabel>
-										<Button size="xs" leftIcon={<FiPlus />} onClick={handleAddSynonym}>
-											별칭 추가
-										</Button>
+							<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
+								<VStack spacing={4} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
+									<Flex gap={4}>
+										<FormControl flex={2}>
+											<FormLabel>곡 제목</FormLabel>
+											<Input
+												value={editingSong.title}
+												onChange={(e) => setEditingSong({ ...editingSong, title: e.target.value })}
+											/>
+										</FormControl>
+										<FormControl flex={1}>
+											<FormLabel>아티스트</FormLabel>
+											<Input
+												value={editingSong.artist}
+												onChange={(e) => setEditingSong({ ...editingSong, artist: e.target.value })}
+											/>
+										</FormControl>
 									</Flex>
-									<VStack spacing={2}>
-										{editingSong.synonyms.map((syn, idx) => (
-											<Flex key={idx} w="100%" gap={2}>
-												<Input size="sm" value={syn} onChange={(e) => handleSynonymChange(idx, e.target.value)} />
-												<IconButton
-													aria-label="remove"
-													icon={<FiX />}
-													size="sm"
-													colorScheme="red"
-													onClick={() => handleRemoveSynonym(idx)}
-												/>
-											</Flex>
-										))}
-										{editingSong.synonyms.length === 0 && (
-											<Text fontSize="sm" color="gray.500">
-												등록된 별칭이 없습니다.
-											</Text>
-										)}
-									</VStack>
-								</FormControl>
 
-								<FormControl>
-									<FormLabel>메모 (Notes)</FormLabel>
-									<Input
-										value={editingSong.notes}
-										onChange={(e) => setEditingSong({ ...editingSong, notes: e.target.value })}
-									/>
-								</FormControl>
+									<Flex gap={4}>
+										<FormControl>
+											<FormLabel>장르</FormLabel>
+											<Select
+												value={editingSong.genre}
+												onChange={(e) => setEditingSong({ ...editingSong, genre: e.target.value as Genre })}
+											>
+												<option value="K-POP">K-POP</option>
+												<option value="J-POP">J-POP</option>
+												<option value="POP">POP</option>
+											</Select>
+										</FormControl>
+										<FormControl>
+											<FormLabel>치즈 (난이도/성향)</FormLabel>
+											<Select
+												value={editingSong.cheese}
+												onChange={(e) => setEditingSong({ ...editingSong, cheese: e.target.value as Cheese })}
+											>
+												<option value="잘몰라">잘몰라</option>
+												<option value="일반곡">일반곡</option>
+												<option value="피토곡">피토곡</option>
+												<option value="우엑곡">우엑곡</option>
+												<option value="숙제곡">숙제곡</option>
+											</Select>
+										</FormControl>
+									</Flex>
 
-								<FormControl display="flex" alignItems="center" mt={2}>
-									<FormLabel mb="0">공식 등록 곡</FormLabel>
-									<Checkbox
-										isChecked={editingSong.isOfficial}
-										onChange={(e) => setEditingSong({ ...editingSong, isOfficial: e.target.checked })}
-									/>
-								</FormControl>
-								<Flex gap={4}>
-									<FormControl flex={1}>
-										<FormLabel>활성 상태</FormLabel>
-										<Select
-											value={editingSong.actionStatus}
-											onChange={(e) => setEditingSong({ ...editingSong, actionStatus: e.target.value as ActionStatus })}
-										>
-											<option value="ACTIVE">활성</option>
-											<option value="DISABLED">비활성</option>
-											<option value="DELETED">삭제 대기</option>
-										</Select>
+									<FormControl>
+										<FormLabel>
+											가사{" "}
+											<IconButton
+												size="sm"
+												aria-label="open-lyric-search"
+												onClick={() => {
+													const query = `${editingSong.artist} ${editingSong.title} 가사`;
+													window.open(
+														`https://www.google.com/search?q=${encodeURIComponent(query)}&udm=14`,
+														"lyrics",
+														"noopener,width=540,height=600",
+													);
+												}}
+											>
+												<MdSearch />
+											</IconButton>
+										</FormLabel>
+										{/* 여러 줄 입력 가능한 Textarea */}
+										<Textarea
+											className="textarea-resizing"
+											rows={12}
+											value={editingSong.lyric}
+											onChange={(e) => setEditingSong({ ...editingSong, lyric: e.target.value })}
+										/>
 									</FormControl>
-									<Box flex={2}></Box>
-								</Flex>
-							</VStack>
+
+									<Divider />
+
+									<FormControl>
+										<Flex justify="space-between" align="center" mb={2}>
+											<FormLabel m={0}>별칭 (검색어)</FormLabel>
+											<Button size="xs" leftIcon={<FiPlus />} onClick={handleAddSynonym}>
+												별칭 추가
+											</Button>
+										</Flex>
+										<VStack spacing={2}>
+											{editingSong.synonyms.map((syn, idx) => (
+												<Flex key={idx} w="100%" gap={2}>
+													<Input size="sm" value={syn} onChange={(e) => handleSynonymChange(idx, e.target.value)} />
+													<IconButton
+														aria-label="remove"
+														icon={<FiX />}
+														size="sm"
+														colorScheme="red"
+														onClick={() => handleRemoveSynonym(idx)}
+													/>
+												</Flex>
+											))}
+											{editingSong.synonyms.length === 0 && (
+												<Text fontSize="sm" color="gray.500">
+													등록된 별칭이 없습니다.
+												</Text>
+											)}
+										</VStack>
+									</FormControl>
+
+									<FormControl>
+										<FormLabel>메모 (Notes)</FormLabel>
+										<Input
+											value={editingSong.notes}
+											onChange={(e) => setEditingSong({ ...editingSong, notes: e.target.value })}
+										/>
+									</FormControl>
+
+									<FormControl display="flex" alignItems="center" mt={2}>
+										<FormLabel mb="0">공식 등록 곡</FormLabel>
+										<Checkbox
+											isChecked={editingSong.isOfficial}
+											onChange={(e) => setEditingSong({ ...editingSong, isOfficial: e.target.checked })}
+										/>
+									</FormControl>
+									<Flex gap={4}>
+										<FormControl flex={1}>
+											<FormLabel>활성 상태</FormLabel>
+											<Select
+												value={editingSong.actionStatus}
+												onChange={(e) =>
+													setEditingSong({ ...editingSong, actionStatus: e.target.value as ActionStatus })
+												}
+											>
+												<option value="ACTIVE">활성</option>
+												<option value="DISABLED">비활성</option>
+												<option value="DELETED">삭제 대기</option>
+											</Select>
+										</FormControl>
+										<Box flex={2}></Box>
+									</Flex>
+								</VStack>
+								<VStack width={["100%", "100%", "280px"]} align="stretch" p={"12px 4px"}>
+									<VStack
+										border="1px solid"
+										borderColor="#c5c5c5"
+										borderRadius={"12px"}
+										p={2}
+										height="100%"
+										maxHeight="540px"
+										overflow="auto"
+									>
+										<FormControl>
+											<Flex justify="space-between" align="center" mb={2}>
+												<FormLabel m={0}>가창 기록</FormLabel>
+												{/* <Button size="xs" leftIcon={<FiPlus />} onClick={handleAddSynonym}>
+													기록 추가
+												</Button> */}
+											</Flex>
+											<VStack spacing={2}>
+												<SongHistoryEditor editingSong={editingSong} setEditingSong={setEditingSong} />
+											</VStack>
+										</FormControl>
+									</VStack>
+									{/* sungAt: string;
+	youtubeVideoId: string;
+	start: number;
+	end: number;
+	memo: string; */}
+								</VStack>
+							</HStack>
 						</ModalBody>
 					)}
 
@@ -1033,7 +1108,355 @@ export function Songbook() {
 	);
 }
 
-interface Mapping {
-	genre: { [key: string]: Genre };
-	cheese: { [key: string]: Cheese };
+interface SongHistoryEditorProps {
+	editingSong: SongData | null;
+	setEditingSong: React.Dispatch<React.SetStateAction<SongData | null>>;
+}
+
+export default function SongHistoryEditor({ editingSong, setEditingSong }: SongHistoryEditorProps) {
+	const { isOpen, onOpen, onClose } = useDisclosure();
+
+	// 상태 관리
+	const [editIndex, setEditIndex] = useState<number | null>(null);
+	const [modalData, setModalData] = useState<SongHistory | null>(null);
+
+	// 시간 포맷(MM:SS)과 초(Seconds) 단위 토글
+	const [isTimeFormat, setIsTimeFormat] = useState<boolean>(true);
+
+	// 💡 UX 최적화: 타이핑 중 커서가 튀는 현상을 막기 위해, 시간 입력값은 모달 내 로컬 string 상태로 관리합니다.
+	const [timeStrStart, setTimeStrStart] = useState<string>("");
+	const [timeStrEnd, setTimeStrEnd] = useState<string>("");
+
+	// editingSong이 null일 경우 렌더링 방어 (Early Return)
+	if (!editingSong) {
+		return (
+			<Flex w="280px" p={4} justify="center" align="center" borderWidth="1px" borderRadius="md" bg="gray.50">
+				<Text fontSize="sm" color="gray.500">
+					선택된 곡이 없습니다.
+				</Text>
+			</Flex>
+		);
+	}
+
+	// --- 핸들러: 기록 추가 ---
+	const handleAddHistory = () => {
+		const newHistory: SongHistory = {
+			sungAt: formatDateToYYYYMMDD(new Date().toDateString()),
+			historyId: `HISTORY::${Date.now()}::${crypto.randomUUID()}`,
+			youtubeVideoId: "",
+			start: 0,
+			end: null,
+			memo: "",
+			priority: 0,
+		};
+		setModalData(newHistory);
+		setTimeStrStart("00:00");
+		setTimeStrEnd("");
+		setEditIndex(-1); // -1은 '새로 추가'를 의미
+		onOpen();
+	};
+
+	// --- 핸들러: 카드 클릭 (수정) ---
+	const handleClickCard = (history: SongHistory, index: number) => {
+		setModalData({ ...history, sungAt: formatDateToYYYYMMDD(history.sungAt) });
+		setTimeStrStart(isTimeFormat ? formatTime(history.start) || "00:00" : String(history.start || 0));
+		setTimeStrEnd(
+			isTimeFormat
+				? formatTime(history.end)
+				: history.end !== undefined && history.end !== null
+					? String(history.end)
+					: "",
+		);
+		setEditIndex(index);
+		onOpen();
+	};
+
+	// --- 핸들러: 기록 삭제 ---
+	const handleRemoveHistory = (e: React.MouseEvent, indexToRemove: number) => {
+		e.stopPropagation();
+		setEditingSong((prev) => {
+			if (!prev) return prev;
+			return {
+				...prev,
+				song_histories: prev.song_histories.filter((_, idx) => idx !== indexToRemove),
+			};
+		});
+	};
+
+	// --- 핸들러: 모달 저장 ---
+	const handleSaveHistory = () => {
+		if (!modalData) return;
+		const { sungAt, youtubeVideoId, start, end, memo } = modalData;
+		if (sungAt === "" || youtubeVideoId === "") return;
+
+		// 로컬 텍스트 상태(timeStr)를 파싱하여 modalData의 실제 start, end(숫자)로 변환
+		let finalStart = 0;
+		let finalEnd: number | null = null;
+
+		if (isTimeFormat) {
+			finalStart = parseTimeToSeconds(timeStrStart) ?? 0;
+			finalEnd = parseTimeToSeconds(timeStrEnd);
+		} else {
+			finalStart = Number(timeStrStart) || 0;
+			finalEnd = timeStrEnd.trim() !== "" ? Number(timeStrEnd) : null;
+		}
+
+		const historyToSave = {
+			...modalData,
+			start: finalStart,
+			end: finalEnd,
+		};
+
+		setEditingSong((prev) => {
+			if (!prev) return prev;
+			const newHistories = [...prev.song_histories];
+
+			if (editIndex === -1) {
+				newHistories.push(historyToSave);
+			} else if (editIndex !== null) {
+				newHistories[editIndex] = historyToSave;
+			}
+
+			return { ...prev, song_histories: newHistories };
+		});
+
+		onClose();
+	};
+
+	// 포맷 토글 시 로컬 스트링 상태도 맞춰서 변환
+	const handleToggleFormat = (checked: boolean) => {
+		setIsTimeFormat(checked);
+
+		// 현재 입력되어 있는 값을 기반으로 즉시 포맷팅 스왑
+		const currentStartSec = isTimeFormat ? parseTimeToSeconds(timeStrStart) : Number(timeStrStart);
+		const currentEndSec = isTimeFormat ? parseTimeToSeconds(timeStrEnd) : timeStrEnd ? Number(timeStrEnd) : undefined;
+
+		if (checked) {
+			// 초 -> MM:SS 전환
+			setTimeStrStart(formatTime(currentStartSec) || "00:00");
+			setTimeStrEnd(formatTime(currentEndSec));
+		} else {
+			// MM:SS -> 초 전환
+			setTimeStrStart(String(currentStartSec || 0));
+			setTimeStrEnd(currentEndSec !== undefined ? String(currentEndSec) : "");
+		}
+	};
+
+	const youtubeLink = (youtubeVideoId: string, start: number) =>
+		`https://www.youtube.com/watch?v=${youtubeVideoId}&t=${start}s`;
+
+	return (
+		<>
+			{/* 📋 가창 기록 리스트 */}
+			{editingSong.song_histories.map((his, idx) => (
+				<Box
+					key={idx}
+					w="100%"
+					p={2}
+					borderWidth="1px"
+					borderRadius="md"
+					cursor="pointer"
+					_hover={{ bg: "gray.50" }}
+					onClick={() => handleClickCard(his, idx)}
+				>
+					<Flex direction="column" gap={1} overflow="hidden">
+						{/* 1행: 날짜 | 유튜브 ID | 삭제 버튼 */}
+						<Grid templateColumns="auto 1fr auto" gap={2} alignItems="center">
+							<Text fontSize="xs" fontWeight="bold" whiteSpace="nowrap">
+								{formatDateToYYYYMMDD(his.sungAt) || "날짜 미상"}
+							</Text>
+							<Text fontSize="xs" color="gray.500" isTruncated>
+								{his.youtubeVideoId || "ID 없음"}
+							</Text>
+							<HStack gap={0}>
+								<IconButton
+									aria-label="Open youtube link"
+									icon={<MdOpenInNew />}
+									size="xs"
+									variant="ghost"
+									colorScheme="blue"
+									onClick={(e) => {
+										e.stopPropagation();
+										window.open(youtubeLink(his.youtubeVideoId, his.start), "_blank");
+									}}
+								/>
+								<IconButton
+									aria-label="Remove history"
+									icon={<MdClose />}
+									size="xs"
+									variant="ghost"
+									colorScheme="red"
+									onClick={(e) => handleRemoveHistory(e, idx)}
+								/>
+							</HStack>
+						</Grid>
+
+						{/* 2행: 시간 구간 | 메모 */}
+						<Grid templateColumns="auto 1fr auto" gap={2} alignItems="center">
+							<Text fontSize="xs" color="blue.500" whiteSpace="nowrap">
+								{formatTime(his.start) || "00:00"}
+								{his.end !== null ? ` ~ ${formatTime(his.end)}` : ""}
+							</Text>
+							<Text fontSize="xs" isTruncated>
+								{his.memo || "메모 없음"}
+							</Text>
+							<Text fontSize="xs" isTruncated>
+								중요도 {his.priority === 7 ? "⭐" : his.priority}
+							</Text>
+						</Grid>
+					</Flex>
+				</Box>
+			))}
+
+			{/* ➕ 추가 버튼 */}
+			<Button leftIcon={<MdAdd />} size="sm" w="100%" colorScheme="teal" variant="outline" onClick={handleAddHistory}>
+				새 가창 기록 추가
+			</Button>
+
+			{/* 🛠️ 수정/추가 모달 */}
+			<Modal isOpen={isOpen} onClose={onClose} isCentered size="sm">
+				<ModalOverlay />
+				<ModalContent mx={4}>
+					<ModalHeader fontSize="md">{editIndex === -1 ? "가창 기록 추가" : "가창 기록 수정"}</ModalHeader>
+					<ModalCloseButton />
+
+					<ModalBody>
+						{modalData && (
+							<Flex direction="column" gap={3}>
+								<FormControl isInvalid={modalData.sungAt === ""}>
+									<FormLabel fontSize="sm" mb={1} color={modalData.sungAt === "" ? "red.500" : undefined}>
+										날짜 (sungAt)
+									</FormLabel>
+									<Input
+										size="sm"
+										type="date"
+										value={modalData.sungAt || ""}
+										onChange={(e) => setModalData({ ...modalData, sungAt: e.target.value })}
+									/>
+								</FormControl>
+
+								<FormControl isInvalid={modalData.youtubeVideoId === ""}>
+									<FormLabel fontSize="sm" mb={1} color={modalData.youtubeVideoId === "" ? "red.500" : undefined}>
+										유튜브 Video ID
+										<IconButton
+											aria-label="Open youtube link"
+											icon={<MdOpenInNew />}
+											size="xs"
+											variant="ghost"
+											colorScheme="blue"
+											onClick={(e) => {
+												e.stopPropagation();
+												window.open(youtubeLink(modalData.youtubeVideoId, modalData.start), "_blank");
+											}}
+										/>
+									</FormLabel>
+									<Input
+										size="sm"
+										value={modalData.youtubeVideoId || ""}
+										onChange={(e) => setModalData({ ...modalData, youtubeVideoId: e.target.value })}
+									/>
+								</FormControl>
+
+								{/* ⏱️ 시간 입력 영역 */}
+								<Box p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+									<Flex alignItems="center" mb={3}>
+										<Text fontSize="sm" fontWeight="bold">
+											재생 구간
+										</Text>
+										<Spacer />
+										<Flex alignItems="center" gap={2}>
+											<Text fontSize="xs" color="gray.500">
+												{isTimeFormat ? "시간 포맷" : "초 단위"}
+											</Text>
+											<Switch
+												size="sm"
+												colorScheme="teal"
+												isChecked={isTimeFormat}
+												onChange={(e) => handleToggleFormat(e.target.checked)}
+											/>
+										</Flex>
+									</Flex>
+
+									<Grid templateColumns="1fr 1fr" gap={2}>
+										<FormControl>
+											<FormLabel fontSize="xs" mb={1}>
+												시작
+											</FormLabel>
+											<Input
+												size="sm"
+												type={isTimeFormat ? "text" : "number"}
+												placeholder={isTimeFormat ? "예: 01:25" : "예: 85"}
+												value={timeStrStart || ""}
+												onChange={(e) => setTimeStrStart(e.target.value)}
+											/>
+										</FormControl>
+										<FormControl>
+											<FormLabel fontSize="xs" mb={1}>
+												종료 (선택)
+											</FormLabel>
+											<Input
+												size="sm"
+												type={isTimeFormat ? "text" : "number"}
+												placeholder="없음"
+												value={timeStrEnd || ""}
+												onChange={(e) => setTimeStrEnd(e.target.value)}
+											/>
+										</FormControl>
+									</Grid>
+								</Box>
+
+								<FormControl>
+									<FormLabel fontSize="sm" mb={1}>
+										메모
+									</FormLabel>
+									<Input
+										size="sm"
+										value={modalData.memo || ""}
+										onChange={(e) => setModalData({ ...modalData, memo: e.target.value })}
+									/>
+								</FormControl>
+								<FormControl>
+									<FormLabel fontSize="sm" mb={1}>
+										중요도
+									</FormLabel>
+									<NumberInput
+										value={modalData.priority || 0}
+										defaultValue={0}
+										min={0}
+										max={255}
+										size="sm"
+										maxW={32}
+										onChange={(_, number) => setModalData({ ...modalData, priority: number })}
+									>
+										<NumberInputField />
+										<NumberInputStepper>
+											<NumberIncrementStepper />
+											<NumberDecrementStepper />
+										</NumberInputStepper>
+									</NumberInput>
+									<Text fontSize="xs" color="gray.500">
+										(높을수록 중요, 7로 설정시 ⭐표시)
+									</Text>
+								</FormControl>
+							</Flex>
+						)}
+					</ModalBody>
+
+					<ModalFooter>
+						<Button variant="ghost" mr={2} onClick={onClose} size="sm">
+							취소
+						</Button>
+						<Button
+							colorScheme="blue"
+							onClick={handleSaveHistory}
+							size="sm"
+							isDisabled={modalData?.youtubeVideoId === "" || modalData?.youtubeVideoId === ""}
+						>
+							저장
+						</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
+		</>
+	);
 }
