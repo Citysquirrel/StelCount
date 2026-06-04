@@ -1187,7 +1187,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 	const handleSaveHistory = () => {
 		if (!modalData) return;
 		const { sungAt, youtubeVideoId, start, end, memo } = modalData;
-		if (sungAt === "" || youtubeVideoId === "") return;
+		if (sungAt === "") return;
 
 		// 로컬 텍스트 상태(timeStr)를 파싱하여 modalData의 실제 start, end(숫자)로 변환
 		let finalStart = 0;
@@ -1335,8 +1335,8 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 									/>
 								</FormControl>
 
-								<FormControl isInvalid={modalData.youtubeVideoId === ""}>
-									<FormLabel fontSize="sm" mb={1} color={modalData.youtubeVideoId === "" ? "red.500" : undefined}>
+								<FormControl>
+									<FormLabel fontSize="sm" mb={1}>
 										유튜브 Video ID
 										<IconButton
 											aria-label="Open youtube link"
@@ -1446,12 +1446,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 						<Button variant="ghost" mr={2} onClick={onClose} size="sm">
 							취소
 						</Button>
-						<Button
-							colorScheme="blue"
-							onClick={handleSaveHistory}
-							size="sm"
-							isDisabled={modalData?.youtubeVideoId === "" || modalData?.youtubeVideoId === ""}
-						>
+						<Button colorScheme="blue" onClick={handleSaveHistory} size="sm" isDisabled={modalData?.sungAt === ""}>
 							저장
 						</Button>
 					</ModalFooter>
