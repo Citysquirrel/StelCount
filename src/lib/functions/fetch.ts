@@ -32,7 +32,8 @@ interface ServerAPIMap {
 		| "/settings" // GET, POST /settings
 		| "/dashboard"
 		| "/songbook"
-		| "/songbook/import";
+		| "/songbook/import"
+		| "/stellars";
 }
 
 type Version = keyof ServerAPIMap;

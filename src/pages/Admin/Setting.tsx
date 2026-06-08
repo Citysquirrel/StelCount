@@ -198,7 +198,7 @@ export function Setting() {
 		return <Box p={6}>설정 데이터를 불러오는 중...</Box>;
 	}
 	return (
-		<Box p={{ base: 4, md: 8 }} maxW="1200px" mx="auto">
+		<Box p={8}>
 			<Flex
 				justify="space-between"
 				align="center"
@@ -206,11 +206,9 @@ export function Setting() {
 				top="0"
 				zIndex={10}
 				bg={stickyHeaderBg}
-				backdropFilter="blur(4px)" // 스크롤 시 아래 내용이 예쁘게 블러 처리됨
-				py={4}
+				backdropFilter="blur(4px)"
 				mb={6}
-				mx={{ base: -4, md: -8 }} // 부모 Box의 Padding을 무시하고 꽉 채우기 위함
-				px={{ base: 4, md: 8 }} // 꽉 채운 뒤 다시 내부 Padding 설정
+				// mx={{ base: -4, md: -8 }} // 부모 Box의 Padding을 무시하고 꽉 채우기 위함
 				borderBottom={`1px solid ${borderColor}`}
 			>
 				<Box>

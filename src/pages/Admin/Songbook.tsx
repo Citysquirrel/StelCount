@@ -54,6 +54,7 @@ import { MdAdd, MdClose, MdOpenInNew, MdSearch } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
 import { formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
 import { useConsole } from "../../lib/hooks/useConsole";
+import useColor from "../../lib/hooks/useColor";
 
 // --- [타입 정의] ---
 export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
@@ -177,15 +178,8 @@ export function Songbook() {
 	const statuses: (ActionStatus | SyncStatus)[] = ["ACTIVE", "DELETED", "DISABLED", "MODIFIED", "NEW", "UNCHANGED"];
 
 	// 테마 색상
-	const bgCard = useColorModeValue("white", "gray.700");
-	const borderColor = useColorModeValue("gray.200", "gray.600");
-	const headerBg = useColorModeValue("gray.50", "gray.800");
-	const greenColor = useColorModeValue("green.50", "rgba(72, 187, 120, 0.1)");
-	const redColor = useColorModeValue("red.50", "rgba(245, 101, 101, 0.1)");
-	const blueColor = useColorModeValue("blue.50", "rgb(101, 101, 245,0.1)");
-	const grayColor = useColorModeValue("gray.100", "rgba(160, 174, 192, 0.2)");
-	const yellowColor = useColorModeValue("yellow.50", "rgba(236, 201, 75, 0.1)");
-	const fieldHoverBgColor = useColorModeValue("blue.50", "blue.600");
+	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
+		useColor();
 
 	const parseRawData = (rawData: RawSongData[]): SongData[] => {
 		return rawData.map((song) => {
@@ -1075,20 +1069,12 @@ export function Songbook() {
 										<FormControl>
 											<Flex justify="space-between" align="center" mb={2}>
 												<FormLabel m={0}>가창 기록</FormLabel>
-												{/* <Button size="xs" leftIcon={<FiPlus />} onClick={handleAddSynonym}>
-													기록 추가
-												</Button> */}
 											</Flex>
 											<VStack spacing={2}>
 												<SongHistoryEditor editingSong={editingSong} setEditingSong={setEditingSong} />
 											</VStack>
 										</FormControl>
 									</VStack>
-									{/* sungAt: string;
-	youtubeVideoId: string;
-	start: number;
-	end: number;
-	memo: string; */}
 								</VStack>
 							</HStack>
 						</ModalBody>

@@ -227,7 +227,7 @@ export function Dashboard() {
 		return <Box p={6}>대시보드 데이터를 불러오는 중...</Box>;
 	}
 	return (
-		<Box p={12}>
+		<Box p={8}>
 			<Box mb={8}>
 				<Heading size="lg" mb={2}>
 					주간 트렌드 분석
