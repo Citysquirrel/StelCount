@@ -104,7 +104,9 @@ function App() {
 									isRound
 									icon={<MdSettings />}
 									colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-									onClick={nav("/admin")}
+									onClick={() => {
+										window.location.href = "admin";
+									}}
 									aria-label="admin"
 								/>
 							</Tooltip>
@@ -114,7 +116,9 @@ function App() {
 									isRound
 									icon={<MdSettings />}
 									colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-									onClick={nav("/new-admin")}
+									onClick={() => {
+										window.location.href = "new-admin";
+									}}
 									aria-label="admin"
 								/>
 							</Tooltip>
