@@ -4,7 +4,6 @@ import {
 	Heading,
 	Text,
 	Button,
-	useColorModeValue,
 	Flex,
 	useToast,
 	Badge,
@@ -42,7 +41,6 @@ import {
 	NumberInputStepper,
 	NumberIncrementStepper,
 	NumberDecrementStepper,
-	ButtonGroup,
 } from "@chakra-ui/react";
 import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -53,7 +51,6 @@ import { isEqual, omit } from "lodash";
 import { MdAdd, MdClose, MdOpenInNew, MdSearch } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
 import { formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
-import { useConsole } from "../../lib/hooks/useConsole";
 import useColor from "../../lib/hooks/useColor";
 
 // --- [타입 정의] ---
@@ -89,6 +86,7 @@ interface SongHistory {
 	end: number | null;
 	memo: string;
 	priority: number | null;
+	isActive: boolean;
 	hamkubby_id?: number;
 	createdAt?: string | null;
 	updatedAt?: string | null;
@@ -276,13 +274,13 @@ export function Songbook() {
 	const rowVirtualizer = useVirtualizer({
 		count: filteredSongs.length,
 		getScrollElement: () => parentRef.current,
-		estimateSize: () => 64, // 행의 대략적인 높이(px)
-		overscan: 10, // 보이지 않는 영역에 미리 렌더링할 개수 (부드러운 스크롤링)
+		estimateSize: () => 64,
+		overscan: 10,
 	});
 
 	// --- [핸들러 함수] ---
 	const toggleStatus = (e: React.MouseEvent, syncId: string, newStatus: ActionStatus) => {
-		e.stopPropagation(); // 행 클릭(모달 열기) 이벤트 방지
+		e.stopPropagation();
 
 		// filteredSongs의 index를 통해 원본 songs 배열의 실제 index를 찾아 업데이트
 		const r = rawSongRef.current.find((rs) => rs.syncId === syncId);
@@ -497,7 +495,6 @@ export function Songbook() {
 								return song;
 							});
 
-						console.log(parsed);
 						setSongs(parsed);
 						rawSongRef.current = parsed;
 					} else {
@@ -750,17 +747,9 @@ export function Songbook() {
 				검색 결과: {filteredSongs.length} 건
 			</Text>
 
-			{/* 💡 [수정됨] 가상화 테이블 영역 (구조 분리 적용) */}
-			{/* 1. 전체를 감싸는 최상위 껍데기 Box: 기존에 스크롤 영역에 있던 배경색, 테두리, 그림자를 밖으로 끌어올렸습니다. */}
-			<Box
-				bg={bgCard}
-				rounded="xl"
-				shadow="sm"
-				border={`1px solid ${borderColor}`}
-				overflow="hidden" // 헤더나 아이템의 배경색이 둥근 모서리를 삐져나가지 않게 막아줍니다.
-			>
-				{/* 💡 2. 테이블 헤더 (스크롤 컨테이너 바깥으로 완전 분리) */}
-				{/* 더 이상 스크롤 안에 있지 않으므로 position="sticky", top={0}, zIndex 속성이 필요 없어 삭제했습니다. */}
+			{/* 가상화 테이블 영역 */}
+			<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
+				{/* 테이블 헤더 */}
 				<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
 					<Box w="60px">행</Box>
 					<Box w="100px">상태</Box>
@@ -776,8 +765,7 @@ export function Songbook() {
 					</Box>
 				</Flex>
 
-				{/* 💡 3. 실제 스크롤이 발생하는 가상화 컨테이너 */}
-				{/* 헤더 바로 아래에 배치되며, ref={parentRef}가 여기에 들어옵니다. */}
+				{/* 가상화 컨테이너 */}
 				<Box ref={parentRef} h="600px" overflowY="auto">
 					<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 						{/* 가상화된 행 렌더링 */}
@@ -808,11 +796,9 @@ export function Songbook() {
 									align="center"
 									bg={rowColorMap[song.syncStatus]}
 									borderBottom={`1px solid ${borderColor}`}
-									// outline={song.actionStatus === "ACTIVE" ? undefined : "1px solid"}
-									// outlineColor={borderColorMap[song.actionStatus] || undefined}
 									cursor="pointer"
 									_hover={{ bg: fieldHoverBgColor }}
-									onClick={() => handleRowClick(virtualRow.index)} // 행 클릭 시 수정 모달 오픈
+									onClick={() => handleRowClick(virtualRow.index)}
 								>
 									<Box w="60px">{song.columnData}</Box>
 									<Stack w="100px" alignItems={"flex-start"}>
@@ -1067,6 +1053,7 @@ export function Songbook() {
 										overflow="auto"
 									>
 										<FormControl>
+											{/* 가창 기록 구역 */}
 											<Flex justify="space-between" align="center" mb={2}>
 												<FormLabel m={0}>가창 기록</FormLabel>
 											</Flex>
@@ -1109,7 +1096,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 	// 시간 포맷(MM:SS)과 초(Seconds) 단위 토글
 	const [isTimeFormat, setIsTimeFormat] = useState<boolean>(true);
 
-	// 💡 UX 최적화: 타이핑 중 커서가 튀는 현상을 막기 위해, 시간 입력값은 모달 내 로컬 string 상태로 관리합니다.
+	// 타이핑 중 커서가 튀는 현상을 막기 위해, 시간 입력값은 모달 내 로컬 string 상태로 관리
 	const [timeStrStart, setTimeStrStart] = useState<string>("");
 	const [timeStrEnd, setTimeStrEnd] = useState<string>("");
 
@@ -1134,6 +1121,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 			end: null,
 			memo: "",
 			priority: 0,
+			isActive: true,
 		};
 		setModalData(newHistory);
 		setTimeStrStart("00:00");
@@ -1233,7 +1221,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 
 	return (
 		<>
-			{/* 📋 가창 기록 리스트 */}
+			{/* 가창 기록 리스트 */}
 			{editingSong.song_histories.map((his, idx) => (
 				<Box
 					key={idx}
@@ -1242,11 +1230,13 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 					borderWidth="1px"
 					borderRadius="md"
 					cursor="pointer"
-					_hover={{ bg: "gray.50" }}
+					bg={his.isActive ? undefined : "red.100"}
+					textDecoration={his.isActive ? undefined : "line-through"}
+					_hover={{ bg: his.isActive ? "gray.100" : "red.200" }}
 					onClick={() => handleClickCard(his, idx)}
 				>
 					<Flex direction="column" gap={1} overflow="hidden">
-						{/* 1행: 날짜 | 유튜브 ID | 삭제 버튼 */}
+						{/* 1행 */}
 						<Grid templateColumns="auto 1fr auto" gap={2} alignItems="center">
 							<Text fontSize="xs" fontWeight="bold" whiteSpace="nowrap">
 								{formatDateToYYYYMMDD(his.sungAt) || "날짜 미상"}
@@ -1277,7 +1267,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 							</HStack>
 						</Grid>
 
-						{/* 2행: 시간 구간 | 메모 */}
+						{/* 2행 */}
 						<Grid templateColumns="auto 1fr auto" gap={2} alignItems="center">
 							<Text fontSize="xs" color="blue.500" whiteSpace="nowrap">
 								{formatTime(his.start) || "00:00"}
@@ -1401,29 +1391,41 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 										onChange={(e) => setModalData({ ...modalData, memo: e.target.value })}
 									/>
 								</FormControl>
-								<FormControl>
-									<FormLabel fontSize="sm" mb={1}>
-										중요도
-									</FormLabel>
-									<NumberInput
-										value={modalData.priority || 0}
-										defaultValue={0}
-										min={0}
-										max={255}
-										size="sm"
-										maxW={32}
-										onChange={(_, number) => setModalData({ ...modalData, priority: number })}
+								<Flex>
+									<FormControl>
+										<FormLabel fontSize="sm" mb={1}>
+											중요도
+										</FormLabel>
+										<NumberInput
+											value={modalData.priority || 0}
+											defaultValue={0}
+											min={0}
+											max={255}
+											size="sm"
+											maxW={32}
+											onChange={(_, number) => setModalData({ ...modalData, priority: number })}
+										>
+											<NumberInputField />
+											<NumberInputStepper>
+												<NumberIncrementStepper />
+												<NumberDecrementStepper />
+											</NumberInputStepper>
+										</NumberInput>
+										<Text fontSize="xs" color="gray.500">
+											(높을수록 중요, 7로 설정시 ⭐표시)
+										</Text>
+									</FormControl>
+									<Checkbox
+										flexBasis={"100px"}
+										alignSelf={"flex-end"}
+										isChecked={modalData.isActive}
+										onChange={(e) => {
+											setModalData({ ...modalData, isActive: e.target.checked });
+										}}
 									>
-										<NumberInputField />
-										<NumberInputStepper>
-											<NumberIncrementStepper />
-											<NumberDecrementStepper />
-										</NumberInputStepper>
-									</NumberInput>
-									<Text fontSize="xs" color="gray.500">
-										(높을수록 중요, 7로 설정시 ⭐표시)
-									</Text>
-								</FormControl>
+										활성화
+									</Checkbox>
+								</Flex>
 							</Flex>
 						)}
 					</ModalBody>
