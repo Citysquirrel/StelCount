@@ -105,7 +105,7 @@ function App() {
 									icon={<MdSettings />}
 									colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
 									onClick={() => {
-										window.location.href = "admin";
+										window.location.href = "/admin";
 									}}
 									aria-label="admin"
 								/>
@@ -117,7 +117,7 @@ function App() {
 									icon={<MdSettings />}
 									colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
 									onClick={() => {
-										window.location.href = "new-admin";
+										window.location.href = "/new-admin";
 									}}
 									aria-label="admin"
 								/>
