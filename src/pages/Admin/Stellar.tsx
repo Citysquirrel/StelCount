@@ -1,6 +1,31 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchServer } from "../../lib/functions/fetch";
-import { Badge, Box, Flex, HStack, Heading, IconButton, Stack, Text } from "@chakra-ui/react";
+import {
+	Badge,
+	Box,
+	Flex,
+	HStack,
+	Heading,
+	IconButton,
+	Modal,
+	ModalContent,
+	ModalHeader,
+	ModalOverlay,
+	ModalCloseButton,
+	ModalBody,
+	ModalFooter,
+	Stack,
+	Text,
+	VStack,
+	FormControl,
+	FormLabel,
+	Input,
+	Select,
+	Textarea,
+	Divider,
+	Button,
+	Checkbox,
+} from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
 
@@ -8,6 +33,7 @@ interface StellarInputValue {
 	name: string;
 	nameShort: string;
 	group: string;
+	groups: StellarGroups;
 	formerGroups: string[];
 	youtubeId: string;
 	chzzkId: string;
@@ -21,16 +47,91 @@ interface StellarInputValue {
 
 interface StellarData extends StellarInputValue {
 	id: number;
+	uuid: string;
 	youtubeCustomUrl: string;
+}
+
+interface StellarGroups {
+	id: number;
+	name: string;
+	numbering: string;
+	description: string;
+	isActive: boolean;
+	stellar_id: number;
 }
 
 export function Stellar() {
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
 
+	// 모달 (에디터) 상태
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [editingStellar, setEditingStellar] = useState<StellarData | null>(null);
+	const [editingIndex, setEditingIndex] = useState<number | null>(null);
+	const [searchYoutubeId, setSearchYoutubeId] = useState("");
+
 	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
 		useColor();
 
 	const parentRef = useRef<HTMLDivElement>(null);
+
+	// 행 클릭 시 상세 모달 열기
+	const handleRowClick = (index: number) => {
+		setEditingStellar({ ...stellarData[index] });
+		setEditingIndex(index);
+		setIsModalOpen(true);
+	};
+
+	// 모달 내 저장 버튼
+	const handleSaveEdit = () => {
+		if (!editingStellar) return;
+
+		// if (editingIndex === -1) {
+		// 	// 신규 추가
+		// 	setSongs((prev) => [editingStellar, ...prev]);
+		// } else {
+		// 	// 기존 데이터 수정
+		// 	const targetOriginalSong = filteredSongs[editingIndex!];
+		// 	setSongs((prev) =>
+		// 		prev.map((s) => {
+		// 			if (s === targetOriginalSong) {
+		// 				const raw = rawSongRef.current.find((rs) => rs.syncId === s.syncId);
+
+		// 				const newStatus: SyncStatus = !raw
+		// 					? "NEW"
+		// 					: isEqual(omit(raw, ["syncStatus"]), omit(editingStellar, ["syncStatus"]))
+		// 						? "UNCHANGED"
+		// 						: "MODIFIED";
+
+		// 				return { ...editingStellar, syncStatus: newStatus };
+		// 			}
+		// 			return s;
+		// 		}),
+		// 	);
+		// }
+		setIsModalOpen(false);
+	};
+
+	const handleGetYoutubeId = (e?: React.MouseEvent<HTMLButtonElement>) => {
+		e?.preventDefault();
+		if (searchYoutubeId === "") {
+			alert("빈값");
+			return;
+		}
+		fetchServer("v1", `/yid?username=${searchYoutubeId}`).then((res) => {
+			if (res && res.data.items && editingStellar) {
+				if (editingStellar.youtubeId.length === 0) {
+					setEditingStellar(() => ({ ...editingStellar, youtubeId: res.data.items[0].id }));
+				} else {
+					setEditingStellar(() => ({
+						...editingStellar,
+						youtubeId: editingStellar.youtubeId + "," + res.data.items[0].id,
+					}));
+				}
+			} else {
+				// toast({ description: "올바르지 않은 채널명입니다", status: "error" });
+			}
+		});
+	};
 
 	useEffect(() => {
 		fetchServer("admin", "/stellars").then((res) => {
@@ -42,11 +143,11 @@ export function Stellar() {
 	const rowVirtualizer = useVirtualizer({
 		count: stellarData.length,
 		getScrollElement: () => parentRef.current,
-		estimateSize: () => 64, // 행의 대략적인 높이(px)
-		overscan: 10, // 보이지 않는 영역에 미리 렌더링할 개수 (부드러운 스크롤링)
+		estimateSize: () => 48,
+		overscan: 10,
 	});
 	return (
-		<Box p={8}>
+		<Box>
 			<Box mb={8}>
 				<Heading size="lg" mb={2}>
 					스텔라 데이터 관리
@@ -56,37 +157,26 @@ export function Stellar() {
 				</Text>
 			</Box>
 			<Stack>
-				<Box
-					bg={bgCard}
-					rounded="xl"
-					shadow="sm"
-					border={`1px solid ${borderColor}`}
-					overflow="hidden" // 헤더나 아이템의 배경색이 둥근 모서리를 삐져나가지 않게 막아줍니다.
-				>
-					{/* 💡 2. 테이블 헤더 (스크롤 컨테이너 바깥으로 완전 분리) */}
-					{/* 더 이상 스크롤 안에 있지 않으므로 position="sticky", top={0}, zIndex 속성이 필요 없어 삭제했습니다. */}
+				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
+					{/* 테이블 헤더 */}
 					<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
-						<Box w="60px">행</Box>
-						<Box w="100px">상태</Box>
-						<Box w="60px" textAlign="center">
-							공식
+						<Box w="60px">ID</Box>
+						<Box w="140px">이름</Box>
+						<Box w="140px" textAlign="center">
+							그룹
 						</Box>
-						<Box w="60px" textAlign="center">
-							가사
+						<Box w="120px" textAlign="center">
+							활동일
 						</Box>
-						<Box flex={1}>곡 제목 / 아티스트</Box>
-						<Box w="100px" textAlign="center">
-							조작
-						</Box>
+						<Box flex={1}>소스</Box>
 					</Flex>
 
-					{/* 💡 3. 실제 스크롤이 발생하는 가상화 컨테이너 */}
-					{/* 헤더 바로 아래에 배치되며, ref={parentRef}가 여기에 들어옵니다. */}
+					{/* 가상화 컨테이너 */}
 					<Box ref={parentRef} h="600px" overflowY="auto">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
-							{rowVirtualizer.getVirtualItems().map((virtualRow) => {
-								const song = stellarData[virtualRow.index];
+							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+								const stellar = stellarData[virtualRow.index];
 								// const isFaded = song.actionStatus === "DELETED" || song.actionStatus === "DISABLED";
 								const rowColorMap = {
 									NEW: greenColor,
@@ -109,6 +199,7 @@ export function Stellar() {
 										transform={`translateY(${virtualRow.start}px)`}
 										h={`${virtualRow.size}px`}
 										px={4}
+										bg={index % 2 ? "gray.50" : undefined}
 										align="center"
 										// bg={bgColor}
 										borderBottom={`1px solid ${borderColor}`}
@@ -116,55 +207,42 @@ export function Stellar() {
 										// outlineColor={borderColorMap[song.actionStatus] || undefined}
 										cursor="pointer"
 										_hover={{ bg: fieldHoverBgColor }}
-										// onClick={() => handleRowClick(virtualRow.index)} // 행 클릭 시 수정 모달 오픈
+										onClick={() => handleRowClick(virtualRow.index)}
 									>
-										{/* <Box w="60px">{song.columnData}</Box>
-										<Stack w="100px" alignItems={"flex-start"}>
+										<Box w="60px">{stellar.id}</Box>
+										{/* <Stack w="100px" alignItems={"flex-start"}>
 											<Badge
 												colorScheme={
-													song.syncStatus === "NEW" ? "green" : song.syncStatus === "MODIFIED" ? "yellow" : "gray"
+													stellar.syncStatus === "NEW" ? "green" : stellar.syncStatus === "MODIFIED" ? "yellow" : "gray"
 												}
 											>
-												{song.syncStatus}
+												{stellar.syncStatus}
 											</Badge>
 											<Badge
 												colorScheme={
-													song.actionStatus === "ACTIVE"
+													stellar.actionStatus === "ACTIVE"
 														? "blue"
-														: song.actionStatus === "DELETED"
+														: stellar.actionStatus === "DELETED"
 															? "red"
-															: song.actionStatus === "DISABLED"
+															: stellar.actionStatus === "DISABLED"
 																? "orange"
 																: "gray"
 												}
 											>
-												{song.actionStatus}
+												{stellar.actionStatus}
 											</Badge>
-										</Stack>
-										<Box w="60px" textAlign="center">
-											{song.isOfficial && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
+										</Stack> */}
+										<Box w="140px" textAlign="center">
+											{stellar.name}
+											{stellar.nameShort && `(${stellar.nameShort})`}
 										</Box>
-										<Box w="60px" textAlign="center">
-											{!!song.lyric && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
+										<Box w="140px" textAlign="center">
+											{stellar.group}
 										</Box>
-										<Box
-											flex={1}
-											opacity={isFaded ? 0.5 : 1}
-											textDecoration={song.actionStatus === "DELETED" ? "line-through" : "none"}
-										>
-											<Text fontWeight="bold">
-												{song.title}{" "}
-												<Badge
-													ml={1}
-													colorScheme={song.genre === "K-POP" ? "green" : song.genre === "J-POP" ? "blue" : "yellow"}
-												>
-													{song.genre}
-												</Badge>
-											</Text>
-											<Text fontSize="sm" color="gray.500">
-												{song.artist}
-											</Text>
-										</Box> */}
+										<Box w="120px" textAlign="center">
+											1234
+										</Box>
+										<Box flex={1}></Box>
 
 										{/* 조작 버튼 구역 */}
 										{/* <Box w="100px" textAlign="center">
@@ -208,6 +286,182 @@ export function Stellar() {
 							})}
 						</Box>
 					</Box>
+					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
+						<ModalOverlay />
+						<ModalContent>
+							<ModalHeader>
+								{editingIndex === -1 ? "새 스텔라 추가" : "스텔라 상세 정보 수정"}
+								<Text fontSize="xs" color="gray" fontWeight="400">
+									{editingStellar?.uuid || ""}
+								</Text>
+							</ModalHeader>
+
+							<ModalCloseButton />
+
+							{editingStellar && (
+								<ModalBody>
+									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
+										<VStack spacing={4} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
+											<Flex gap={4}>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">이름</FormLabel>
+													<Input
+														size="sm"
+														value={editingStellar.name}
+														onChange={(e) => setEditingStellar({ ...editingStellar, name: e.target.value })}
+													/>
+												</FormControl>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">짧은 이름</FormLabel>
+													<Input
+														size="sm"
+														value={editingStellar.nameShort}
+														onChange={(e) => setEditingStellar({ ...editingStellar, nameShort: e.target.value })}
+													/>
+												</FormControl>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">그룹</FormLabel>
+													{/* <Input
+														size="sm"
+														value={editingStellar.groups}
+														onChange={(e) => setEditingStellar({ ...editingStellar, nameShort: e.target.value })}
+													/> */}
+												</FormControl>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">그룹(deprecated)</FormLabel>
+													<Text>{editingStellar.group}</Text>
+												</FormControl>
+											</Flex>
+
+											<Flex gap={4}>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">데뷔일</FormLabel>
+													<Input
+														size="sm"
+														fontSize="xs"
+														value={editingStellar.debut}
+														onChange={(e) => setEditingStellar({ ...editingStellar, debut: e.target.value })}
+														type="datetime-local"
+													/>
+												</FormControl>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">졸업일</FormLabel>
+													<Input
+														size="sm"
+														fontSize="xs"
+														value={editingStellar.graduation}
+														onChange={(e) => setEditingStellar({ ...editingStellar, graduation: e.target.value })}
+														type="datetime-local"
+													/>
+												</FormControl>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">
+														색상코드
+														<Box
+															display="inline-block"
+															bg={`#${editingStellar.colorCode}`}
+															borderRadius={"full"}
+															border="1px solid black"
+															boxSize="14px"
+															transform="translate(2px, 2px)"
+														/>
+													</FormLabel>
+													<Input
+														size="sm"
+														value={editingStellar.colorCode}
+														onChange={(e) => setEditingStellar({ ...editingStellar, colorCode: e.target.value })}
+													/>
+												</FormControl>
+												<Box flex={1}></Box>
+											</Flex>
+											<Divider />
+											<Flex gap={4}>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">치지직 ID</FormLabel>
+													<Input
+														size="sm"
+														value={editingStellar.chzzkId}
+														onChange={(e) => setEditingStellar({ ...editingStellar, chzzkId: e.target.value })}
+													/>
+												</FormControl>
+												<Box flex={1}></Box>
+												<Box flex={1}></Box>
+												<Box flex={1}></Box>
+											</Flex>
+											<Flex gap={4}>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">유튜브 ID</FormLabel>
+													<Input
+														size="sm"
+														value={editingStellar.youtubeId}
+														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeId: e.target.value })}
+													/>
+												</FormControl>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">유튜브 별칭주소</FormLabel>
+													<Input
+														size="sm"
+														value={editingStellar.youtubeCustomUrl}
+														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeCustomUrl: e.target.value })}
+													/>
+												</FormControl>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">플레이리스트 ID</FormLabel>
+													<Input
+														size="sm"
+														value={editingStellar.playlistIdForMusic}
+														onChange={(e) =>
+															setEditingStellar({ ...editingStellar, playlistIdForMusic: e.target.value })
+														}
+													/>
+												</FormControl>
+												<Box flex={1}></Box>
+											</Flex>
+											<Flex gap={2} alignItems={"flex-end"}>
+												<FormControl flex={1}>
+													<FormLabel fontSize="sm">유튜브 ID 검색</FormLabel>
+													<Input
+														size="sm"
+														value={searchYoutubeId}
+														onChange={(e) => setSearchYoutubeId(e.target.value)}
+														onKeyUp={(e) => {
+															if (e.key === "Enter") {
+																handleGetYoutubeId();
+															}
+														}}
+														placeholder="별칭을 입력해 ID 찾기"
+													/>
+												</FormControl>
+												<Box flex={1}>
+													<Button width="72px" size={"sm"} onClick={handleGetYoutubeId}>
+														검색
+													</Button>
+												</Box>
+												<Box flex={1}></Box>
+												<Box flex={1}></Box>
+											</Flex>
+											<Divider />
+											<Checkbox
+												isChecked={editingStellar.justLive}
+												onChange={(e) => setEditingStellar({ ...editingStellar, justLive: e.target.checked })}
+											>
+												카운터 데이터를 제외하고 라이브만 표시합니다.
+											</Checkbox>
+										</VStack>
+									</HStack>
+								</ModalBody>
+							)}
+
+							<ModalFooter>
+								<Button variant="ghost" mr={3} onClick={() => setIsModalOpen(false)}>
+									취소
+								</Button>
+								<Button colorScheme="blue" onClick={handleSaveEdit}>
+									적용하기
+								</Button>
+							</ModalFooter>
+						</ModalContent>
+					</Modal>
 				</Box>
 			</Stack>
 		</Box>
