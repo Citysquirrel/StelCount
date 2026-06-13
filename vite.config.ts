@@ -1,5 +1,7 @@
+import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import ssl from "@vitejs/plugin-basic-ssl";
 import { visualizer } from "rollup-plugin-visualizer";
 import viteCompression from "vite-plugin-compression";
@@ -10,6 +12,7 @@ export default defineConfig(({ mode }) => {
 	return {
 		plugins: [
 			react(),
+			tailwindcss(),
 			!isProd && ssl(),
 			// 정적 파일 Gzip 압축
 			isProd &&
@@ -31,9 +34,7 @@ export default defineConfig(({ mode }) => {
 				}),
 		].filter(Boolean),
 
-		server: {
-			https: !isProd,
-		},
+		server: {},
 
 		// esbuild 설정 (console.log 제거)
 		esbuild: {
@@ -72,6 +73,11 @@ export default defineConfig(({ mode }) => {
 					chunkFileNames: "chunks/[name].[hash].js",
 					assetFileNames: "assets/[name].[hash].[ext]",
 				},
+			},
+		},
+		resolve: {
+			alias: {
+				"@": path.resolve(__dirname, "./src"),
 			},
 		},
 	};

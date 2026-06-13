@@ -18,6 +18,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { FiUsers, FiTv, FiVideo, FiPlayCircle, FiMenu, FiHome, FiPieChart, FiSettings } from "react-icons/fi";
 import { IconType } from "react-icons";
+import { Button } from "@/components/ui/button";
 
 // 1. 주간 메트릭 데이터 구조 정의 (하루 누적 최종치)
 interface WeeklyMetricData {
@@ -229,6 +230,9 @@ export function Dashboard() {
 	return (
 		<Box p={8}>
 			<Box mb={8}>
+				<Button size="sm" variant={"outline"}>
+					UI 테스트 버튼
+				</Button>
 				<Heading size="lg" mb={2}>
 					주간 트렌드 분석
 				</Heading>

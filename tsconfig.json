@@ -20,9 +20,12 @@
 		// "noUnusedLocals": true,
 		// "noUnusedParameters": true,
 		"jsx": "react-jsx",
-		"types": ["chrome"]
+		"types": ["chrome"],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
 	},
 	"include": ["src"],
 	"references": [{ "path": "./tsconfig.node.json" }]
 }
-
