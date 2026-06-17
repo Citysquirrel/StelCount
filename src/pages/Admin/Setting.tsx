@@ -17,6 +17,7 @@ import {
 	Badge,
 	Switch,
 } from "@chakra-ui/react";
+import JsonEditor from "../../components/JsonEditor";
 
 // API 응답 타입 정의
 interface SettingResponse {
@@ -33,13 +34,14 @@ interface ConfigInfo {
 const CONFIG_INFOS: Record<string, ConfigInfo> = {
 	MAINTENANCE_MODE: { description: "시스템 점검 모드 활성화 여부", id: 1 },
 	MAINTENANCE_MESSAGE: { description: "점검 중일 때 사용자에게 노출될 안내 메시지", id: 2 },
-	CLIENT_BASE_URL: { description: `CORS 추가 도메인 설정 (예: "https://event.com, https://test.com")`, id: 3 },
-	MAINTENANCE_MODE_HAMKUBBY: { description: "햄쿠비 노래책 점검 모드 활성화 여부", id: 4 },
-	MAINTENANCE_MESSAGE_HAMKUBBY: { description: "노래책 점검 중일 때 사용자에게 노출될 안내 메시지", id: 5 },
+	MAINTENANCE_MODE_HAMKUBBY: { description: "햄쿠비 노래책 점검 모드 활성화 여부", id: 3 },
+	MAINTENANCE_MESSAGE_HAMKUBBY: { description: "노래책 점검 중일 때 사용자에게 노출될 안내 메시지", id: 4 },
+	CLIENT_BASE_URL: { description: `CORS 추가 도메인 설정 (예: "https://event.com, https://test.com")`, id: 5 },
 	GOOGLE_SHEET_ID: { description: "햄쿠비 노래책 구글 시트 ID", id: 6 },
 	GOOGLE_SHEET_JPOP_ID: { description: "J-POP 곡 구글 시트 탭 구글 시트 ID", id: 7 },
 	GOOGLE_SHEET_KPOP_ID: { description: "K-POP 곡 구글 시트 탭 ID", id: 8 },
 	GOOGLE_SHEET_POP_ID: { description: "POP 곡 구글 시트 탭 구글 시트 ID", id: 9 },
+	HAMKUBBY_LINKS: { description: "햄쿠비 관련 페이지의 통합 링크 목록", id: 10 },
 };
 
 export function Setting() {
@@ -69,7 +71,11 @@ export function Setting() {
 							mergedConfigs[key] = key === "MAINTENANCE_MODE" ? "false" : "";
 						});
 					}
-
+					Object.keys(mergedConfigs).forEach((key) => {
+						if (!CONFIG_INFOS.hasOwnProperty(key)) {
+							delete mergedConfigs[key];
+						}
+					});
 					setConfigs(mergedConfigs);
 					setMissingKeysList(fetchedMissingKeys);
 				} else {
@@ -139,8 +145,9 @@ export function Setting() {
 			{keys.map((key) => {
 				const value = configs[key];
 				const isMaintenance = key === "MAINTENANCE_MODE" || key === "MAINTENANCE_MODE_HAMKUBBY";
-
+				const isJson = key === "HAMKUBBY_LINKS";
 				const isMissing = missingKeysList.includes(key);
+
 				return (
 					<FormControl key={key}>
 						<Flex direction={{ base: "column", md: "row" }} gap={4} align={{ base: "stretch", md: "center" }}>
@@ -176,6 +183,13 @@ export function Setting() {
 											{value === "true" ? "점검 활성화됨" : "정상 서비스 중"}
 										</Text>
 									</Flex>
+								) : isJson ? (
+									<JsonEditor
+										value={value}
+										onChange={(e) => {
+											handleInputChange(key, e.target.value);
+										}}
+									/>
 								) : (
 									<Input
 										value={value}
