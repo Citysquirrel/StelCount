@@ -96,7 +96,7 @@ interface ThumbnailScheme {
 export interface MultiViewData {
 	name: string;
 	nameShort?: string;
-	chzzkId?: string | undefined;
+	chzzkId: string;
 	uuid: string;
 	colorCode?: string | undefined;
 	channelName?: string;

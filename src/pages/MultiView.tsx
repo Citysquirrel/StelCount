@@ -73,7 +73,6 @@ import {
 	USER_SETTING_STORAGE,
 	FIREFOX_EXTENSION_URL,
 } from "../lib/constant";
-import { useKeyBind } from "../lib/hooks/useKeyBind";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { Spacing } from "../components/Spacing";
 import { useLocalStorage } from "usehooks-ts";
@@ -89,6 +88,8 @@ import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import * as Hangul from "hangul-js";
 import { UserSettingModal } from "./MultiView/UserSetting";
 import { useConsoleAdmin } from "../lib/hooks/useConsole";
+import { ExtensionDataModal } from "./MultiView/ExtensionData";
+import { ExtensionSyncEditor } from "./MultiView/ExtensionSyncEditor";
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -106,6 +107,7 @@ export function MultiView() {
 		controllerPos: "right-bottom",
 	});
 	const [isBukiUsingFirefox, setIsBukiUsingFirefox] = useState(true);
+	//! useMultivew 위치 어휴 코드 꼬라지 다 갈아엎고싶네
 	const {
 		data,
 		setData,
@@ -124,22 +126,35 @@ export function MultiView() {
 	const { windowWidth, windowHeight } = useResponsive();
 	const { isExtensionInstalled, isLatestVersion } = useExtensionCheck(CHROME_EXTENSION_ID, "1.1.0");
 	const [searchParams, setSearchParams] = useSearchParams();
+	const EXTENSION_DATA_PARAM_NAME = "data";
 	const STREAMS_PARAM_NAME = "streams";
 	const CHAT_PARAM_NAME = "chat";
 	const PARAMS_DELIMITER = "--";
 	const INNER_CHAT_WIDTH = 350;
+	const dataParam = searchParams.get(EXTENSION_DATA_PARAM_NAME);
 	const streamsParam = searchParams.get(STREAMS_PARAM_NAME);
 	const chatParam = searchParams.get(CHAT_PARAM_NAME);
+	const CHANNEL_DATA_FROM_EXTENSION = "stored-extension-channel-data";
+
 	const {
 		isOpen: isSettingOpen,
 		onToggle: handleToggleSetting,
 		onClose: handleCloseSetting,
 		onOpen: handleOpenSetting,
 	} = useDisclosure();
+	const {
+		isOpen: isExtensionSyncModalOpen,
+		onToggle: handleToggleExtensionSyncModal,
+		onClose: handleCloseExtensionSyncModal,
+		onOpen: handleOpenExtensionSyncModal,
+	} = useDisclosure();
 	const len = streams.length;
 
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const [remotePos, setRemotePos] = useState({ x: 0, y: 0 });
+	const [channelDataFromExtension, setChannelDataFromExtension, removeChannelDataFromExtension] = useLocalStorage<
+		ChannelData[]
+	>(CHANNEL_DATA_FROM_EXTENSION, []);
 
 	const handleStreamsParam = (params: string | null) => {
 		if (!params) return;
@@ -212,36 +227,35 @@ export function MultiView() {
 
 	const handleAddStream = (streamId: string | undefined, type: StreamType, uuid: string, name: string) => () => {
 		if (!streamId) return;
-		setStreams((prev) => {
-			const result = [...prev, { streamId, type, uuid, name }];
-			const value = result.reduce((a, c) => {
-				return !a ? c.streamId : a + PARAMS_DELIMITER + c.streamId;
-			}, "");
-			setSearchParams((prev) => {
-				const newParams = new URLSearchParams(prev);
-				newParams.set(STREAMS_PARAM_NAME, value);
-				return newParams;
-			});
-			return result;
+
+		const newStream = { streamId, type, uuid, name };
+		const result = [...streams, newStream];
+
+		setStreams(result);
+
+		const value = result.map((c) => c.streamId).join(PARAMS_DELIMITER);
+
+		setSearchParams((prevParams) => {
+			const newParams = new URLSearchParams(prevParams);
+			newParams.set(STREAMS_PARAM_NAME, value);
+			return newParams;
 		});
 	};
 
 	const handleDeleteStream = (uuid: string) => () => {
-		setStreams((prev) => {
-			const arr = prev.filter((a) => a.uuid !== uuid);
-			const value = arr.map((c) => c.streamId).join(PARAMS_DELIMITER);
-			setSearchParams((prev) => {
-				if (value) {
-					const newParams = new URLSearchParams(prev);
-					newParams.set(STREAMS_PARAM_NAME, value);
-					return newParams;
-				} else {
-					const newParams = new URLSearchParams(prev);
-					newParams.delete(STREAMS_PARAM_NAME);
-					return newParams;
-				}
-			});
-			return arr;
+		const newStreams = streams.filter((a) => a.uuid !== uuid);
+		setStreams(newStreams);
+
+		const value = newStreams.map((c) => c.streamId).join(PARAMS_DELIMITER);
+
+		setSearchParams((prevParams) => {
+			const newParams = new URLSearchParams(prevParams);
+			if (value) {
+				newParams.set(STREAMS_PARAM_NAME, value);
+			} else {
+				newParams.delete(STREAMS_PARAM_NAME);
+			}
+			return newParams;
 		});
 	};
 
@@ -287,7 +301,7 @@ export function MultiView() {
 		}, 30000);
 		customIntervalRef.current = setInterval(() => {
 			refetchCustom(true);
-		}, 60000);
+		}, 30000);
 	};
 
 	const handleCloseMenu = () => {
@@ -374,6 +388,50 @@ export function MultiView() {
 		else setStreams([]);
 	}, [data, streamsParam]);
 
+	// #region 확장 프로그램에서 전달받은 데이터 처리
+
+	//? 송신: 데이터 달라고 조르는 과정
+	useEffect(() => {
+		let requestInterval: number;
+
+		if (dataParam === "ext") {
+			requestInterval = window.setInterval(() => {
+				window.postMessage({ action: "requestInitData" }, window.location.origin);
+			}, 200);
+		}
+
+		return () => {
+			if (requestInterval) clearInterval(requestInterval);
+		};
+	}, [dataParam]);
+
+	//? 수신: content script가 전송한 데이터 받아먹기
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			if (event.data && event.data.action === "updateMultiView") {
+				const receivedChannels = event.data.channels as ChannelData[];
+				setChannelDataFromExtension(receivedChannels);
+				handleOpenExtensionSyncModal();
+
+				if (dataParam === "ext")
+					setSearchParams(
+						(prevParams) => {
+							prevParams.delete("data");
+							return prevParams;
+						},
+						{ replace: true },
+					);
+			}
+		};
+
+		window.addEventListener("message", handleMessage);
+
+		return () => {
+			window.removeEventListener("message", handleMessage);
+		};
+	}, []);
+	// #endregion
+
 	useEffect(() => {
 		if (streams.length === 0) {
 			// setIsInnerChatOpen(false);
@@ -395,312 +453,335 @@ export function MultiView() {
 	configState.controllerPos; // top bottom left right
 
 	return (
-		<HStack
-			position="relative"
-			width="100%"
-			height="100dvh"
-			backgroundColor="black"
-			alignItems={"center"}
-			justifyContent={"center"}
-		>
-			<SideMenu
-				isOpen={isMenuOpen}
-				data={data}
-				setData={setData}
-				handleAddStream={handleAddStream}
-				handleDeleteStream={handleDeleteStream}
-				handleOpen={handleOpenMenu}
-				handleClose={handleCloseMenu}
-				configState={configState}
-				setConfigState={setConfigState}
-				isSettingOpen={isSettingOpen}
-				customStreams={customStreams}
-				setCustomStreams={setCustomStreams}
-				handleToggleSetting={handleToggleSetting}
-				handleCloseSetting={handleCloseSetting}
-				handleOpenSetting={handleOpenSetting}
-				refetch={refetch}
-				refetchCustom={refetchCustom}
-				customIntervalRef={customIntervalRef}
-				isLoading={isLoading}
-				isCustomLoading={isCustomLoading}
-				streams={streams}
-				userSetting={userSetting}
-				setUserSetting={setUserSetting}
+		<>
+			<ExtensionDataModal
+				isOpen={isExtensionSyncModalOpen}
+				onClose={() => {
+					setChannelDataFromExtension([]);
+					handleCloseExtensionSyncModal();
+				}}
+				body={
+					<>
+						<Text color="gray.500" fontSize="sm">
+							체크된 항목으로 리스트가 동기화됩니다.
+						</Text>
+						<ExtensionSyncEditor
+							customStreams={customStreams}
+							setCustomStreams={setCustomStreams}
+							channelDataFromExtension={channelDataFromExtension}
+							setChannelDataFromExtension={setChannelDataFromExtension}
+							onClose={handleCloseExtensionSyncModal}
+						/>
+					</>
+				}
 			/>
 			<HStack
+				position="relative"
+				width="100%"
+				height="100dvh"
+				backgroundColor="black"
 				alignItems={"center"}
 				justifyContent={"center"}
-				gap={0}
-				flexDirection={configState.chatToLeft ? "row-reverse" : "row"}
 			>
+				<SideMenu
+					isOpen={isMenuOpen}
+					data={data}
+					setData={setData}
+					handleAddStream={handleAddStream}
+					handleDeleteStream={handleDeleteStream}
+					handleOpen={handleOpenMenu}
+					handleClose={handleCloseMenu}
+					configState={configState}
+					setConfigState={setConfigState}
+					isSettingOpen={isSettingOpen}
+					customStreams={customStreams}
+					setCustomStreams={setCustomStreams}
+					handleToggleSetting={handleToggleSetting}
+					handleCloseSetting={handleCloseSetting}
+					handleOpenSetting={handleOpenSetting}
+					refetch={refetch}
+					refetchCustom={refetchCustom}
+					customIntervalRef={customIntervalRef}
+					isLoading={isLoading}
+					isCustomLoading={isCustomLoading}
+					streams={streams}
+					userSetting={userSetting}
+					setUserSetting={setUserSetting}
+				/>
 				<HStack
-					id="streams"
-					sx={{
-						flexGrow: 1,
-						flexWrap: "wrap",
-						justifyContent: "center",
-						alignItems: "center",
-						alignContent: "center",
-						width: streamContainerWidth,
-						height: "100vh",
-						boxSizing: "border-box",
-						gap: "0",
-					}}
+					alignItems={"center"}
+					justifyContent={"center"}
+					gap={0}
+					flexDirection={configState.chatToLeft ? "row-reverse" : "row"}
 				>
-					{streams.length > 0 ? (
-						streams.map((stream, idx) => {
-							// const [scrolling, setScrolling] = useState<"yes" | "no" | "auto" | (string & {})>("no"); 미친왜 여기들어가있어
-							const { type, streamId, uuid, name } = stream;
-							const ref = refs.current[idx];
-							const src = createStreamSrc(type, streamId);
-							const handleRefresh = (isAll?: boolean) => () => {
-								if (isAll) {
-									refs.current.forEach((ref) => {
-										if (ref.current) ref.current.src = ref.current.src;
-									});
-									return;
-								}
-								if (ref.current) ref.current.src = ref.current.src;
-							};
+					<HStack
+						id="streams"
+						sx={{
+							flexGrow: 1,
+							flexWrap: "wrap",
+							justifyContent: "center",
+							alignItems: "center",
+							alignContent: "center",
+							width: streamContainerWidth,
+							height: "100vh",
+							boxSizing: "border-box",
+							gap: "0",
+						}}
+					>
+						{streams.length > 0 ? (
+							streams.map((stream, idx) => {
+								// const [scrolling, setScrolling] = useState<"yes" | "no" | "auto" | (string & {})>("no"); 미친왜 여기들어가있어
+								const { type, streamId, uuid, name } = stream;
+								const ref = refs.current[idx];
+								const src = createStreamSrc(type, streamId);
+								const handleRefresh = (isAll?: boolean) => () => {
+									if (isAll) {
+										refs.current.forEach((ref) => {
+											if (ref.current) ref.current.src = ref.current.src;
+										});
+										return;
+									}
+									if (ref.current) ref.current.src = ref.current.src;
+								};
 
-							if (!src) return <Fragment key={`${idx}-${streamId}`}></Fragment>;
-							return (
-								<Box
-									position="relative"
-									key={`${streamId}`}
-									// onDragOver={handleRemoteDragOver}
-									// onDrop={handleRemoteDrop}
-								>
+								if (!src) return <Fragment key={`${idx}-${streamId}`}></Fragment>;
+								return (
 									<Box
-										as="iframe"
-										ref={ref}
-										src={src}
-										width={`${frameSize.width}px`}
-										height={`${frameSize.height}px`}
-										aspectRatio={"16 / 9"}
-										allowFullScreen
-										scrolling={"no"}
-										frameBorder={"0"}
-									/>
-									<Stack
-										// draggable
-										position="absolute"
-										// top={remotePos.y}
-										// left={remotePos.x}
-										top={configState.controllerPos.includes("top") ? "48px" : undefined}
-										left={configState.controllerPos.includes("left") ? "20px" : undefined}
-										bottom={configState.controllerPos.includes("bottom") ? "48px" : undefined}
-										right={configState.controllerPos.includes("right") ? "60px" : undefined}
-										backgroundColor={"rgb(255,255,255,0.3)"}
-										borderRadius={".5rem"}
-										padding="8px 12px 8px 12px"
-										gap="4px"
-										// outline={"1px solid white"}
-										transition="all .2s"
-										backdropFilter="blur(1px)"
-										opacity={isMenuOpen ? 1 : 0}
-										_hover={{ opacity: 1 }}
+										position="relative"
+										key={`${streamId}`}
+										// onDragOver={handleRemoteDragOver}
+										// onDrop={handleRemoteDrop}
 									>
-										{/* <RemoteControlClicker
+										<Box
+											as="iframe"
+											ref={ref}
+											src={src}
+											width={`${frameSize.width}px`}
+											height={`${frameSize.height}px`}
+											aspectRatio={"16 / 9"}
+											allowFullScreen
+											scrolling={"no"}
+											frameBorder={"0"}
+										/>
+										<Stack
+											// draggable
+											position="absolute"
+											// top={remotePos.y}
+											// left={remotePos.x}
+											top={configState.controllerPos.includes("top") ? "48px" : undefined}
+											left={configState.controllerPos.includes("left") ? "20px" : undefined}
+											bottom={configState.controllerPos.includes("bottom") ? "48px" : undefined}
+											right={configState.controllerPos.includes("right") ? "60px" : undefined}
+											backgroundColor={"rgb(255,255,255,0.3)"}
+											borderRadius={".5rem"}
+											padding="8px 12px 8px 12px"
+											gap="4px"
+											// outline={"1px solid white"}
+											transition="all .2s"
+											backdropFilter="blur(1px)"
+											opacity={isMenuOpen ? 1 : 0}
+											_hover={{ opacity: 1 }}
+										>
+											{/* <RemoteControlClicker
 											dotColor="gray.300"
 											alignSelf={"center"}
 											// onDragStart={handleRemoteDragStart}
 										/> */}
-										<ButtonGroup size="sm" isAttached colorScheme="green">
-											<Button onClick={handleOpenChat(streamId, name)}>채팅</Button>
-											<IconButton
-												onClick={handleOpenChat(streamId, name, true)}
-												icon={<MdOpenInNew />}
-												aria-label="open-chat-in-new-tab"
-											/>
-										</ButtonGroup>
-										<ButtonGroup size="sm" isAttached colorScheme="blue">
-											<Button onClick={handleRefresh()}>갱신</Button>
-											<IconButton
-												onClick={handleRefresh(true)}
-												icon={<RefreshAllIconSVG color="white" width="18px" height="18px" />}
-												aria-label="refresh-all-streams"
-											/>
-										</ButtonGroup>
+											<ButtonGroup size="sm" isAttached colorScheme="green">
+												<Button onClick={handleOpenChat(streamId, name)}>채팅</Button>
+												<IconButton
+													onClick={handleOpenChat(streamId, name, true)}
+													icon={<MdOpenInNew />}
+													aria-label="open-chat-in-new-tab"
+												/>
+											</ButtonGroup>
+											<ButtonGroup size="sm" isAttached colorScheme="blue">
+												<Button onClick={handleRefresh()}>갱신</Button>
+												<IconButton
+													onClick={handleRefresh(true)}
+													icon={<RefreshAllIconSVG color="white" width="18px" height="18px" />}
+													aria-label="refresh-all-streams"
+												/>
+											</ButtonGroup>
 
-										<Button size="sm" colorScheme="red" onClick={handleDeleteStream(uuid)}>
-											방송 끄기
-										</Button>
-										<Button size="sm" colorScheme="orange" onClick={handleOpenNewWindow(uuid)}>
-											새탭으로
-										</Button>
-									</Stack>
-								</Box>
-							);
-						})
-					) : (
-						<Stack color="white" justifyContent={"center"} alignItems="center" width="100%" transition="all .3s">
-							<Stack>
-								<Text>
-									<Box as="span" fontWeight={"bold"}>
-										좌측 메뉴
+											<Button size="sm" colorScheme="red" onClick={handleDeleteStream(uuid)}>
+												방송 끄기
+											</Button>
+											<Button size="sm" colorScheme="orange" onClick={handleOpenNewWindow(uuid)}>
+												새탭으로
+											</Button>
+										</Stack>
 									</Box>
-									에서 스텔라를 선택해주세요
-								</Text>
-								{isExtensionInstalled ? (
-									isLatestVersion ? (
-										<Text>확장 프로그램이 성공적으로 실행되었습니다</Text>
-									) : (
-										<Text>확장 프로그램을 최신버전으로 업데이트 해주세요</Text>
-									)
-								) : (
+								);
+							})
+						) : (
+							<Stack color="white" justifyContent={"center"} alignItems="center" width="100%" transition="all .3s">
+								<Stack>
 									<Text>
-										네이버 계정으로 인증 및 채팅을 원하시면{" "}
-										<Link href={extensionUrl} isExternal color="blue.500">
-											{isFirefox ? "부가 기능" : "확장 프로그램"}
-										</Link>
-										을 이용해보세요
+										<Box as="span" fontWeight={"bold"}>
+											좌측 메뉴
+										</Box>
+										에서 스텔라를 선택해주세요
 									</Text>
-								)}
+									{isExtensionInstalled ? (
+										isLatestVersion ? (
+											<Text>확장 프로그램이 성공적으로 실행되었습니다</Text>
+										) : (
+											<Text>확장 프로그램을 최신버전으로 업데이트 해주세요</Text>
+										)
+									) : (
+										<Text>
+											네이버 계정으로 인증 및 채팅을 원하시면{" "}
+											<Link href={extensionUrl} isExternal color="blue.500">
+												{isFirefox ? "부가 기능" : "확장 프로그램"}
+											</Link>
+											을 이용해보세요
+										</Text>
+									)}
 
-								<Spacing size={4} />
-								<Text fontSize="sm">
-									<Link href={CHROME_EXTENSION_GITHUB_URL} isExternal>
-										Extension Github
-									</Link>
-									&nbsp;|&nbsp;
-									<Link href={PRIVACY_POLICY_URL} isExternal>
-										개인정보처리방침
-									</Link>
-								</Text>
+									<Spacing size={4} />
+									<Text fontSize="sm">
+										<Link href={CHROME_EXTENSION_GITHUB_URL} isExternal>
+											Extension Github
+										</Link>
+										&nbsp;|&nbsp;
+										<Link href={PRIVACY_POLICY_URL} isExternal>
+											개인정보처리방침
+										</Link>
+									</Text>
+								</Stack>
 							</Stack>
-						</Stack>
-					)}
-				</HStack>
-				{isInnerChatOpen ? (
-					<Box position="relative" userSelect={"none"} overflow="hidden">
-						{/* 채팅 컨트롤러 */}
-						<HStack
-							flexDir={"row-reverse"}
-							position="absolute"
-							top={"6px"}
-							left={"4px"}
-							// width="280px"
-							justifyContent={"center"}
-							// backgroundColor={"#141517"}
-							borderRadius={".5rem"}
-							padding="4px 12px"
-							zIndex={1}
-							gap="2px"
-						>
-							<CloseButton
-								size="sm"
-								sx={{ color: "white", borderRadius: "8px", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
-								onClick={() => {
-									setIsInnerChatOpen(false);
-									const newParams = new URLSearchParams(searchParams);
-									newParams.delete(CHAT_PARAM_NAME);
-									setSearchParams(newParams);
-								}}
-							/>
-							<IconButton
-								boxSize={"24px"}
-								minWidth="auto"
-								padding="0"
-								fontSize={"0.825rem"}
-								variant={"ghost"}
-								borderRadius={"8px"}
-								icon={<MdOpenInNew />}
-								aria-label="chat-open-in-new"
-								onClick={handleOpenChatInNewWindow(chatStream.streamId)}
-								sx={{
-									color: "white",
-									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-								}}
-							/>
-							{/* <Stack>
+						)}
+					</HStack>
+					{isInnerChatOpen ? (
+						<Box position="relative" userSelect={"none"} overflow="hidden">
+							{/* 채팅 컨트롤러 */}
+							<HStack
+								flexDir={"row-reverse"}
+								position="absolute"
+								top={"6px"}
+								left={"4px"}
+								// width="280px"
+								justifyContent={"center"}
+								// backgroundColor={"#141517"}
+								borderRadius={".5rem"}
+								padding="4px 12px"
+								zIndex={1}
+								gap="2px"
+							>
+								<CloseButton
+									size="sm"
+									sx={{ color: "white", borderRadius: "8px", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+									onClick={() => {
+										setIsInnerChatOpen(false);
+										const newParams = new URLSearchParams(searchParams);
+										newParams.delete(CHAT_PARAM_NAME);
+										setSearchParams(newParams);
+									}}
+								/>
+								<IconButton
+									boxSize={"24px"}
+									minWidth="auto"
+									padding="0"
+									fontSize={"0.825rem"}
+									variant={"ghost"}
+									borderRadius={"8px"}
+									icon={<MdOpenInNew />}
+									aria-label="chat-open-in-new"
+									onClick={handleOpenChatInNewWindow(chatStream.streamId)}
+									sx={{
+										color: "white",
+										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+									}}
+								/>
+								{/* <Stack>
 								<Text color={COLOR_CHZZK} fontWeight={"bold"}>
 									{chatStream.name}
 								</Text>
 							</Stack> */}
-							{data.length > 0 ? (
-								<Menu>
-									<MenuButton
-										as={IconButton}
-										aria-label="chat-list-menu"
-										icon={<IoList />}
-										variant={"ghost"}
-										boxSize={"24px"}
-										minWidth="auto"
-										padding="0"
-										fontSize={"0.825rem"}
-										borderRadius={"8px"}
-										sx={{
-											color: "white",
-											_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-											_active: { backgroundColor: "rgba(255,255,255,0.5)" },
-										}}
-									/>
-									<MenuList
-										sx={{
-											minWidth: "120px",
-											padding: "4px 0",
-											fontSize: "sm",
-											color: "white",
-											backgroundColor: "rgba(35,35,35,0.9)",
-											borderColor: "rgba(0,0,0,0.9)",
-										}}
-									>
-										{data
-											.filter(
-												(s) =>
-													s.chzzkId &&
-													s.chzzkId !== chatStream.streamId &&
-													(s.graduation == null || new Date(s.graduation) >= new Date()),
-											)
-											.sort(sortByChannelName)
-											.map((s) => (
-												<MenuItem
-													key={s.chzzkId}
-													sx={{
-														color: s.openLive ? `${lightenColor(s.colorCode || "", 60)}` : "rgba(70,70,70)",
-														backgroundColor: "rgba(35,35,35,0.5)",
-														_hover: { backgroundColor: "rgba(0,0,0,0.5)" },
-													}}
-													onClick={handleChangeChatStream(s.chzzkId || "", s.channelName || "")}
-												>
-													{s.channelName}
-												</MenuItem>
-											))}
-									</MenuList>
-								</Menu>
-							) : null}
-							<IconButton
-								boxSize={"24px"}
-								minWidth="auto"
-								padding="0"
-								fontSize={"0.825rem"}
-								variant={"ghost"}
-								borderRadius={"8px"}
-								icon={<MdRefresh />}
-								aria-label="chat-refresh"
-								onClick={handleChatRefresh}
-								sx={{
-									color: "white",
-									_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-								}}
+								{data.length > 0 ? (
+									<Menu>
+										<MenuButton
+											as={IconButton}
+											aria-label="chat-list-menu"
+											icon={<IoList />}
+											variant={"ghost"}
+											boxSize={"24px"}
+											minWidth="auto"
+											padding="0"
+											fontSize={"0.825rem"}
+											borderRadius={"8px"}
+											sx={{
+												color: "white",
+												_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+												_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+											}}
+										/>
+										<MenuList
+											sx={{
+												minWidth: "120px",
+												padding: "4px 0",
+												fontSize: "sm",
+												color: "white",
+												backgroundColor: "rgba(35,35,35,0.9)",
+												borderColor: "rgba(0,0,0,0.9)",
+											}}
+										>
+											{data
+												.filter(
+													(s) =>
+														s.chzzkId &&
+														s.chzzkId !== chatStream.streamId &&
+														(s.graduation == null || new Date(s.graduation) >= new Date()),
+												)
+												.sort(sortByChannelName)
+												.map((s) => (
+													<MenuItem
+														key={s.chzzkId}
+														sx={{
+															color: s.openLive ? `${lightenColor(s.colorCode || "", 60)}` : "rgba(70,70,70)",
+															backgroundColor: "rgba(35,35,35,0.5)",
+															_hover: { backgroundColor: "rgba(0,0,0,0.5)" },
+														}}
+														onClick={handleChangeChatStream(s.chzzkId || "", s.channelName || "")}
+													>
+														{s.channelName}
+													</MenuItem>
+												))}
+										</MenuList>
+									</Menu>
+								) : null}
+								<IconButton
+									boxSize={"24px"}
+									minWidth="auto"
+									padding="0"
+									fontSize={"0.825rem"}
+									variant={"ghost"}
+									borderRadius={"8px"}
+									icon={<MdRefresh />}
+									aria-label="chat-refresh"
+									onClick={handleChatRefresh}
+									sx={{
+										color: "white",
+										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+									}}
+								/>
+							</HStack>
+							{/* 채팅 IFRAME 시작 */}
+							<Box
+								as="iframe"
+								ref={chatRef}
+								src={`${naver.chzzk.liveChatUrl(chatStream.streamId)}`}
+								width="350px"
+								height="100dvh"
+								scrolling="no"
+								frameBorder={"0"}
 							/>
-						</HStack>
-						{/* 채팅 IFRAME 시작 */}
-						<Box
-							as="iframe"
-							ref={chatRef}
-							src={`${naver.chzzk.liveChatUrl(chatStream.streamId)}`}
-							width="350px"
-							height="100dvh"
-							scrolling="no"
-							frameBorder={"0"}
-						/>
-					</Box>
-				) : null}
+						</Box>
+					) : null}
+				</HStack>
 			</HStack>
-		</HStack>
+		</>
 	);
 }
 
@@ -865,9 +946,6 @@ function SideMenu({
 		const uuid = v4();
 		handleAddStream(streamId, "chzzk", uuid, name || "알 수 없음")();
 		setCustomStreams((prev) => {
-			if (prev.length >= 50) {
-				return prev;
-			}
 			return [
 				...prev,
 				{
@@ -888,40 +966,66 @@ function SideMenu({
 		});
 		setSearchInputValue("");
 
-		setUserSetting((prev) => {
-			// 중복검사
-			const exists = prev.customStreams?.some((item) => item.platform === platform && item.streamId === streamId);
-			if (exists) return prev;
-			// 추가
-			const newItem: CustomStreamsForUS = { name, platform, streamId, isBookmarked: false };
-			const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
-			return { ...prev, customStreams: arr };
-		});
+		// setUserSetting((prev) => {
+		// 	// 중복검사
+		// 	const exists = prev.customStreams?.some((item) => item.platform === platform && item.streamId === streamId);
+		// 	if (exists) return prev;
+		// 	// 추가
+		// 	const newItem: CustomStreamsForUS = { name, platform, streamId, isBookmarked: false };
+		// 	const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
+		// 	return { ...prev, customStreams: arr };
+		// });
 
 		clearInterval(customIntervalRef.current);
 		customIntervalRef.current = setInterval(() => {
 			refetchCustom(true);
-		}, 60000);
+		}, 30000);
 	};
 
 	const handleDeleteCustomStream = (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
 		e.stopPropagation();
 		setCustomStreams((prev) => prev.filter((s) => s.uuid !== uuid));
-		const currentStreamId = customStreams.find((s) => s.uuid === uuid)?.chzzkId;
+		// const currentStreamId = customStreams.find((s) => s.uuid === uuid)?.chzzkId;
 
-		setUserSetting((prev) => {
-			const arr = prev.customStreams;
-			if (arr) {
-				return { ...prev, customStreams: arr.filter((s) => s.streamId !== currentStreamId) };
-			}
-			return prev;
-		});
+		// setUserSetting((prev) => {
+		// 	const arr = prev.customStreams;
+		// 	if (arr) {
+		// 		return { ...prev, customStreams: arr.filter((s) => s.streamId !== currentStreamId) };
+		// 	}
+		// 	return prev;
+		// });
 
 		clearInterval(customIntervalRef.current);
 		customIntervalRef.current = setInterval(() => {
 			refetchCustom(true);
-		}, 60000);
+		}, 30000);
 	};
+
+	// 커스텀 스트림의 로컬스토리지 동기화
+	useEffect(() => {
+		setUserSetting((prev) => {
+			const arr = prev.customStreams;
+			if (arr) {
+				return {
+					...prev,
+					customStreams: customStreams
+						.map((s) =>
+							s.chzzkId
+								? {
+										streamId: s.chzzkId,
+										name: s.name,
+										platform: "chzzk",
+										isBookmarked: s.isBookmarked,
+									}
+								: null,
+						)
+						.filter((a) => a !== null) as CustomStreamsForUS[],
+				};
+			}
+
+			return prev;
+		});
+	}, [customStreams]);
 
 	useEffect(() => {
 		if (userSetting.isCardCompact) {
@@ -1415,12 +1519,11 @@ function SideMenu({
 									isDisabled={
 										!selectedStreamer.streamId ||
 										currentStreams.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1 ||
-										data.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1 ||
-										customStreams.length >= 50
+										data.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1
 									}
 									onClick={handleAddCustomStream}
 								>
-									{customStreams.length >= 50 ? "개수 초과" : "추가"}
+									추가
 								</Button>
 							</HStack>
 						</Stack>
@@ -1964,10 +2067,20 @@ function calculateColumnCount(isInnerChatOpen: boolean, chatWidth: number) {
 
 type StreamType = "chzzk" | (string & {});
 type ImageSize = "160" | "320" | "480" | "640" | "720" | "1280" | "1920" | (string & {});
-interface Stream {
-	type: StreamType;
+
+export interface ChannelData {
 	name: string;
 	streamId: string;
+	channelImageUrl: string;
+	liveTitle: string;
+	liveCategoryValue: string;
+	openLive: boolean;
+}
+
+interface Stream {
+	name: string;
+	streamId: string;
+	type: StreamType;
 	uuid: string;
 }
 

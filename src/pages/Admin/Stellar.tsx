@@ -172,7 +172,7 @@ export function Stellar() {
 					</Flex>
 
 					{/* 가상화 컨테이너 */}
-					<Box ref={parentRef} h="600px" overflowY="auto">
+					<Box ref={parentRef} h="384px" overflowY="auto">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
