@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchServer } from "../functions/fetch";
 import { MultiViewData, MultiViewDataData } from "../types";
 import { useRecoilState } from "recoil";
@@ -12,6 +12,7 @@ export function useMultiView() {
 	const diffRef = useRef<(MultiViewData & { diff?: string[] | Diff<MultiViewData>[] })[]>([]);
 	const [data, setData] = useState<MultiViewData[]>([]);
 	const [customStreams, setCustomStreams] = useState<MultiViewData[]>([]);
+	const customStreamsRef = useRef<MultiViewData[]>(customStreams);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [isCustomLoading, setIsCustomLoading] = useState<boolean>(false);
 	const [statusCode, setStatusCode] = useState<StatusCode>({ main: 200, custom: 200 });
@@ -54,9 +55,10 @@ export function useMultiView() {
 			});
 	};
 
-	const refetchCustom = (activeLoading?: boolean) => {
+	const refetchCustom = useCallback((activeLoading?: boolean) => {
 		activeLoading && setIsCustomLoading(true);
-		fetchServer("v1", `/multiview`, { method: "POST", body: { customStreams } })
+		const latestStreams = customStreamsRef.current;
+		fetchServer("v1", `/multiview`, { method: "POST", body: { customStreams: latestStreams } })
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, custom: res.status }));
 				if (res.status === 200) {
@@ -67,7 +69,12 @@ export function useMultiView() {
 			.finally(() => {
 				setIsCustomLoading(false);
 			});
-	};
+	}, []);
+
+	// customStreams 동기화
+	useEffect(() => {
+		customStreamsRef.current = customStreams;
+	}, [customStreams]);
 
 	useEffect(() => {
 		refetch();
@@ -79,16 +86,18 @@ export function useMultiView() {
 		};
 	}, []);
 
+	const hasCustomStreams = customStreams.length > 0;
+
 	useEffect(() => {
-		if (customStreams.length > 0) {
+		if (hasCustomStreams) {
 			customIntervalRef.current = setInterval(() => {
 				refetchCustom(true);
-			}, 60000);
+			}, 30000);
 		}
 		return () => {
 			clearInterval(customIntervalRef.current);
 		};
-	}, []);
+	}, [hasCustomStreams, refetchCustom]);
 
 	return {
 		data,
