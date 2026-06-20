@@ -57,7 +57,9 @@ export function useMultiView() {
 
 	const refetchCustom = useCallback((activeLoading?: boolean) => {
 		activeLoading && setIsCustomLoading(true);
-		const latestStreams = customStreamsRef.current;
+		const stellarIds = new Set(data.map((member) => member.chzzkId));
+
+		const latestStreams = customStreamsRef.current.filter((s) => !stellarIds.has(s.chzzkId));
 		fetchServer("v1", `/multiview`, { method: "POST", body: { customStreams: latestStreams } })
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, custom: res.status }));

@@ -466,6 +466,7 @@ export function MultiView() {
 							체크된 항목으로 리스트가 동기화됩니다.
 						</Text>
 						<ExtensionSyncEditor
+							data={data}
 							customStreams={customStreams}
 							setCustomStreams={setCustomStreams}
 							channelDataFromExtension={channelDataFromExtension}
@@ -966,16 +967,6 @@ function SideMenu({
 		});
 		setSearchInputValue("");
 
-		// setUserSetting((prev) => {
-		// 	// 중복검사
-		// 	const exists = prev.customStreams?.some((item) => item.platform === platform && item.streamId === streamId);
-		// 	if (exists) return prev;
-		// 	// 추가
-		// 	const newItem: CustomStreamsForUS = { name, platform, streamId, isBookmarked: false };
-		// 	const arr = prev.customStreams ? [...prev.customStreams, newItem] : [newItem];
-		// 	return { ...prev, customStreams: arr };
-		// });
-
 		clearInterval(customIntervalRef.current);
 		customIntervalRef.current = setInterval(() => {
 			refetchCustom(true);
@@ -985,15 +976,6 @@ function SideMenu({
 	const handleDeleteCustomStream = (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
 		e.stopPropagation();
 		setCustomStreams((prev) => prev.filter((s) => s.uuid !== uuid));
-		// const currentStreamId = customStreams.find((s) => s.uuid === uuid)?.chzzkId;
-
-		// setUserSetting((prev) => {
-		// 	const arr = prev.customStreams;
-		// 	if (arr) {
-		// 		return { ...prev, customStreams: arr.filter((s) => s.streamId !== currentStreamId) };
-		// 	}
-		// 	return prev;
-		// });
 
 		clearInterval(customIntervalRef.current);
 		customIntervalRef.current = setInterval(() => {
@@ -1003,28 +985,23 @@ function SideMenu({
 
 	// 커스텀 스트림의 로컬스토리지 동기화
 	useEffect(() => {
-		setUserSetting((prev) => {
-			const arr = prev.customStreams;
-			if (arr) {
-				return {
-					...prev,
-					customStreams: customStreams
-						.map((s) =>
-							s.chzzkId
-								? {
-										streamId: s.chzzkId,
-										name: s.name,
-										platform: "chzzk",
-										isBookmarked: s.isBookmarked,
-									}
-								: null,
-						)
-						.filter((a) => a !== null) as CustomStreamsForUS[],
-				};
-			}
+		if (!customStreams || !Array.isArray(customStreams)) return;
 
-			return prev;
-		});
+		setUserSetting((prev) => ({
+			...prev,
+			customStreams: customStreams
+				.map((s) =>
+					s.chzzkId
+						? {
+								streamId: s.chzzkId,
+								name: s.name,
+								platform: "chzzk",
+								isBookmarked: s.isBookmarked,
+							}
+						: null,
+				)
+				.filter((a) => a !== null) as CustomStreamsForUS[],
+		}));
 	}, [customStreams]);
 
 	useEffect(() => {

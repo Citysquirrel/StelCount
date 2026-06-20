@@ -5,6 +5,7 @@ import { MultiViewData } from "../../lib/types";
 import { ChannelData } from "../MultiView";
 
 interface ExtensionSyncEditorProps {
+	data: MultiViewData[];
 	customStreams: MultiViewData[];
 	setCustomStreams: React.Dispatch<React.SetStateAction<MultiViewData[]>>;
 	channelDataFromExtension: ChannelData[];
@@ -13,6 +14,7 @@ interface ExtensionSyncEditorProps {
 }
 
 export function ExtensionSyncEditor({
+	data,
 	customStreams,
 	setCustomStreams,
 	channelDataFromExtension,
@@ -21,10 +23,13 @@ export function ExtensionSyncEditor({
 }: ExtensionSyncEditorProps) {
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+	const stellarIds = new Set(data.map((member) => member.chzzkId));
 	const combinedStreamsMap = new Map();
 
 	// 기존 데이터 세팅
 	customStreams.forEach((stream) => {
+		if (stellarIds.has(stream.chzzkId)) return;
+
 		combinedStreamsMap.set(stream.chzzkId, {
 			streamId: stream.chzzkId,
 			name: stream.channelName,
@@ -39,6 +44,8 @@ export function ExtensionSyncEditor({
 
 	// 확프 데이터 덮어쓰기
 	channelDataFromExtension.forEach((stream) => {
+		if (stellarIds.has(stream.streamId)) return;
+
 		if (combinedStreamsMap.has(stream.streamId)) {
 			const existing = combinedStreamsMap.get(stream.streamId);
 			combinedStreamsMap.set(stream.streamId, {
@@ -134,7 +141,6 @@ export function ExtensionSyncEditor({
 					</Text>
 				</Checkbox>
 				<Spacer />
-				{/* 💡 피드백 7: 휴지통 버튼 삭제됨 */}
 			</HStack>
 
 			{/* 스트리머 리스트 에디터 영역 */}
@@ -159,8 +165,8 @@ export function ExtensionSyncEditor({
 								border="1px solid"
 								borderColor={isChecked ? "whiteAlpha.500" : "transparent"}
 								_hover={{ bg: "rgba(255,255,255,0.08)" }}
-								cursor="pointer" // 💡 피드백 2: 포인터 커서 적용
-								onClick={() => handleToggleCheck(stream.streamId)} // 💡 피드백 2: 아이템 클릭 시 체크 토글
+								cursor="pointer"
+								onClick={() => handleToggleCheck(stream.streamId)}
 							>
 								{/* 체크박스 */}
 								<Checkbox
@@ -188,8 +194,6 @@ export function ExtensionSyncEditor({
 										)}
 										{stream.openLive && (
 											<Badge colorScheme="red" fontSize="10px">
-												{" "}
-												{/* 💡 피드백 3: 붉은색 계열로 변경 */}
 												LIVE
 											</Badge>
 										)}
