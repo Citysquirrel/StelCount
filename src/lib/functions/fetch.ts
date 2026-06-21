@@ -1,4 +1,4 @@
-interface ServerAPIMap {
+export interface ServerAPIMap {
 	none: "";
 	v1:
 		| "/debug-sentry"
@@ -36,7 +36,7 @@ interface ServerAPIMap {
 		| "/stellars";
 }
 
-type Version = keyof ServerAPIMap;
+export type Version = keyof ServerAPIMap;
 
 export interface FetchOptions extends RequestInit {
 	method?: "GET" | "POST" | "DELETE" | "PATCH" | "PUT" | (string & {});
