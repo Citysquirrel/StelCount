@@ -46,7 +46,8 @@
 		"rollup-plugin-visualizer": "^7.0.1",
 		"typescript": "^5.4.5",
 		"vite": "^5.2.0",
-		"vite-plugin-compression": "^0.5.1"
+		"vite-plugin-compression": "^0.5.1",
+		"vite-tsconfig-paths": "^6.1.1"
 	},
 	"description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
 	"main": "index.js",

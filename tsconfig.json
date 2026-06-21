@@ -20,9 +20,20 @@
 		// "noUnusedLocals": true,
 		// "noUnusedParameters": true,
 		"jsx": "react-jsx",
-		"types": ["chrome"]
+		"types": ["chrome"],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["src/*"],
+			"@component/*": ["src/components/*"],
+			"@layout/*": ["src/components/layout/*"],
+			"@lib/*": ["src/lib/*"],
+			"@hook/*": ["src/lib/hooks/*"],
+			"@function/*": ["src/lib/functions/*"],
+			"@type": ["src/lib/types"],
+			"@atom": ["src/lib/Atom"],
+			"@state": ["src/lib/Atom"]
+		}
 	},
 	"include": ["src"],
 	"references": [{ "path": "./tsconfig.node.json" }]
 }
-
