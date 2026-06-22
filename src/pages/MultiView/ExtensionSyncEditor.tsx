@@ -89,29 +89,36 @@ export function ExtensionSyncEditor({
 		}
 	};
 
+	const openLiveSort = <T extends { openLive?: boolean }>(a: T, b: T): number => {
+		if (a.openLive === b.openLive) return 0;
+		return a.openLive ? -1 : 1;
+	};
+
 	const handleSave = () => {
-		const newCustomStreams = selectedIds.map((id) => {
-			const streamData = combinedStreamsMap.get(id);
+		const newCustomStreams: MultiViewData[] = selectedIds
+			.map((id) => {
+				const streamData = combinedStreamsMap.get(id);
 
-			if (streamData.originalData) {
-				return streamData.originalData;
-			}
+				if (streamData.originalData) {
+					return streamData.originalData;
+				}
 
-			return {
-				name: streamData.name,
-				channelName: streamData.name,
-				channelImageUrl: streamData.channelImageUrl,
-				chzzkId: streamData.streamId,
-				uuid: v4(),
-				liveTitle: streamData.liveTitle || "오프라인",
-				liveImageUrl: null,
-				liveCategoryValue: streamData.liveCategoryValue,
-				openLive: streamData.openLive,
-				openDate: undefined,
-				isCustom: true,
-				party: null,
-			};
-		});
+				return {
+					name: streamData.name,
+					channelName: streamData.name,
+					channelImageUrl: streamData.channelImageUrl,
+					chzzkId: streamData.streamId,
+					uuid: v4(),
+					liveTitle: streamData.liveTitle || "오프라인",
+					liveImageUrl: null,
+					liveCategoryValue: streamData.liveCategoryValue,
+					openLive: streamData.openLive,
+					openDate: undefined,
+					isCustom: true,
+					party: null,
+				};
+			})
+			.sort(openLiveSort);
 
 		setCustomStreams(newCustomStreams);
 		onClose();
@@ -120,10 +127,7 @@ export function ExtensionSyncEditor({
 	const newStreams = allAvailableStreams.filter((stream) => !stream.isAlreadyExist);
 	const existingStreams = allAvailableStreams.filter((stream) => stream.isAlreadyExist);
 
-	existingStreams.sort((a, b) => {
-		if (a.openLive === b.openLive) return 0;
-		return a.openLive ? -1 : 1;
-	});
+	existingStreams.sort(openLiveSort);
 
 	const displayStreams = [...newStreams, ...existingStreams];
 
