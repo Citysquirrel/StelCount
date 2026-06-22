@@ -26,6 +26,7 @@
 			"@/*": ["src/*"],
 			"@component/*": ["src/components/*"],
 			"@layout/*": ["src/components/layout/*"],
+			"@page/*": ["src/pages/*"],
 			"@lib/*": ["src/lib/*"],
 			"@hook/*": ["src/lib/hooks/*"],
 			"@function/*": ["src/lib/functions/*"],
