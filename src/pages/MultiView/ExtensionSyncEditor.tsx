@@ -178,7 +178,7 @@ export function ExtensionSyncEditor({
 								/>
 
 								{/* 프로필 이미지 */}
-								<Avatar src={stream.channelImageUrl} name={stream.name} size="sm" mr={3} />
+								<Avatar src={`${stream.channelImageUrl}?type=f40_40_na`} name={stream.name} size="sm" mr={3} />
 
 								{/* 채널 정보 */}
 								<Box flex={1} overflow="hidden">
