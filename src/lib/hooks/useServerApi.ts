@@ -11,7 +11,8 @@ const fetchServerAdaptor = async <TData = any, V extends Version = Version>(
 	const response = await fetchServer<TData, V>(version, api, options);
 
 	// React Query가 에러를 감지할 수 있도록 HTTP 에러 상태일 때 강제로 throw
-	//? 기존 fetchServer 형태로 바로 들어가면 react-query 측에서는 success로 간주하기 때문
+	//? 기존 fetchServer(fetch_) 형태로 바로 return 들어가면
+	//? react-query 측에서는 success로 간주하기 때문에 throw로 명시해주어야함
 	if (response.status >= 400 || response.status === 0) {
 		throw new Error(response.statusText || "API Request Failed");
 	}
@@ -24,9 +25,6 @@ const fetchServerAdaptor = async <TData = any, V extends Version = Version>(
 	return response.data;
 };
 
-// -----------------------------------------------------
-// 2. GET 요청을 위한 Custom useQuery 훅
-// -----------------------------------------------------
 interface UseServerQueryProps<TData, V extends Version> {
 	version: V;
 	api: ServerAPIMap[V] | (string & {});

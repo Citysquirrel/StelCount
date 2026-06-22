@@ -149,3 +149,8 @@ export const isMaintenanceState = atom<boolean>({
 	key: createAtomKey("isMaintenance"),
 	default: false,
 });
+
+export const activeVideoIdState = atom<string | null>({
+	key: "activeVideoIdState",
+	default: null,
+});

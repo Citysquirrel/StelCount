@@ -12,6 +12,8 @@ import { Dashboard } from "./pages/Admin/Dashboard";
 import { Stellar } from "./pages/Admin/Stellar";
 import { Songbook } from "./pages/Admin/Songbook";
 import { Setting } from "./pages/Admin/Setting";
+import AppV2 from "./AppV2";
+import HomeV2 from "@page/v2/Home";
 
 const Admin = lazy(() => import("./pages/Admin").then((m) => ({ default: m.Admin })));
 const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminEdit })));
@@ -66,6 +68,7 @@ export const routeObj: RouteObject[] = [
 			{ path: "/", element: <NotExist /> },
 		],
 	},
+	{ path: "/v2", element: <AppV2 />, children: [{ element: <HomeV2 />, index: true }] },
 	{ path: "/multiview", element: <MultiView />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/login", element: <Login />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/oauth", element: <OAuth />, errorElement: <ServerErrorPage isErrorComponent /> },

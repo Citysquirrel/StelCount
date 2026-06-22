@@ -1,4 +1,4 @@
-import { Box, HStack } from "@chakra-ui/react";
+import { HStack } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 
 export function Carousel<T>({ list, SlideComponent, currentPageIdx, timeout }: CarouselProps<T>) {

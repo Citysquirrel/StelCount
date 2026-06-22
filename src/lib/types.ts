@@ -1,3 +1,14 @@
+export interface HomeVideoData {
+	id: string;
+	title: string;
+	thumbnailUrl: string;
+	videoUrl: string;
+	viewCount: number;
+	publishedAt?: string;
+	updatedAt?: string;
+	unit?: number[];
+}
+
 export interface UserSettingStorage {
 	isAutoScrollOn?: boolean;
 	homeStellar?: string;
