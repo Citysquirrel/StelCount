@@ -17,12 +17,7 @@ const fetchServerAdaptor = async <TData = any, V extends Version = Version>(
 		throw new Error(response.statusText || "API Request Failed");
 	}
 
-	// 성공 시 React Query의 data 객체로 곧바로 들어갈 수 있게 data만 추출
-	if (response.data === undefined) {
-		throw new Error("No data returned from server");
-	}
-
-	return response.data;
+	return response.data as TData;
 };
 
 interface UseServerQueryProps<TData, V extends Version> {
@@ -50,7 +45,8 @@ export function useServerQuery<TData = any, V extends Version = Version>({
 // Mutations
 interface UseServerMutationProps<TData, TVariables, V extends Version> {
 	version: V;
-	api: ServerAPIMap[V] | (string & {});
+	// ✨ 문자열 패턴("/stellar/:id")을 쉽게 쓸 수 있도록 (string & {}) 유지
+	api: ServerAPIMap[V] | (string & {}) | ((variables: TVariables) => ServerAPIMap[V] | (string & {}));
 	method?: "POST" | "PATCH" | "PUT" | "DELETE";
 	mutationOptions?: UseMutationOptions<TData, Error, TVariables>;
 }
@@ -62,8 +58,51 @@ export function useServerMutation<TData = any, TVariables = any, V extends Versi
 	mutationOptions,
 }: UseServerMutationProps<TData, TVariables, V>) {
 	return useMutation<TData, Error, TVariables>({
-		mutationFn: (variables: TVariables) =>
-			fetchServerAdaptor<TData, V>(version, api, { method, body: variables as any }),
+		mutationFn: (variables: TVariables) => {
+			let resolvedApi = "";
+			let finalBody = variables as any;
+
+			if (typeof api === "function") {
+				// 1. 콜백 함수 형태인 경우
+				resolvedApi = api(variables);
+			} else if (typeof api === "string") {
+				// 2. 문자열 형태인 경우
+				resolvedApi = api;
+
+				// ✨ 핵심 마법 로직: "/stellar/:id" 같은 패턴이 있고, variables가 일반 객체일 때
+				const isPlainObject =
+					variables !== null &&
+					typeof variables === "object" &&
+					!Array.isArray(variables) &&
+					!(variables instanceof FormData);
+
+				if (api.includes(":") && isPlainObject) {
+					finalBody = { ...variables }; // 원본 오염 방지를 위해 얕은 복사
+
+					// 정규식으로 ":id", ":stellarId" 같은 파라미터 추출
+					const pathParams = api.match(/:[a-zA-Z0-9_]+/g);
+
+					if (pathParams) {
+						pathParams.forEach((param) => {
+							const key = param.substring(1); // 앞에 붙은 ":" 제거
+
+							if (key in finalBody) {
+								// ① URL 완성: ":id" 부분을 실제 값(예: 1)으로 치환
+								resolvedApi = resolvedApi.replace(param, encodeURIComponent(String(finalBody[key])));
+
+								// ② Body 최적화: URL로 빠진 데이터는 서버 Body에서 깔끔하게 삭제!
+								delete finalBody[key];
+							}
+						});
+					}
+				}
+			}
+
+			return fetchServerAdaptor<TData, V>(version, resolvedApi, {
+				method,
+				body: finalBody,
+			});
+		},
 		...mutationOptions,
 	});
 }

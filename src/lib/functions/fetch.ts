@@ -33,7 +33,8 @@ export interface ServerAPIMap {
 		| "/dashboard"
 		| "/songbook"
 		| "/songbook/import"
-		| "/stellars";
+		| "/stellars"
+		| "/stellar";
 }
 
 export type Version = keyof ServerAPIMap;

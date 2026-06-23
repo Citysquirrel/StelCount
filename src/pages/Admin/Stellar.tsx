@@ -25,15 +25,19 @@ import {
 	Divider,
 	Button,
 	Checkbox,
+	useToast,
 } from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
+import { v4 } from "uuid";
+import { FiPlus } from "react-icons/fi";
+import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 
 interface StellarInputValue {
 	name: string;
 	nameShort: string;
 	group: string;
-	groups: StellarGroups;
+	groups: StellarGroups[];
 	formerGroups: string[];
 	youtubeId: string;
 	chzzkId: string;
@@ -46,7 +50,7 @@ interface StellarInputValue {
 }
 
 interface StellarData extends StellarInputValue {
-	id: number;
+	id?: number;
 	uuid: string;
 	youtubeCustomUrl: string;
 }
@@ -69,8 +73,21 @@ export function Stellar() {
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const [searchYoutubeId, setSearchYoutubeId] = useState("");
 
+	// Hooks
+	const toast = useToast();
 	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
 		useColor();
+	const getStellars = useServerQuery<StellarData[], "admin">({ version: "admin", api: "/stellars" });
+	const createStellar = useServerMutation<StellarData, StellarData, "admin">({
+		version: "admin",
+		api: "/stellar",
+		method: "POST",
+	});
+	const editStellar = useServerMutation<void, { id: number }, "admin">({
+		version: "admin",
+		api: "/stellar/:id",
+		method: "PATCH",
+	});
 
 	const parentRef = useRef<HTMLDivElement>(null);
 
@@ -81,34 +98,61 @@ export function Stellar() {
 		setIsModalOpen(true);
 	};
 
+	const handleAddNewStellar = () => {
+		const newSong: StellarData = {
+			name: "",
+			nameShort: "",
+			group: "",
+			groups: [],
+			formerGroups: [],
+			youtubeId: "",
+			chzzkId: "",
+			xId: "",
+			colorCode: "",
+			playlistIdForMusic: "",
+			justLive: false,
+			debut: "",
+			graduation: "",
+			uuid: v4(),
+			youtubeCustomUrl: "",
+		};
+		setEditingStellar(newSong);
+		setEditingIndex(-1); // -1은 신규 추가를 의미
+		setIsModalOpen(true);
+	};
+
 	// 모달 내 저장 버튼
 	const handleSaveEdit = () => {
 		if (!editingStellar) return;
 
-		// if (editingIndex === -1) {
-		// 	// 신규 추가
-		// 	setSongs((prev) => [editingStellar, ...prev]);
-		// } else {
-		// 	// 기존 데이터 수정
-		// 	const targetOriginalSong = filteredSongs[editingIndex!];
-		// 	setSongs((prev) =>
-		// 		prev.map((s) => {
-		// 			if (s === targetOriginalSong) {
-		// 				const raw = rawSongRef.current.find((rs) => rs.syncId === s.syncId);
-
-		// 				const newStatus: SyncStatus = !raw
-		// 					? "NEW"
-		// 					: isEqual(omit(raw, ["syncStatus"]), omit(editingStellar, ["syncStatus"]))
-		// 						? "UNCHANGED"
-		// 						: "MODIFIED";
-
-		// 				return { ...editingStellar, syncStatus: newStatus };
-		// 			}
-		// 			return s;
-		// 		}),
-		// 	);
-		// }
-		setIsModalOpen(false);
+		if (editingIndex === -1) {
+			// 신규 추가
+			createStellar.mutate(editingStellar, {
+				onSuccess: (data) => {
+					setStellarData((prev) => [data, ...prev]);
+				},
+				onError: () => {
+					toast({ description: "스텔라 추가 중 서버 에러 발생" });
+				},
+			});
+		} else {
+			// 기존 데이터 수정
+			editStellar.mutate(editingStellar as Required<StellarData>, {
+				onSuccess: () => {
+					const targetOriginalStellar = stellarData[editingIndex!];
+					console.log(targetOriginalStellar);
+					setStellarData((prev) =>
+						prev.map((s) => {
+							if (s === targetOriginalStellar) {
+								return { ...editingStellar };
+							}
+							return s;
+						}),
+					);
+					setIsModalOpen(false);
+				},
+			});
+		}
 	};
 
 	const handleGetYoutubeId = (e?: React.MouseEvent<HTMLButtonElement>) => {
@@ -156,6 +200,22 @@ export function Stellar() {
 					스텔라들의 상세 데이터를 관리합니다.
 				</Text>
 			</Box>
+			<Flex
+				gap={4}
+				mb={6}
+				flexWrap="wrap"
+				bg={bgCard}
+				p={4}
+				rounded="xl"
+				shadow="sm"
+				border={`1px solid ${borderColor}`}
+			>
+				<Flex flex={1} justify="flex-end" gap={2}>
+					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewStellar}>
+						추가
+					</Button>
+				</Flex>
+			</Flex>
 			<Stack>
 				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
 					{/* 테이블 헤더 */}
@@ -307,7 +367,7 @@ export function Stellar() {
 													<FormLabel fontSize="sm">이름</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.name}
+														value={editingStellar.name || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, name: e.target.value })}
 													/>
 												</FormControl>
@@ -315,7 +375,7 @@ export function Stellar() {
 													<FormLabel fontSize="sm">짧은 이름</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.nameShort}
+														value={editingStellar.nameShort || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, nameShort: e.target.value })}
 													/>
 												</FormControl>
@@ -339,7 +399,7 @@ export function Stellar() {
 													<Input
 														size="sm"
 														fontSize="xs"
-														value={editingStellar.debut}
+														value={editingStellar.debut || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, debut: e.target.value })}
 														type="datetime-local"
 													/>
@@ -349,7 +409,7 @@ export function Stellar() {
 													<Input
 														size="sm"
 														fontSize="xs"
-														value={editingStellar.graduation}
+														value={editingStellar.graduation || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, graduation: e.target.value })}
 														type="datetime-local"
 													/>
@@ -368,7 +428,7 @@ export function Stellar() {
 													</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.colorCode}
+														value={editingStellar.colorCode || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, colorCode: e.target.value })}
 													/>
 												</FormControl>
@@ -380,7 +440,7 @@ export function Stellar() {
 													<FormLabel fontSize="sm">치지직 ID</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.chzzkId}
+														value={editingStellar.chzzkId || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, chzzkId: e.target.value })}
 													/>
 												</FormControl>
@@ -393,7 +453,7 @@ export function Stellar() {
 													<FormLabel fontSize="sm">유튜브 ID</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.youtubeId}
+														value={editingStellar.youtubeId || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeId: e.target.value })}
 													/>
 												</FormControl>
@@ -401,7 +461,7 @@ export function Stellar() {
 													<FormLabel fontSize="sm">유튜브 별칭주소</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.youtubeCustomUrl}
+														value={editingStellar.youtubeCustomUrl || ""}
 														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeCustomUrl: e.target.value })}
 													/>
 												</FormControl>
@@ -409,7 +469,7 @@ export function Stellar() {
 													<FormLabel fontSize="sm">플레이리스트 ID</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.playlistIdForMusic}
+														value={editingStellar.playlistIdForMusic || ""}
 														onChange={(e) =>
 															setEditingStellar({ ...editingStellar, playlistIdForMusic: e.target.value })
 														}
@@ -422,7 +482,7 @@ export function Stellar() {
 													<FormLabel fontSize="sm">유튜브 ID 검색</FormLabel>
 													<Input
 														size="sm"
-														value={searchYoutubeId}
+														value={searchYoutubeId || ""}
 														onChange={(e) => setSearchYoutubeId(e.target.value)}
 														onKeyUp={(e) => {
 															if (e.key === "Enter") {
@@ -456,7 +516,7 @@ export function Stellar() {
 								<Button variant="ghost" mr={3} onClick={() => setIsModalOpen(false)}>
 									취소
 								</Button>
-								<Button colorScheme="blue" onClick={handleSaveEdit}>
+								<Button colorScheme="blue" onClick={handleSaveEdit} disabled={createStellar.isPending}>
 									적용하기
 								</Button>
 							</ModalFooter>
