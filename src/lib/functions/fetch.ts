@@ -34,7 +34,11 @@ export interface ServerAPIMap {
 		| "/songbook"
 		| "/songbook/import"
 		| "/stellars"
-		| "/stellar";
+		| "/stellar"
+		| "/stellar/:id"
+		| "/groups"
+		| "/group"
+		| "/group/:id";
 }
 
 export type Version = keyof ServerAPIMap;

@@ -69,7 +69,7 @@ export function useServerMutation<TData = any, TVariables = any, V extends Versi
 				// 2. 문자열 형태인 경우
 				resolvedApi = api;
 
-				// ✨ 핵심 마법 로직: "/stellar/:id" 같은 패턴이 있고, variables가 일반 객체일 때
+				// "/stellar/:id" 같은 패턴이 있고, variables가 일반 객체일 때
 				const isPlainObject =
 					variables !== null &&
 					typeof variables === "object" &&
