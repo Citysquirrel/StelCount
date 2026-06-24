@@ -37,7 +37,7 @@ interface StellarInputValue {
 	name: string;
 	nameShort: string;
 	group: string;
-	groups: StellarGroups[];
+	groups: StellarGroup[];
 	formerGroups: string[];
 	youtubeId: string;
 	chzzkId: string;
@@ -55,12 +55,13 @@ interface StellarData extends StellarInputValue {
 	youtubeCustomUrl: string;
 }
 
-interface StellarGroups {
+interface StellarGroup {
 	id: number;
 	name: string;
 	numbering: string;
 	description: string;
 	isActive: boolean;
+	sortOrder: number;
 	stellar_id: number;
 }
 
@@ -72,12 +73,12 @@ export function Stellar() {
 	const [editingStellar, setEditingStellar] = useState<StellarData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const [searchYoutubeId, setSearchYoutubeId] = useState("");
+	const [isGroupListOpen, setIsGroupListOpen] = useState(false);
 
 	// Hooks
 	const toast = useToast();
 	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
 		useColor();
-	const getStellars = useServerQuery<StellarData[], "admin">({ version: "admin", api: "/stellars" });
 	const createStellar = useServerMutation<StellarData, StellarData, "admin">({
 		version: "admin",
 		api: "/stellar",
@@ -88,6 +89,8 @@ export function Stellar() {
 		api: "/stellar/:id",
 		method: "PATCH",
 	});
+
+	const getAllGroup = useServerQuery<StellarGroup[]>({ version: "admin", api: "/groups" });
 
 	const parentRef = useRef<HTMLDivElement>(null);
 
@@ -175,6 +178,19 @@ export function Stellar() {
 				// toast({ description: "올바르지 않은 채널명입니다", status: "error" });
 			}
 		});
+	};
+
+	const handleGroup = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		if (!editingStellar) return;
+
+		const value = Number(e.target.value);
+
+		if (isNaN(value))
+			toast({ title: "올바르지 않은 id 입력됨. 코드 점검 요함", status: "error", duration: 3000, isClosable: true });
+		e.target.value = "";
+
+		const selectedGroup = getAllGroup.data?.find((g) => g.id === value);
+		setEditingStellar({ ...editingStellar, groups: selectedGroup ? [selectedGroup] : [] });
 	};
 
 	useEffect(() => {
@@ -381,11 +397,7 @@ export function Stellar() {
 												</FormControl>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">그룹</FormLabel>
-													{/* <Input
-														size="sm"
-														value={editingStellar.groups}
-														onChange={(e) => setEditingStellar({ ...editingStellar, nameShort: e.target.value })}
-													/> */}
+													<Select onChange={handleGroup}>{}</Select>
 												</FormControl>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">그룹(deprecated)</FormLabel>
