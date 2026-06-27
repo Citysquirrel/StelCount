@@ -30,8 +30,11 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
 import { v4 } from "uuid";
-import { FiPlus } from "react-icons/fi";
+import { FiFolder, FiPlus } from "react-icons/fi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
+import { CopyText } from "@/components/CopyText";
+import { getComplementaryColor } from "@/lib/functions/etc";
+import GroupModal from "./Stellar/GroupModal";
 
 interface StellarInputValue {
 	name: string;
@@ -55,9 +58,10 @@ interface StellarData extends StellarInputValue {
 	youtubeCustomUrl: string;
 }
 
-interface StellarGroup {
+export interface StellarGroup {
 	id: number;
 	name: string;
+	engName: string;
 	numbering: string;
 	description: string;
 	isActive: boolean;
@@ -73,7 +77,7 @@ export function Stellar() {
 	const [editingStellar, setEditingStellar] = useState<StellarData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const [searchYoutubeId, setSearchYoutubeId] = useState("");
-	const [isGroupListOpen, setIsGroupListOpen] = useState(false);
+	const [isGroupOpen, setIsGroupOpen] = useState(false);
 
 	// Hooks
 	const toast = useToast();
@@ -101,6 +105,7 @@ export function Stellar() {
 		setIsModalOpen(true);
 	};
 
+	// 버튼 핸들러
 	const handleAddNewStellar = () => {
 		const newSong: StellarData = {
 			name: "",
@@ -122,6 +127,9 @@ export function Stellar() {
 		setEditingStellar(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
 		setIsModalOpen(true);
+	};
+	const handleGroupSetting = () => {
+		setIsGroupOpen(true);
 	};
 
 	// 모달 내 저장 버튼
@@ -231,6 +239,9 @@ export function Stellar() {
 					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewStellar}>
 						추가
 					</Button>
+					<Button leftIcon={<FiFolder />} colorScheme="gray" onClick={handleGroupSetting} variant={"outline"}>
+						그룹 관리
+					</Button>
 				</Flex>
 			</Flex>
 			<Stack>
@@ -239,11 +250,11 @@ export function Stellar() {
 					<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
 						<Box w="60px">ID</Box>
 						<Box w="140px">이름</Box>
-						<Box w="140px" textAlign="center">
+						<Box w="120px" textAlign="center">
 							그룹
 						</Box>
-						<Box w="120px" textAlign="center">
-							활동일
+						<Box w="60px" textAlign="center">
+							색상
 						</Box>
 						<Box flex={1}>소스</Box>
 					</Flex>
@@ -255,16 +266,6 @@ export function Stellar() {
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
 								const stellar = stellarData[virtualRow.index];
 								// const isFaded = song.actionStatus === "DELETED" || song.actionStatus === "DISABLED";
-								const rowColorMap = {
-									NEW: greenColor,
-									MODIFIED: yellowColor,
-									UNCHANGED: "transparent",
-								};
-								const borderColorMap = {
-									ACTIVE: blueColor,
-									DELETED: redColor,
-									DISABLED: grayColor,
-								};
 
 								return (
 									<Flex
@@ -313,57 +314,27 @@ export function Stellar() {
 											{stellar.name}
 											{stellar.nameShort && `(${stellar.nameShort})`}
 										</Box>
-										<Box w="140px" textAlign="center">
-											{stellar.group}
-										</Box>
 										<Box w="120px" textAlign="center">
-											1234
+											{stellar.groups[0]?.name}
 										</Box>
-										<Box flex={1}></Box>
-
-										{/* 조작 버튼 구역 */}
-										{/* <Box w="100px" textAlign="center">
-											<HStack spacing={1} justify="center">
-												{song.actionStatus === "ACTIVE" ? null : (
-													<IconButton
-														aria-label="Active"
-														icon={<FiCheckCircle />}
-														size="md"
-														variant="ghost"
-														colorScheme="green"
-														onClick={(e) => toggleStatus(e, song.syncId, "ACTIVE")}
-													/>
-												)}
-												<>
-													{song.actionStatus === "DISABLED" ? null : (
-														<IconButton
-															aria-label="Disable"
-															icon={<FiEyeOff />}
-															size="md"
-															variant="ghost"
-															colorScheme="orange"
-															onClick={(e) => toggleStatus(e, song.syncId, "DISABLED")}
-														/>
-													)}
-													{song.actionStatus === "DELETED" ? null : (
-														<IconButton
-															aria-label="Delete"
-															icon={<FiTrash2 />}
-															size="md"
-															variant="ghost"
-															colorScheme="red"
-															onClick={(e) => toggleStatus(e, song.syncId, "DELETED")}
-														/>
-													)}
-												</>
-											</HStack>
-										</Box> */}
+										<Flex w="60px" fontSize="2xs" justifyContent={"center"}>
+											<CopyText color={`#${stellar.colorCode}`} fontWeight={"bold"}>
+												{`#${stellar.colorCode}`}
+											</CopyText>
+										</Flex>
+										<Box flex={1}>
+											<HStack spacing={1} justify={"center"}></HStack>
+										</Box>
 									</Flex>
 								);
 							})}
 						</Box>
 					</Box>
-					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
+					{/* 그룹 편집 모달 */}
+					<GroupModal isModalOpen={isGroupOpen} setIsModalOpen={setIsGroupOpen} data={getAllGroup.data} />
+
+					{/* 스텔라 편집 모달 */}
+					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl" closeOnOverlayClick={false}>
 						<ModalOverlay />
 						<ModalContent>
 							<ModalHeader>

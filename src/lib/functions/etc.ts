@@ -323,3 +323,25 @@ export const formatDateToYYYYMMDD = (dateString?: string): string => {
 
 	return `${yyyy}-${mm}-${dd}`;
 };
+
+export function getComplementaryColor(hex: string) {
+	hex = hex.replace("#", "");
+
+	if (hex.length === 3) {
+		hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+	}
+
+	const r = parseInt(hex.substring(0, 2), 16);
+	const g = parseInt(hex.substring(2, 4), 16);
+	const b = parseInt(hex.substring(4, 6), 16);
+
+	const compR = 255 - r;
+	const compG = 255 - g;
+	const compB = 255 - b;
+
+	const hexR = compR.toString(16).padStart(2, "0");
+	const hexG = compG.toString(16).padStart(2, "0");
+	const hexB = compB.toString(16).padStart(2, "0");
+
+	return `#${hexR}${hexG}${hexB}`;
+}

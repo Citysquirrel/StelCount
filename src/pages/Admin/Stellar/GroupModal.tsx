@@ -1,3 +1,4 @@
+import { DefaultResponseData } from "@/lib/functions/fetch";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import {
 	Modal,
@@ -11,25 +12,18 @@ import {
 	Button,
 } from "@chakra-ui/react";
 import { Dispatch, SetStateAction } from "react";
-
-interface Group {
-	id?: number;
-	name: string;
-	numbering: string;
-	description: string;
-	isActive: boolean;
-}
+import { StellarGroup } from "../Stellar";
 
 interface GroupModalProps {
 	isModalOpen: boolean;
 	setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+	data: DefaultResponseData<StellarGroup[]> | undefined;
 }
 
-export default function GroupModal({ isModalOpen, setIsModalOpen }: GroupModalProps) {
-	const { data: groupListData } = useServerQuery<Group[], "admin">({ version: "admin", api: "/stellars" });
-	const createGroup = useServerMutation<Group, Group, "admin">({
+export default function GroupModal({ isModalOpen, setIsModalOpen, data }: GroupModalProps) {
+	const createGroup = useServerMutation<DefaultResponseData<StellarGroup>, StellarGroup, "admin">({
 		version: "admin",
-		api: "/stellar",
+		api: "/group",
 		method: "POST",
 	});
 	const editGroup = useServerMutation<void, { id: number }, "admin">({

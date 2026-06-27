@@ -1,17 +1,26 @@
-import { Box, HStack, Text, useClipboard, useToast } from "@chakra-ui/react";
+import { Box, HStack, StackProps, Text, useClipboard, useToast } from "@chakra-ui/react";
 import { MdContentCopy } from "react-icons/md";
 
-export function CopyText({ children }) {
+interface CopyTextProps extends StackProps {
+	children: React.ReactNode;
+}
+
+export function CopyText({ children, ...props }: CopyTextProps) {
 	children = children || "";
 	const { onCopy } = useClipboard(children.toString());
 	const toast = useToast();
 
-	const handleClick = () => {
+	const handleClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		onCopy();
 		toast({ title: "클립보드에 텍스트를 복사했습니다.", status: "info", duration: 3000, isClosable: true });
 	};
 	return (
-		<HStack onClick={handleClick} sx={{ gap: "2px", ":hover": { textDecoration: "underline", cursor: "pointer" } }}>
+		<HStack
+			onClick={handleClick}
+			sx={{ gap: "2px", ":hover": { textDecoration: "underline", cursor: "pointer" } }}
+			{...props}
+		>
 			{children.toString().length === 0 ? null : (
 				<>
 					<Text>{children}</Text>
