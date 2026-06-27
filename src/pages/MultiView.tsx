@@ -1674,7 +1674,7 @@ function MenuCardImage({ liveImageUrl, openLive, adult }: MenuCardImageProps) {
 					</Stack>
 				) : liveImageUrl ? (
 					<Image
-						src={modImageUrl(liveImageUrl + `?t=${now.getTime()}`, "320")}
+						src={modImageUrl(liveImageUrl + `?t=${now.getTime()}`, "160")}
 						height="72px"
 						objectFit={"cover"}
 						borderRadius={".5rem"}
