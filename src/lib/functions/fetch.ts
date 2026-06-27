@@ -48,6 +48,11 @@ export interface FetchOptions extends RequestInit {
 	timeout?: number;
 }
 
+export interface DefaultResponseData<T = any> {
+	msg: string;
+	data: T;
+}
+
 interface FetchResponse<T = any> {
 	data?: T;
 	headers?: Headers;

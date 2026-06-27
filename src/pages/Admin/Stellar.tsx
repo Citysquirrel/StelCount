@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchServer } from "../../lib/functions/fetch";
+import { DefaultResponseData, fetchServer } from "../../lib/functions/fetch";
 import {
 	Badge,
 	Box,
@@ -79,7 +79,7 @@ export function Stellar() {
 	const toast = useToast();
 	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
 		useColor();
-	const createStellar = useServerMutation<StellarData, StellarData, "admin">({
+	const createStellar = useServerMutation<DefaultResponseData<StellarData>, StellarData, "admin">({
 		version: "admin",
 		api: "/stellar",
 		method: "POST",
@@ -90,7 +90,7 @@ export function Stellar() {
 		method: "PATCH",
 	});
 
-	const getAllGroup = useServerQuery<StellarGroup[]>({ version: "admin", api: "/groups" });
+	const getAllGroup = useServerQuery<DefaultResponseData<StellarGroup[]>>({ version: "admin", api: "/groups" });
 
 	const parentRef = useRef<HTMLDivElement>(null);
 
@@ -132,7 +132,8 @@ export function Stellar() {
 			// 신규 추가
 			createStellar.mutate(editingStellar, {
 				onSuccess: (data) => {
-					setStellarData((prev) => [data, ...prev]);
+					setStellarData((prev) => [...prev, data.data]);
+					setIsModalOpen(false);
 				},
 				onError: () => {
 					toast({ description: "스텔라 추가 중 서버 에러 발생" });
@@ -189,7 +190,7 @@ export function Stellar() {
 			toast({ title: "올바르지 않은 id 입력됨. 코드 점검 요함", status: "error", duration: 3000, isClosable: true });
 		e.target.value = "";
 
-		const selectedGroup = getAllGroup.data?.find((g) => g.id === value);
+		const selectedGroup = getAllGroup.data?.data.find((g) => g.id === value);
 		setEditingStellar({ ...editingStellar, groups: selectedGroup ? [selectedGroup] : [] });
 	};
 
@@ -397,7 +398,13 @@ export function Stellar() {
 												</FormControl>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">그룹</FormLabel>
-													<Select onChange={handleGroup}>{}</Select>
+													<Select size="sm" onChange={handleGroup} isDisabled={getAllGroup.data?.data.length === 0}>
+														{getAllGroup.data && getAllGroup.data.data.length > 0 ? (
+															getAllGroup.data.data.map((g) => <option value={g.id}>{g.name}</option>)
+														) : (
+															<option>그룹 데이터 없음</option>
+														)}
+													</Select>
 												</FormControl>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">그룹(deprecated)</FormLabel>
