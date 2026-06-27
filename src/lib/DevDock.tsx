@@ -17,6 +17,7 @@ import {
 import { NetworkLog } from "./functions/fetch"; // 본인의 API 파일 경로로 수정
 
 const STORAGE_KEY__NETWORK_DOCK = "network_dock_position";
+const DOCK_STORAGE_SIZE = [10, 25]; // [Network Dock, Console Dock]
 
 export const NetworkDock: React.FC = () => {
 	const [logs, setLogs] = useState<NetworkLog[]>([]);
@@ -35,6 +36,7 @@ export const NetworkDock: React.FC = () => {
 					updatedLogs[existingIndex] = { ...updatedLogs[existingIndex], ...newLog };
 					return updatedLogs;
 				}
+				if (prev.length >= DOCK_STORAGE_SIZE[0]) prev.pop();
 				return [newLog, ...prev];
 			});
 		};
@@ -401,19 +403,20 @@ export const ConsoleDock: React.FC = () => {
 		// 가로채기 함수 생성
 		const interceptConsole = (method: LogMethod) => {
 			return (...args: any[]) => {
-				// 1. 원래 콘솔창에도 똑같이 출력 (기능 유지)
 				originalConsole[method](...args);
 
-				// 2. 우리 Dock UI를 위한 상태 업데이트
-				setLogs((prev) => [
-					{
-						id: Math.random().toString(36).substring(7),
-						method,
-						args,
-						time: new Date().toLocaleTimeString(),
-					},
-					...prev, // 최신 로그가 위로 오게
-				]);
+				setLogs((prev) => {
+					if (prev.length >= DOCK_STORAGE_SIZE[1]) prev.pop();
+					return [
+						{
+							id: Math.random().toString(36).substring(7),
+							method,
+							args,
+							time: new Date().toLocaleTimeString(),
+						},
+						...prev,
+					];
+				});
 			};
 		};
 
