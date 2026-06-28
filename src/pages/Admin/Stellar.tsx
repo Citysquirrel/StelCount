@@ -26,15 +26,21 @@ import {
 	Button,
 	Checkbox,
 	useToast,
+	Link,
 } from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
 import { v4 } from "uuid";
 import { FiFolder, FiPlus } from "react-icons/fi";
+import { TfiYoutube } from "react-icons/tfi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import { CopyText } from "@/components/CopyText";
-import { getComplementaryColor } from "@/lib/functions/etc";
 import GroupModal from "./Stellar/GroupModal";
+import { MdDelete } from "react-icons/md";
+import { naver, youtube } from "@/lib/functions/platforms";
+import { FaYoutube } from "react-icons/fa6";
+import { TbPlaylist } from "react-icons/tb";
+import { Image } from "@/components/Image";
 
 interface StellarInputValue {
 	name: string;
@@ -59,14 +65,13 @@ interface StellarData extends StellarInputValue {
 }
 
 export interface StellarGroup {
-	id: number;
+	id?: number;
 	name: string;
 	engName: string;
 	numbering: string;
 	description: string;
 	isActive: boolean;
 	sortOrder: number;
-	stellar_id: number;
 }
 
 export function Stellar() {
@@ -93,6 +98,11 @@ export function Stellar() {
 		api: "/stellar/:id",
 		method: "PATCH",
 	});
+	const deleteStellar = useServerMutation<void, { id: number }, "admin">({
+		version: "admin",
+		api: "/stellar/:id",
+		method: "DELETE",
+	});
 
 	const getAllGroup = useServerQuery<DefaultResponseData<StellarGroup[]>>({ version: "admin", api: "/groups" });
 
@@ -103,6 +113,26 @@ export function Stellar() {
 		setEditingStellar({ ...stellarData[index] });
 		setEditingIndex(index);
 		setIsModalOpen(true);
+	};
+
+	const handleRowDelete = (id?: number) => {
+		if (!id) return;
+		if (confirm(`${id}번 데이터를 정말로 삭제하시겠습니까?`))
+			deleteStellar.mutate(
+				{ id },
+				{
+					onSuccess: () => {
+						setStellarData((prev) => {
+							const idx = prev.findIndex((p) => p.id === id);
+							prev.splice(idx, 1);
+							return prev;
+						});
+					},
+					onError: () => {
+						toast({ description: "그룹 편집 중 서버 에러 발생" });
+					},
+				},
+			);
 	};
 
 	// 버튼 핸들러
@@ -152,7 +182,6 @@ export function Stellar() {
 			editStellar.mutate(editingStellar as Required<StellarData>, {
 				onSuccess: () => {
 					const targetOriginalStellar = stellarData[editingIndex!];
-					console.log(targetOriginalStellar);
 					setStellarData((prev) =>
 						prev.map((s) => {
 							if (s === targetOriginalStellar) {
@@ -253,10 +282,15 @@ export function Stellar() {
 						<Box w="120px" textAlign="center">
 							그룹
 						</Box>
-						<Box w="60px" textAlign="center">
+						<Box w="80px" textAlign="center">
 							색상
 						</Box>
-						<Box flex={1}>소스</Box>
+						<Box flex={1} textAlign="center">
+							소스
+						</Box>
+						<Box w="60px" textAlign="center">
+							작업
+						</Box>
 					</Flex>
 
 					{/* 가상화 컨테이너 */}
@@ -279,59 +313,75 @@ export function Stellar() {
 										px={4}
 										bg={index % 2 ? "gray.50" : undefined}
 										align="center"
-										// bg={bgColor}
 										borderBottom={`1px solid ${borderColor}`}
-										// outline={song.actionStatus === "ACTIVE" ? undefined : "1px solid"}
-										// outlineColor={borderColorMap[song.actionStatus] || undefined}
 										cursor="pointer"
 										_hover={{ bg: fieldHoverBgColor }}
 										onClick={() => handleRowClick(virtualRow.index)}
 									>
 										<Box w="60px">{stellar.id}</Box>
-										{/* <Stack w="100px" alignItems={"flex-start"}>
-											<Badge
-												colorScheme={
-													stellar.syncStatus === "NEW" ? "green" : stellar.syncStatus === "MODIFIED" ? "yellow" : "gray"
-												}
-											>
-												{stellar.syncStatus}
-											</Badge>
-											<Badge
-												colorScheme={
-													stellar.actionStatus === "ACTIVE"
-														? "blue"
-														: stellar.actionStatus === "DELETED"
-															? "red"
-															: stellar.actionStatus === "DISABLED"
-																? "orange"
-																: "gray"
-												}
-											>
-												{stellar.actionStatus}
-											</Badge>
-										</Stack> */}
+
 										<Box w="140px" textAlign="center">
 											{stellar.name}
 											{stellar.nameShort && `(${stellar.nameShort})`}
 										</Box>
 										<Box w="120px" textAlign="center">
-											{stellar.groups[0]?.name}
+											{stellar.groups && stellar.groups[0]?.name}
 										</Box>
-										<Flex w="60px" fontSize="2xs" justifyContent={"center"}>
+										<Flex w="80px" fontSize="2xs" justifyContent={"center"}>
 											<CopyText color={`#${stellar.colorCode}`} fontWeight={"bold"}>
-												{`#${stellar.colorCode}`}
+												{stellar.colorCode && `#${stellar.colorCode}`}
 											</CopyText>
 										</Flex>
 										<Box flex={1}>
-											<HStack spacing={1} justify={"center"}></HStack>
+											<HStack spacing={2} justify={"center"}>
+												<Text
+													as={Link}
+													href={youtube.channelUrlByYoutubeId(stellar.youtubeId)}
+													isExternal
+													color="red.500"
+													fontSize="xl"
+												>
+													<FaYoutube />
+												</Text>
+												<Text
+													as={Link}
+													href={youtube.playlistUrl(stellar.playlistIdForMusic)}
+													isExternal
+													color="red.500"
+													fontSize="xl"
+												>
+													<TbPlaylist />
+												</Text>
+												<Text as={Link} href={naver.chzzk.channelUrl(stellar.chzzkId)} isExternal fontSize="xl">
+													<Image src="/images/i_chzzk_1.png" boxSize="20px" />
+												</Text>
+											</HStack>
 										</Box>
+										<Flex w="60px" fontSize="2xs" justifyContent={"center"}>
+											<IconButton
+												aria-label="Delete stellar"
+												size="sm"
+												variant={"ghost"}
+												onClick={(e) => {
+													e.stopPropagation();
+													handleRowDelete(stellar.id);
+												}}
+											>
+												<MdDelete />
+											</IconButton>
+										</Flex>
 									</Flex>
 								);
 							})}
 						</Box>
 					</Box>
 					{/* 그룹 편집 모달 */}
-					<GroupModal isModalOpen={isGroupOpen} setIsModalOpen={setIsGroupOpen} data={getAllGroup.data} />
+					<GroupModal
+						isModalOpen={isGroupOpen}
+						setIsModalOpen={setIsGroupOpen}
+						data={getAllGroup.data?.data}
+						refetch={getAllGroup.refetch}
+					/>
 
 					{/* 스텔라 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl" closeOnOverlayClick={false}>
@@ -369,9 +419,19 @@ export function Stellar() {
 												</FormControl>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">그룹</FormLabel>
-													<Select size="sm" onChange={handleGroup} isDisabled={getAllGroup.data?.data.length === 0}>
+													<Select
+														size="sm"
+														placeholder="그룹을 선택해주세요"
+														onChange={handleGroup}
+														value={(editingStellar.groups[0] && editingStellar.groups[0].id) || ""}
+														isDisabled={getAllGroup.data?.data.length === 0}
+													>
 														{getAllGroup.data && getAllGroup.data.data.length > 0 ? (
-															getAllGroup.data.data.map((g) => <option value={g.id}>{g.name}</option>)
+															getAllGroup.data.data.map((g) => (
+																<option key={g.id} value={g.id}>
+																	{`${g.engName && `${g.numbering} - `}${g.name}${g.engName && `(${g.engName})`}`}
+																</option>
+															))
 														) : (
 															<option>그룹 데이터 없음</option>
 														)}

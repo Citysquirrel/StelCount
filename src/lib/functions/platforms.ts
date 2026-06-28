@@ -20,6 +20,15 @@ export const youtube = {
 		youtubeId ? `https://www.youtube.com/channel/${youtubeId}` : undefined,
 	videoUrl: (videoId: string) => (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
 	musicUrl: (videoId: string) => (videoId ? `https://music.youtube.com/watch?v=${videoId}` : undefined),
+	playlistUrl: (playlistId: string) => (playlistId ? `https://www.youtube.com/playlist?list=${playlistId}` : undefined),
+};
+
+export const naver = {
+	chzzk: {
+		liveUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}` : undefined),
+		liveChatUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}/chat` : undefined),
+		channelUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/${channelId}` : undefined),
+	},
 };
 
 export function objectToUrlParams(object: Object) {
@@ -30,11 +39,3 @@ export function objectToUrlParams(object: Object) {
 	});
 	return params;
 }
-
-export const naver = {
-	chzzk: {
-		liveUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}` : undefined),
-		liveChatUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}/chat` : undefined),
-		channelUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/${channelId}` : undefined),
-	},
-};
