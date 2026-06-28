@@ -55,6 +55,10 @@ export const routeObj: RouteObject[] = [
 						element: <Stellar />,
 					},
 					{
+						path: "video",
+						element: <Stellar />,
+					},
+					{
 						path: "songbook",
 						element: <Songbook />,
 					},

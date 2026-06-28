@@ -32,7 +32,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
 import { v4 } from "uuid";
 import { FiFolder, FiPlus } from "react-icons/fi";
-import { TfiYoutube } from "react-icons/tfi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import { CopyText } from "@/components/CopyText";
 import GroupModal from "./Stellar/GroupModal";
@@ -42,7 +41,7 @@ import { FaYoutube } from "react-icons/fa6";
 import { TbPlaylist } from "react-icons/tb";
 import { Image } from "@/components/Image";
 
-interface StellarInputValue {
+interface VideoInputValue {
 	name: string;
 	nameShort: string;
 	group: string;
@@ -58,7 +57,7 @@ interface StellarInputValue {
 	graduation: string;
 }
 
-interface StellarData extends StellarInputValue {
+interface VideoData extends VideoInputValue {
 	id?: number;
 	uuid: string;
 	youtubeCustomUrl: string;
@@ -75,11 +74,11 @@ export interface StellarGroup {
 }
 
 export function Stellar() {
-	const [stellarData, setStellarData] = useState<StellarData[]>([]);
+	const [videoData, setVideoData] = useState<VideoData[]>([]);
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [editingStellar, setEditingStellar] = useState<StellarData | null>(null);
+	const [editingStellar, setEditingStellar] = useState<VideoData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const [searchYoutubeId, setSearchYoutubeId] = useState("");
 	const [isGroupOpen, setIsGroupOpen] = useState(false);
@@ -88,7 +87,7 @@ export function Stellar() {
 	const toast = useToast();
 	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
 		useColor();
-	const createStellar = useServerMutation<DefaultResponseData<StellarData>, StellarData, "admin">({
+	const createStellar = useServerMutation<DefaultResponseData<VideoData>, VideoData, "admin">({
 		version: "admin",
 		api: "/stellar",
 		method: "POST",
@@ -111,7 +110,7 @@ export function Stellar() {
 
 	// 행 클릭 시 상세 모달 열기
 	const handleRowClick = (index: number) => {
-		setEditingStellar({ ...stellarData[index] });
+		setEditingStellar({ ...videoData[index] });
 		setEditingIndex(index);
 		setIsModalOpen(true);
 	};
@@ -123,7 +122,7 @@ export function Stellar() {
 				{ id },
 				{
 					onSuccess: () => {
-						setStellarData((prev) => {
+						setVideoData((prev) => {
 							const idx = prev.findIndex((p) => p.id === id);
 							prev.splice(idx, 1);
 							return prev;
@@ -138,7 +137,7 @@ export function Stellar() {
 
 	// 버튼 핸들러
 	const handleAddNewStellar = () => {
-		const newSong: StellarData = {
+		const newSong: VideoData = {
 			name: "",
 			nameShort: "",
 			group: "",
@@ -171,7 +170,7 @@ export function Stellar() {
 			// 신규 추가
 			createStellar.mutate(editingStellar, {
 				onSuccess: (data) => {
-					setStellarData((prev) => [...prev, data.data]);
+					setVideoData((prev) => [...prev, data.data]);
 					setIsModalOpen(false);
 				},
 				onError: () => {
@@ -180,10 +179,10 @@ export function Stellar() {
 			});
 		} else {
 			// 기존 데이터 수정
-			editStellar.mutate(editingStellar as Required<StellarData>, {
+			editStellar.mutate(editingStellar as Required<VideoData>, {
 				onSuccess: () => {
-					const targetOriginalStellar = stellarData[editingIndex!];
-					setStellarData((prev) =>
+					const targetOriginalStellar = videoData[editingIndex!];
+					setVideoData((prev) =>
 						prev.map((s) => {
 							if (s === targetOriginalStellar) {
 								return { ...editingStellar };
@@ -234,13 +233,13 @@ export function Stellar() {
 
 	useEffect(() => {
 		fetchServer("admin", "/stellars").then((res) => {
-			setStellarData(res.data.data);
+			setVideoData(res.data.data);
 		});
 		// fetchServer("v1", "/tags").then(() => {});
 	}, []);
 	// --- [가상화 스크롤 설정] ---
 	const rowVirtualizer = useVirtualizer({
-		count: stellarData.length,
+		count: videoData.length,
 		getScrollElement: () => parentRef.current,
 		estimateSize: () => 48,
 		overscan: 10,
@@ -299,7 +298,7 @@ export function Stellar() {
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
-								const stellar = stellarData[virtualRow.index];
+								const stellar = videoData[virtualRow.index];
 								// const isFaded = song.actionStatus === "DELETED" || song.actionStatus === "DISABLED";
 
 								return (

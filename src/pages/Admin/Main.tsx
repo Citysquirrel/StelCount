@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchServer } from "../../lib/functions/fetch";
 import { Box, HStack, Stack, useColorModeValue, Text, Flex, IconButton, VStack, useMediaQuery } from "@chakra-ui/react";
-import { FiHome, FiSettings, FiUsers, FiMenu, FiBook } from "react-icons/fi";
+import { FiHome, FiSettings, FiUsers, FiMenu, FiBook, FiYoutube } from "react-icons/fi";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../lib/hooks/useAuth";
 import { NotExist } from "../NotExist";
@@ -11,6 +11,7 @@ const PAGE_TITLES: Record<string, string> = {
 	"/": "대시보드",
 	"/dashboard": "대시보드",
 	"/stellar": "스텔라 관리",
+	"/video": "영상 관리",
 	"/songbook": "노래책 관리",
 	"/settings": "시스템 설정",
 };
@@ -115,6 +116,7 @@ export function NewAdmin() {
 				<VStack spacing={2} align="stretch" mt={4} px={isExpanded ? 4 : 2}>
 					<NavItem icon={FiHome} label="대시보드" to={`${ROUTE_NAME}/dashboard`} isExpanded={isExpanded} />
 					<NavItem icon={FiUsers} label="스텔라 관리" to={`${ROUTE_NAME}/stellar`} isExpanded={isExpanded} />
+					{/* <NavItem icon={FiYoutube} label="영상 관리" to={`${ROUTE_NAME}/video`} isExpanded={isExpanded} /> */}
 					<NavItem icon={FiBook} label="노래책 관리" to={`${ROUTE_NAME}/songbook`} isExpanded={isExpanded} />
 					<NavItem icon={FiSettings} label="설정" to={`${ROUTE_NAME}/setting`} isExpanded={isExpanded} />
 				</VStack>
