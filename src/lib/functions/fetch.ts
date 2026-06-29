@@ -167,7 +167,7 @@ export async function fetchServer<TData = any, V extends Version = Version, TBod
 ): Promise<FetchResponse<TData>> {
 	const baseUrl = (import.meta.env.VITE_SERVER_URL ?? "").replace(/\/$/, "");
 	const apiSegment = options?.isNotAPI ? "" : "api";
-	const versionSegment = version === "none" ? "" : version;
+	const versionSegment = version === "none" ? "" : version === "admin" ? "sq" : version;
 	const cleanApi = api.startsWith("/") ? api : `/${api}`;
 
 	const urlPath = [apiSegment, versionSegment].filter(Boolean).join("/");
