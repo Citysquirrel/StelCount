@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
 			// 빌드 시에만 번들 분석 리포트 생성 및 자동 열기
 			isProd &&
 				visualizer({
-					filename: "./dist/stats.html", // 분석 결과 파일 경로
+					filename: "./analysis/stats.html", // 분석 결과 파일 경로
 					open: true, // 빌드 완료 시 브라우저에서 자동으로 열기
 					gzipSize: true, // 실제 네트워크 전송 시 압축되는 사이즈로 보여주기
 				}),
