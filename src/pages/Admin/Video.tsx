@@ -27,11 +27,12 @@ import {
 	Checkbox,
 	useToast,
 	Link,
+	Icon,
 } from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
 import { v4 } from "uuid";
-import { FiFolder, FiPlus } from "react-icons/fi";
+import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import { CopyText } from "@/components/CopyText";
 import GroupModal from "./Stellar/GroupModal";
@@ -40,6 +41,8 @@ import { naver, youtube } from "@/lib/functions/platforms";
 import { FaYoutube } from "react-icons/fa6";
 import { TbPlaylist } from "react-icons/tb";
 import { Image } from "@/components/Image";
+import { Statistics, VideoDetail, YoutubeMusicData } from "@/lib/types";
+import { getThumbnails } from "@/lib/functions/etc";
 
 interface VideoInputValue {
 	name: string;
@@ -57,10 +60,18 @@ interface VideoInputValue {
 	graduation: string;
 }
 
-interface VideoData extends VideoInputValue {
+interface VideoData extends Omit<
+	YoutubeMusicData,
+	"details" | "statistics" | "mostPopular" | "mostPopularMusic" | "thumbnail" | "thumbnails"
+> {
 	id?: number;
-	uuid: string;
-	youtubeCustomUrl: string;
+	thumbnail?: string;
+	thumbnails?: string;
+	mostPopular?: number;
+	mostPopularMusic?: number;
+	details?: VideoDetail[];
+	statistics?: Statistics[];
+	inheritChannelId?: string;
 }
 
 export interface StellarGroup {
@@ -73,12 +84,12 @@ export interface StellarGroup {
 	sortOrder: number;
 }
 
-export function Stellar() {
+export function Video() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [editingStellar, setEditingStellar] = useState<VideoData | null>(null);
+	const [editingVideo, setEditingVideo] = useState<VideoData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const [searchYoutubeId, setSearchYoutubeId] = useState("");
 	const [isGroupOpen, setIsGroupOpen] = useState(false);
@@ -87,30 +98,31 @@ export function Stellar() {
 	const toast = useToast();
 	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
 		useColor();
-	const createStellar = useServerMutation<DefaultResponseData<VideoData>, VideoData, "admin">({
+	const getAllVideos = useServerQuery<DefaultResponseData<VideoData[]>>({
 		version: "admin",
-		api: "/stellar",
+		api: "/videos",
+	});
+	const createVideo = useServerMutation<DefaultResponseData<VideoData>, VideoData, "admin">({
+		version: "admin",
+		api: "/video",
 		method: "POST",
 	});
-	const editStellar = useServerMutation<void, { id: number }, "admin">({
+	const editVideo = useServerMutation<void, { id: number }, "admin">({
 		version: "admin",
-		api: "/stellar/:id",
+		api: "/video/:id",
 		method: "PATCH",
 	});
-	const deleteStellar = useServerMutation<void, { id: number }, "admin">({
+	const deleteVideo = useServerMutation<void, { id: number }, "admin">({
 		version: "admin",
-		api: "/stellar/:id",
+		api: "/video/:id",
 		method: "DELETE",
 	});
-
-	//TODO: Group 데이터에 대해 order 적용 (모달 내부까지)
-	const getAllGroup = useServerQuery<DefaultResponseData<StellarGroup[]>>({ version: "admin", api: "/groups" });
 
 	const parentRef = useRef<HTMLDivElement>(null);
 
 	// 행 클릭 시 상세 모달 열기
 	const handleRowClick = (index: number) => {
-		setEditingStellar({ ...videoData[index] });
+		setEditingVideo({ ...videoData[index] });
 		setEditingIndex(index);
 		setIsModalOpen(true);
 	};
@@ -118,7 +130,7 @@ export function Stellar() {
 	const handleRowDelete = (id?: number) => {
 		if (!id) return;
 		if (confirm(`${id}번 데이터를 정말로 삭제하시겠습니까?`))
-			deleteStellar.mutate(
+			deleteVideo.mutate(
 				{ id },
 				{
 					onSuccess: () => {
@@ -136,25 +148,18 @@ export function Stellar() {
 	};
 
 	// 버튼 핸들러
-	const handleAddNewStellar = () => {
+	const handleAddNewVideo = () => {
 		const newSong: VideoData = {
-			name: "",
-			nameShort: "",
-			group: "",
-			groups: [],
-			formerGroups: [],
-			youtubeId: "",
-			chzzkId: "",
-			xId: "",
-			colorCode: "",
-			playlistIdForMusic: "",
-			justLive: false,
-			debut: "",
-			graduation: "",
-			uuid: v4(),
-			youtubeCustomUrl: "",
+			type: "music",
+			title: "",
+			titleAlias: "",
+			channelId: "",
+			videoId: "",
+			isActive: true,
+			inheritChannelId: "",
+			tags: [],
 		};
-		setEditingStellar(newSong);
+		setEditingVideo(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
 		setIsModalOpen(true);
 	};
@@ -164,28 +169,28 @@ export function Stellar() {
 
 	// 모달 내 저장 버튼
 	const handleSaveEdit = () => {
-		if (!editingStellar) return;
+		if (!editingVideo) return;
 
 		if (editingIndex === -1) {
 			// 신규 추가
-			createStellar.mutate(editingStellar, {
+			createVideo.mutate(editingVideo, {
 				onSuccess: (data) => {
 					setVideoData((prev) => [...prev, data.data]);
 					setIsModalOpen(false);
 				},
 				onError: () => {
-					toast({ description: "스텔라 추가 중 서버 에러 발생" });
+					toast({ description: "영상 추가 중 서버 에러 발생" });
 				},
 			});
 		} else {
 			// 기존 데이터 수정
-			editStellar.mutate(editingStellar as Required<VideoData>, {
+			editVideo.mutate(editingVideo as Required<VideoData>, {
 				onSuccess: () => {
 					const targetOriginalStellar = videoData[editingIndex!];
 					setVideoData((prev) =>
 						prev.map((s) => {
 							if (s === targetOriginalStellar) {
-								return { ...editingStellar };
+								return { ...editingVideo };
 							}
 							return s;
 						}),
@@ -196,47 +201,44 @@ export function Stellar() {
 		}
 	};
 
-	const handleGetYoutubeId = (e?: React.MouseEvent<HTMLButtonElement>) => {
-		e?.preventDefault();
-		if (searchYoutubeId === "") {
-			alert("빈값");
-			return;
-		}
-		fetchServer("v1", `/yid?username=${searchYoutubeId}`).then((res) => {
-			if (res && res.data.items && editingStellar) {
-				if (editingStellar.youtubeId.length === 0) {
-					setEditingStellar(() => ({ ...editingStellar, youtubeId: res.data.items[0].id }));
-				} else {
-					setEditingStellar(() => ({
-						...editingStellar,
-						youtubeId: editingStellar.youtubeId + "," + res.data.items[0].id,
-					}));
-				}
-			} else {
-				// toast({ description: "올바르지 않은 채널명입니다", status: "error" });
-			}
-		});
-	};
+	// const handleGetYoutubeId = (e?: React.MouseEvent<HTMLButtonElement>) => {
+	// 	e?.preventDefault();
+	// 	if (searchYoutubeId === "") {
+	// 		alert("빈값");
+	// 		return;
+	// 	}
+	// 	fetchServer("v1", `/yid?username=${searchYoutubeId}`).then((res) => {
+	// 		if (res && res.data.items && editingVideo) {
+	// 			if (editingVideo.youtubeId.length === 0) {
+	// 				setEditingVideo(() => ({ ...editingVideo, youtubeId: res.data.items[0].id }));
+	// 			} else {
+	// 				setEditingVideo(() => ({
+	// 					...editingVideo,
+	// 					youtubeId: editingVideo.youtubeId + "," + res.data.items[0].id,
+	// 				}));
+	// 			}
+	// 		} else {
+	// 			// toast({ description: "올바르지 않은 채널명입니다", status: "error" });
+	// 		}
+	// 	});
+	// };
 
-	const handleGroup = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		if (!editingStellar) return;
+	// const handleGroup = (e: React.ChangeEvent<HTMLSelectElement>) => {
+	// 	if (!editingVideo) return;
 
-		const value = Number(e.target.value);
+	// 	const value = Number(e.target.value);
 
-		if (isNaN(value))
-			toast({ title: "올바르지 않은 id 입력됨. 코드 점검 요함", status: "error", duration: 3000, isClosable: true });
-		e.target.value = "";
+	// 	if (isNaN(value))
+	// 		toast({ title: "올바르지 않은 id 입력됨. 코드 점검 요함", status: "error", duration: 3000, isClosable: true });
+	// 	e.target.value = "";
 
-		const selectedGroup = getAllGroup.data?.data.find((g) => g.id === value);
-		setEditingStellar({ ...editingStellar, groups: selectedGroup ? [selectedGroup] : [] });
-	};
+	// 	const selectedGroup = getAllGroup.data?.data.find((g) => g.id === value);
+	// 	setEditingVideo({ ...editingVideo, groups: selectedGroup ? [selectedGroup] : [] });
+	// };
 
 	useEffect(() => {
-		fetchServer("admin", "/stellars").then((res) => {
-			setVideoData(res.data.data);
-		});
-		// fetchServer("v1", "/tags").then(() => {});
-	}, []);
+		if (getAllVideos.data?.data) setVideoData(getAllVideos.data.data);
+	}, [getAllVideos.data?.data]);
 	// --- [가상화 스크롤 설정] ---
 	const rowVirtualizer = useVirtualizer({
 		count: videoData.length,
@@ -248,10 +250,10 @@ export function Stellar() {
 		<Box>
 			<Box mb={8}>
 				<Heading size="lg" mb={2}>
-					스텔라 데이터 관리
+					영상 데이터 관리
 				</Heading>
 				<Text color="gray.500" fontSize="sm">
-					스텔라들의 상세 데이터를 관리합니다.
+					스텔라들의 영상 데이터를 관리합니다.
 				</Text>
 			</Box>
 			<Flex
@@ -265,11 +267,11 @@ export function Stellar() {
 				border={`1px solid ${borderColor}`}
 			>
 				<Flex flex={1} justify="flex-end" gap={2}>
-					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewStellar}>
+					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
 						추가
 					</Button>
 					<Button leftIcon={<FiFolder />} colorScheme="gray" onClick={handleGroupSetting} variant={"outline"}>
-						그룹 관리
+						태그 관리
 					</Button>
 				</Flex>
 			</Flex>
@@ -278,19 +280,9 @@ export function Stellar() {
 					{/* 테이블 헤더 */}
 					<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
 						<Box w="60px">ID</Box>
-						<Box w="140px">이름</Box>
-						<Box w="120px" textAlign="center">
-							그룹
-						</Box>
-						<Box w="80px" textAlign="center">
-							색상
-						</Box>
-						<Box flex={1} textAlign="center">
-							소스
-						</Box>
-						<Box w="60px" textAlign="center">
-							작업
-						</Box>
+						<Box w="60px">상속</Box>
+						<Box w="120px">썸네일</Box>
+						<Box flex={1}>제목(태그)</Box>
 					</Flex>
 
 					{/* 가상화 컨테이너 */}
@@ -298,8 +290,14 @@ export function Stellar() {
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
-								const stellar = videoData[virtualRow.index];
-								// const isFaded = song.actionStatus === "DELETED" || song.actionStatus === "DISABLED";
+								const video = videoData[virtualRow.index];
+								// ID
+								// 타이틀 (대체됨 여부까지)
+								// 썸네일
+								// videoId
+								// 상속
+								// 태그뱃지
+								//// 2줄로하자
 
 								return (
 									<Flex
@@ -318,139 +316,60 @@ export function Stellar() {
 										_hover={{ bg: fieldHoverBgColor }}
 										onClick={() => handleRowClick(virtualRow.index)}
 									>
-										<Box w="60px">{stellar.id}</Box>
-
-										<Box w="140px" textAlign="center">
-											{stellar.name}
-											{stellar.nameShort && `(${stellar.nameShort})`}
+										<Box w="60px">{video.id}</Box>
+										<Box w="60px" textAlign="center">
+											{video.inheritChannelId && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
 										</Box>
 										<Box w="120px" textAlign="center">
-											{stellar.groups && stellar.groups[0]?.name}
+											<Image src={getThumbnails(video.thumbnails).default?.url || "/images/no_thb.png"} />
 										</Box>
-										<Flex w="80px" fontSize="2xs" justifyContent={"center"}>
-											<CopyText color={`#${stellar.colorCode}`} fontWeight={"bold"}>
-												{stellar.colorCode && `#${stellar.colorCode}`}
-											</CopyText>
-										</Flex>
-										<Box flex={1}>
-											<HStack spacing={2} justify={"center"}>
-												<Text
-													as={Link}
-													href={youtube.channelUrlByYoutubeId(stellar.youtubeId)}
-													isExternal
-													color="red.500"
-													fontSize="xl"
-												>
-													<FaYoutube />
-												</Text>
-												<Text
-													as={Link}
-													href={youtube.playlistUrl(stellar.playlistIdForMusic)}
-													isExternal
-													color="red.500"
-													fontSize="xl"
-												>
-													<TbPlaylist />
-												</Text>
-												<Text as={Link} href={naver.chzzk.channelUrl(stellar.chzzkId)} isExternal fontSize="xl">
-													<Image src="/images/i_chzzk_1.png" boxSize="20px" />
-												</Text>
-											</HStack>
-										</Box>
-										<Flex w="60px" fontSize="2xs" justifyContent={"center"}>
-											<IconButton
-												aria-label="Delete stellar"
-												size="sm"
-												variant={"ghost"}
-												onClick={(e) => {
-													e.stopPropagation();
-													handleRowDelete(stellar.id);
-												}}
-											>
-												<MdDelete />
-											</IconButton>
+										<Flex flex={1} fontSize="2xs" justifyContent={"center"}>
+											{video.titleAlias ? `${video.titleAlias}(수정됨)` : video.title}
 										</Flex>
 									</Flex>
 								);
 							})}
 						</Box>
 					</Box>
-					{/* 그룹 편집 모달 */}
-					<GroupModal
-						isModalOpen={isGroupOpen}
-						setIsModalOpen={setIsGroupOpen}
-						data={getAllGroup.data?.data}
-						refetch={getAllGroup.refetch}
-					/>
 
-					{/* 스텔라 편집 모달 */}
+					{/* 비디오 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl" closeOnOverlayClick={false}>
 						<ModalOverlay />
 						<ModalContent>
 							<ModalHeader>
-								{editingIndex === -1 ? "새 스텔라 추가" : "스텔라 상세 정보 수정"}
+								{editingIndex === -1 ? "새 영상 추가" : "영상 상세 정보 수정"}
 								<Text fontSize="xs" color="gray" fontWeight="400">
-									{editingStellar?.uuid || ""}
+									{/* {editingVideo?.uuid || ""} */}
 								</Text>
 							</ModalHeader>
 
 							<ModalCloseButton />
 
-							{editingStellar && (
+							{editingVideo && (
 								<ModalBody>
 									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
 										<VStack spacing={4} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
-											<Flex gap={4}>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">이름</FormLabel>
-													<Input
-														size="sm"
-														value={editingStellar.name || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, name: e.target.value })}
-													/>
-												</FormControl>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">짧은 이름</FormLabel>
-													<Input
-														size="sm"
-														value={editingStellar.nameShort || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, nameShort: e.target.value })}
-													/>
-												</FormControl>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">그룹</FormLabel>
-													<Select
-														size="sm"
-														placeholder="그룹을 선택해주세요"
-														onChange={handleGroup}
-														value={(editingStellar.groups[0] && editingStellar.groups[0].id) || ""}
-														isDisabled={getAllGroup.data?.data.length === 0}
-													>
-														{getAllGroup.data && getAllGroup.data.data.length > 0 ? (
-															getAllGroup.data.data.map((g) => (
-																<option key={g.id} value={g.id}>
-																	{`${g.engName && `${g.numbering} - `}${g.name}${g.engName && `(${g.engName})`}`}
-																</option>
-															))
-														) : (
-															<option>그룹 데이터 없음</option>
-														)}
-													</Select>
-												</FormControl>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">그룹(deprecated)</FormLabel>
-													<Text>{editingStellar.group}</Text>
-												</FormControl>
-											</Flex>
+											<FormControl flex={1}>
+												<FormLabel fontSize="sm">제목</FormLabel>
+												<Input size="sm" value={editingVideo.title || ""} isDisabled />
+											</FormControl>
+											<FormControl flex={1}>
+												<FormLabel fontSize="sm">대체 제목</FormLabel>
+												<Input
+													size="sm"
+													value={editingVideo.titleAlias || ""}
+													onChange={(e) => setEditingVideo({ ...editingVideo, titleAlias: e.target.value })}
+												/>
+											</FormControl>
 
-											<Flex gap={4}>
+											{/* <Flex gap={4}>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">데뷔일</FormLabel>
 													<Input
 														size="sm"
 														fontSize="xs"
-														value={editingStellar.debut || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, debut: e.target.value })}
+														value={editingVideo.debut || ""}
+														onChange={(e) => setEditingVideo({ ...editingVideo, debut: e.target.value })}
 														type="datetime-local"
 													/>
 												</FormControl>
@@ -459,8 +378,8 @@ export function Stellar() {
 													<Input
 														size="sm"
 														fontSize="xs"
-														value={editingStellar.graduation || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, graduation: e.target.value })}
+														value={editingVideo.graduation || ""}
+														onChange={(e) => setEditingVideo({ ...editingVideo, graduation: e.target.value })}
 														type="datetime-local"
 													/>
 												</FormControl>
@@ -469,7 +388,7 @@ export function Stellar() {
 														색상코드
 														<Box
 															display="inline-block"
-															bg={`#${editingStellar.colorCode}`}
+															bg={`#${editingVideo.colorCode}`}
 															borderRadius={"full"}
 															border="1px solid black"
 															boxSize="14px"
@@ -478,8 +397,8 @@ export function Stellar() {
 													</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.colorCode || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, colorCode: e.target.value })}
+														value={editingVideo.colorCode || ""}
+														onChange={(e) => setEditingVideo({ ...editingVideo, colorCode: e.target.value })}
 													/>
 												</FormControl>
 												<Box flex={1}></Box>
@@ -490,8 +409,8 @@ export function Stellar() {
 													<FormLabel fontSize="sm">치지직 ID</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.chzzkId || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, chzzkId: e.target.value })}
+														value={editingVideo.chzzkId || ""}
+														onChange={(e) => setEditingVideo({ ...editingVideo, chzzkId: e.target.value })}
 													/>
 												</FormControl>
 												<Box flex={1}></Box>
@@ -503,26 +422,24 @@ export function Stellar() {
 													<FormLabel fontSize="sm">유튜브 ID</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.youtubeId || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeId: e.target.value })}
+														value={editingVideo.youtubeId || ""}
+														onChange={(e) => setEditingVideo({ ...editingVideo, youtubeId: e.target.value })}
 													/>
 												</FormControl>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">유튜브 별칭주소</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.youtubeCustomUrl || ""}
-														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeCustomUrl: e.target.value })}
+														value={editingVideo.youtubeCustomUrl || ""}
+														onChange={(e) => setEditingVideo({ ...editingVideo, youtubeCustomUrl: e.target.value })}
 													/>
 												</FormControl>
 												<FormControl flex={1}>
 													<FormLabel fontSize="sm">플레이리스트 ID</FormLabel>
 													<Input
 														size="sm"
-														value={editingStellar.playlistIdForMusic || ""}
-														onChange={(e) =>
-															setEditingStellar({ ...editingStellar, playlistIdForMusic: e.target.value })
-														}
+														value={editingVideo.playlistIdForMusic || ""}
+														onChange={(e) => setEditingVideo({ ...editingVideo, playlistIdForMusic: e.target.value })}
 													/>
 												</FormControl>
 												<Box flex={1}></Box>
@@ -550,12 +467,12 @@ export function Stellar() {
 												<Box flex={1}></Box>
 												<Box flex={1}></Box>
 											</Flex>
-											<Divider />
+											<Divider /> */}
 											<Checkbox
-												isChecked={editingStellar.justLive}
-												onChange={(e) => setEditingStellar({ ...editingStellar, justLive: e.target.checked })}
+												isChecked={editingVideo.isActive}
+												onChange={(e) => setEditingVideo({ ...editingVideo, isActive: e.target.checked })}
 											>
-												카운터 데이터를 제외하고 라이브만 표시합니다.
+												활성화
 											</Checkbox>
 										</VStack>
 									</HStack>
@@ -566,7 +483,7 @@ export function Stellar() {
 								<Button variant="ghost" mr={3} onClick={() => setIsModalOpen(false)}>
 									취소
 								</Button>
-								<Button colorScheme="blue" onClick={handleSaveEdit} disabled={createStellar.isPending}>
+								<Button colorScheme="blue" onClick={handleSaveEdit} disabled={createVideo.isPending}>
 									적용하기
 								</Button>
 							</ModalFooter>

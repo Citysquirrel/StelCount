@@ -12,6 +12,7 @@ import { Dashboard } from "./pages/Admin/Dashboard";
 import { Stellar } from "./pages/Admin/Stellar";
 import { Songbook } from "./pages/Admin/Songbook";
 import { Setting } from "./pages/Admin/Setting";
+import { Video } from "./pages/Admin/Video";
 import AppV2 from "./AppV2";
 import HomeV2 from "@page/v2/Home";
 
@@ -56,7 +57,7 @@ export const routeObj: RouteObject[] = [
 					},
 					{
 						path: "video",
-						element: <Stellar />,
+						element: <Video />,
 					},
 					{
 						path: "songbook",

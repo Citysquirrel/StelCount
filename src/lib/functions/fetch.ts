@@ -38,7 +38,10 @@ export interface ServerAPIMap {
 		| "/stellar/:id"
 		| "/groups"
 		| "/group"
-		| "/group/:id";
+		| "/group/:id"
+		| "/videos"
+		| "/video"
+		| "/video/:id";
 }
 
 export type Version = keyof ServerAPIMap;

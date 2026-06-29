@@ -193,6 +193,9 @@ export function Stellar() {
 					);
 					setIsModalOpen(false);
 				},
+				onError: () => {
+					toast({ description: "스텔라 편집 중 서버 에러 발생" });
+				},
 			});
 		}
 	};

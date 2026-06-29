@@ -139,8 +139,9 @@ export function serverTZSync() {
 	const timeZoneUpdatedAt = "2024-07-04 11:30:08";
 }
 
-export function getThumbnails(thumbnails: string): Thumbnails {
+export function getThumbnails(thumbnails: string | undefined): Thumbnails {
 	try {
+		if (!thumbnails) return {};
 		return JSON.parse(thumbnails);
 	} catch (err) {
 		return {};

@@ -116,7 +116,7 @@ export function NewAdmin() {
 				<VStack spacing={2} align="stretch" mt={4} px={isExpanded ? 4 : 2}>
 					<NavItem icon={FiHome} label="대시보드" to={`${ROUTE_NAME}/dashboard`} isExpanded={isExpanded} />
 					<NavItem icon={FiUsers} label="스텔라 관리" to={`${ROUTE_NAME}/stellar`} isExpanded={isExpanded} />
-					{/* <NavItem icon={FiYoutube} label="영상 관리" to={`${ROUTE_NAME}/video`} isExpanded={isExpanded} /> */}
+					<NavItem icon={FiYoutube} label="영상 관리" to={`${ROUTE_NAME}/video`} isExpanded={isExpanded} />
 					<NavItem icon={FiBook} label="노래책 관리" to={`${ROUTE_NAME}/songbook`} isExpanded={isExpanded} />
 					<NavItem icon={FiSettings} label="설정" to={`${ROUTE_NAME}/setting`} isExpanded={isExpanded} />
 				</VStack>
