@@ -300,7 +300,8 @@ export function Stellar() {
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
 								const stellar = stellarData[virtualRow.index];
-								// const isFaded = song.actionStatus === "DELETED" || song.actionStatus === "DISABLED";
+								// youtubeId가 여러개인 경우를 대비
+								const youtubeIds = stellar.youtubeId.split(",");
 
 								return (
 									<Flex
@@ -335,27 +336,34 @@ export function Stellar() {
 										</Flex>
 										<Box flex={1}>
 											<HStack spacing={2} justify={"center"}>
-												<Text
-													as={Link}
-													href={youtube.channelUrlByYoutubeId(stellar.youtubeId)}
-													isExternal
-													color="red.500"
-													fontSize="xl"
-												>
-													<FaYoutube />
-												</Text>
-												<Text
-													as={Link}
-													href={youtube.playlistUrl(stellar.playlistIdForMusic)}
-													isExternal
-													color="red.500"
-													fontSize="xl"
-												>
-													<TbPlaylist />
-												</Text>
-												<Text as={Link} href={naver.chzzk.channelUrl(stellar.chzzkId)} isExternal fontSize="xl">
-													<Image src="/images/i_chzzk_1.png" boxSize="20px" />
-												</Text>
+												{stellar.youtubeId &&
+													youtubeIds.map((id) => (
+														<Text
+															as={Link}
+															href={youtube.channelUrlByYoutubeId(id)}
+															isExternal
+															color="red.500"
+															fontSize="xl"
+														>
+															<FaYoutube />
+														</Text>
+													))}
+												{stellar.playlistIdForMusic && (
+													<Text
+														as={Link}
+														href={youtube.playlistUrl(stellar.playlistIdForMusic)}
+														isExternal
+														color="red.500"
+														fontSize="xl"
+													>
+														<TbPlaylist />
+													</Text>
+												)}
+												{stellar.chzzkId && (
+													<Text as={Link} href={naver.chzzk.channelUrl(stellar.chzzkId)} isExternal fontSize="xl">
+														<Image src="/images/i_chzzk_1.png" boxSize="20px" />
+													</Text>
+												)}
 											</HStack>
 										</Box>
 										<Flex w="60px" fontSize="2xs" justifyContent={"center"}>
