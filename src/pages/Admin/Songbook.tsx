@@ -124,7 +124,7 @@ type RawSongData = Omit<SongData, "synonyms" | "actionStatus" | "syncStatus"> & 
 //?: 2. DELETED일 경우 삭제처리로 넘긴다
 //?: 3. 나머지 데이터(ACTIVE, DISABLED) 수집한다
 //?: 4. 한꺼번에 bulkCreate로 upsert 한다
-//TODO: 그러므로 프론트엔드에서는 정보가 변하거나 actionStatus(중요)가 변하는 경우 무조건 MODIFIED 표시되어야 한다.
+//DONE: 그러므로 프론트엔드에서는 정보가 변하거나 actionStatus(중요)가 변하는 경우 무조건 MODIFIED 표시되어야 한다.
 //!: 아래부터 이번 TODO에 대한 의사코드 작성
 // # DB에서 불러온 첫 rawData로부터 비교 실행. 고유키인 syncId를 기준으로 비교할 것.
 // 1. 기존에 없던 데이터를 NEW 처리
@@ -140,13 +140,13 @@ type RawSongData = Omit<SongData, "synonyms" | "actionStatus" | "syncStatus"> & 
 // "UNCHANGED" | "NEW" | "MODIFIED";
 // "ACTIVE" | "DELETED" | "DISABLED";
 
-//TODO: 신규 데이터 직접 생성 시 NEW, syncId 할당
-/////TODO: NEW 상태인 데이터를 삭제할 때의 최적화
-/////TODO: 	>> 관리자가 직접 새곡 추가를 했다가 마음이 바뀌어 삭제버튼을 누르는 경우. 아예 그자리에서 DROP하는 형태로..
-/////TODO:	>> 이건 대신 UNDO를 못하는 대신 확인창 한번 띄워주면 좋을듯
-//TODO: DB에 저장 동기화 API 호출 성공 후 로컬 상태 초기화 해주기
-//TODO:	>> DELETED 항목은 제거
-//TODO:	>> NEW, MODIFIED 항목은 UNCHANGED로 리셋
+//DONE: 신규 데이터 직접 생성 시 NEW, syncId 할당
+/////DONE: NEW 상태인 데이터를 삭제할 때의 최적화
+/////DONE: 	>> 관리자가 직접 새곡 추가를 했다가 마음이 바뀌어 삭제버튼을 누르는 경우. 아예 그자리에서 DROP하는 형태로..
+/////DONE:	>> 이건 대신 UNDO를 못하는 대신 확인창 한번 띄워주면 좋을듯
+//DONE: DB에 저장 동기화 API 호출 성공 후 로컬 상태 초기화 해주기
+//DONE:	>> DELETED 항목은 제거
+//DONE:	>> NEW, MODIFIED 항목은 UNCHANGED로 리셋
 
 export function Songbook() {
 	// --- [상태 관리] ---
@@ -309,6 +309,20 @@ export function Songbook() {
 		setSongs((prev) => prev.map((s) => (s.syncId === syncId ? { ...s, syncStatus, actionStatus: newStatus } : s)));
 	};
 
+	const modifySyncId = (syncId: string) => {
+		// 1. SHEET인지 MANUAL인지 검사
+		if (!syncId.startsWith("SHEET")) return syncId; // MANUAL인 경우이므로 그대로 전달
+
+		// 2. ::로 나눈 후 칼럼 정보를 빼고 재결합
+		try {
+			const [type, _, title, artist] = syncId.split("::");
+			const modified = [type, title, artist].join("::");
+			return modified;
+		} catch {
+			return syncId;
+		}
+	};
+
 	const parseSheetData = useCallback(
 		function (syncData: SyncDataData[], existingSongs: SongData[]): SongData[] {
 			const mapping = {
@@ -320,66 +334,78 @@ export function Songbook() {
 				},
 			} as const;
 
-			// 1. 저장된 songs 배열 상태 가져와서 대조해보기.
-			// 2. sync 배열을 돌며 title과 artist 두 개가 모두 같은 객체가 있는지 검증
-			// 3. 검증 후 두개가 같으면 나머지 값들을 마저 검증하여 다른 값이 있을 경우 덮어씌운 후 MODIFIED로 기록
-			// 4. 검증 후 하나라도 다르면 새 곡으로 push 하고 NEW로 기록
-			// (5. NEW와 MODIFIED가 위로 오도록 정렬)
-
-			// 2. 기존 곡들을 Map으로 변환 (검색 속도 최적화)
-			const oldSongsMap = new Map<string, SongData>();
+			// 기존 곡들을 Map으로 변환 (검색 속도 최적화)
+			const updatedSongs: SongData[] = [];
+			const oldSongsMap = new Map<string, SongData[]>();
 			existingSongs.forEach((song) => {
-				oldSongsMap.set(song.syncId, song);
+				if (!song.syncId.startsWith("SHEET")) {
+					// MANUAL 곡은 시트 동기화 대상이 아니므로 그대로 최종 배열에 푸시
+					updatedSongs.push(song);
+					return;
+				}
+
+				const key = modifySyncId(song.syncId); // 기존 곡도 꼬리표 뗀 키로 생성
+				const existingGroup = oldSongsMap.get(key) || [];
+				existingGroup.push(song);
+				oldSongsMap.set(key, existingGroup);
 			});
 
-			const updatedSongs: SongData[] = [];
-			// 처리된 곡의 Key를 기록해둘 Set (Map에서 delete하지 않기 위함)
-			const processedKeys = new Set<string>();
-
-			// 3. syncData를 순회하며 검증 및 병합
+			// syncData를 순회하며 검증 및 병합
 			syncData.forEach((syncItem) => {
-				const key = syncItem.syncId;
-				processedKeys.add(key); // 처리됨을 기록
+				const key = modifySyncId(syncItem.syncId);
+				const candidates = oldSongsMap.get(key); // 후보 배열을 가져옴
 
-				const oldSong = oldSongsMap.get(key);
+				let oldSong: SongData | undefined;
 
-				// mapping 객체를 통해 안전하게 타입 변환
-				// const mappedGenre = mapping.genre[syncItem.genre] as Genre;
-				const mappedCheese = mapping.cheese[syncItem.cheese] as Cheese;
+				//! 2개 이상의 중복 곡 대처 및 배열 소진(Consume) 로직
+				if (candidates && candidates.length > 0) {
+					// 우선순위 1: 완전히 동일한 syncId (행 이동 없이 제자리에 있는 곡)
+					const exactMatchIdx = candidates.findIndex((c) => c.syncId === syncItem.syncId);
+
+					if (exactMatchIdx !== -1) {
+						oldSong = candidates[exactMatchIdx];
+						candidates.splice(exactMatchIdx, 1); // 사용한 데이터는 배열에서 제거
+					} else {
+						// 우선순위 2: 일치하는게 없다면 (행이 밀린 중복 곡), 첫 번째 것을 가져옴
+						oldSong = candidates.shift(); // 배열의 첫 요소 제거 및 반환
+					}
+				}
+
+				const mappedCheese = mapping.cheese[syncItem.cheese as keyof typeof mapping.cheese] as Cheese;
 
 				if (oldSong) {
-					// [기존에 존재하는 곡]
-					// 비교할 핵심 필드들이 변경되었는지 확인
+					//? [기존에 존재하는 곡]
+					//! syncId가 달라졌는지(행 이동 감지) 여부도 isModified에 포함해야함
 					const isModified =
+						// oldSong.syncId !== syncItem.syncId || // 행이 밀려서 ID가 바뀐 경우
 						oldSong.genre !== syncItem.genre || oldSong.cheese !== mappedCheese || oldSong.notes !== syncItem.notes;
 
 					if (isModified) {
-						// 값이 다르면 MODIFIED
+						//? 변화가 생긴 경우
 						updatedSongs.push({
 							...oldSong,
+							// syncId: syncItem.syncId, // 새로운 행 번호가 포함된 syncId로 업데이트
 							genre: syncItem.genre,
 							cheese: mappedCheese,
 							notes: syncItem.notes,
 							syncStatus: "MODIFIED",
 						});
 					} else {
-						// 완전히 같으면 UNCHANGED
+						//? 변하지 않은 경우
 						updatedSongs.push({
 							...oldSong,
 							syncStatus: "UNCHANGED",
 						});
 					}
 				} else {
-					// [완전히 새로운 곡]
-
-					// 행 계산식
+					//? [완전히 새로운 곡]
 					const START_COLUMN = 6;
 					const id = syncItem.id;
 					const dashIndex = id.indexOf("-");
 					const num = +id.substring(dashIndex + 1);
 					const columnData = String(num + START_COLUMN);
-					//
-					updatedSongs.push({
+
+					updatedSongs.unshift({
 						columnData,
 						syncId: syncItem.syncId,
 						title: syncItem.title,
@@ -398,15 +424,28 @@ export function Songbook() {
 			});
 
 			// 삭제된 곡(DELETED) 판별 로직
-			// 기존 배열을 순회하며 processedKeys Set에 없는 녀석들만 골라냄
-			existingSongs.forEach((oldSong) => {
-				const key = oldSong.syncId;
-				if (!processedKeys.has(key)) {
-					updatedSongs.push({
-						...oldSong,
-						actionStatus: "DELETED",
-					});
-				}
+			// 기존 processedKeys Set 대신, 배열에서 뽑혀나가지 못하고 Map에 남아있는 객체들을 찾습니다.
+			Array.from(oldSongsMap.values())
+				.flat() // 2차원 배열(Map의 value들)을 1차원 배열로 펼침
+				.forEach((remainingSong) => {
+					if (remainingSong.syncId.startsWith("SHEET")) {
+						updatedSongs.push({
+							...remainingSong,
+							actionStatus: "DELETED",
+						});
+					}
+				});
+
+			// 테이블에 전송 전 정렬
+			updatedSongs.sort((a, b) => {
+				const getWeight = (song: SongData) => {
+					if (song.syncStatus === "NEW") return 1;
+					if (song.actionStatus === "DELETED") return 2;
+					if (song.syncStatus === "MODIFIED") return 3;
+					if (song.syncStatus === "UNCHANGED") return 4;
+					return 5;
+				};
+				return getWeight(a) - getWeight(b);
 			});
 
 			return updatedSongs;
