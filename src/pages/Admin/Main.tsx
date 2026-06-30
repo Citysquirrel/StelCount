@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchServer } from "../../lib/functions/fetch";
-import { Box, HStack, Stack, useColorModeValue, Text, Flex, IconButton, VStack, useMediaQuery } from "@chakra-ui/react";
+import { Box, HStack, useColorModeValue, Text, Flex, IconButton, VStack, useMediaQuery } from "@chakra-ui/react";
 import { FiHome, FiSettings, FiUsers, FiMenu, FiBook, FiYoutube } from "react-icons/fi";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../lib/hooks/useAuth";

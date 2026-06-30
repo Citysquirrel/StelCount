@@ -41,6 +41,7 @@ import {
 	NumberInputStepper,
 	NumberIncrementStepper,
 	NumberDecrementStepper,
+	useMediaQuery,
 } from "@chakra-ui/react";
 import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -166,7 +167,12 @@ export function Songbook() {
 	const [editingSong, setEditingSong] = useState<SongData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+	// 훅
 	const toast = useToast();
+	const [isTablet] = useMediaQuery("(max-width: 768px)");
+	const [isMobile] = useMediaQuery("(max-width: 580px)");
+
+	// ref
 	const parentRef = useRef<HTMLDivElement>(null);
 	const rawSongRef = useRef<SongData[]>([]);
 	const sheetUrlRef = useRef<string>("");
@@ -274,9 +280,13 @@ export function Songbook() {
 	const rowVirtualizer = useVirtualizer({
 		count: filteredSongs.length,
 		getScrollElement: () => parentRef.current,
-		estimateSize: () => 64,
+		estimateSize: () => (isMobile ? 120 : 64),
 		overscan: 10,
 	});
+
+	useEffect(() => {
+		rowVirtualizer.measure();
+	}, [rowVirtualizer, isMobile]);
 
 	// --- [핸들러 함수] ---
 	const toggleStatus = (e: React.MouseEvent, syncId: string, newStatus: ActionStatus) => {
@@ -726,10 +736,10 @@ export function Songbook() {
 						isLoading={isSyncing}
 						loadingText="동기화 중"
 					>
-						시트 동기화
+						{!isMobile && "시트 동기화"}
 					</Button>
 					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewSong}>
-						직접 추가
+						{!isMobile && "직접 추가"}
 					</Button>
 					<Button
 						leftIcon={<FiSave />}
@@ -738,7 +748,7 @@ export function Songbook() {
 						isLoading={isDBSaving}
 						loadingText="저장 중"
 					>
-						DB에 최종 저장
+						{!isMobile && "DB에 최종 저장"}
 					</Button>
 				</Flex>
 			</Flex>
@@ -751,14 +761,18 @@ export function Songbook() {
 			<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
 				{/* 테이블 헤더 */}
 				<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
-					<Box w="60px">행</Box>
+					{!isTablet && <Box w="60px">행</Box>}
 					<Box w="100px">상태</Box>
-					<Box w="60px" textAlign="center">
-						공식
-					</Box>
-					<Box w="60px" textAlign="center">
-						가사
-					</Box>
+					{!isTablet && (
+						<>
+							<Box w="60px" textAlign="center">
+								공식
+							</Box>
+							<Box w="60px" textAlign="center">
+								가사
+							</Box>
+						</>
+					)}
 					<Box flex={1}>곡 제목 / 아티스트</Box>
 					<Box w="100px" textAlign="center">
 						조작
@@ -800,7 +814,7 @@ export function Songbook() {
 									_hover={{ bg: fieldHoverBgColor }}
 									onClick={() => handleRowClick(virtualRow.index)}
 								>
-									<Box w="60px">{song.columnData}</Box>
+									{!isTablet && <Box w="60px">{song.columnData}</Box>}
 									<Stack w="100px" alignItems={"flex-start"}>
 										<Badge
 											colorScheme={
@@ -823,12 +837,17 @@ export function Songbook() {
 											{song.actionStatus}
 										</Badge>
 									</Stack>
-									<Box w="60px" textAlign="center">
-										{song.isOfficial && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
-									</Box>
-									<Box w="60px" textAlign="center">
-										{!!song.lyric && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
-									</Box>
+									{!isTablet && (
+										<>
+											<Box w="60px" textAlign="center">
+												{song.isOfficial && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
+											</Box>
+											<Box w="60px" textAlign="center">
+												{!!song.lyric && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
+											</Box>
+										</>
+									)}
+
 									<Box
 										flex={1}
 										opacity={isFaded ? 0.5 : 1}
@@ -850,7 +869,7 @@ export function Songbook() {
 
 									{/* 조작 버튼 구역 */}
 									<Box w="100px" textAlign="center">
-										<HStack spacing={1} justify="center">
+										<HStack spacing={1} justify="center" flexDirection={isMobile ? "column" : undefined}>
 											{song.actionStatus === "ACTIVE" ? null : (
 												<IconButton
 													aria-label="Active"
