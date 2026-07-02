@@ -60,7 +60,7 @@ import {
 import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
 import { TbForbid, TbResize } from "react-icons/tb";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { Image } from "../components/Image";
+import { Image, ImageV2 } from "../components/Image";
 import { IoHome, IoList, IoPeople, IoReload, IoSettings } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import { nowState } from "../lib/Atom";
@@ -1673,7 +1673,7 @@ function MenuCardImage({ liveImageUrl, openLive, adult }: MenuCardImageProps) {
 						<AdultIcon />
 					</Stack>
 				) : liveImageUrl ? (
-					<Image
+					<ImageV2
 						src={modImageUrl(liveImageUrl + `?t=${now.getTime()}`, "160")}
 						height="72px"
 						objectFit={"cover"}
