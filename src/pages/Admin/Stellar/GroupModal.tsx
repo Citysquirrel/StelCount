@@ -1,5 +1,5 @@
 import { DefaultResponseData } from "@/lib/functions/fetch";
-import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
+import { useServerMutation } from "@/lib/hooks/useServerApi";
 import {
 	Modal,
 	ModalContent,
@@ -7,10 +7,8 @@ import {
 	ModalOverlay,
 	ModalCloseButton,
 	ModalBody,
-	ModalFooter,
 	Text,
 	Button,
-	Flex,
 	Box,
 	HStack,
 	Heading,
@@ -20,7 +18,6 @@ import {
 	Input,
 	FormControl,
 	FormLabel,
-	FormHelperText,
 	Checkbox,
 	useToast,
 } from "@chakra-ui/react";
@@ -222,12 +219,6 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 									<Heading size="md">{viewMode === "add" ? "새 그룹 추가" : "그룹 편집"}</Heading>
 								</HStack>
 								<Divider mb={4} />
-								{/* name: string;
-	engName: string;
-	numbering: string;
-	description: string;
-	isActive: boolean;
-	sortOrder?: number; */}
 								<VStack align="stretch" spacing={2}>
 									<FormControl>
 										<FormLabel fontSize="md">이름</FormLabel>

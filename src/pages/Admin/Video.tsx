@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DefaultResponseData, fetchServer } from "../../lib/functions/fetch";
+import { DefaultResponseData } from "../../lib/functions/fetch";
 import {
 	Badge,
 	Box,
@@ -20,45 +20,35 @@ import {
 	FormControl,
 	FormLabel,
 	Input,
-	Select,
-	Textarea,
-	Divider,
 	Button,
 	Checkbox,
 	useToast,
-	Link,
 	Icon,
+	Link,
+	Card,
+	CardBody,
+	Divider,
 } from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
-import { v4 } from "uuid";
 import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
-import { CopyText } from "@/components/CopyText";
-import GroupModal from "./Stellar/GroupModal";
-import { MdDelete } from "react-icons/md";
-import { naver, youtube } from "@/lib/functions/platforms";
-import { FaYoutube } from "react-icons/fa6";
-import { TbPlaylist } from "react-icons/tb";
+import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdPublish } from "react-icons/md";
 import { Image } from "@/components/Image";
-import { Statistics, VideoDetail, YoutubeMusicData } from "@/lib/types";
-import { getThumbnails } from "@/lib/functions/etc";
+import { Statistics, Tag, VideoDetail, YoutubeMusicData } from "@/lib/types";
+import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
 
-interface VideoInputValue {
-	name: string;
-	nameShort: string;
-	group: string;
-	groups: StellarGroup[];
-	formerGroups: string[];
-	youtubeId: string;
-	chzzkId: string;
-	xId: string;
-	colorCode: string;
-	playlistIdForMusic: string;
-	justLive: boolean;
-	debut: string;
-	graduation: string;
-}
+import { useConsole } from "@/lib/hooks/useConsole";
+import { youtube } from "@/lib/functions/platforms";
+import { formatUtcToKst } from "@/lib/functions/date";
+import { FaEye } from "react-icons/fa6";
+import { AiFillLike } from "react-icons/ai";
+import { IoRefreshCircle } from "react-icons/io5";
+import { VscWarning } from "react-icons/vsc";
+import TagInputAutocomplete from "./Video/TagInput";
+import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
+import { stellarState } from "@/lib/Atom";
+import { useRecoilState } from "recoil";
 
 interface VideoData extends Omit<
 	YoutubeMusicData,
@@ -72,6 +62,7 @@ interface VideoData extends Omit<
 	details?: VideoDetail[];
 	statistics?: Statistics[];
 	inheritChannelId?: string;
+	isInheritChannelId: boolean;
 }
 
 export interface StellarGroup {
@@ -84,15 +75,19 @@ export interface StellarGroup {
 	sortOrder: number;
 }
 
+// TODO: 필터링 기능 넣기
 export function Video() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
+	const [stellarData] = useRecoilState(stellarState);
+
+	const stellarYoutubeChannelIds = stellarData.map((s) => s.youtubeId.split(",")).flat();
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingVideo, setEditingVideo] = useState<VideoData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
-	const [searchYoutubeId, setSearchYoutubeId] = useState("");
-	const [isGroupOpen, setIsGroupOpen] = useState(false);
+
+	const [isTagOpen, setIsTagOpen] = useState(false); // TODO: 태그 편집 모달 완성하기
 
 	// Hooks
 	const toast = useToast();
@@ -101,6 +96,10 @@ export function Video() {
 	const getAllVideos = useServerQuery<DefaultResponseData<VideoData[]>>({
 		version: "admin",
 		api: "/videos",
+	});
+	const getAllTags = useServerQuery<DefaultResponseData<Tag[]>>({
+		version: "admin",
+		api: "/tags",
 	});
 	const createVideo = useServerMutation<DefaultResponseData<VideoData>, VideoData, "admin">({
 		version: "admin",
@@ -121,8 +120,19 @@ export function Video() {
 	const parentRef = useRef<HTMLDivElement>(null);
 
 	// 행 클릭 시 상세 모달 열기
-	const handleRowClick = (index: number) => {
-		setEditingVideo({ ...videoData[index] });
+	const handleRowClick = (index: number, videoId: number | undefined) => {
+		if (!videoId) {
+			toast({ status: "error", description: "ID가 존재하지 않습니다! 코드 또는 데이터에 이상이 있는 경우입니다!" });
+			return;
+		}
+		const currentVideoData = videoData[index];
+
+		setEditingVideo({
+			...currentVideoData,
+			id: videoId,
+			isInheritChannelId: !!currentVideoData.inheritChannelId,
+			inheritChannelId: stellarData.find((s) => s.playlistIdForMusic === currentVideoData.ownerId)?.youtubeId || "",
+		});
 		setEditingIndex(index);
 		setIsModalOpen(true);
 	};
@@ -147,6 +157,25 @@ export function Video() {
 			);
 	};
 
+	// 페이지 업/다운 핸들러
+	const isPageStart = editingIndex === 0;
+	const isPageEnd = editingIndex === videoData.length - 1;
+
+	const handleModalPageUp = () => {
+		if (editingIndex === null || isPageStart) return;
+		const nextIndex = editingIndex - 1;
+		setEditingIndex(nextIndex);
+		const prev = videoData[nextIndex];
+		setEditingVideo({ ...prev, id: prev.id });
+	};
+	const handleModalPageDown = () => {
+		if (editingIndex === null || isPageEnd) return;
+		const nextIndex = editingIndex + 1;
+		setEditingIndex(nextIndex);
+		const prev = videoData[nextIndex];
+		setEditingVideo({ ...prev, id: prev.id });
+	};
+
 	// 버튼 핸들러
 	const handleAddNewVideo = () => {
 		const newSong: VideoData = {
@@ -157,14 +186,15 @@ export function Video() {
 			videoId: "",
 			isActive: true,
 			inheritChannelId: "",
+			isInheritChannelId: false,
 			tags: [],
 		};
 		setEditingVideo(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
 		setIsModalOpen(true);
 	};
-	const handleGroupSetting = () => {
-		setIsGroupOpen(true);
+	const handleTagSetting = () => {
+		setIsTagOpen(true);
 	};
 
 	// 모달 내 저장 버튼
@@ -177,6 +207,7 @@ export function Video() {
 				onSuccess: (data) => {
 					setVideoData((prev) => [...prev, data.data]);
 					setIsModalOpen(false);
+					getAllVideos.refetch();
 				},
 				onError: () => {
 					toast({ description: "영상 추가 중 서버 에러 발생" });
@@ -196,45 +227,41 @@ export function Video() {
 						}),
 					);
 					setIsModalOpen(false);
+					getAllVideos.refetch();
+				},
+				onError: () => {
+					toast({ description: "영상 편집 중 서버 에러 발생" });
 				},
 			});
 		}
 	};
 
-	// const handleGetYoutubeId = (e?: React.MouseEvent<HTMLButtonElement>) => {
-	// 	e?.preventDefault();
-	// 	if (searchYoutubeId === "") {
-	// 		alert("빈값");
-	// 		return;
-	// 	}
-	// 	fetchServer("v1", `/yid?username=${searchYoutubeId}`).then((res) => {
-	// 		if (res && res.data.items && editingVideo) {
-	// 			if (editingVideo.youtubeId.length === 0) {
-	// 				setEditingVideo(() => ({ ...editingVideo, youtubeId: res.data.items[0].id }));
-	// 			} else {
-	// 				setEditingVideo(() => ({
-	// 					...editingVideo,
-	// 					youtubeId: editingVideo.youtubeId + "," + res.data.items[0].id,
-	// 				}));
-	// 			}
-	// 		} else {
-	// 			// toast({ description: "올바르지 않은 채널명입니다", status: "error" });
-	// 		}
-	// 	});
-	// };
+	// 태그 변화 핸들러
+	const onChangeTags = (tags: Tag[]) => {
+		setEditingVideo((prev) => {
+			if (!prev) return prev;
+			return { ...prev, tags };
+		});
+	};
 
-	// const handleGroup = (e: React.ChangeEvent<HTMLSelectElement>) => {
-	// 	if (!editingVideo) return;
-
-	// 	const value = Number(e.target.value);
-
-	// 	if (isNaN(value))
-	// 		toast({ title: "올바르지 않은 id 입력됨. 코드 점검 요함", status: "error", duration: 3000, isClosable: true });
-	// 	e.target.value = "";
-
-	// 	const selectedGroup = getAllGroup.data?.data.find((g) => g.id === value);
-	// 	setEditingVideo({ ...editingVideo, groups: selectedGroup ? [selectedGroup] : [] });
-	// };
+	// Details 변화 핸들러
+	const onChangeDetails = (details: AdditionalInputValue[]) => {
+		console.log(editingIndex, editingVideo);
+		if (!editingVideo || editingIndex === null) return;
+		setEditingVideo({
+			...editingVideo,
+			details: details.map((dt) => ({
+				...dt,
+				id: videoData[editingIndex].id,
+				viewCount: "",
+				likeCount: "",
+				countUpdatedAt: "",
+				statistics: [],
+				youtube_video_detail_id: null,
+				youtube_video_id: null,
+			})) as VideoDetail[],
+		});
+	};
 
 	useEffect(() => {
 		if (getAllVideos.data?.data) setVideoData(getAllVideos.data.data);
@@ -243,7 +270,7 @@ export function Video() {
 	const rowVirtualizer = useVirtualizer({
 		count: videoData.length,
 		getScrollElement: () => parentRef.current,
-		estimateSize: () => 48,
+		estimateSize: () => 60,
 		overscan: 10,
 	});
 	return (
@@ -270,7 +297,7 @@ export function Video() {
 					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
 						추가
 					</Button>
-					<Button leftIcon={<FiFolder />} colorScheme="gray" onClick={handleGroupSetting} variant={"outline"}>
+					<Button leftIcon={<FiFolder />} colorScheme="gray" onClick={handleTagSetting} variant={"outline"}>
 						태그 관리
 					</Button>
 				</Flex>
@@ -278,26 +305,40 @@ export function Video() {
 			<Stack>
 				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
 					{/* 테이블 헤더 */}
-					<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
-						<Box w="60px">ID</Box>
-						<Box w="60px">상속</Box>
-						<Box w="120px">썸네일</Box>
-						<Box flex={1}>제목(태그)</Box>
+					<Flex
+						bg={headerBg}
+						borderBottom={`1px solid ${borderColor}`}
+						px={4}
+						py={3}
+						pr={6}
+						fontWeight="bold"
+						fontSize="sm"
+					>
+						<Box w="40px">ID</Box>
+						<Box w="54px" textAlign={"center"}>
+							상속
+						</Box>
+						<Box w="100px" textAlign={"center"}>
+							썸네일
+						</Box>
+						<Box flex={1} ml={2}>
+							상세
+						</Box>
+						<Box w="120px" textAlign={"center"}>
+							부가 영상
+						</Box>
+						<Box w="60px" textAlign={"center"}>
+							조작
+						</Box>
 					</Flex>
 
 					{/* 가상화 컨테이너 */}
-					<Box ref={parentRef} h="384px" overflowY="auto">
+					<Box ref={parentRef} h="384px" overflowY="scroll">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
 								const video = videoData[virtualRow.index];
-								// ID
-								// 타이틀 (대체됨 여부까지)
-								// 썸네일
-								// videoId
-								// 상속
-								// 태그뱃지
-								//// 2줄로하자
+								const isFaded = !video.isActive;
 
 								return (
 									<Flex
@@ -309,22 +350,87 @@ export function Video() {
 										transform={`translateY(${virtualRow.start}px)`}
 										h={`${virtualRow.size}px`}
 										px={4}
-										bg={index % 2 ? "gray.50" : undefined}
+										bg={isFaded ? "red.50" : index % 2 ? "gray.50" : undefined}
 										align="center"
 										borderBottom={`1px solid ${borderColor}`}
 										cursor="pointer"
 										_hover={{ bg: fieldHoverBgColor }}
-										onClick={() => handleRowClick(virtualRow.index)}
+										onClick={() => handleRowClick(virtualRow.index, video.id)}
 									>
-										<Box w="60px">{video.id}</Box>
-										<Box w="60px" textAlign="center">
-											{video.inheritChannelId && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
+										{/* ID */}
+										<Box w="40px">{video.id}</Box>
+										{/* 상속 */}
+										<Box w="54px" textAlign="center">
+											{video.inheritChannelId ? (
+												<Icon as={FiCheckCircle} color="blue.500" boxSize={5} />
+											) : !stellarYoutubeChannelIds.includes(video.channelId) ? (
+												<Icon as={VscWarning} color="orange.500" boxSize={5} />
+											) : null}
 										</Box>
-										<Box w="120px" textAlign="center">
-											<Image src={getThumbnails(video.thumbnails).default?.url || "/images/no_thb.png"} />
+										{/* 썸네일 */}
+										<Flex w="100px" textAlign="center" align={"center"} justify={"center"}>
+											<Image
+												src={getThumbnails(video.thumbnails).default?.url || "/images/no_thb.png"}
+												display="block"
+												borderRadius={"4px"}
+												mx="auto"
+												w="92px"
+												maxH="54px"
+												aspectRatio="16/9"
+												objectFit="cover"
+												objectPosition="center"
+											/>
+										</Flex>
+										{/* 상세 */}
+										<Box flex={1} fontSize="2xs" ml={2} opacity={isFaded ? 0.5 : 1}>
+											<Text fontSize="16px" fontWeight={"bold"}>
+												{video.titleAlias ? `${video.titleAlias}` : video.title}
+												{video.titleAlias && (
+													<Text as="span" display="inline-block" fontSize="12px" color="gray" fontWeight="400">
+														(수정됨)
+													</Text>
+												)}
+											</Text>
+											<Text>
+												{video.tags &&
+													video.tags.map((tag) => (
+														<Badge key={tag.id} colorScheme={tag.colorCode ? tag.colorCode : "gray"} mr={1}>
+															{tag.name}
+														</Badge>
+													))}
+											</Text>
 										</Box>
-										<Flex flex={1} fontSize="2xs" justifyContent={"center"}>
-											{video.titleAlias ? `${video.titleAlias}(수정됨)` : video.title}
+										{/* 부가 영상 */}
+										<VStack w="120px" gap={0}>
+											{video.details && video.details.length > 0
+												? video.details.map((dt) => (
+														<Link
+															key={dt.videoId}
+															href={youtube.videoUrl(dt.videoId)}
+															isExternal
+															fontSize="10px"
+															onClick={(e) => {
+																e.stopPropagation();
+															}}
+														>
+															{dt.type.split(" ")[0]}
+														</Link>
+													))
+												: null}
+										</VStack>
+										{/* 조작 */}
+										<Flex w="60px" justify={"center"}>
+											<IconButton
+												aria-label="Delete video"
+												size="sm"
+												variant={"ghost"}
+												onClick={(e) => {
+													e.stopPropagation();
+													handleRowDelete(video.id);
+												}}
+											>
+												<MdDelete />
+											</IconButton>
 										</Flex>
 									</Flex>
 								);
@@ -333,13 +439,35 @@ export function Video() {
 					</Box>
 
 					{/* 비디오 편집 모달 */}
-					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl" closeOnOverlayClick={false}>
+					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
 						<ModalOverlay />
 						<ModalContent>
-							<ModalHeader>
-								{editingIndex === -1 ? "새 영상 추가" : "영상 상세 정보 수정"}
+							<ModalHeader pb={1}>
+								<HStack gap={1}>
+									<Text as="span" mr={4}>
+										{editingIndex === -1 ? "새 영상 추가" : "영상 상세 정보 수정"}
+									</Text>
+									<IconButton
+										size="sm"
+										variant={"outline"}
+										aria-label="Prev Video"
+										onClick={handleModalPageUp}
+										isDisabled={isPageStart}
+									>
+										<MdKeyboardArrowUp />
+									</IconButton>
+									<IconButton
+										size="sm"
+										variant={"outline"}
+										aria-label="Prev Video"
+										onClick={handleModalPageDown}
+										isDisabled={isPageEnd}
+									>
+										<MdKeyboardArrowDown />
+									</IconButton>
+								</HStack>
 								<Text fontSize="xs" color="gray" fontWeight="400">
-									{/* {editingVideo?.uuid || ""} */}
+									{editingVideo?.id || ""}
 								</Text>
 							</ModalHeader>
 
@@ -348,132 +476,130 @@ export function Video() {
 							{editingVideo && (
 								<ModalBody>
 									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
-										<VStack spacing={4} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
-											<FormControl flex={1}>
-												<FormLabel fontSize="sm">제목</FormLabel>
-												<Input size="sm" value={editingVideo.title || ""} isDisabled />
-											</FormControl>
-											<FormControl flex={1}>
-												<FormLabel fontSize="sm">대체 제목</FormLabel>
-												<Input
-													size="sm"
-													value={editingVideo.titleAlias || ""}
-													onChange={(e) => setEditingVideo({ ...editingVideo, titleAlias: e.target.value })}
-												/>
-											</FormControl>
-
-											{/* <Flex gap={4}>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">데뷔일</FormLabel>
-													<Input
-														size="sm"
-														fontSize="xs"
-														value={editingVideo.debut || ""}
-														onChange={(e) => setEditingVideo({ ...editingVideo, debut: e.target.value })}
-														type="datetime-local"
-													/>
-												</FormControl>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">졸업일</FormLabel>
-													<Input
-														size="sm"
-														fontSize="xs"
-														value={editingVideo.graduation || ""}
-														onChange={(e) => setEditingVideo({ ...editingVideo, graduation: e.target.value })}
-														type="datetime-local"
-													/>
-												</FormControl>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">
-														색상코드
-														<Box
-															display="inline-block"
-															bg={`#${editingVideo.colorCode}`}
-															borderRadius={"full"}
-															border="1px solid black"
-															boxSize="14px"
-															transform="translate(2px, 2px)"
+										<VStack spacing={2} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
+											{/* 상단: 제목 및 썸네일, 태그 */}
+											<Flex gap={4}>
+												<VStack flex={1}>
+													<FormControl>
+														<FormLabel fontSize="sm">제목</FormLabel>
+														<Input size="sm" value={editingVideo.title || ""} isDisabled />
+													</FormControl>
+													<FormControl>
+														<FormLabel fontSize="sm">대체 제목</FormLabel>
+														<Input
+															size="sm"
+															value={editingVideo.titleAlias || ""}
+															onChange={(e) => setEditingVideo({ ...editingVideo, titleAlias: e.target.value })}
 														/>
-													</FormLabel>
-													<Input
-														size="sm"
-														value={editingVideo.colorCode || ""}
-														onChange={(e) => setEditingVideo({ ...editingVideo, colorCode: e.target.value })}
+													</FormControl>
+													<FormControl>
+														<TagInputAutocomplete
+															data={editingVideo.tags}
+															tagData={getAllTags.data?.data}
+															size="sm"
+															wrapperProps={{ maxW: "512px" }}
+															onChangeTags={onChangeTags}
+														/>
+													</FormControl>
+												</VStack>
+												<Link href={youtube.videoUrl(editingVideo.videoId)} isExternal>
+													<Image
+														src={
+															getThumbnails(editingVideo.thumbnails).maxres?.url ||
+															getThumbnails(editingVideo.thumbnails).standard?.url ||
+															getThumbnails(editingVideo.thumbnails).high?.url ||
+															getThumbnails(editingVideo.thumbnails).medium?.url ||
+															"/images/no_thb.png"
+														}
+														display="block"
+														borderRadius={"4px"}
+														mx="auto"
+														w="320px"
+														maxH="240px"
+														aspectRatio="16/9"
+														objectFit="cover"
+														objectPosition="center"
 													/>
-												</FormControl>
-												<Box flex={1}></Box>
+												</Link>
 											</Flex>
-											<Divider />
-											<Flex gap={4}>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">치지직 ID</FormLabel>
-													<Input
-														size="sm"
-														value={editingVideo.chzzkId || ""}
-														onChange={(e) => setEditingVideo({ ...editingVideo, chzzkId: e.target.value })}
-													/>
-												</FormControl>
-												<Box flex={1}></Box>
-												<Box flex={1}></Box>
-												<Box flex={1}></Box>
+
+											{/* 하단: Details 이외 체크박스, 기록 칸 */}
+											<Flex gap={3}>
+												<VStack flex={3}>
+													<Card variant={"outline"} height="fit-content" width="100%">
+														<CardBody display="flex" p={3} flexDirection="row">
+															<DetailsEditor data={editingVideo.details} onChangeDetails={onChangeDetails} />
+														</CardBody>
+													</Card>
+													<Card variant={"outline"} height="fit-content" width="100%">
+														<CardBody display="flex" p={3} flexDirection="row">
+															<VStack flex={1} align={"flex-start"}>
+																<Checkbox
+																	size="sm"
+																	isChecked={editingVideo.isInheritChannelId}
+																	onChange={(e) =>
+																		setEditingVideo({ ...editingVideo, isInheritChannelId: e.target.checked })
+																	}
+																>
+																	채널 ID 상속(다른 채널에 업로드 된 경우 사용합니다)
+																</Checkbox>
+																<Checkbox
+																	size="sm"
+																	isChecked={editingVideo.isActive}
+																	onChange={(e) => setEditingVideo({ ...editingVideo, isActive: e.target.checked })}
+																>
+																	활성화
+																</Checkbox>
+															</VStack>
+														</CardBody>
+													</Card>
+												</VStack>
+												{/* 기록 */}
+												<Card flex={2} variant={"outline"} height="fit-content">
+													<CardBody display="flex" p={3} flexDirection="row">
+														<Box flex={1}>
+															<Heading fontSize="md" fontWeight={"600"}>
+																기록
+															</Heading>
+															<Divider marginBlock={2} />
+															<Flex align={"center"} gap={2}>
+																<Icon boxSize="14px" as={FaEye} />
+																<Text display="inline-block" fontSize="xs">
+																	{numberToLocaleString(editingVideo.viewCount)}
+																</Text>
+															</Flex>
+															<Flex align={"center"} gap={2}>
+																<Icon boxSize="14px" as={AiFillLike} />
+																<Text display="inline-block" fontSize="xs">
+																	{numberToLocaleString(editingVideo.likeCount)}
+																</Text>
+															</Flex>
+															{editingVideo.countUpdatedAt && (
+																<Flex align={"center"} gap={2}>
+																	<Icon boxSize="14px" as={IoRefreshCircle} />
+																	<Text display="inline-block" fontSize="xs">
+																		{formatUtcToKst(editingVideo.countUpdatedAt) || ""}
+																	</Text>
+																</Flex>
+															)}
+															<Flex align={"center"} gap={2} pt={1}>
+																<Icon boxSize="14px" as={MdPublish} />
+																<Text display="inline-block" fontSize="xs">
+																	{formatUtcToKst(editingVideo.publishedAt) || ""}
+																</Text>
+															</Flex>
+														</Box>
+													</CardBody>
+												</Card>
 											</Flex>
-											<Flex gap={4}>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">유튜브 ID</FormLabel>
-													<Input
-														size="sm"
-														value={editingVideo.youtubeId || ""}
-														onChange={(e) => setEditingVideo({ ...editingVideo, youtubeId: e.target.value })}
-													/>
-												</FormControl>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">유튜브 별칭주소</FormLabel>
-													<Input
-														size="sm"
-														value={editingVideo.youtubeCustomUrl || ""}
-														onChange={(e) => setEditingVideo({ ...editingVideo, youtubeCustomUrl: e.target.value })}
-													/>
-												</FormControl>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">플레이리스트 ID</FormLabel>
-													<Input
-														size="sm"
-														value={editingVideo.playlistIdForMusic || ""}
-														onChange={(e) => setEditingVideo({ ...editingVideo, playlistIdForMusic: e.target.value })}
-													/>
-												</FormControl>
-												<Box flex={1}></Box>
-											</Flex>
-											<Flex gap={2} alignItems={"flex-end"}>
-												<FormControl flex={1}>
-													<FormLabel fontSize="sm">유튜브 ID 검색</FormLabel>
-													<Input
-														size="sm"
-														value={searchYoutubeId || ""}
-														onChange={(e) => setSearchYoutubeId(e.target.value)}
-														onKeyUp={(e) => {
-															if (e.key === "Enter") {
-																handleGetYoutubeId();
-															}
-														}}
-														placeholder="별칭을 입력해 ID 찾기"
-													/>
-												</FormControl>
-												<Box flex={1}>
-													<Button width="72px" size={"sm"} onClick={handleGetYoutubeId}>
-														검색
-													</Button>
-												</Box>
-												<Box flex={1}></Box>
-												<Box flex={1}></Box>
-											</Flex>
-											<Divider /> */}
-											<Checkbox
-												isChecked={editingVideo.isActive}
-												onChange={(e) => setEditingVideo({ ...editingVideo, isActive: e.target.checked })}
-											>
-												활성화
-											</Checkbox>
+
+											{/* 
+											details
+											
+											scheduledStartTime
+											liveBroadcastContent
+											
+											*/}
 										</VStack>
 									</HStack>
 								</ModalBody>
@@ -483,7 +609,11 @@ export function Video() {
 								<Button variant="ghost" mr={3} onClick={() => setIsModalOpen(false)}>
 									취소
 								</Button>
-								<Button colorScheme="blue" onClick={handleSaveEdit} disabled={createVideo.isPending}>
+								<Button
+									colorScheme="blue"
+									onClick={handleSaveEdit}
+									disabled={editVideo.isPending || createVideo.isPending}
+								>
 									적용하기
 								</Button>
 							</ModalFooter>

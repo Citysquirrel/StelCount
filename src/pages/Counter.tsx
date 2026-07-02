@@ -45,7 +45,6 @@ import {
 	elapsedTimeTextForCard,
 	remainingTimeText,
 	getLocale,
-	minus9Hs,
 	sortStatsByUnit,
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
@@ -126,7 +125,7 @@ export function Counter() {
 	const currentYoutubeData = modYoutubeData(
 		currentStellar?.youtubeId || "",
 		currentStellar?.youtubeSubscriberCount || "",
-		currentStellar?.youtubeCustomUrl || ""
+		currentStellar?.youtubeCustomUrl || "",
 	);
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
 	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat());
@@ -280,7 +279,7 @@ export function Counter() {
 					{isLoading
 						? Array.from({ length: 4 }, () => true).map((_, idx) => (
 								<Skeleton key={idx} height="40px" borderRadius={"0.375rem"} />
-						  ))
+							))
 						: total.map((s, idx) => (
 								<Fragment key={idx}>
 									{s.length > 0 ? (
@@ -294,8 +293,8 @@ export function Counter() {
 											{isUnder720 || isMobile()
 												? idx
 												: typeof s[0].group === "number"
-												? stellarGroupName[s[0].group][1]
-												: "Unclassified"}
+													? stellarGroupName[s[0].group][1]
+													: "Unclassified"}
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
@@ -337,7 +336,7 @@ export function Counter() {
 										);
 									})}
 								</Fragment>
-						  ))}
+							))}
 					{isMobile() ? <Spacing size={8} direction="horizontal" /> : null}
 				</SideList>
 			</SideListContainer>
@@ -382,8 +381,8 @@ export function Counter() {
 								currentStellar?.name === "스텔라이브"
 									? "48px"
 									: currentStellar?.name === "아라하시 타비"
-									? "70px"
-									: "72px"
+										? "70px"
+										: "72px"
 							}
 						>
 							<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
@@ -423,7 +422,7 @@ export function Counter() {
 													currentColorCode={currentColorCode}
 													subText={idx === 1 ? "Music Channel" : undefined}
 												/>
-											) : null
+											) : null,
 										)}
 										{currentStellar?.chzzkFollowerCount ? (
 											<FollowerCard
@@ -455,8 +454,8 @@ export function Counter() {
 															? "과거"
 															: "오름"
 														: sort.current[0] === 2
-														? "최신"
-														: "내림"}
+															? "최신"
+															: "내림"}
 												</Button>
 											</Tooltip>
 										</>
@@ -710,10 +709,10 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 				isUpcoming
 					? undefined
 					: isPlzInterest
-					? "rgba(255,235,235,.9)"
-					: dir === 1
-					? "rgba(255,255,255,.9)"
-					: "rgba(235,255,235,.9)"
+						? "rgba(255,235,235,.9)"
+						: dir === 1
+							? "rgba(255,255,255,.9)"
+							: "rgba(235,255,235,.9)"
 			}
 			background={isUpcoming ? upcomingCardBg : undefined}
 			border="1px solid transparent"
@@ -979,7 +978,7 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 											{
 												elapsedTimeTextForCard(
 													new Date(c.statistics.at(-1)?.createdAt || MIN_DATE),
-													new Date(getLocale())
+													new Date(getLocale()),
 												)[1]
 											}
 										</ColorText>

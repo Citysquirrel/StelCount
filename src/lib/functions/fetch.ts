@@ -41,7 +41,10 @@ export interface ServerAPIMap {
 		| "/group/:id"
 		| "/videos"
 		| "/video"
-		| "/video/:id";
+		| "/video/:id"
+		| "/tags"
+		| "/tag"
+		| "/tag/:id";
 }
 
 export type Version = keyof ServerAPIMap;

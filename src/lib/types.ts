@@ -139,3 +139,5 @@ export interface MultiViewDataData {
 	data: MultiViewData[];
 	upcoming: any[];
 }
+
+export type DateInput = Date | string | number;

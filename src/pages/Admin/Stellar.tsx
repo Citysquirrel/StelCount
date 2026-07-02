@@ -21,7 +21,6 @@ import {
 	FormLabel,
 	Input,
 	Select,
-	Textarea,
 	Divider,
 	Button,
 	Checkbox,
@@ -32,7 +31,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
 import { v4 } from "uuid";
 import { FiFolder, FiPlus } from "react-icons/fi";
-import { TfiYoutube } from "react-icons/tfi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import { CopyText } from "@/components/CopyText";
 import GroupModal from "./Stellar/GroupModal";
@@ -578,7 +576,11 @@ export function Stellar() {
 								<Button variant="ghost" mr={3} onClick={() => setIsModalOpen(false)}>
 									취소
 								</Button>
-								<Button colorScheme="blue" onClick={handleSaveEdit} disabled={createStellar.isPending}>
+								<Button
+									colorScheme="blue"
+									onClick={handleSaveEdit}
+									disabled={editStellar.isPending || createStellar.isPending}
+								>
 									적용하기
 								</Button>
 							</ModalFooter>

@@ -62,6 +62,10 @@ function assistSort(num: number, unit: number) {
 	return a > s ? num : a;
 }
 
+/**
+ * ! 이제부터 date.ts의 elapsedTimeText를 사용합니다.
+ * @deprecated
+ */
 export function elapsedTimeTextForCard(date: Date, now: Date): [number, string] {
 	const gap = (now.getTime() - date.getTime()) / 1000;
 	let text = "";
@@ -77,6 +81,10 @@ export function elapsedTimeTextForCard(date: Date, now: Date): [number, string] 
 	return [gap, text];
 }
 
+/**
+ * ! 이제부터 date.ts의 elapsedTimeText를 사용합니다.
+ * @deprecated
+ */
 export function elapsedTimeText(date: Date, now: Date): [number, string] {
 	const gap = (now.getTime() - date.getTime()) / 1000;
 	let text = "";
@@ -126,17 +134,12 @@ export function minus9Hs(input?: string | Date) {
 		if (!input) {
 			return new Date();
 		}
-		console.log(input);
 		const date = new Date(input);
 		date.setHours(date.getHours() - 9);
 		return date;
 	} catch (err) {
 		return new Date();
 	}
-}
-
-export function serverTZSync() {
-	const timeZoneUpdatedAt = "2024-07-04 11:30:08";
 }
 
 export function getThumbnails(thumbnails: string | undefined): Thumbnails {

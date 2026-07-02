@@ -54,6 +54,8 @@ export interface StellarState extends StellarInfo {
 	youtubeMusic: YoutubeMusicData[];
 	debut?: string | null | undefined;
 	graduation?: string | null | undefined;
+	ownerId: string | null;
+	playlistIdForMusic: string | null;
 }
 
 export interface LiveStatusState {
