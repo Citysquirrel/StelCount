@@ -340,6 +340,7 @@ export function Stellar() {
 												{stellar.youtubeId &&
 													youtubeIds.map((id) => (
 														<Text
+															key={id}
 															as={Link}
 															href={youtube.channelUrlByYoutubeId(id)}
 															isExternal

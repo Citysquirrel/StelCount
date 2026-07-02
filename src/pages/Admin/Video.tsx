@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import {
 	Badge,
@@ -28,6 +28,10 @@ import {
 	Card,
 	CardBody,
 	Divider,
+	InputGroup,
+	InputRightElement,
+	CloseButton,
+	Tag,
 } from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
@@ -35,7 +39,7 @@ import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdPublish } from "react-icons/md";
 import { Image } from "@/components/Image";
-import { Statistics, Tag, VideoDetail, YoutubeMusicData } from "@/lib/types";
+import { Statistics, Tag as TagType, VideoDetail, YoutubeMusicData } from "@/lib/types";
 import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
 
 import { useConsole } from "@/lib/hooks/useConsole";
@@ -49,6 +53,8 @@ import TagInputAutocomplete from "./Video/TagInput";
 import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
 import { stellarState } from "@/lib/Atom";
 import { useRecoilState } from "recoil";
+import FilterPanel from "./Video/FilterPanel";
+import { normalizeKeyword } from "@/lib/functions/normalized";
 
 interface VideoData extends Omit<
 	YoutubeMusicData,
@@ -82,12 +88,25 @@ export function Video() {
 
 	const stellarYoutubeChannelIds = stellarData.map((s) => s.youtubeId.split(",")).flat();
 
+	// 필터 상태
+	const [searchQuery, setSearchQuery] = useState("");
+
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingVideo, setEditingVideo] = useState<VideoData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
 	const [isTagOpen, setIsTagOpen] = useState(false); // TODO: 태그 편집 모달 완성하기
+
+	const filteredData = useMemo(() => {
+		return videoData.filter((video) => {
+			const normalizedQuery = normalizeKeyword(searchQuery);
+			const matchSearch =
+				normalizeKeyword(video.title).includes(normalizedQuery) ||
+				normalizeKeyword(video.titleAlias || "").includes(normalizedQuery);
+			return matchSearch;
+		});
+	}, [videoData, searchQuery]);
 
 	// Hooks
 	const toast = useToast();
@@ -97,7 +116,7 @@ export function Video() {
 		version: "admin",
 		api: "/videos",
 	});
-	const getAllTags = useServerQuery<DefaultResponseData<Tag[]>>({
+	const getAllTags = useServerQuery<DefaultResponseData<TagType[]>>({
 		version: "admin",
 		api: "/tags",
 	});
@@ -125,7 +144,7 @@ export function Video() {
 			toast({ status: "error", description: "ID가 존재하지 않습니다! 코드 또는 데이터에 이상이 있는 경우입니다!" });
 			return;
 		}
-		const currentVideoData = videoData[index];
+		const currentVideoData = filteredData[index];
 
 		setEditingVideo({
 			...currentVideoData,
@@ -159,20 +178,20 @@ export function Video() {
 
 	// 페이지 업/다운 핸들러
 	const isPageStart = editingIndex === 0;
-	const isPageEnd = editingIndex === videoData.length - 1;
+	const isPageEnd = editingIndex === filteredData.length - 1;
 
 	const handleModalPageUp = () => {
 		if (editingIndex === null || isPageStart) return;
 		const nextIndex = editingIndex - 1;
 		setEditingIndex(nextIndex);
-		const prev = videoData[nextIndex];
+		const prev = filteredData[nextIndex];
 		setEditingVideo({ ...prev, id: prev.id });
 	};
 	const handleModalPageDown = () => {
 		if (editingIndex === null || isPageEnd) return;
 		const nextIndex = editingIndex + 1;
 		setEditingIndex(nextIndex);
-		const prev = videoData[nextIndex];
+		const prev = filteredData[nextIndex];
 		setEditingVideo({ ...prev, id: prev.id });
 	};
 
@@ -217,7 +236,7 @@ export function Video() {
 			// 기존 데이터 수정
 			editVideo.mutate(editingVideo as Required<VideoData>, {
 				onSuccess: () => {
-					const targetOriginalStellar = videoData[editingIndex!];
+					const targetOriginalStellar = filteredData[editingIndex!];
 					setVideoData((prev) =>
 						prev.map((s) => {
 							if (s === targetOriginalStellar) {
@@ -237,7 +256,7 @@ export function Video() {
 	};
 
 	// 태그 변화 핸들러
-	const onChangeTags = (tags: Tag[]) => {
+	const onChangeTags = (tags: TagType[]) => {
 		setEditingVideo((prev) => {
 			if (!prev) return prev;
 			return { ...prev, tags };
@@ -252,7 +271,7 @@ export function Video() {
 			...editingVideo,
 			details: details.map((dt) => ({
 				...dt,
-				id: videoData[editingIndex].id,
+				id: filteredData[editingIndex].id,
 				viewCount: "",
 				likeCount: "",
 				countUpdatedAt: "",
@@ -268,7 +287,7 @@ export function Video() {
 	}, [getAllVideos.data?.data]);
 	// --- [가상화 스크롤 설정] ---
 	const rowVirtualizer = useVirtualizer({
-		count: videoData.length,
+		count: filteredData.length,
 		getScrollElement: () => parentRef.current,
 		estimateSize: () => 60,
 		overscan: 10,
@@ -283,6 +302,26 @@ export function Video() {
 					스텔라들의 영상 데이터를 관리합니다.
 				</Text>
 			</Box>
+			<Flex gap={2}>
+				<InputGroup w="240px">
+					<Input
+						placeholder="제목을 검색하세요.."
+						value={searchQuery}
+						onChange={(e) => {
+							setSearchQuery(e.target.value);
+						}}
+						onKeyDown={(e) => {
+							e.key === "Escape" && setSearchQuery("");
+						}}
+					/>
+					{searchQuery.length !== 0 ? (
+						<InputRightElement>
+							<CloseButton onClick={() => setSearchQuery("")} />
+						</InputRightElement>
+					) : null}
+				</InputGroup>
+				<FilterPanel tags={getAllTags.data?.data} />
+			</Flex>
 			<Flex
 				gap={4}
 				mb={6}
@@ -331,13 +370,17 @@ export function Video() {
 							조작
 						</Box>
 					</Flex>
-
+					{filteredData.length === 0 ? (
+						<Flex height="240px" justify="center" align="center">
+							<Text color="gray">데이터 없음</Text>
+						</Flex>
+					) : null}
 					{/* 가상화 컨테이너 */}
 					<Box ref={parentRef} h="384px" overflowY="scroll">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
-								const video = videoData[virtualRow.index];
+								const video = filteredData[virtualRow.index];
 								const isFaded = !video.isActive;
 
 								return (
@@ -394,9 +437,9 @@ export function Video() {
 											<Text>
 												{video.tags &&
 													video.tags.map((tag) => (
-														<Badge key={tag.id} colorScheme={tag.colorCode ? tag.colorCode : "gray"} mr={1}>
+														<Tag key={tag.id} colorScheme={tag.colorCode ? tag.colorCode : "gray"} mr={1}>
 															{tag.name}
-														</Badge>
+														</Tag>
 													))}
 											</Text>
 										</Box>
