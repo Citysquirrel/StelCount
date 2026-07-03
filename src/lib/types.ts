@@ -42,6 +42,7 @@ export interface Tag extends DefaultDateFields {
 	name: string;
 	colorCode?: string;
 	isCover: boolean;
+	count?: number;
 }
 
 export interface YoutubeMusicData {

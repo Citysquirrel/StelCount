@@ -79,6 +79,8 @@ export interface StellarGroup {
 	sortOrder: number;
 }
 
+//TODO: 부가영상을 앞쪽으로 옮기거나 상세에 붙이는 것이 나을듯
+//TODO: 업로드 날짜를 테이블에 입력
 export function Video() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
 	const [stellarData] = useRecoilState(stellarState);
