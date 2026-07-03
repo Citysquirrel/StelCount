@@ -4,6 +4,7 @@ import { FiHome, FiSettings, FiUsers, FiMenu, FiBook, FiYoutube } from "react-ic
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../lib/hooks/useAuth";
 import { NotExist } from "../NotExist";
+import { CustomLink } from "@/components/Link";
 
 const ROUTE_NAME = "/new-admin";
 const PAGE_TITLES: Record<string, string> = {
@@ -53,8 +54,8 @@ export function NewAdmin() {
 	// 사이드바 메뉴 아이템 컴포넌트
 	const NavItem = ({ icon, label, to, isExpanded }) => (
 		<HStack
-			as={NavLink}
-			to={to}
+			as={CustomLink}
+			href={to}
 			w="full"
 			p={3}
 			borderRadius="md"
