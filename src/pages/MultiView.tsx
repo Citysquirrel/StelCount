@@ -102,7 +102,7 @@ export function MultiView() {
 		controllerPos: "right-bottom",
 	});
 
-	//! useMultivew 위치 어휴 코드 꼬라지 다 갈아엎고싶네
+	//! useMultiview 위치
 	const {
 		data,
 		setData,

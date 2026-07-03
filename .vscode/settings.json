@@ -1,5 +1,17 @@
 {
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"typescript.enablePromptUseWorkspaceTsdk": true,
-	"cSpell.words": ["everys", "HAMKUBBY", "multiview", "overscan", "stellars", "upserted"]
+	"cSpell.words": [
+		"aldeieecngphbbepbpljdafgibcfmima",
+		"everys",
+		"HAMKUBBY",
+		"multiview",
+		"overscan",
+		"Stel",
+		"stelcount",
+		"stellars",
+		"upserted",
+		"ypat",
+		"ypid"
+	]
 }

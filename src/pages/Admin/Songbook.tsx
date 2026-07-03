@@ -121,7 +121,7 @@ type RawSongData = Omit<SongData, "synonyms" | "actionStatus" | "syncStatus"> & 
 	deletedAt?: string | null;
 };
 //?: 백엔드에서의 버킷팅 순서
-//?: 1. UNCHAGED일 경우는 무조건 건너뛴다
+//?: 1. UNCHANGED일 경우는 무조건 건너뛴다
 //?: 2. DELETED일 경우 삭제처리로 넘긴다
 //?: 3. 나머지 데이터(ACTIVE, DISABLED) 수집한다
 //?: 4. 한꺼번에 bulkCreate로 upsert 한다
@@ -182,8 +182,7 @@ export function Songbook() {
 	const statuses: (ActionStatus | SyncStatus)[] = ["ACTIVE", "DELETED", "DISABLED", "MODIFIED", "NEW", "UNCHANGED"];
 
 	// 테마 색상
-	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
-		useColor();
+	const { bgCard, borderColor, headerBg, greenColor, yellowColor, fieldHoverBgColor } = useColor();
 
 	const parseRawData = (rawData: RawSongData[]): SongData[] => {
 		return rawData.map((song) => {
