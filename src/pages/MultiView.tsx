@@ -1018,7 +1018,7 @@ function SideMenu({
 		}
 		if (userSetting.customStreams) {
 			const { customStreams } = userSetting;
-			const temp: MultiViewData[] = customStreams.map((s) => ({
+			const next: MultiViewData[] = customStreams.map((s) => ({
 				name: s.name,
 				channelName: s.name,
 				chzzkId: s.streamId,
@@ -1027,8 +1027,11 @@ function SideMenu({
 				isBookmarked: !!s.isBookmarked,
 				party: null,
 			}));
-			setCustomStreams(temp);
-			fetchServer("v1", `/multiview`, { method: "POST", body: { customStreams: temp } }).then((res) => {
+			setCustomStreams(next);
+
+			//! 첫 데이터 로드
+			const requestBody = next.map((data) => ({ uuid: data.uuid, chzzkId: data.chzzkId }));
+			fetchServer("v2", "/multiview", { method: "POST", body: requestBody }).then((res) => {
 				if (res.status === 200) {
 					const data: MultiViewData[] = res.data;
 					setCustomStreams(data.sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive)));

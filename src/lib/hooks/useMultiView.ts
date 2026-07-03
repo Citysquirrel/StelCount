@@ -62,7 +62,16 @@ export function useMultiView() {
 		const stellarIds = new Set(data.map((member) => member.chzzkId));
 
 		const latestStreams = customStreamsRef.current.filter((s) => !stellarIds.has(s.chzzkId));
-		fetchServer("v1", `/multiview`, { method: "POST", body: { customStreams: latestStreams } })
+		const requestBody = latestStreams.reduce(
+			(acc, data) => {
+				if (data.chzzkId) {
+					acc[data.uuid] = data.chzzkId;
+				}
+				return acc;
+			},
+			{} as Record<string, string>,
+		);
+		fetchServer("v2", `/multiview`, { method: "POST", body: requestBody })
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, custom: res.status }));
 				if (res.status === 200) {
