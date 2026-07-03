@@ -6,12 +6,13 @@ export function useNow(timeout?: number) {
 	const [, setNow] = useRecoilState(nowState);
 	useEffect(() => {
 		const i = setInterval(() => {
-			let ms = new Date().getMilliseconds();
+			const ms = new Date().getMilliseconds();
 			if (ms) setNow(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })));
 		}, timeout || 1000);
 
 		return () => {
 			clearInterval(i);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 }

@@ -9,6 +9,7 @@ import {
 	FormLabel,
 	HStack,
 	IconButton,
+	// eslint-disable-next-line no-restricted-imports
 	Link,
 	Menu,
 	MenuButton,
@@ -33,21 +34,15 @@ import {
 	Avatar,
 	AvatarBadge,
 	IconButtonProps,
-	BoxProps,
-	SimpleGrid,
-	SimpleGridProps,
-	BackgroundProps,
 	StackProps,
 	RadioGroup,
 	Radio,
 	StackDivider,
-	PositionProps,
-	ResponsiveValue,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useCallback, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
 import { useMultiView } from "../lib/hooks/useMultiView";
-import { CustomStreamsForUS, MultiViewData, UserSettingStorage } from "../lib/types";
+import { CustomStreamsForUS, LiteralUnion, MultiViewData, UserSettingStorage } from "../lib/types";
 import {
 	MdClear,
 	MdKeyboardDoubleArrowRight,
@@ -87,7 +82,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import * as Hangul from "hangul-js";
 import { UserSettingModal } from "./MultiView/UserSetting";
-import { useConsoleAdmin } from "../lib/hooks/useConsole";
 import { ExtensionDataModal } from "./MultiView/ExtensionData";
 import { ExtensionSyncEditor } from "./MultiView/ExtensionSyncEditor";
 
@@ -96,6 +90,7 @@ export function MultiView() {
 	const refs = useRef(Array.from({ length: 12 }, () => true).map(() => createRef<HTMLIFrameElement>()));
 	const chatRef = useRef<HTMLIFrameElement>(null);
 	const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [frameColumns, setFrameColumns] = useState(1);
 	const [isInnerChatOpen, setIsInnerChatOpen] = useState(false);
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
@@ -106,7 +101,7 @@ export function MultiView() {
 		listOpenerWidth: "32",
 		controllerPos: "right-bottom",
 	});
-	const [isBukiUsingFirefox, setIsBukiUsingFirefox] = useState(true);
+
 	//! useMultivew 위치 어휴 코드 꼬라지 다 갈아엎고싶네
 	const {
 		data,
@@ -119,8 +114,6 @@ export function MultiView() {
 		intervalRef,
 		refetchCustom,
 		customIntervalRef,
-		diffRef,
-		prevDataRef,
 	} = useMultiView();
 	const { enableConfirmOnExit, disableConfirmOnExit } = useConfirmOnExit(true);
 	const { windowWidth, windowHeight } = useResponsive();
@@ -144,26 +137,25 @@ export function MultiView() {
 	} = useDisclosure();
 	const {
 		isOpen: isExtensionSyncModalOpen,
-		onToggle: handleToggleExtensionSyncModal,
 		onClose: handleCloseExtensionSyncModal,
 		onOpen: handleOpenExtensionSyncModal,
 	} = useDisclosure();
 	const len = streams.length;
 
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
-	const [remotePos, setRemotePos] = useState({ x: 0, y: 0 });
-	const [channelDataFromExtension, setChannelDataFromExtension, removeChannelDataFromExtension] = useLocalStorage<
-		ChannelData[]
-	>(CHANNEL_DATA_FROM_EXTENSION, []);
+	const [channelDataFromExtension, setChannelDataFromExtension] = useLocalStorage<ChannelData[]>(
+		CHANNEL_DATA_FROM_EXTENSION,
+		[],
+	);
 
 	const handleStreamsParam = (params: string | null) => {
 		if (!params) return;
 		if (data.length === 0) return;
 
-		let storage: Stream[] = [];
+		const storage: Stream[] = [];
 		const streamIds = params.split(PARAMS_DELIMITER).filter((s) => s);
 		const mergedData = [...data, ...customStreams];
-		for (let streamId of streamIds) {
+		for (const streamId of streamIds) {
 			const idx = mergedData.findIndex((s) => s.chzzkId === streamId);
 			if (idx !== -1) {
 				const { channelName, uuid } = mergedData[idx];
@@ -329,43 +321,41 @@ export function MultiView() {
 
 	const handleChatRefresh = () => {
 		if (chatRef.current) {
+			// eslint-disable-next-line no-self-assign
 			chatRef.current.src = chatRef.current.src;
 		}
 	};
 
-	const handleRemoteDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-		const { offsetX, offsetY } = e.nativeEvent;
-		e.dataTransfer.setData("text/plain", JSON.stringify({ offsetX, offsetY }));
-	};
-	const handleRemoteDrop = (e: React.DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
-	};
-	const handleRemoteDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-		const { offsetX, offsetY } = JSON.parse(e.dataTransfer.getData("text/plain"));
-		const x = e.clientX - offsetX;
-		const y = e.clientY - offsetY;
-		setRemotePos({ x, y });
-	};
+	// const handleRemoteDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+	// 	const { offsetX, offsetY } = e.nativeEvent;
+	// 	e.dataTransfer.setData("text/plain", JSON.stringify({ offsetX, offsetY }));
+	// };
+	// const handleRemoteDrop = (e: React.DragEvent<HTMLDivElement>) => {
+	// 	e.preventDefault();
+	// };
+	// const handleRemoteDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+	// 	const { offsetX, offsetY } = JSON.parse(e.dataTransfer.getData("text/plain"));
+	// 	const x = e.clientX - offsetX;
+	// 	const y = e.clientY - offsetY;
+	// 	setRemotePos({ x, y });
+	// };
 
 	useEffect(() => {
 		handleFrameSize();
 		const columnCount = calculateColumnCount(isInnerChatOpen, INNER_CHAT_WIDTH);
 		setFrameColumns(columnCount);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [windowWidth, windowHeight, streams, isInnerChatOpen]);
 
 	useEffect(() => {
 		document.title = "StelCount - Multiview";
 		if (streamsParam) setIsMenuOpen(false);
 
-		if (userSetting.isFoxUsingFirefox !== undefined) {
-			const { isFoxUsingFirefox } = userSetting;
-			setIsBukiUsingFirefox(isFoxUsingFirefox);
-		}
-
 		return () => {
 			clearInterval(intervalRef.current);
 			clearInterval(customIntervalRef.current);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
@@ -381,11 +371,13 @@ export function MultiView() {
 			});
 			setIsInnerChatOpen(true);
 		} else setIsInnerChatOpen(false);
-	}, []); // 글고 여기 chatParam 빠지는게 맞을듯? 채팅창 정보 바뀔때마다 렌더링 2번씩 함
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	useEffect(() => {
 		if (streamsParam) handleStreamsParam(streamsParam);
 		else setStreams([]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data, streamsParam]);
 
 	// #region 확장 프로그램에서 전달받은 데이터 처리
@@ -429,6 +421,7 @@ export function MultiView() {
 		return () => {
 			window.removeEventListener("message", handleMessage);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	// #endregion
 
@@ -439,6 +432,7 @@ export function MultiView() {
 		} else {
 			enableConfirmOnExit();
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [streams]);
 
 	useHotkeys("ctrl+alt+l", () => {
@@ -538,10 +532,12 @@ export function MultiView() {
 								const handleRefresh = (isAll?: boolean) => () => {
 									if (isAll) {
 										refs.current.forEach((ref) => {
+											// eslint-disable-next-line no-self-assign
 											if (ref.current) ref.current.src = ref.current.src;
 										});
 										return;
 									}
+									// eslint-disable-next-line no-self-assign
 									if (ref.current) ref.current.src = ref.current.src;
 								};
 
@@ -789,7 +785,6 @@ export function MultiView() {
 function SideMenu({
 	isOpen,
 	data,
-	setData,
 	handleAddStream,
 	handleDeleteStream,
 	handleOpen,
@@ -801,7 +796,6 @@ function SideMenu({
 	setCustomStreams,
 	handleToggleSetting,
 	handleCloseSetting,
-	handleOpenSetting,
 	refetch,
 	refetchCustom,
 	customIntervalRef,
@@ -813,10 +807,9 @@ function SideMenu({
 }: SideMenuProps) {
 	const WIDTH = 320;
 	const OPENER_WIDTH = 32;
-	const CONFIG_HEIGHT = 180;
 	const listRef = useRef<HTMLDivElement>(null);
 	const searchInputRef = useRef<HTMLInputElement>(null);
-	const { isAdmin, isLoading: isAuthLoading } = useAuth();
+	const { isAdmin } = useAuth();
 
 	const [currentMode, setCurrentMode] = useState(0);
 	const [searchInputValue, setSearchInputValue] = useState<string>("");
@@ -830,7 +823,8 @@ function SideMenu({
 	const [isCardCompact, setIsCardCompact] = useState<boolean>(false);
 	const [filteredData, setFilteredData] = useState<FilteredData[]>([]);
 
-	const configDict: ConfigDict[] = [
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const configDict: ConfigDict<any>[] = [
 		{
 			name: "chatToLeft",
 			label: "채팅창 위치 좌측으로",
@@ -942,7 +936,7 @@ function SideMenu({
 	};
 
 	const handleAddCustomStream = () => {
-		const { name, imageUrl, streamId, platform, liveCategoryValue, liveTitle, liveImageUrl, openLive, openDate } =
+		const { name, imageUrl, streamId, liveCategoryValue, liveTitle, liveImageUrl, openLive, openDate } =
 			selectedStreamer;
 		const uuid = v4();
 		handleAddStream(streamId, "chzzk", uuid, name || "알 수 없음")();
@@ -1002,6 +996,7 @@ function SideMenu({
 				)
 				.filter((a) => a !== null) as CustomStreamsForUS[],
 		}));
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [customStreams]);
 
 	useEffect(() => {
@@ -1040,6 +1035,7 @@ function SideMenu({
 				}
 			});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const getCurrentStreams = (currentMode: number): FilteredData[] => {
@@ -1374,7 +1370,7 @@ function SideMenu({
 											cursor: "pointer",
 											zIndex: 1,
 										}}
-										onClick={(e) => {
+										onClick={() => {
 											setSearchInputValue("");
 											setFilteredData([]);
 										}}
@@ -1552,7 +1548,6 @@ function MenuCard({
 	isBookmarked,
 }: MenuCardProps) {
 	const {
-		name,
 		chzzkId,
 		uuid,
 		categoryRange,
@@ -1679,6 +1674,7 @@ function MenuCardImage({ liveImageUrl, openLive, adult }: MenuCardImageProps) {
 						objectFit={"cover"}
 						borderRadius={".5rem"}
 						transition="all .3s"
+						isDarkMode
 						_hover={{ transform: "scale(1.5) translate(20px,9px)" }}
 					/>
 				) : (
@@ -1854,9 +1850,7 @@ function createConfigComponent(
 	} else if (type === "radio") {
 		const value = configState[name] as string;
 		const { defaultValue, radioList } = config as ConfigDict<"radio">;
-		//TODO: ConfigDict에 새로운 값 지정 필요 -- 구조? structure?
 		if (!radioList) {
-			useConsoleAdmin(`개발자 경고: ${name}항목에 대해 radioList가 지정되지 않음`);
 			return <Fragment key={name}></Fragment>;
 		}
 		return (
@@ -1883,22 +1877,6 @@ function createConfigComponent(
 			</FormControl>
 		);
 	} else return <Fragment key={name}></Fragment>;
-}
-
-function RemoteControlClicker({ dotColor, ...props }: StackProps & { dotColor?: BackgroundProps["backgroundColor"] }) {
-	return (
-		<Stack alignItems={"center"} width="100%" paddingBlock={"6px 4px"} cursor="move" {...props}>
-			<SimpleGrid width={"fit-content"} columns={4} spacing={1} justifyItems={"center"}>
-				{Array.from({ length: 8 }, (_, i) => i).map((n, i) => (
-					<Dot key={i} backgroundColor={dotColor}></Dot>
-				))}
-			</SimpleGrid>
-		</Stack>
-	);
-}
-
-function Dot({ ...props }: BoxProps) {
-	return <Box boxSize="4px" borderRadius={"full"} backgroundColor="black" {...props}></Box>;
 }
 
 //? Function
@@ -2004,32 +1982,6 @@ function applySearchHighlight(text: string | null | undefined, ranges: number[][
 	return <>{elements}</>;
 }
 
-//! 아마 앞으로 미사용
-function customRangeSearch(text: string, search: string): number[][] {
-	const disassembledText = Hangul.disassemble(text); // 결과는 배열
-	const disassembledSearch = Hangul.disassemble(search).join("");
-
-	const ranges: number[][] = [];
-	let startIndex = 0;
-
-	while (startIndex < disassembledText.length) {
-		// 배열을 문자열로 변환 후 검색
-		const index = disassembledText.join("").indexOf(disassembledSearch, startIndex);
-		if (index === -1) break;
-
-		const endIndex = index + disassembledSearch.length - 1;
-
-		// 원래 배열에서 범위를 가져옴
-		const originalStart = Hangul.assemble(disassembledText.slice(0, index)).length;
-		const originalEnd = Hangul.assemble(disassembledText.slice(0, endIndex + 1)).length - 1;
-
-		ranges.push([originalStart, originalEnd]);
-		startIndex = index + 1;
-	}
-
-	return ranges;
-}
-
 function calculateColumnCount(isInnerChatOpen: boolean, chatWidth: number) {
 	const viewportWidth = window.innerWidth;
 	const viewportHeight = window.innerHeight;
@@ -2042,8 +1994,8 @@ function calculateColumnCount(isInnerChatOpen: boolean, chatWidth: number) {
 	return columns;
 }
 
-type StreamType = "chzzk" | (string & {});
-type ImageSize = "160" | "320" | "480" | "640" | "720" | "1280" | "1920" | (string & {});
+type StreamType = LiteralUnion<"chzzk">;
+type ImageSize = LiteralUnion<"160" | "320" | "480" | "640" | "720" | "1280" | "1920">;
 
 export interface ChannelData {
 	name: string;
@@ -2117,7 +2069,7 @@ interface ConfigState {
 	controllerPos: ConfigStateControllerPos;
 }
 
-type ConfigStateControllerPos = "right-bottom" | "left-bottom" | "right-top" | "left-top" | (string & {});
+type ConfigStateControllerPos = LiteralUnion<"right-bottom" | "left-bottom" | "right-top" | "left-top">;
 
 interface ConfigDict<T extends ConfigType = ConfigType> {
 	name: keyof ConfigState;
@@ -2136,7 +2088,7 @@ interface ConfigDictRadioList {
 	value: string;
 }
 
-type ConfigType = "switch" | "number" | "slider" | "list" | "radio" | (string & {});
+type ConfigType = LiteralUnion<"switch" | "number" | "slider" | "list" | "radio">;
 type DefaultValueType<T> = T extends "list" | "radio"
 	? string
 	: T extends "number" | "slider"
@@ -2149,7 +2101,7 @@ interface Streamer {
 	name: string;
 	streamId: string;
 	imageUrl: string;
-	platform: "chzzk" | (string & {});
+	platform: LiteralUnion<"chzzk">;
 	liveCategoryValue?: string;
 	liveTitle?: string;
 	liveImageUrl?: string;

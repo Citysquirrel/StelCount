@@ -53,12 +53,13 @@ import { MdAdd, MdClose, MdOpenInNew, MdSearch } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
 import { formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
 import useColor from "../../lib/hooks/useColor";
+import { LiteralUnion } from "@/lib/types";
 
 // --- [타입 정의] ---
 export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
 export type ActionStatus = "ACTIVE" | "DELETED" | "DISABLED";
-export type Cheese = "잘몰라" | "일반곡" | "피토곡" | "우엑곡" | "숙제곡" | (string & {});
-export type Genre = "K-POP" | "J-POP" | "POP" | (string & {});
+export type Cheese = LiteralUnion<"잘몰라" | "일반곡" | "피토곡" | "우엑곡" | "숙제곡">;
+export type Genre = LiteralUnion<"K-POP" | "J-POP" | "POP">;
 
 export interface SongData {
 	id?: number;
@@ -176,7 +177,6 @@ export function Songbook() {
 	const parentRef = useRef<HTMLDivElement>(null);
 	const rawSongRef = useRef<SongData[]>([]);
 	const sheetUrlRef = useRef<string>("");
-	const TABLE_HEADER_HEIGHT = 44;
 
 	const genres: Genre[] = ["K-POP", "J-POP", "POP"];
 	const statuses: (ActionStatus | SyncStatus)[] = ["ACTIVE", "DELETED", "DISABLED", "MODIFIED", "NEW", "UNCHANGED"];
@@ -187,7 +187,7 @@ export function Songbook() {
 
 	const parseRawData = (rawData: RawSongData[]): SongData[] => {
 		return rawData.map((song) => {
-			const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
+			const { isActive, ...restSong } = song;
 			const [syncType, rawSyncValue] = restSong.syncId.split("::");
 
 			const columnData =
@@ -216,22 +216,7 @@ export function Songbook() {
 
 					const parsed = parseRawData(data);
 
-					// const parsed: SongData[] = data.map((song) => {
-					// 	const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
-					// 	const [syncType, rawSyncValue] = restSong.syncId.split("::");
-
-					// 	const columnData =
-					// 		syncType === "SHEET" && rawSyncValue?.includes("-") ? String(Number(rawSyncValue.split("-")[1]) + 6) : "";
-
-					// 	//TODO: searchBase searchChosung searchJamo 설정
-					// 	return {
-					// 		...restSong,
-					// 		columnData,
-					// 		synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
-					// 		actionStatus: isActive ? "ACTIVE" : "DISABLED",
-					// 		syncStatus: "UNCHANGED",
-					// 	};
-					// });
+					//TODO: 스마트 검색
 					setSongs(parsed);
 
 					// 비교를 위한 원본 저장
@@ -255,6 +240,7 @@ export function Songbook() {
 			.finally(() => {
 				setIsLoading(false);
 			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// --- [검색 및 필터링 적용 (파생 상태)] ---
@@ -315,6 +301,7 @@ export function Songbook() {
 
 		// 2. ::로 나눈 후 칼럼 정보를 빼고 재결합
 		try {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const [type, _, title, artist] = syncId.split("::");
 			const modified = [type, title, artist].join("::");
 			return modified;
@@ -450,7 +437,7 @@ export function Songbook() {
 
 			return updatedSongs;
 		},
-		[songs],
+		[songs], //TODO: 이부분은 고민해볼 필요가 있음
 	);
 
 	// 시트 동기화
@@ -829,11 +816,6 @@ export function Songbook() {
 								NEW: greenColor,
 								MODIFIED: yellowColor,
 								UNCHANGED: "transparent",
-							};
-							const borderColorMap = {
-								ACTIVE: blueColor,
-								DELETED: redColor,
-								DISABLED: grayColor,
 							};
 
 							return (
@@ -1218,7 +1200,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 	// --- 핸들러: 모달 저장 ---
 	const handleSaveHistory = () => {
 		if (!modalData) return;
-		const { sungAt, youtubeVideoId, start, end, memo } = modalData;
+		const { sungAt } = modalData;
 		if (sungAt === "") return;
 
 		// 로컬 텍스트 상태(timeStr)를 파싱하여 modalData의 실제 start, end(숫자)로 변환

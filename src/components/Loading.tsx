@@ -1,4 +1,4 @@
-import { Image, Stack, StackProps } from "@chakra-ui/react";
+import { Stack, StackProps } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 
 export function Loading({ options }: LoadingProps) {

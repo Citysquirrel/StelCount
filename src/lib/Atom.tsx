@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 import { createAtomKey } from "./functions/createAtomKey";
-import { YoutubeMusicData } from "./types";
+import { LiteralUnion, YoutubeMusicData } from "./types";
 
 export const headerOffsetState = atom({
 	key: createAtomKey("headerOffset"),
@@ -76,7 +76,7 @@ export interface LiveStatusState {
 	debut?: string | null | undefined;
 }
 
-type FetchInfoKey = "stellar" | "liveStatus" | "liveDetail" | (string & {});
+type FetchInfoKey = LiteralUnion<"stellar" | "liveStatus" | "liveDetail">;
 
 export type FetchInfoState = {
 	[K in FetchInfoKey]?: { [key: string]: string | null | undefined };

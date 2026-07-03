@@ -32,6 +32,7 @@ export const JsonEditor = ({ value, onChange, name, id, minH = "300px" }: JsonEd
 		try {
 			JSON.parse(value);
 			setError(null);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (err: any) {
 			setError(err.message);
 		}

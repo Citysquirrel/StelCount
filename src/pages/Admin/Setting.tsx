@@ -72,7 +72,7 @@ export function Setting() {
 						});
 					}
 					Object.keys(mergedConfigs).forEach((key) => {
-						if (!CONFIG_INFOS.hasOwnProperty(key)) {
+						if (!Object.hasOwn(CONFIG_INFOS, key)) {
 							delete mergedConfigs[key];
 						}
 					});
@@ -97,6 +97,7 @@ export function Setting() {
 			.finally(() => {
 				setIsLoading(false);
 			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	// 입력값 변경 핸들러
 	const handleInputChange = (key: string, value: string) => {

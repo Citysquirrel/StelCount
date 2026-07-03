@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa6";
 import { ImMail4 } from "react-icons/im";
-import { Box, HStack, Image, Link, Text } from "@chakra-ui/react";
+import { Box, HStack, Image, Text } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
+import { Link } from "./Link";
 
 export function Footer() {
 	const values = useColorModeValues();

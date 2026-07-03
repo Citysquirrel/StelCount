@@ -8,6 +8,7 @@ import {
 	Input,
 	InputGroup,
 	InputLeftAddon,
+	// eslint-disable-next-line no-restricted-imports
 	Link,
 	Skeleton,
 	SkeletonText,
@@ -29,7 +30,7 @@ import {
 	nowState,
 	stellarState,
 } from "../lib/Atom";
-import { UserSettingStorage, YoutubeMusicData } from "../lib/types";
+import { LiteralUnion, UserSettingStorage, YoutubeMusicData } from "../lib/types";
 import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
 import {
 	elapsedTimeTextForCard,
@@ -200,6 +201,7 @@ export default function Home() {
 			obj.isUpdated = true;
 			return obj;
 		});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [stellar]);
 
 	useEffect(() => {
@@ -216,12 +218,13 @@ export default function Home() {
 			.filter((a) => !a.openLive && (a.graduation == null || new Date(a.graduation) >= new Date()))
 			.sort((a, b) => a.gap[0] - b.gap[0]);
 		setLiveData([...openArr, ...closeArr]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [liveStatus]);
 
 	useEffect(() => {
 		setLiveData((prev) => {
 			const arr = [...prev];
-			for (let v of arr) {
+			for (const v of arr) {
 				v.profileImage = v.channelImageUrl || "";
 				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
 				v.gap = v.openLive
@@ -278,17 +281,7 @@ export default function Home() {
 	);
 }
 
-function RecentNews({
-	isLoading,
-	isDataLoading,
-	now,
-	recent,
-	mostPopular,
-	mostPopularMusic,
-	upcoming,
-	approach,
-	mostViews,
-}: RecentNewsProps) {
+function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upcoming, approach }: RecentNewsProps) {
 	const { windowWidth } = useResponsive();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const intervalRef = useRef<number>();
@@ -313,19 +306,6 @@ function RecentNews({
 		};
 
 		return messages[condition] || messages.default;
-		// if (condition === -1) {
-		// 	return `최초 공개 ${isLive ? "진행중" : startTimeGap <= 0 ? "곧 시작" : remainingDateText}`;
-		// } else if (condition === 0) {
-		// 	return `인기 급상승 동영상 #${data.mostPopular}`;
-		// } else if (condition === 1) {
-		// 	return `${elapsedDateText} 게시된 새 영상`;
-		// } else if (condition === 2) {
-		// 	return `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`;
-		// } else if (condition === 3) {
-		// 	return `인기 급상승 음악 #${data.mostPopularMusic}`;
-		// } else {
-		// 	return `최다 조회수: ${numberToLocaleString(data.viewCount)}`;
-		// }
 	}
 
 	const autoPagingTime = 6500;
@@ -387,6 +367,7 @@ function RecentNews({
 		return () => {
 			clearInterval(intervalRef.current);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isLoading]);
 
 	return (
@@ -911,7 +892,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 function MultiView({ list, setList }: MultiViewProps) {
 	const [mulLiveUrl, setMulLiveUrl] = useState("");
 	const [mulLiveMode, setMulLiveMode] = useState(1);
-	const [isOtherOn, setIsOtherOn] = useState(false);
+	const [isOtherOn] = useState(false);
 	const urlPrefix = mulLiveMode === 1 ? "https://mul.live/" : "https://stelcount.fans/multiview?streams=";
 	const link = `${urlPrefix}${mulLiveUrl}`;
 	const { onCopy } = useClipboard(link);
@@ -939,6 +920,7 @@ function MultiView({ list, setList }: MultiViewProps) {
 				],
 			}),
 		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	const renderItem = useCallback((item: IMultiViewItem, index: number) => {
 		return (
@@ -954,6 +936,7 @@ function MultiView({ list, setList }: MultiViewProps) {
 				setList={setList}
 			/>
 		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
@@ -971,7 +954,7 @@ function MultiView({ list, setList }: MultiViewProps) {
 		} else if (mulLiveMode === 1) {
 			setMulLiveUrl(arr.join("/"));
 		}
-	}, [list]);
+	}, [list, mulLiveMode]);
 
 	return (
 		<DndProvider backend={HTML5Backend}>
@@ -1012,6 +995,7 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 	// 	}, 66);
 	// };
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const handleClickItem = (id: number) => () => {};
 	const handleDeleteItem = (id: number) => () => {
 		setList((prev) => {
@@ -1022,13 +1006,14 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 		});
 	};
 
-	const [{ handlerId }, drop] = useDrop({
+	const [, drop] = useDrop({
 		accept: "multiViewItem",
 		collect(monitor) {
 			return {
 				handlerId: monitor.getHandlerId(),
 			};
 		},
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		hover: (item: any, monitor) => {
 			if (!ref.current) {
 				return;
@@ -1154,7 +1139,7 @@ interface RecentNewsProps {
 	mostViews: YoutubeMusicData[];
 }
 
-type CarouselListType = "recent" | "approach" | (string & {});
+type CarouselListType = LiteralUnion<"recent" | "approach">;
 interface CarouselListProps {
 	type?: CarouselListType;
 	heading: string;

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { DefaultResponseData, fetchServer } from "../../lib/functions/fetch";
 import {
-	Badge,
 	Box,
 	Flex,
 	HStack,
@@ -25,7 +24,6 @@ import {
 	Button,
 	Checkbox,
 	useToast,
-	Link,
 } from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useColor from "../../lib/hooks/useColor";
@@ -39,6 +37,7 @@ import { naver, youtube } from "@/lib/functions/platforms";
 import { FaYoutube } from "react-icons/fa6";
 import { TbPlaylist } from "react-icons/tb";
 import { Image } from "@/components/Image";
+import { Link } from "@/components/Link";
 
 interface StellarInputValue {
 	name: string;
@@ -84,8 +83,7 @@ export function Stellar() {
 
 	// Hooks
 	const toast = useToast();
-	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
-		useColor();
+	const { bgCard, borderColor, headerBg, fieldHoverBgColor } = useColor();
 	const createStellar = useServerMutation<DefaultResponseData<StellarData>, StellarData, "admin">({
 		version: "admin",
 		api: "/stellar",
@@ -346,6 +344,9 @@ export function Stellar() {
 															isExternal
 															color="red.500"
 															fontSize="xl"
+															onClick={(e) => {
+																e.stopPropagation();
+															}}
 														>
 															<FaYoutube />
 														</Text>
@@ -357,12 +358,23 @@ export function Stellar() {
 														isExternal
 														color="red.500"
 														fontSize="xl"
+														onClick={(e) => {
+															e.stopPropagation();
+														}}
 													>
 														<TbPlaylist />
 													</Text>
 												)}
 												{stellar.chzzkId && (
-													<Text as={Link} href={naver.chzzk.channelUrl(stellar.chzzkId)} isExternal fontSize="xl">
+													<Text
+														as={Link}
+														href={naver.chzzk.channelUrl(stellar.chzzkId)}
+														isExternal
+														fontSize="xl"
+														onClick={(e) => {
+															e.stopPropagation();
+														}}
+													>
 														<Image src="/images/i_chzzk_1.png" boxSize="20px" />
 													</Text>
 												)}

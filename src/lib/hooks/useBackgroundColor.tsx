@@ -9,6 +9,7 @@ export default function useBackgroundColor(color?: string) {
 		return () => {
 			setBackgroundColor("white");
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [color]);
 	return { backgroundColor, setBackgroundColor };
 }

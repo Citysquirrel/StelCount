@@ -34,7 +34,7 @@ function App() {
 		refetch(true);
 		clearInterval(intervalRef.current);
 		intervalRef.current = setInterval(() => {
-			let second = new Date().getSeconds();
+			const second = new Date().getSeconds();
 			if (second === 0 && import.meta.env.PROD) refetch(true);
 		}, 1000);
 	};

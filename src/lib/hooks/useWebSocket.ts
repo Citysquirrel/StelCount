@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { LiteralUnion } from "../types";
 
+/**
+ * @deprecated 웹소켓을 굳이 사용할 이유가 없다고 판단
+ */
 export function useWebSocket() {
 	const socketRef = useRef<WebSocket | null>(null);
 	const [socketMessages, setSocketMessages] = useState<SocketMessage[]>([]);
-	//!: 메시지 상태를 전역상태로 바꾸는 방안 검토 => 예상치 못한 렌더링 발생 예상. 바람직하지 않음
-
-	//TODO: 로컬스토리지를 통해 웹소켓의 중복 소통을 방지
-	//TODO: useMultiView, useStellar와의 소통:
-	//TODO: 웹소켓이 정상 연결상태일 때는 setInterval을 멈춤
-
-	//TODO: reconnectWebsocket 메서드 추가
 
 	const sendMessage = (msg: string) => {
 		if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -30,13 +27,11 @@ export function useWebSocket() {
 		socketRef.current = ws;
 
 		ws.onopen = () => {
-			// console.log("웹소켓 연결성공");
 			ws.send(JSON.stringify({ type: "message", data: "클라이언트 연결 완료" } as SocketMessage));
 		};
 
 		ws.onmessage = (e) => {
 			const msg: SocketMessage = JSON.parse(e.data);
-			// console.log(msg);
 
 			setMessages(msg);
 		};
@@ -57,7 +52,6 @@ export function useWebSocket() {
 
 			newWs.onmessage = (e) => {
 				const msg: SocketMessage = JSON.parse(e.data);
-				// console.log(msg);
 
 				setMessages(msg);
 			};
@@ -78,7 +72,8 @@ export function useWebSocket() {
 }
 
 interface SocketMessage {
-	type: "message" | "data" | "multiview" | (string & {});
+	type: LiteralUnion<"message" | "data" | "multiview">;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	data: any;
 	timestamp: string;
 }

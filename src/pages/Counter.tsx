@@ -18,6 +18,7 @@ import {
 	Divider,
 	HStack,
 	IconButton,
+	// eslint-disable-next-line no-restricted-imports
 	Link,
 	Menu,
 	MenuButton,
@@ -37,7 +38,7 @@ import {
 	Tooltip,
 } from "@chakra-ui/react";
 import { Image } from "../components/Image";
-import { Dispatch, Fragment, SetStateAction, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
 	musicDefaultSortValue,
 	numberToLocaleString,
@@ -49,27 +50,10 @@ import {
 } from "../lib/functions/etc";
 import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { CAFE_WRITE_URL, MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import {
-	MdCheck,
-	MdClear,
-	MdFilterList,
-	MdHome,
-	MdImage,
-	MdOpenInNew,
-	MdSettings,
-	MdTag,
-	MdViewList,
-} from "react-icons/md";
+import { MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
+import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
 import { useLocalStorage } from "usehooks-ts";
-import {
-	Statistics,
-	Tag as TagType,
-	Thumbnails,
-	UserSettingStorage,
-	VideoDetail,
-	YoutubeMusicData,
-} from "../lib/types";
+import { Statistics, Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
 import { ColorText } from "../components/Text";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import isMobile from "is-mobile";
@@ -144,8 +128,6 @@ export function Counter() {
 	const unclassified = data.filter((s) => !s.group && s.group !== 0 && !s.justLive);
 	const total = [stellive, everys, universe, cliche, mystic, unclassified];
 
-	const renewal = data.filter((s) => s.group != null);
-
 	const gridWidth = gridRef.current?.clientWidth || 0;
 	const imageHeightOffset = 4;
 	const cardWidth = [
@@ -176,6 +158,8 @@ export function Counter() {
 		setUserSetting((prev) => ({ ...prev, homeStellar: currentUuid }));
 	};
 
+	//TODO: 레거시 뷰를 지원할것인지
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const handleLegacy = () => {
 		setIsLegacyView((prev) => !prev);
 	};
@@ -241,13 +225,17 @@ export function Counter() {
 			} else {
 				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
 			}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data]);
 
-	const musics =
-		currentMusic
-			?.filter((m) => m.type === "music")
-			.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
-			.filter(tagFilterFunc(filter.tag)) || [];
+	const musics = useMemo(
+		() =>
+			currentMusic
+				?.filter((m) => m.type === "music")
+				.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
+				.filter(tagFilterFunc(filter.tag)) || [],
+		[currentMusic, filter.tag, sort],
+	);
 
 	useEffect(() => {
 		setIsFuncLoading(false);
@@ -407,7 +395,7 @@ export function Counter() {
 								overflow="auto"
 							>
 								{isLoading || isFuncLoading ? (
-									Array.from({ length: 2 }, (_) => 1).map((_, idx) => (
+									Array.from({ length: 2 }, () => 1).map((_, idx) => (
 										<Skeleton key={idx} width={"240px"} height="54px" borderRadius={"0.375rem"} />
 									))
 								) : (
@@ -525,7 +513,7 @@ export function Counter() {
 								placeItems={"center"}
 							>
 								{isLoading || isFuncLoading || (cardWidth && cardWidth[0]) === "0px" ? (
-									Array.from({ length: 3 }, (_) => 1).map((_, idx) => (
+									Array.from({ length: 3 }, () => 1).map((_, idx) => (
 										<Skeleton
 											key={idx}
 											width={(cardWidth && cardWidth[0]) === "0px" ? "100%" : cardWidth}
@@ -650,23 +638,16 @@ function FilterTag({ tagId, name, color, tagFilter, children, ...props }: Filter
 function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCardProps) {
 	const [dateHover, setDateHover] = useState(false);
 	const {
-		type,
 		title,
 		titleAlias,
 		videoId,
 		thumbnail,
-		thumbnails,
 		viewCount,
-		likeCount,
-		ownerId,
-		isOriginal,
-		isCollaborated,
 		publishedAt,
 		liveBroadcastContent,
 		scheduledStartTime,
 		details,
 		mostPopular,
-		countUpdatedAt,
 		statistics,
 	} = data;
 
@@ -722,27 +703,6 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 			onMouseLeave={handleMouseLeave}
 			onMouseMove={handleMouseMove}
 		>
-			{/* {maxresUrl ? (
-				<Stack position="absolute" top={"4px"} right={"4px"}>
-					<IconButton icon={<MdImage />} aria-label="link-maxres-thumbnail" onClick={handleClickMaxresThumbnail} />
-				</Stack>
-			) : null} */}
-
-			{false ? (
-				<Button
-					as={Link}
-					variant={"ghost"}
-					size="xs"
-					position="absolute"
-					left={1}
-					top={1}
-					href={CAFE_WRITE_URL}
-					isExternal
-				>
-					축하 글쓰기
-					<MdOpenInNew />
-				</Button>
-			) : null}
 			<Text
 				position="absolute"
 				top={"6px"}
@@ -913,6 +873,7 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 
 	useEffect(() => {
 		if (isDetailExist) carouselScrollByPage(1);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return isDetailExist ? (
@@ -1090,7 +1051,7 @@ function modYoutubeData(id: string, subCnt: string, url: string) {
 	const idSplit = id.split(",");
 	const subSplit = subCnt.split(",");
 	const urlSplit = url.split(",");
-	for (let idx in idSplit) {
+	for (const idx in idSplit) {
 		const temp: moddedYoutubeData = { id: idSplit[idx], subscriberCount: subSplit[idx], customUrl: urlSplit[idx] };
 		storage[idx] = temp;
 	}

@@ -29,6 +29,7 @@ import {
 	InputLeftElement,
 	InputRightAddon,
 	InputRightElement,
+	// eslint-disable-next-line no-restricted-imports
 	Link,
 	Modal,
 	ModalBody,
@@ -206,9 +207,8 @@ export function Admin() {
 		nav(`/admin/${id}`);
 	};
 
-	const handleDelete = (id: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-		if (!confirm(`${stellarData.find((s) => s.id === id)?.name} 항목을 삭제하시겠습니까?`)) {
-		} else {
+	const handleDelete = (id: number) => () => {
+		if (confirm(`${stellarData.find((s) => s.id === id)?.name} 항목을 삭제하시겠습니까?`)) {
 			fetchServer("v1", `/stellar/${id}`, { method: "DELETE", body: { id } }).then(() => {
 				getStellarData();
 			});
@@ -680,6 +680,7 @@ export function AdminEdit() {
 			.finally(() => {
 				setIsLoading(false);
 			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
@@ -1347,6 +1348,7 @@ function TagModal({ isOpen, onClose, inputValue, setInputValue, refetch }: TagMo
 					toast({ status: "error", description: "예기치 못한 문제가 발생했습니다" });
 				}
 			})
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.catch((err: any) => {
 				toast({ status: "error", description: err.stack });
 			});
@@ -1410,29 +1412,6 @@ function HeadedDivider({ children }) {
 			>
 				{children}
 			</AbsoluteCenter>
-		</Box>
-	);
-}
-
-function FloatingMenu() {
-	const nav = useNavigate();
-	const list = [
-		{ title: "Main", route: "/" },
-		{ title: "Sub", route: "/sub" },
-	];
-	return (
-		<Box position="fixed" bottom={"12px"} width={"100%"}>
-			<HStack>
-				{list.map((l) => (
-					<Button
-						onClick={() => {
-							nav(l.route);
-						}}
-					>
-						{l.title}
-					</Button>
-				))}
-			</HStack>
 		</Box>
 	);
 }

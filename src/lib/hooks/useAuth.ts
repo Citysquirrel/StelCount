@@ -33,6 +33,7 @@ export function useAuth() {
 				.finally(() => {
 					setIsLoading(false);
 				});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	return { isLoading, isLogin, isAdmin, query };
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { LiteralUnion } from "../types";
 
 export function useKeyBind(keyConfig: KeyConfig, ref: HTMLElement | null = null, eventType?: KeyBindEventType) {
 	const keyConfigRef = useRef(keyConfig);
@@ -24,18 +25,22 @@ export function useKeyBind(keyConfig: KeyConfig, ref: HTMLElement | null = null,
 
 	useEffect(() => {
 		const target = ref || window;
-		// @ts-ignore
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
 		target.addEventListener(eventType || "keydown", handleKey);
 
 		return () => {
-			// @ts-ignore
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-expect-error
 			target.removeEventListener(eventType || "keydown", handleKey);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ref]);
 }
 
 interface KeyConfig {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	[key: string]: (event?: any) => void;
 }
 
-type KeyBindEventType = "keydown" | "keypress" | "keyup" | (string & {});
+type KeyBindEventType = LiteralUnion<"keydown" | "keypress" | "keyup">;

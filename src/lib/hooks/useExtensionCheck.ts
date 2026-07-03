@@ -20,6 +20,7 @@ export function useExtensionCheck(extensionId: string, correctVersion: string) {
 				}
 			});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return { isExtensionInstalled, version, isLatestVersion };

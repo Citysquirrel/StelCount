@@ -22,6 +22,7 @@ export function OAuth() {
 				} else navigate("/");
 			});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	return <Loading options={{ mode: "fullscreen" }} />;
 }

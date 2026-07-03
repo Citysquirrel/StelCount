@@ -24,6 +24,7 @@ export function useNotification() {
 		} else {
 			notify("이미 알림 권한이 허용되어 있습니다.");
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// 알림 표시 함수

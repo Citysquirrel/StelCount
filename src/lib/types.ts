@@ -1,3 +1,10 @@
+// #region utility-types
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type LiteralUnion<T extends U, U = string> = T | (U & {});
+
+// #endregion
+
 export interface HomeVideoData {
 	id: string;
 	title: string;
@@ -26,7 +33,7 @@ export interface UserSettingStorage {
 export interface CustomStreamsForUS {
 	name: string;
 	streamId: string;
-	platform: "chzzk" | (string & {});
+	platform: LiteralUnion<"chzzk">;
 	isBookmarked?: boolean;
 }
 
@@ -37,7 +44,7 @@ export interface Tag extends DefaultDateFields {
 }
 
 export interface YoutubeMusicData {
-	type?: "music" | "main" | "replay" | (string & {}); // "music", "main", "replay"
+	type?: LiteralUnion<"music" | "main" | "replay">; // "music", "main", "replay"
 	title: string;
 	titleAlias?: string;
 	channelId: string;
@@ -51,7 +58,7 @@ export interface YoutubeMusicData {
 	isOriginal?: boolean;
 	isCollaborated?: boolean;
 	publishedAt?: string;
-	liveBroadcastContent?: "live" | "upcoming" | "none" | (string & {});
+	liveBroadcastContent?: LiteralUnion<"live" | "upcoming" | "none">;
 	scheduledStartTime?: string;
 	mostPopular: number;
 	mostPopularMusic: number;
@@ -137,6 +144,7 @@ export interface ImprovedIntervalOptions {
 
 export interface MultiViewDataData {
 	data: MultiViewData[];
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	upcoming: any[];
 }
 

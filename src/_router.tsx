@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Navigate, RouteObject, createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import { OAuth } from "./pages/OAuth";

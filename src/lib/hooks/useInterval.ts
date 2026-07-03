@@ -4,9 +4,9 @@ import { ImprovedIntervalOptions } from "../types";
 export function useImprovedInterval(
 	callback: () => void,
 	timeout: number | null | undefined,
-	options?: ImprovedIntervalOptions
+	options?: ImprovedIntervalOptions,
 ) {
-	const savedCallback = useRef<Function>(() => {});
+	const savedCallback = useRef<() => void>(() => {});
 	const lastExecutionTime = useRef<number>(new Date().getTime());
 	const intervalId = useRef<number>();
 	const mergedOptions: Required<ImprovedIntervalOptions> = { executeCallbackWhenWindowFocused: false, ...options };
@@ -47,6 +47,7 @@ export function useImprovedInterval(
 			window && window.removeEventListener("blur", blur);
 			window && window.removeEventListener("focus", focus);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [timeout]);
 
 	return { lastExecutionTime, intervalId };

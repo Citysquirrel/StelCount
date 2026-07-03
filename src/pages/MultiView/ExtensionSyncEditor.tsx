@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { VStack, HStack, Flex, Text, Checkbox, Avatar, Badge, Button, Box, Divider, Spacer } from "@chakra-ui/react";
-import { v4 } from "uuid"; // 💡 v4() 사용을 위한 임포트
+import { VStack, HStack, Flex, Text, Checkbox, Avatar, Badge, Button, Box, Spacer } from "@chakra-ui/react";
+import { v4 } from "uuid";
 import { MultiViewData } from "../../lib/types";
 import { ChannelData } from "../MultiView";
 
@@ -68,6 +68,7 @@ export function ExtensionSyncEditor({
 		if (allAvailableStreams.length > 0 && selectedIds.length === 0) {
 			setSelectedIds(allAvailableStreams.map((ch) => ch.streamId));
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [channelDataFromExtension]);
 
 	// 본 컴포넌트가 언마운트 될때 내부 state를 초기화

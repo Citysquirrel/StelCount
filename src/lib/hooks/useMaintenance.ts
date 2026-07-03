@@ -11,9 +11,10 @@ export function useMaintenance() {
 			.then((res) => {
 				console.log(res.data);
 			})
-			.catch((error) => {
+			.catch(() => {
 				setIsMaintenance(false);
 			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	return { isMaintenance };
 }

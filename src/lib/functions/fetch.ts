@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { LiteralUnion } from "../types";
+
 export interface ServerAPIMap {
 	none: "";
 	v1:
@@ -50,7 +53,7 @@ export interface ServerAPIMap {
 export type Version = keyof ServerAPIMap;
 
 export interface FetchOptions extends RequestInit {
-	method?: "GET" | "POST" | "DELETE" | "PATCH" | "PUT" | (string & {});
+	method?: LiteralUnion<"GET" | "POST" | "DELETE" | "PATCH" | "PUT">;
 	timeout?: number;
 }
 
@@ -168,7 +171,7 @@ interface FetchServerOption<B = any> extends Omit<FetchOptions, "body"> {
 
 export async function fetchServer<TData = any, V extends Version = Version, TBody = any>(
 	version: V,
-	api: ServerAPIMap[V] | (string & {}),
+	api: LiteralUnion<ServerAPIMap[V]>,
 	options?: FetchServerOption<TBody>,
 ): Promise<FetchResponse<TData>> {
 	const baseUrl = (import.meta.env.VITE_SERVER_URL ?? "").replace(/\/$/, "");

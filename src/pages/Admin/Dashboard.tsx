@@ -10,16 +10,14 @@ import {
 	StatLabel,
 	StatNumber,
 	useColorModeValue,
-	useBreakpointValue,
-	VStack,
 	Icon,
 	useToast,
 } from "@chakra-ui/react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { FiUsers, FiTv, FiVideo, FiPlayCircle, FiMenu, FiHome, FiPieChart, FiSettings } from "react-icons/fi";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { FiUsers, FiTv, FiVideo, FiPlayCircle } from "react-icons/fi";
 import { IconType } from "react-icons";
 
-// 1. 주간 메트릭 데이터 구조 정의 (하루 누적 최종치)
+// 주간 메트릭 데이터 구조 정의 (하루 누적 최종치)
 interface WeeklyMetricData {
 	date: string;
 	visit_counter: number;
@@ -34,59 +32,6 @@ interface ChartColors {
 	videoApi: string;
 	playlistApi: string;
 }
-
-// 2. 테스트용 주간 더미 데이터 (월~일 하루 누적 최종 수치)
-const weeklyData: WeeklyMetricData[] = [
-	{
-		date: "월",
-		visit_counter: 1250,
-		multiview_call_count: 420,
-		api_quota_video_list: 850,
-		api_quota_playlist_items: 310,
-	},
-	{
-		date: "화",
-		visit_counter: 1320,
-		multiview_call_count: 480,
-		api_quota_video_list: 920,
-		api_quota_playlist_items: 350,
-	},
-	{
-		date: "수",
-		visit_counter: 1100,
-		multiview_call_count: 390,
-		api_quota_video_list: 780,
-		api_quota_playlist_items: 280,
-	},
-	{
-		date: "목",
-		visit_counter: 1450,
-		multiview_call_count: 510,
-		api_quota_video_list: 1050,
-		api_quota_playlist_items: 410,
-	},
-	{
-		date: "금",
-		visit_counter: 1680,
-		multiview_call_count: 620,
-		api_quota_video_list: 1200,
-		api_quota_playlist_items: 520,
-	},
-	{
-		date: "토",
-		visit_counter: 2100,
-		multiview_call_count: 850,
-		api_quota_video_list: 1550,
-		api_quota_playlist_items: 700,
-	},
-	{
-		date: "일",
-		visit_counter: 1950,
-		multiview_call_count: 790,
-		api_quota_video_list: 1420,
-		api_quota_playlist_items: 640,
-	},
-];
 
 interface WeeklyTotals {
 	visit: number;
@@ -140,6 +85,7 @@ const transformToWeeklyData = (logs: LogData[]): WeeklyMetricData[] => {
 
 						// 2. 파싱된 값이 null이 아닌 순수 '객체(Object)'일 경우 합산 로직 실행
 						if (typeof parsed === "object" && parsed !== null) {
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
 							totalSum = Object.values(parsed).reduce((sum: number, val: any) => sum + Number(val), 0);
 						}
 						// 3. 파싱된 값이 단순 숫자(또는 다른 원시 타입)인 경우
@@ -222,6 +168,7 @@ export function Dashboard() {
 			.finally(() => {
 				setIsLoading(false);
 			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	if (isLoading) {
 		return <Box p={6}>대시보드 데이터를 불러오는 중...</Box>;
@@ -371,39 +318,5 @@ function StatCard({ label, value, icon: IconComponent, iconBg, iconColor, bg, bo
 				</Flex>
 			</Flex>
 		</Box>
-	);
-}
-
-interface SidebarItemProps {
-	icon: IconType;
-	label: string;
-	isExpanded?: boolean;
-	active?: boolean;
-}
-
-function SidebarItem({ icon, label, isExpanded, active }: SidebarItemProps) {
-	const activeBg = useColorModeValue("gray.100", "gray.700");
-	const hoverBg = useColorModeValue("gray.50", "gray.700");
-
-	return (
-		<Flex
-			align="center"
-			justify={isExpanded ? "flex-start" : "center"}
-			p={3}
-			mx={isExpanded ? 2 : 0}
-			rounded="lg"
-			bg={active ? activeBg : "transparent"}
-			color={active ? "blue.500" : "gray.500"}
-			cursor="pointer"
-			_hover={{ bg: hoverBg, color: "blue.400" }}
-			transition="all 0.2s"
-		>
-			<Icon as={icon} boxSize="20px" />
-			{isExpanded && (
-				<Text ml={4} fontWeight="medium" whiteSpace="nowrap">
-					{label}
-				</Text>
-			)}
-		</Flex>
 	);
 }

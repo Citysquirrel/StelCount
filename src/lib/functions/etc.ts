@@ -6,15 +6,15 @@ export function stringNullCheck(str: string | null | undefined) {
 	} else return str;
 }
 
-export function objectNullCheck(obj: Object): Object {
+export function objectNullCheck(obj: object): object {
 	const result = {};
-	for (let [key, value] of Object.entries(obj)) {
+	for (const [key, value] of Object.entries(obj)) {
 		result[key] = stringNullCheck(value);
 	}
 	return result;
 }
 
-export function objectBoolCheck(obj: Object): Object {
+export function objectBoolCheck(obj: object): object {
 	const result = {};
 	for (const [key, value] of Object.entries(obj)) {
 		result[key] = !!value;
@@ -103,13 +103,13 @@ export function elapsedTimeText(date: Date, now: Date): [number, string] {
 export function remainingTimeText(date: Date, now: Date): [number, string] {
 	const gap = (date.getTime() - now.getTime()) / 1000;
 	let text = "";
-	let s = Math.floor(gap % 60)
+	const s = Math.floor(gap % 60)
 		.toString()
 		.padStart(2, "0");
-	let m = Math.floor((gap / 60) % 60)
+	const m = Math.floor((gap / 60) % 60)
 		.toString()
 		.padStart(2, "0");
-	let h = Math.floor(gap / 3600)
+	const h = Math.floor(gap / 3600)
 		.toString()
 		.padStart(2, "0");
 	if (gap > 31536000000) return [gap, ""];
@@ -194,13 +194,14 @@ export function lightenColor(hex: string, percent: number) {
 	g = Math.min(255, Math.floor(g + ((255 - g) * percent) / 100));
 	b = Math.min(255, Math.floor(b + ((255 - b) * percent) / 100));
 
-	let result =
+	const result =
 		"#" + r.toString(16).padStart(2, "0") + g.toString(16).padStart(2, "0") + b.toString(16).padStart(2, "0");
 
 	return result;
 }
 
 export function confirmOnExit() {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const handleBeforeUnload = (event: any) => {
 		event.preventDefault();
 		event.returnValue = "";
@@ -233,12 +234,14 @@ export function getBrowserInfo() {
 	return "Unknown";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Diff<T> = { key: keyof T; before: any; after: any };
 interface GetDiffArrayOptions {
 	excludeUnchanged?: boolean;
 }
 
 /** 두 객체배열 비교 후 변경된 사항 추적하여 리턴. 비교를 위해 변화하지 않는 값을 key(third parameter)에 할당 */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getDiffArray<T extends object = Record<string, any>>(
 	beforeArr: T[],
 	afterArr: T[],

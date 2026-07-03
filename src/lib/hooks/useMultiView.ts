@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchServer } from "../functions/fetch";
-import { MultiViewData, MultiViewDataData } from "../types";
+import { LiteralUnion, MultiViewData, MultiViewDataData } from "../types";
 import { useRecoilState } from "recoil";
 import { nowState } from "../Atom";
 import { getDiffArray, Diff } from "../functions/etc";
@@ -26,12 +26,14 @@ export function useMultiView() {
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, main: res.status }));
 				if (res.status === 200) {
+					//TODO: upcoming 등 유튜브 데이터들의 알림 구현
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					const { data: applyType, upcoming } = res.data as MultiViewDataData;
 					const opens = applyType.filter((stream) => stream.openLive);
 					const closes = applyType.filter((stream) => !stream.openLive);
 					const defaultDate = "2000-01-01";
 
-					setData((prev) => {
+					setData(() => {
 						const parsed = [
 							...opens.sort(
 								(a, b) => new Date(b.openDate || defaultDate).getTime() - new Date(a.openDate || defaultDate).getTime(),
@@ -71,6 +73,7 @@ export function useMultiView() {
 			.finally(() => {
 				setIsCustomLoading(false);
 			});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// customStreams 동기화
@@ -86,6 +89,7 @@ export function useMultiView() {
 		return () => {
 			clearInterval(intervalRef.current);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const hasCustomStreams = customStreams.length > 0;
@@ -118,7 +122,7 @@ export function useMultiView() {
 	};
 }
 
-type StatusCodeKey = "main" | "custom" | (string & {});
+type StatusCodeKey = LiteralUnion<"main" | "custom">;
 
 export type StatusCode = {
 	[K in StatusCodeKey]: number;

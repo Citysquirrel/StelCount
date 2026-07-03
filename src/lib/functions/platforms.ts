@@ -31,10 +31,10 @@ export const naver = {
 	},
 };
 
-export function objectToUrlParams(object: Object) {
+export function objectToUrlParams(object: object) {
 	let params = "";
 	Object.entries(object).forEach(([key, value], idx) => {
-		let prefix = idx === 0 ? "?" : "&";
+		const prefix = idx === 0 ? "?" : "&";
 		params += `${prefix}${key}=${value}`;
 	});
 	return params;

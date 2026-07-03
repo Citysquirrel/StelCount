@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import {
-	Badge,
 	Box,
 	Flex,
 	HStack,
@@ -24,7 +23,6 @@ import {
 	Checkbox,
 	useToast,
 	Icon,
-	Link,
 	Card,
 	CardBody,
 	Divider,
@@ -38,11 +36,8 @@ import useColor from "../../lib/hooks/useColor";
 import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdPublish } from "react-icons/md";
-import { Image } from "@/components/Image";
 import { Statistics, Tag as TagType, VideoDetail, YoutubeMusicData } from "@/lib/types";
 import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
-
-import { useConsole } from "@/lib/hooks/useConsole";
 import { youtube } from "@/lib/functions/platforms";
 import { formatUtcToKst } from "@/lib/functions/date";
 import { FaEye } from "react-icons/fa6";
@@ -55,6 +50,8 @@ import { stellarState } from "@/lib/Atom";
 import { useRecoilState } from "recoil";
 import FilterPanel from "./Video/FilterPanel";
 import { normalizeKeyword } from "@/lib/functions/normalized";
+import { Link } from "@/components/Link";
+import { ImageV2 } from "@/components/Image";
 
 interface VideoData extends Omit<
 	YoutubeMusicData,
@@ -96,7 +93,7 @@ export function Video() {
 	const [editingVideo, setEditingVideo] = useState<VideoData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-	const [isTagOpen, setIsTagOpen] = useState(false); // TODO: 태그 편집 모달 완성하기
+	const [, setIsTagOpen] = useState(false); // TODO: 태그 편집 모달 완성하기
 
 	const filteredData = useMemo(() => {
 		return videoData.filter((video) => {
@@ -110,8 +107,7 @@ export function Video() {
 
 	// Hooks
 	const toast = useToast();
-	const { bgCard, borderColor, headerBg, greenColor, redColor, blueColor, grayColor, yellowColor, fieldHoverBgColor } =
-		useColor();
+	const { bgCard, borderColor, headerBg, fieldHoverBgColor } = useColor();
 	const getAllVideos = useServerQuery<DefaultResponseData<VideoData[]>>({
 		version: "admin",
 		api: "/videos",
@@ -412,15 +408,13 @@ export function Video() {
 										</Box>
 										{/* 썸네일 */}
 										<Flex w="100px" textAlign="center" align={"center"} justify={"center"}>
-											<Image
-												src={getThumbnails(video.thumbnails).default?.url || "/images/no_thb.png"}
+											<ImageV2
+												src={getThumbnails(video.thumbnails).default?.url || ""}
 												display="block"
 												borderRadius={"4px"}
 												mx="auto"
 												w="92px"
 												maxH="54px"
-												aspectRatio="16/9"
-												objectFit="cover"
 												objectPosition="center"
 											/>
 										</Flex>
@@ -449,7 +443,7 @@ export function Video() {
 												? video.details.map((dt) => (
 														<Link
 															key={dt.videoId}
-															href={youtube.videoUrl(dt.videoId)}
+															href={youtube.videoUrl(dt.videoId) || ""}
 															isExternal
 															fontSize="10px"
 															onClick={(e) => {
@@ -545,22 +539,20 @@ export function Video() {
 														/>
 													</FormControl>
 												</VStack>
-												<Link href={youtube.videoUrl(editingVideo.videoId)} isExternal>
-													<Image
+												<Link href={youtube.videoUrl(editingVideo.videoId) || ""} isExternal>
+													<ImageV2
 														src={
 															getThumbnails(editingVideo.thumbnails).maxres?.url ||
 															getThumbnails(editingVideo.thumbnails).standard?.url ||
 															getThumbnails(editingVideo.thumbnails).high?.url ||
 															getThumbnails(editingVideo.thumbnails).medium?.url ||
-															"/images/no_thb.png"
+															""
 														}
 														display="block"
 														borderRadius={"4px"}
 														mx="auto"
 														w="320px"
 														maxH="240px"
-														aspectRatio="16/9"
-														objectFit="cover"
 														objectPosition="center"
 													/>
 												</Link>

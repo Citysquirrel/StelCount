@@ -1,5 +1,5 @@
 import { DefaultResponseData } from "@/lib/functions/fetch";
-import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
+import { useServerMutation } from "@/lib/hooks/useServerApi";
 import {
 	Modal,
 	ModalContent,
@@ -7,10 +7,8 @@ import {
 	ModalOverlay,
 	ModalCloseButton,
 	ModalBody,
-	ModalFooter,
 	Text,
 	Button,
-	Flex,
 	Box,
 	HStack,
 	Heading,
@@ -20,7 +18,6 @@ import {
 	Input,
 	FormControl,
 	FormLabel,
-	FormHelperText,
 	Checkbox,
 	useToast,
 } from "@chakra-ui/react";

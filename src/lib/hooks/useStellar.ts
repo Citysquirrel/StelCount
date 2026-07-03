@@ -4,21 +4,18 @@ import {
 	serverErrorState,
 	isStellarLoadingState,
 	stellarState,
-	LiveStatusState,
 	liveStatusState,
 	isLiveLoadingState,
 	isLiveFetchingState,
 	fetchInfoState,
-	isLiveDetailFetchingState,
 	StellarState,
 } from "../Atom";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { fetchServer } from "../functions/fetch";
 import { useToast } from "@chakra-ui/react";
-import isMobile from "is-mobile";
 import { getLocale } from "../functions/etc";
 import { useImprovedInterval } from "./useInterval";
-import { MultiViewData, MultiViewDataData } from "../types";
+import { MultiViewDataData } from "../types";
 
 export function useStellar() {
 	const fbImages = [
@@ -28,7 +25,6 @@ export function useStellar() {
 		},
 	];
 	const toast = useToast();
-	const intervalRef = useRef<number>();
 	const [data, setData] = useRecoilState(stellarState);
 	const [, setLiveStatus] = useRecoilState(liveStatusState);
 	const [, setServerError] = useRecoilState(serverErrorState);
@@ -36,7 +32,6 @@ export function useStellar() {
 	const [, setIsStellarLoading] = useRecoilState(isStellarLoadingState);
 	const [, setIsLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [, setIsLiveFetching] = useRecoilState(isLiveFetchingState);
-	const [, setIsLiveDetailFetching] = useRecoilState(isLiveDetailFetchingState);
 	const [, setFetchInfo] = useRecoilState(fetchInfoState);
 
 	const getLiveStatus = () => {
@@ -45,7 +40,7 @@ export function useStellar() {
 		fetchServer("v1", "/multiview")
 			.then((res) => {
 				if (res.status === 200) {
-					const { data, upcoming } = res.data as MultiViewDataData; //? 우선 upcoming은 본 기능에서 사용되지 않음
+					const { data } = res.data as MultiViewDataData; //? 우선 upcoming은 본 기능에서 사용되지 않음
 					setLiveStatus(data);
 					setFetchInfo((prev) => {
 						const obj = { ...prev };
@@ -132,6 +127,7 @@ export function useStellar() {
 		// return () => {
 		// 	clearInterval(intervalRef.current);
 		// };
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const { intervalId } = useImprovedInterval(

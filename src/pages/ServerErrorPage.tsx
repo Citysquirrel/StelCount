@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports
 import { Heading, Link, Stack, Text } from "@chakra-ui/react";
 import { useRecoilState } from "recoil";
 import { serverErrorState } from "../lib/Atom";
