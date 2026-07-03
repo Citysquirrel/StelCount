@@ -1,57 +1,58 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { DefaultResponseData } from "../../lib/functions/fetch";
+import { ImageV2 } from "@/components/Image";
+import { Link } from "@/components/Link";
+import { stellarState } from "@/lib/Atom";
+import { formatUtcToKst } from "@/lib/functions/date";
+import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
+import { normalizeKeyword } from "@/lib/functions/normalized";
+import { youtube } from "@/lib/functions/platforms";
+import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
+import { Statistics, Tag as TagType, VideoDetail, YoutubeMusicData } from "@/lib/types";
 import {
 	Box,
-	Flex,
-	HStack,
-	Heading,
-	IconButton,
-	Modal,
-	ModalContent,
-	ModalHeader,
-	ModalOverlay,
-	ModalCloseButton,
-	ModalBody,
-	ModalFooter,
-	Stack,
-	Text,
-	VStack,
-	FormControl,
-	FormLabel,
-	Input,
 	Button,
-	Checkbox,
-	useToast,
-	Icon,
 	Card,
 	CardBody,
+	Checkbox,
+	CloseButton,
 	Divider,
+	Flex,
+	FormControl,
+	FormLabel,
+	HStack,
+	Heading,
+	Icon,
+	IconButton,
+	Input,
 	InputGroup,
 	InputRightElement,
-	CloseButton,
+	Modal,
+	ModalBody,
+	ModalCloseButton,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+	ModalOverlay,
+	Stack,
 	Tag,
+	Text,
+	VStack,
+	useToast,
 } from "@chakra-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import useColor from "../../lib/hooks/useColor";
-import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
-import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
-import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdPublish } from "react-icons/md";
-import { Statistics, Tag as TagType, VideoDetail, YoutubeMusicData } from "@/lib/types";
-import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
-import { youtube } from "@/lib/functions/platforms";
-import { formatUtcToKst } from "@/lib/functions/date";
-import { FaEye } from "react-icons/fa6";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AiFillLike } from "react-icons/ai";
+import { FaEye } from "react-icons/fa6";
+import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
 import { IoRefreshCircle } from "react-icons/io5";
+import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdPublish } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
-import TagInputAutocomplete from "./Video/TagInput";
-import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
-import { stellarState } from "@/lib/Atom";
 import { useRecoilState } from "recoil";
+import { DefaultResponseData } from "../../lib/functions/fetch";
+import useColor from "../../lib/hooks/useColor";
+import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
 import FilterPanel from "./Video/FilterPanel";
-import { normalizeKeyword } from "@/lib/functions/normalized";
-import { Link } from "@/components/Link";
-import { ImageV2 } from "@/components/Image";
+import TagInputAutocomplete from "./Video/TagInput";
+import TagModal from "./Video/TagModal";
 
 interface VideoData extends Omit<
 	YoutubeMusicData,
@@ -78,7 +79,6 @@ export interface StellarGroup {
 	sortOrder: number;
 }
 
-// TODO: 필터링 기능 넣기
 export function Video() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
 	const [stellarData] = useRecoilState(stellarState);
@@ -87,13 +87,15 @@ export function Video() {
 
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
+	const [filterStellar, setFilterStellar] = useState<string[]>([]);
+	const [filterTag, setFilterTag] = useState<string[]>([]);
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingVideo, setEditingVideo] = useState<VideoData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-	const [, setIsTagOpen] = useState(false); // TODO: 태그 편집 모달 완성하기
+	const [isTagOpen, setIsTagOpen] = useState(false);
 
 	const filteredData = useMemo(() => {
 		return videoData.filter((video) => {
@@ -101,9 +103,12 @@ export function Video() {
 			const matchSearch =
 				normalizeKeyword(video.title).includes(normalizedQuery) ||
 				normalizeKeyword(video.titleAlias || "").includes(normalizedQuery);
-			return matchSearch;
+			const matchStellar = filterStellar.length > 0 ? filterStellar.includes(video.ownerId || "") : true;
+			const matchTag =
+				filterTag.length > 0 ? filterTag.some((filterId) => video.tags?.some((t) => String(t.id) === filterId)) : true;
+			return matchSearch && matchStellar && matchTag;
 		});
-	}, [videoData, searchQuery]);
+	}, [videoData, searchQuery, filterStellar, filterTag]);
 
 	// Hooks
 	const toast = useToast();
@@ -166,7 +171,7 @@ export function Video() {
 						});
 					},
 					onError: () => {
-						toast({ description: "그룹 편집 중 서버 에러 발생" });
+						toast({ description: "영상 데이터 편집 중 서버 에러 발생" });
 					},
 				},
 			);
@@ -261,7 +266,6 @@ export function Video() {
 
 	// Details 변화 핸들러
 	const onChangeDetails = (details: AdditionalInputValue[]) => {
-		console.log(editingIndex, editingVideo);
 		if (!editingVideo || editingIndex === null) return;
 		setEditingVideo({
 			...editingVideo,
@@ -276,6 +280,14 @@ export function Video() {
 				youtube_video_id: null,
 			})) as VideoDetail[],
 		});
+	};
+
+	// 필터 핸들러
+	const onChangeStellarsFilter = (playlistIds: (string | number)[]) => {
+		setFilterStellar(playlistIds.map(String));
+	};
+	const onChangeTagsFilter = (tagIds: (string | number)[]) => {
+		setFilterTag(tagIds.map(String));
 	};
 
 	useEffect(() => {
@@ -316,7 +328,11 @@ export function Video() {
 						</InputRightElement>
 					) : null}
 				</InputGroup>
-				<FilterPanel tags={getAllTags.data?.data} />
+				<FilterPanel
+					tags={getAllTags.data?.data}
+					onChangeStellars={onChangeStellarsFilter}
+					onChangeTags={onChangeTagsFilter}
+				/>
 			</Flex>
 			<Flex
 				gap={4}
@@ -474,6 +490,13 @@ export function Video() {
 							})}
 						</Box>
 					</Box>
+					{/* 태그 편집 모달 */}
+					<TagModal
+						isModalOpen={isTagOpen}
+						setIsModalOpen={setIsTagOpen}
+						data={getAllTags.data?.data}
+						refetch={getAllTags.refetch}
+					/>
 
 					{/* 비디오 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">

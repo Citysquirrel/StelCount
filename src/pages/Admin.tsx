@@ -1091,7 +1091,7 @@ function MusicDrawer({
 				if (newTags.find((t) => t.id === numVal)) {
 					return prev;
 				}
-				newTags.push({ id: numVal, name: tags.find((t) => t.id === numVal)?.name || "" });
+				newTags.push({ id: numVal, name: tags.find((t) => t.id === numVal)?.name || "", isCover: false });
 				return { ...prev, tags: newTags };
 			});
 		}

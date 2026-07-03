@@ -1,39 +1,37 @@
 import { stellarState } from "@/lib/Atom";
-import { useConsole } from "@/lib/hooks/useConsole";
 import { Tag as TagType } from "@/lib/types";
 import {
-	Button,
-	Popover,
-	PopoverTrigger,
-	PopoverContent,
-	PopoverArrow,
-	PopoverCloseButton,
-	PopoverBody,
-	Stack,
-	Text,
-	CheckboxGroup,
-	Checkbox,
 	Avatar,
+	Button,
+	Checkbox,
+	CheckboxGroup,
 	Flex,
+	Popover,
+	PopoverArrow,
+	PopoverBody,
+	PopoverCloseButton,
+	PopoverContent,
+	PopoverTrigger,
+	Stack,
 	Tag,
+	Text,
 } from "@chakra-ui/react";
 import { Fragment, useState } from "react";
 import { useRecoilState } from "recoil";
 
 interface FilterPanelProps {
 	tags: TagType[] | undefined;
-	onChangeStellar?: (playlistIds: (string | number)[]) => void;
-	onChangeTag?: (tagIds: (string | number)[]) => void;
+	onChangeStellars?: (playlistIds: (string | number)[]) => void;
+	onChangeTags?: (tagIds: (string | number)[]) => void;
 }
 
-export default function FilterPanel({ tags = [], onChangeStellar, onChangeTag }: FilterPanelProps) {
+export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags }: FilterPanelProps) {
 	const [stellarData] = useRecoilState(stellarState);
 
 	// 상태
 	const [selectedStellar, setSelectedStellar] = useState<(string | number)[]>([]);
 	const [selectedTag, setSelectedTag] = useState<(string | number)[]>([]);
 
-	useConsole(selectedTag);
 	return (
 		<Flex gap={2}>
 			{/* 스텔라 필터 */}
@@ -59,7 +57,7 @@ export default function FilterPanel({ tags = [], onChangeStellar, onChangeTag }:
 									colorScheme="blue"
 									value={selectedStellar}
 									onChange={(value) => {
-										onChangeStellar?.(value);
+										onChangeStellars?.(value);
 										setSelectedStellar(value);
 									}}
 								>
@@ -104,7 +102,7 @@ export default function FilterPanel({ tags = [], onChangeStellar, onChangeTag }:
 									colorScheme="blue"
 									value={selectedTag}
 									onChange={(value) => {
-										onChangeTag?.(value);
+										onChangeTags?.(value);
 										setSelectedTag(value);
 									}}
 								>

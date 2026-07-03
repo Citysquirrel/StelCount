@@ -112,7 +112,7 @@ export function Counter() {
 		currentStellar?.youtubeCustomUrl || "",
 	);
 	const currentMusic = currentStellar && currentStellar.youtubeMusic;
-	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat());
+	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat()).filter((t) => t.id !== undefined);
 
 	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uuid)?.liveStatus || false;
 
@@ -488,11 +488,11 @@ export function Counter() {
 											{currentExistTags.map((t, idx) => (
 												<FilterTag
 													key={`${t.id}-${idx}`}
-													tagId={t.id}
+													tagId={t.id!}
 													name={t.name}
 													color={t.colorCode}
 													tagFilter={filter.tag}
-													onClick={handleTagFilter(t.id)}
+													onClick={handleTagFilter(t.id!)}
 													minWidth="76px"
 													height="24px"
 													wordBreak={"keep-all"}
@@ -1074,7 +1074,7 @@ function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
 function tagFilterFunc(includedTagIds: number[]) {
 	// const result: YoutubeMusicData[] = [];
 	return function (value: YoutubeMusicData): boolean {
-		const tagIds = value.tags?.map((t) => t.id) || [];
+		const tagIds: number[] = (value.tags?.map((t) => t.id).filter(Boolean) as number[]) || [];
 		return includedTagIds.length === 0 ? true : tagIds.some((id) => includedTagIds.includes(id));
 	};
 }

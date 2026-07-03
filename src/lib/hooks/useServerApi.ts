@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
-import { fetchServer, FetchOptions, Version, ServerAPIMap } from "../../lib/functions/fetch";
+import { fetchServer, FetchOptions, Version, ServerAPIMap, DefaultResponseData } from "../../lib/functions/fetch";
 import { LiteralUnion } from "../types";
 
 // fetchServer 어댑터 함수
@@ -16,7 +16,7 @@ const fetchServerAdaptor = async <TData = any, V extends Version = Version>(
 	//? 기존 fetchServer(fetch_) 형태로 바로 return 들어가면
 	//? react-query 측에서는 success로 간주하기 때문에 throw로 명시해주어야함
 	if (response.status >= 400 || response.status === 0) {
-		throw new Error(response.statusText || "API Request Failed");
+		throw new Error((response.data as DefaultResponseData).msg || response.statusText || "API Request Failed");
 	}
 
 	return response.data as TData;

@@ -38,9 +38,10 @@ export interface CustomStreamsForUS {
 }
 
 export interface Tag extends DefaultDateFields {
-	id: number;
+	id?: number;
 	name: string;
 	colorCode?: string;
+	isCover: boolean;
 }
 
 export interface YoutubeMusicData {

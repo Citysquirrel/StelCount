@@ -1,30 +1,30 @@
 import { DefaultResponseData } from "@/lib/functions/fetch";
 import { useServerMutation } from "@/lib/hooks/useServerApi";
 import {
+	Box,
+	Button,
+	Checkbox,
+	Divider,
+	FormControl,
+	FormLabel,
+	HStack,
+	Heading,
+	IconButton,
+	Input,
 	Modal,
+	ModalBody,
+	ModalCloseButton,
 	ModalContent,
 	ModalHeader,
 	ModalOverlay,
-	ModalCloseButton,
-	ModalBody,
 	Text,
-	Button,
-	Box,
-	HStack,
-	Heading,
 	VStack,
-	IconButton,
-	Divider,
-	Input,
-	FormControl,
-	FormLabel,
-	Checkbox,
 	useToast,
 } from "@chakra-ui/react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { StellarGroup } from "../Stellar";
-import { MdAdd, MdArrowBack, MdDelete, MdEdit } from "react-icons/md";
 import { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { MdAdd, MdArrowBack, MdDelete, MdEdit } from "react-icons/md";
+import { StellarGroup } from "../Stellar";
 
 type ViewMode = "list" | "add" | "edit";
 
@@ -114,17 +114,18 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 
 	// 핸들러: 삭제
 	const handleDelete = (id: number) => {
-		deleteGroup.mutate(
-			{ id },
-			{
-				onSuccess: () => {
-					refetch();
+		if (confirm(`${id}번 항목을 삭제하시겠습니까?`))
+			deleteGroup.mutate(
+				{ id },
+				{
+					onSuccess: () => {
+						refetch();
+					},
+					onError: () => {
+						toast({ description: "그룹 삭제 중 서버 에러 발생" });
+					},
 				},
-				onError: () => {
-					toast({ description: "그룹 삭제 중 서버 에러 발생" });
-				},
-			},
-		);
+			);
 	};
 
 	// 동기화
