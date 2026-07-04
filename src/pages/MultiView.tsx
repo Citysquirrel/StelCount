@@ -1030,7 +1030,15 @@ function SideMenu({
 			setCustomStreams(next);
 
 			//! 첫 데이터 로드
-			const requestBody = next.map((data) => ({ uuid: data.uuid, chzzkId: data.chzzkId }));
+			const requestBody = next.reduce(
+				(acc, data) => {
+					if (data.chzzkId) {
+						acc[data.uuid] = data.chzzkId;
+					}
+					return acc;
+				},
+				{} as Record<string, string>,
+			);
 			fetchServer("v2", "/multiview", { method: "POST", body: requestBody }).then((res) => {
 				if (res.status === 200) {
 					const data: MultiViewData[] = res.data;

@@ -174,7 +174,11 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 											<HStack spacing={1}>
 												{type.isCover && <Text>⭐</Text>}
 												<Tag colorScheme={type.colorCode}>{type.name}</Tag>
-												{type.count && <Text ml={2}>Ref: {type.count}</Text>}
+												{type.count && (
+													<Text ml={2} fontSize="xs" color="gray">
+														Ref: {type.count}
+													</Text>
+												)}
 											</HStack>
 											<HStack spacing={1}>
 												<IconButton
