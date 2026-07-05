@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => {
 			isProd &&
 				compression({
 					algorithms: ["gzip", "brotliCompress"],
+					include: /\.(js|mjs|json|css|html|svg)$/i,
+					threshold: 10240,
 				}),
 
 			// 빌드 시에만 번들 분석 리포트 생성 및 자동 열기
