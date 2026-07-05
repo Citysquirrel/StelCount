@@ -871,24 +871,6 @@ function SideMenu({
 		const value = e.target.value;
 		setSearchInputValue(value);
 
-		const results = customStreams
-			.map((item) => {
-				const { liveTitle, channelName, liveCategoryValue } = item;
-				const liveTitleRange = Hangul.rangeSearch(liveTitle || "", value);
-				const channelNameRange = Hangul.rangeSearch(channelName || "", value);
-				const categoryRange = Hangul.rangeSearch(liveCategoryValue || "", value);
-
-				return {
-					...item,
-					liveTitleRange,
-					channelNameRange,
-					categoryRange,
-				};
-			})
-			.filter(
-				(item) => item.liveTitleRange.length > 0 || item.channelNameRange.length > 0 || item.categoryRange.length > 0,
-			);
-
 		const temp = value
 			? new Fuse(
 					customStreams.map((stream) => ({
