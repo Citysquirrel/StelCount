@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchServer } from "../../lib/functions/fetch";
+import { DefaultResponseData, fetchServer } from "../../lib/functions/fetch";
 import {
 	Box,
 	Flex,
@@ -12,10 +12,14 @@ import {
 	useColorModeValue,
 	Icon,
 	useToast,
+	Button,
+	ButtonGroup,
+	Divider,
 } from "@chakra-ui/react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { FiUsers, FiTv, FiVideo, FiPlayCircle } from "react-icons/fi";
 import { IconType } from "react-icons";
+import { useServerQuery } from "@/lib/hooks/useServerApi";
 
 // 주간 메트릭 데이터 구조 정의 (하루 누적 최종치)
 interface WeeklyMetricData {
@@ -60,6 +64,7 @@ type LogKey = "visit_counter" | "multiview_call_count" | "api_quota_video_list" 
 const transformToWeeklyData = (logs: LogData[]): WeeklyMetricData[] => {
 	const grouped = logs.reduce(
 		(acc, log) => {
+			if (!log.date) return acc;
 			// 날짜 추출 (예: "2026-05-28")
 			const dateKey = log.date.split("T")[0];
 
@@ -114,6 +119,9 @@ const transformToWeeklyData = (logs: LogData[]): WeeklyMetricData[] => {
 export function Dashboard() {
 	const [data, setData] = useState<WeeklyMetricData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isPlaylistFetching, setIsPlaylistFetching] = useState(false);
+	const [isDetailFetching, setIsDetailFetching] = useState(false);
+
 	const toast = useToast();
 
 	const bgCard = useColorModeValue("white", "gray.700");
@@ -142,6 +150,37 @@ export function Dashboard() {
 			{ visit: 0, multiview: 0, video: 0, playlist: 0 },
 		);
 	}, [data]);
+
+	const renewPlaylists = () => {
+		setIsPlaylistFetching(true);
+		fetchServer("admin", "/renew/playlist", { timeout: 0 })
+			.then((res) => {
+				if (res.status === 200)
+					toast({ description: res.data.msg || "재생목록 갱신에 성공했습니다", status: "success" });
+				else toast({ description: res.data.msg || "재생목록 갱신 중 오류가 발생했습니다", status: "error" });
+			})
+			.catch(() => {
+				toast({ description: "재생목록 갱신 중 서버 에러 발생" });
+			})
+			.finally(() => {
+				setIsPlaylistFetching(false);
+			});
+	};
+	const renewDetails = () => {
+		setIsDetailFetching(true);
+		fetchServer("admin", "/renew/detail", { timeout: 0 })
+			.then((res) => {
+				if (res.status === 200)
+					toast({ description: res.data.msg || "영상 상세 정보 갱신에 성공했습니다", status: "success" });
+				else toast({ description: res.data.msg || "영상 상세 정보 갱신 중 오류가 발생했습니다", status: "error" });
+			})
+			.catch(() => {
+				toast({ description: "영상 상세 정보 갱신 중 서버 에러 발생" });
+			})
+			.finally(() => {
+				setIsDetailFetching(false);
+			});
+	};
 
 	useEffect(() => {
 		fetchServer<DashboardResponse>("admin", "/dashboard")
@@ -176,6 +215,37 @@ export function Dashboard() {
 	return (
 		<Box p={8}>
 			<Box mb={8}>
+				<Heading size="lg" mb={2}>
+					데이터 갱신
+				</Heading>
+				<Text color="gray.500" fontSize="sm">
+					주기 데이터를 임의로 갱신합니다.
+				</Text>
+			</Box>
+			<Box mb={8}>
+				<ButtonGroup>
+					<Button
+						onClick={() => {
+							renewPlaylists();
+						}}
+						isDisabled={isPlaylistFetching}
+					>
+						재생목록 데이터 갱신
+					</Button>
+					<Button
+						onClick={() => {
+							renewDetails();
+						}}
+						isDisabled={isDetailFetching}
+					>
+						영상 상세 정보 갱신
+					</Button>
+				</ButtonGroup>
+			</Box>
+
+			<Divider mb={4} />
+
+			<Box>
 				<Heading size="lg" mb={2}>
 					주간 트렌드 분석
 				</Heading>

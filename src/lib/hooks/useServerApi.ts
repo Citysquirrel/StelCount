@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
 import { fetchServer, FetchOptions, Version, ServerAPIMap, DefaultResponseData } from "../../lib/functions/fetch";
-import { LiteralUnion } from "../types";
 
 // fetchServer 어댑터 함수
 //? 기존 fetchServer와 fetch_가 꽤 괜찮게 자리잡았다고 판단되어 원본을 해치지 않고 react-query와 연동할 수 있도록 구성하기 위함
 const fetchServerAdaptor = async <TData = any, V extends Version = Version>(
 	version: V,
-	api: LiteralUnion<ServerAPIMap[V]>,
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	api: ServerAPIMap[V] | (string & {}),
 	options?: FetchOptions,
 ): Promise<TData> => {
 	const response = await fetchServer<TData, V>(version, api, options);
@@ -24,7 +24,8 @@ const fetchServerAdaptor = async <TData = any, V extends Version = Version>(
 
 interface UseServerQueryProps<TData, V extends Version> {
 	version: V;
-	api: LiteralUnion<ServerAPIMap[V]>;
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	api: ServerAPIMap[V] | (string & {});
 	options?: FetchOptions;
 	queryOptions?: Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn">;
 }
@@ -47,8 +48,8 @@ export function useServerQuery<TData = any, V extends Version = Version>({
 // Mutations
 interface UseServerMutationProps<TData, TVariables, V extends Version> {
 	version: V;
-	// ✨ 문자열 패턴("/stellar/:id")을 쉽게 쓸 수 있도록 (string & {}) 유지
-	api: LiteralUnion<ServerAPIMap[V]> | ((variables: TVariables) => LiteralUnion<ServerAPIMap[V]>);
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	api: (ServerAPIMap[V] | (string & {})) | ((variables: TVariables) => ServerAPIMap[V] | (string & {}));
 	method?: "POST" | "PATCH" | "PUT" | "DELETE";
 	mutationOptions?: UseMutationOptions<TData, Error, TVariables>;
 }
