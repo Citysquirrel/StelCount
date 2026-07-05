@@ -1,9 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
 import ssl from "@vitejs/plugin-basic-ssl";
 import { visualizer } from "rollup-plugin-visualizer";
-import viteCompression from "vite-plugin-compression";
+import { compression } from "vite-plugin-compression2";
 
 export default defineConfig(({ mode }) => {
 	const isProd = mode === "production";
@@ -11,19 +10,13 @@ export default defineConfig(({ mode }) => {
 	return {
 		plugins: [
 			react(),
-			tsconfigPaths(),
 			!isProd && ssl(),
 			// 정적 파일 Gzip 압축
 			isProd &&
-				viteCompression({
-					algorithm: "gzip",
-					ext: ".gz",
+				compression({
+					algorithms: ["gzip", "brotliCompress"],
 				}),
-			isProd &&
-				viteCompression({
-					algorithm: "brotliCompress",
-					ext: ".br",
-				}),
+
 			// 빌드 시에만 번들 분석 리포트 생성 및 자동 열기
 			isProd &&
 				visualizer({
@@ -35,11 +28,9 @@ export default defineConfig(({ mode }) => {
 
 		server: {},
 
-		// esbuild 설정 (console.log 제거)
-		esbuild: {
-			drop: isProd ? ["console", "debugger"] : [],
+		resolve: {
+			tsconfigPaths: true,
 		},
-
 		build: {
 			sourcemap: false,
 
@@ -49,6 +40,13 @@ export default defineConfig(({ mode }) => {
 
 			rollupOptions: {
 				output: {
+					minify: {
+						compress: {
+							// isProd가 true일 때(프로덕션 빌드 시) 모든 console.* 호출 삭제
+							//? 기존 esbuild를 삭제하면서 exclude 대신 사용(최신 도입된 oxc 기능 편입)
+							dropConsole: isProd,
+						},
+					},
 					manualChunks: (id) => {
 						if (id.includes("node_modules")) {
 							if (id.includes("@chakra-ui")) {
