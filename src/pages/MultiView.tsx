@@ -38,6 +38,7 @@ import {
 	RadioGroup,
 	Radio,
 	StackDivider,
+	chakra,
 } from "@chakra-ui/react";
 import { Dispatch, Fragment, SetStateAction, createRef, useCallback, useEffect, useRef, useState } from "react";
 import { naver } from "../lib/functions/platforms";
@@ -84,6 +85,11 @@ import * as Hangul from "hangul-js";
 import { UserSettingModal } from "./MultiView/UserSetting";
 import { ExtensionDataModal } from "./MultiView/ExtensionData";
 import { ExtensionSyncEditor } from "./MultiView/ExtensionSyncEditor";
+import { getChosung, normalizeKeyword } from "@/lib/functions/search";
+import Fuse from "fuse.js";
+import Inko from "inko";
+
+const inko = new Inko();
 
 export function MultiView() {
 	const navigate = useNavigate();
@@ -860,6 +866,7 @@ function SideMenu({
 		});
 	};
 
+	// #region 검색 핸들러
 	const handleChangeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setSearchInputValue(value);
@@ -882,8 +889,43 @@ function SideMenu({
 				(item) => item.liveTitleRange.length > 0 || item.channelNameRange.length > 0 || item.categoryRange.length > 0,
 			);
 
-		setFilteredData(results);
+		const temp = value
+			? new Fuse(
+					customStreams.map((stream) => ({
+						...stream,
+						searchTitle: normalizeKeyword(stream.liveTitle || ""),
+						searchName: normalizeKeyword(stream.channelName || ""),
+						searchCategory: normalizeKeyword(stream.liveCategoryValue || ""),
+						searchTitleCho: getChosung(stream.liveTitle || ""),
+						searchNameCho: getChosung(stream.channelName || ""),
+						searchCategoryCho: getChosung(stream.liveCategoryValue || ""),
+						searchTitleEng: inko.ko2en(stream.liveTitle || ""),
+						searchNameEng: inko.ko2en(stream.channelName || ""),
+						searchCategoryEng: inko.ko2en(stream.liveCategoryValue || ""),
+					})),
+					{
+						keys: [
+							"searchTitle",
+							"searchName",
+							"searchCategory",
+							"searchTitleCho",
+							"searchNameCho",
+							"searchCategoryCho",
+							"searchTitleEng",
+							"searchNameEng",
+							"searchCategoryEng",
+						],
+						threshold: 0.4,
+						ignoreLocation: true,
+					},
+				)
+					.search(value)
+					.map((s) => s.item)
+			: customStreams;
+
+		setFilteredData(temp);
 	};
+	// #endregion
 
 	const handleOpenRedefine = () => {
 		listRef.current?.scrollTo({ top: 0 });
@@ -1049,7 +1091,7 @@ function SideMenu({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	const getCurrentStreams = (currentMode: number): FilteredData[] => {
+	const getCurrentStreams = (currentMode: number): any[] => {
 		switch (currentMode) {
 			case 0:
 				return data.filter((s) => s.graduation == null || new Date(s.graduation) >= new Date());
@@ -1126,6 +1168,7 @@ function SideMenu({
 							isCompact={isCardCompact}
 							isFiltered={filteredData.length > 0}
 							isBookmarked={isBookmarked}
+							searchInputValue={searchInputValue}
 						/>
 					);
 				})
@@ -1517,31 +1560,6 @@ function SideMenu({
 					{/* 여기에 Divider 추가 */}
 					{renderStreams(streamsOrdinary, 1)}
 				</Stack>
-				{/* 여기부터 사용자 설정 */}
-				{/* <Stack
-					position="relative"
-					backgroundColor={"rgba(7,7,7,0.9)"}
-					zIndex={1}
-					width="100%"
-					minHeight={isSettingOpen ? `${CONFIG_HEIGHT}px` : "0px"}
-					maxHeight={isSettingOpen ? `${CONFIG_HEIGHT}px` : "0px"}
-					gap={0}
-					transition="all .3s"
-					overflowY="hidden"
-				>
-					<HStack padding="4px" position="relative">
-						<Stack flexGrow={1} alignItems={"center"} padding="4px">
-							<Text fontSize={"sm"}>설정</Text>
-						</Stack>
-
-						<CloseButton position="absolute" top={0} right={0} onClick={handleCloseSetting} />
-					</HStack>
-					<Stack padding="12px">
-						{configDict.map((config) => {
-							return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
-						})}
-					</Stack>
-				</Stack> */}
 			</Stack>
 		</>
 	);
@@ -1557,6 +1575,7 @@ function MenuCard({
 	isCompact,
 	isFiltered,
 	isBookmarked,
+	searchInputValue,
 }: MenuCardProps) {
 	const {
 		chzzkId,
@@ -1620,12 +1639,12 @@ function MenuCard({
 								filter={openLive ? undefined : "grayscale(1)"}
 							/>
 							<Text fontSize="0.75em" fontWeight={"bold"} color={openLive ? undefined : "gray.400"}>
-								{applySearchHighlight(channelName, channelNameRange)}
+								{highlight(channelName || "", searchInputValue)}
 							</Text>
 						</HStack>
 
 						<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
-							{openLive ? applySearchHighlight(liveCategoryValue, categoryRange) : "　"}
+							{openLive ? highlight(liveCategoryValue || "", searchInputValue) : "　"}
 						</Text>
 						{isCompact ? null : (
 							<Text color="gray.500" fontSize="0.65em" paddingRight={isCompact ? "12px" : undefined}>
@@ -1648,7 +1667,7 @@ function MenuCard({
 								: undefined
 						}
 					>
-						{openLive ? applySearchHighlight(liveTitle, liveTitleRange) : "방송 종료됨"}
+						{openLive ? highlight(liveTitle || "", searchInputValue) : "방송 종료됨"}
 					</Text>
 				</Stack>
 			</CardBody>
@@ -1968,14 +1987,51 @@ function RefreshAllIconSVG({ ...props }) {
 	);
 }
 
+const highlight = (text: string, keyword: string) => {
+	if (!keyword) return text;
+
+	const normalizedKeyword = keyword.replace(/\s+/g, "").toLowerCase();
+
+	// 공백 제거 + 원본 index 매핑
+	let normalizedText = "";
+	const indexMap: number[] = [];
+
+	for (let i = 0; i < text.length; i++) {
+		const char = text[i];
+
+		if (char !== " ") {
+			normalizedText += char.toLowerCase();
+			indexMap.push(i);
+		}
+	}
+
+	const matchIndex = normalizedText.indexOf(normalizedKeyword);
+
+	if (matchIndex === -1) {
+		return text;
+	}
+
+	// 정규화 index → 원본 index 변환
+	const start = indexMap[matchIndex];
+	const end = indexMap[matchIndex + normalizedKeyword.length - 1] + 1;
+
+	return (
+		<>
+			{text.slice(0, start)}
+			<chakra.mark backgroundColor="yellow.600">{text.slice(start, end)}</chakra.mark>
+			{text.slice(end)}
+		</>
+	);
+};
+
+/**
+ * @deprecated
+ */
 function applySearchHighlight(text: string | null | undefined, ranges: number[][] | undefined): JSX.Element {
 	if (!text) return <></>;
 	if (!ranges || ranges.length === 0) return <>{text}</>;
 	const elements: JSX.Element[] = [];
 	let lastIndex = 0;
-
-	//TODO: 찾은 검색어가 특정 상황에서 문자가 복사되는 문제 발생
-	//TODO: 원인 분석 필요
 
 	ranges.forEach(([start, end], idx) => {
 		elements.push(<span key={`${idx}-normal`}>{text.slice(lastIndex, start)}</span>);
@@ -2060,6 +2116,7 @@ interface MenuCardProps {
 	isCompact: boolean;
 	isFiltered: boolean;
 	isBookmarked: boolean;
+	searchInputValue: string;
 }
 
 interface MenuCardImageProps {
@@ -2129,6 +2186,15 @@ type FilteredData = MultiViewData & {
 	liveTitleRange?: number[][];
 	channelNameRange?: number[][];
 	categoryRange?: number[][];
+	searchTitle?: string;
+	searchName?: string;
+	searchCategory?: string;
+	searchTitleCho?: string;
+	searchNameCho?: string;
+	searchCategoryCho?: string;
+	searchTitleEng?: string;
+	searchNameEng?: string;
+	searchCategoryEng?: string;
 };
 
 interface SearchDataChannel {
