@@ -1137,10 +1137,10 @@ function SideMenu({
 						// streamType을 따로 지정할 필요가 없음. currentMode 상태를 사용할 것
 					};
 					const itemIdx = streams.findIndex((a) => a.uuid === uuid);
-					if (!chzzkId) return <Fragment key={`${idx}-${chzzkId}`}></Fragment>;
+					if (!chzzkId) return <Fragment key={`${idx}`}></Fragment>;
 					return (
 						<MenuCard
-							key={`${idx}-${chzzkId}`}
+							key={`${chzzkId}`}
 							item={item}
 							itemIdx={itemIdx}
 							handleAddStream={handleAddStream}
