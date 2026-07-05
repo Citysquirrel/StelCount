@@ -33,21 +33,15 @@ export const routeObj: RouteObject[] = [
 			// { path: "/about", element: <About /> },
 			{ path: "/counter", element: <Counter /> },
 			{
-				path: "/admin",
+				path: "/old-admin",
 				element: <Admin />,
-				children: [
-					{
-						path: "sub",
-						element: <></>,
-					},
-				],
 			},
-			{ path: "/admin/:id", element: <AdminEdit /> },
+			{ path: "/old-admin/:id", element: <AdminEdit /> },
 			{
-				path: "/new-admin",
+				path: "/admin",
 				element: <NewAdmin />,
 				children: [
-					{ element: <Navigate to="/new-admin/dashboard" replace />, index: true },
+					{ element: <Navigate to="/admin/dashboard" replace />, index: true },
 					{
 						path: "dashboard",
 						element: <Dashboard />,
@@ -62,6 +56,10 @@ export const routeObj: RouteObject[] = [
 					},
 					{
 						path: "songbook",
+						element: <Songbook />,
+					},
+					{
+						path: "song-history",
 						element: <Songbook />,
 					},
 					{

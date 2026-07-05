@@ -1,18 +1,37 @@
+import { CustomLink } from "@/components/Link";
+import {
+	Box,
+	Flex,
+	HStack,
+	IconButton,
+	StackProps,
+	Text,
+	VStack,
+	useColorModeValue,
+	useMediaQuery,
+} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { Box, HStack, useColorModeValue, Text, Flex, IconButton, VStack, useMediaQuery } from "@chakra-ui/react";
-import { FiHome, FiSettings, FiUsers, FiMenu, FiBook, FiYoutube } from "react-icons/fi";
+import { FiBook, FiHome, FiMenu, FiMusic, FiSettings, FiUsers, FiYoutube } from "react-icons/fi";
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../lib/hooks/useAuth";
 import { NotExist } from "../NotExist";
-import { CustomLink } from "@/components/Link";
+import { IconType } from "react-icons";
 
-const ROUTE_NAME = "/new-admin";
+interface NavItemProps extends StackProps {
+	icon: IconType;
+	label: string;
+	to: string;
+	isExpanded: boolean;
+}
+
+const ROUTE_NAME = "/admin";
 const PAGE_TITLES: Record<string, string> = {
 	"/": "대시보드",
 	"/dashboard": "대시보드",
 	"/stellar": "스텔라 관리",
 	"/video": "영상 관리",
 	"/songbook": "노래책 관리",
+	"/song-history": "가창기록 관리",
 	"/settings": "시스템 설정",
 };
 
@@ -52,7 +71,7 @@ export function NewAdmin() {
 	}, [isMobile]);
 
 	// 사이드바 메뉴 아이템 컴포넌트
-	const NavItem = ({ icon, label, to, isExpanded }) => (
+	const NavItem = ({ icon, label, to, isExpanded, ...props }: NavItemProps) => (
 		<HStack
 			as={CustomLink}
 			href={to}
@@ -69,6 +88,7 @@ export function NewAdmin() {
 				color: "blue.600",
 				fontWeight: "bold",
 			}}
+			{...props}
 		>
 			<Box as={icon} boxSize="20px" />
 			{/* 사이드바가 펴져 있을 때만 텍스트 렌더링 */}
@@ -117,8 +137,22 @@ export function NewAdmin() {
 					<NavItem icon={FiHome} label="대시보드" to={`${ROUTE_NAME}/dashboard`} isExpanded={isExpanded} />
 					<NavItem icon={FiUsers} label="스텔라 관리" to={`${ROUTE_NAME}/stellar`} isExpanded={isExpanded} />
 					<NavItem icon={FiYoutube} label="영상 관리" to={`${ROUTE_NAME}/video`} isExpanded={isExpanded} />
-					<NavItem icon={FiBook} label="노래책 관리" to={`${ROUTE_NAME}/songbook`} isExpanded={isExpanded} />
+					<VStack spacing={1} align="stretch">
+						<NavItem icon={FiBook} label="노래책 관리" to={`${ROUTE_NAME}/songbook`} isExpanded={isExpanded} />
+						<VStack spacing={1} align="stretch" pl={isExpanded ? 6 : 0}>
+							<NavItem
+								p={2}
+								icon={FiMusic}
+								label="가창 기록"
+								to={`${ROUTE_NAME}/song-history`}
+								isExpanded={isExpanded}
+							/>
+						</VStack>
+					</VStack>
 					<NavItem icon={FiSettings} label="설정" to={`${ROUTE_NAME}/setting`} isExpanded={isExpanded} />
+				</VStack>
+				<VStack spacing={2} align="stretch" mt={"auto"} mb={2} px={isExpanded ? 4 : 2} justifySelf={"flex-end"}>
+					<NavItem icon={FiSettings} label="구버전 관리자" to={`/old-admin`} isExpanded={isExpanded} />
 				</VStack>
 			</Flex>
 

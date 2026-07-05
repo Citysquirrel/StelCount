@@ -204,7 +204,7 @@ export function Admin() {
 	};
 
 	const handleEdit = (id: number) => () => {
-		nav(`/admin/${id}`);
+		nav(`/old-admin/${id}`);
 	};
 
 	const handleDelete = (id: number) => () => {
@@ -628,7 +628,7 @@ export function AdminEdit() {
 				if (res) {
 					if (res.status === 200) {
 						if (!res.data) {
-							nav("/admin");
+							nav("/old-admin");
 						}
 						const {
 							name,
@@ -852,7 +852,7 @@ export function AdminEdit() {
 							flex={1}
 							type="button"
 							onClick={() => {
-								nav("/admin");
+								nav("/old-admin");
 							}}
 						>
 							이전으로

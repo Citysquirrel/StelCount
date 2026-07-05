@@ -42,6 +42,9 @@ import {
 	NumberIncrementStepper,
 	NumberDecrementStepper,
 	useMediaQuery,
+	InputGroup,
+	InputRightElement,
+	CloseButton,
 } from "@chakra-ui/react";
 import { FiRefreshCw, FiSave, FiTrash2, FiEyeOff, FiCheckCircle, FiPlus, FiX } from "react-icons/fi";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -51,6 +54,7 @@ import { SiGooglesheets } from "react-icons/si";
 import { isEqual, omit } from "lodash";
 import { MdAdd, MdClose, MdOpenInNew, MdSearch } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
+import { LuClipboardPaste } from "react-icons/lu";
 import { formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
 import useColor from "../../lib/hooks/useColor";
 import { LiteralUnion } from "@/lib/types";
@@ -60,6 +64,7 @@ export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
 export type ActionStatus = "ACTIVE" | "DELETED" | "DISABLED";
 export type Cheese = LiteralUnion<"잘몰라" | "일반곡" | "피토곡" | "우엑곡" | "숙제곡">;
 export type Genre = LiteralUnion<"K-POP" | "J-POP" | "POP">;
+type SearchMode = "default" | "copy";
 
 export interface SongData {
 	id?: number;
@@ -155,6 +160,7 @@ export function Songbook() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSyncing, setIsSyncing] = useState(false);
 	const [isDBSaving, setIsDBSaving] = useState(false);
+	const [searchMode, setSearchMode] = useState<SearchMode>("default");
 
 	// 검색 및 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
@@ -167,6 +173,9 @@ export function Songbook() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingSong, setEditingSong] = useState<SongData | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+	// 모달 (시트 붙여넣기 에디터) 상태
+	const { isOpen: isPasteOpen, onOpen: onPasteOpen, onClose: onPasteClose } = useDisclosure();
 
 	// 훅
 	const toast = useToast();
@@ -194,7 +203,6 @@ export function Songbook() {
 					? String(Number(rawSyncValue.split("-")[1]) + 6)
 					: "";
 
-			//TODO: searchBase searchChosung searchJamo 설정
 			return {
 				...restSong,
 				columnData,
@@ -439,6 +447,9 @@ export function Songbook() {
 		[songs], //TODO: 이부분은 고민해볼 필요가 있음
 	);
 
+	// 시트 붙여넣기 핸들러
+	const handleSheetFilterModal = () => {};
+
 	// 시트 동기화
 	const handleSyncSheet = async () => {
 		setIsSyncing(true);
@@ -612,18 +623,6 @@ export function Songbook() {
 			return { ...p, synonyms: newSynonyms };
 		});
 
-	// const handleAddHistory = () =>
-	// 	setEditingSong((p) =>
-	// 		p
-	// 			? {
-	// 					...p,
-	// 					song_histories: [...p.song_histories, { sungAt: "", youtubeVideoId: "", start: 0, end: 0, memo: "" }],
-	// 				}
-	// 			: null,
-	// 	);
-	// const handleRemoveHistory = (idx: number) =>
-	// 	setEditingSong((p) => (p ? { ...p, song_histories: p.song_histories.filter((_, i) => i !== idx) } : null));
-
 	const handleCheckboxChange = (value, type: "genre" | "status") => {
 		if (type === "genre")
 			setFilterGenre((prev) => (prev.includes(value) ? prev.filter((g) => g !== value) : [...prev, value]));
@@ -683,20 +682,35 @@ export function Songbook() {
 				shadow="sm"
 				border={`1px solid ${borderColor}`}
 			>
-				<Input
-					placeholder="제목 또는 가수 부분 검색"
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-					w="300px"
-				/>
+				<InputGroup w="200px" size="sm">
+					<Input
+						placeholder="제목 또는 가수 부분 검색"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						onKeyDown={(e) => {
+							e.key === "Escape" && setSearchQuery("");
+						}}
+					/>
+					{searchQuery.length !== 0 ? (
+						<InputRightElement>
+							<CloseButton
+								size="sm"
+								onClick={() => {
+									setSearchQuery("");
+								}}
+							/>
+						</InputRightElement>
+					) : null}
+				</InputGroup>
 				<Menu closeOnSelect={false}>
-					<MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="150px">
+					<MenuButton as={Button} size="sm" rightIcon={<IoIosArrowDown />} w="120px">
 						{filterGenre.length > 0 ? `${filterGenre.length}개 선택됨` : "모든 장르"}
 					</MenuButton>
-					<MenuList minW="150px">
+					<MenuList minW="120px">
 						{genres.map((genre) => (
 							<MenuItem key={genre} as="label">
 								<Checkbox
+									size="sm"
 									isChecked={filterGenre.includes(genre)}
 									onChange={() => handleCheckboxChange(genre, "genre")}
 									w="100%"
@@ -708,26 +722,34 @@ export function Songbook() {
 					</MenuList>
 				</Menu>
 				<Select
+					size="sm"
 					placeholder="공식 여부"
 					value={filterOfficial}
 					onChange={(e) => setFilterOfficial(e.target.value)}
-					w="150px"
+					w="120px"
 				>
 					<option value="true">공식 곡만</option>
 					<option value="false">수동 추가 곡만</option>
 				</Select>
-				<Select placeholder="가사 여부" value={filterLyric} onChange={(e) => setFilterLyric(e.target.value)} w="150px">
+				<Select
+					size="sm"
+					placeholder="가사 여부"
+					value={filterLyric}
+					onChange={(e) => setFilterLyric(e.target.value)}
+					w="120px"
+				>
 					<option value="true">가사 있음</option>
 					<option value="false">가사 없음</option>
 				</Select>
 				<Menu closeOnSelect={false}>
-					<MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="150px">
+					<MenuButton size="sm" as={Button} rightIcon={<IoIosArrowDown />} w="120px">
 						{filterStatus.length > 0 ? `${filterStatus.length}개 선택됨` : "모든 상태"}
 					</MenuButton>
 					<MenuList minW="150px">
 						{statuses.map((status) => (
 							<MenuItem key={status} as="label">
 								<Checkbox
+									size="sm"
 									isChecked={filterStatus.includes(status)}
 									onChange={() => handleCheckboxChange(status, "status")}
 									w="100%"
@@ -738,8 +760,11 @@ export function Songbook() {
 						))}
 					</MenuList>
 				</Menu>
-
+				<Button size="sm" leftIcon={<LuClipboardPaste />} colorScheme="teal" onClick={handleSheetFilterModal}>
+					{!isMobile && "시트 붙여넣기"}
+				</Button>
 				<Button
+					size="sm"
 					colorScheme="orange"
 					onClick={() => {
 						setSearchQuery("");
@@ -747,13 +772,15 @@ export function Songbook() {
 						setFilterOfficial("");
 						setFilterStatus([]);
 						setFilterLyric("");
+						setSearchMode("default");
 					}}
 				>
-					초기화
+					필터 리셋
 				</Button>
 
 				<Flex flex={1} justify="flex-end" gap={2}>
 					<Button
+						size="sm"
 						leftIcon={<FiRefreshCw />}
 						colorScheme="teal"
 						variant="outline"
@@ -763,10 +790,11 @@ export function Songbook() {
 					>
 						{!isMobile && "시트 동기화"}
 					</Button>
-					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewSong}>
+					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewSong}>
 						{!isMobile && "직접 추가"}
 					</Button>
 					<Button
+						size="sm"
 						leftIcon={<FiSave />}
 						colorScheme="blue"
 						onClick={handleSaveDB}

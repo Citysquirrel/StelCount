@@ -265,10 +265,10 @@ export function Stellar() {
 				border={`1px solid ${borderColor}`}
 			>
 				<Flex flex={1} justify="flex-end" gap={2}>
-					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewStellar}>
+					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewStellar}>
 						추가
 					</Button>
-					<Button leftIcon={<FiFolder />} colorScheme="gray" onClick={handleGroupSetting} variant={"outline"}>
+					<Button size="sm" leftIcon={<FiFolder />} colorScheme="gray" onClick={handleGroupSetting} variant={"outline"}>
 						그룹 관리
 					</Button>
 				</Flex>

@@ -37,7 +37,7 @@ export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags 
 			{/* 스텔라 필터 */}
 			<Popover placement="bottom-start">
 				<PopoverTrigger>
-					<Button variant="outline" size="md">
+					<Button variant="outline" size="sm">
 						스텔라 필터
 						<Text as={"span"} fontSize="xs" color="gray" fontWeight={"400"} display="inline-block">
 							{selectedStellar.length > 0 ? `(${selectedStellar.length} 항목 선택됨)` : null}
@@ -82,7 +82,7 @@ export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags 
 			{/* 태그 필터 */}
 			<Popover placement="bottom-start">
 				<PopoverTrigger>
-					<Button variant="outline" size="md">
+					<Button variant="outline" size="sm">
 						태그 필터
 						<Text as={"span"} fontSize="xs" color="gray" fontWeight={"400"} display="inline-block">
 							{selectedTag.length > 0 ? `(${selectedTag.length} 항목 선택됨)` : null}

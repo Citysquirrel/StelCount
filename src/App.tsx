@@ -86,16 +86,7 @@ function App() {
 							aria-label="multiview"
 						/>
 					</Tooltip>
-					{/* <Tooltip label="사이트 설명">
-					<IconButton
-						fontSize="1.125rem"
-						isRound
-						icon={<MdQuestionMark />}
-						colorScheme={colorMode === "light" ? "blackAlpha" : undefined}
-						onClick={nav("/about")}
-						aria-label="about"
-					/>
-				</Tooltip> */}
+
 					{isAdmin ? (
 						<>
 							<Tooltip label="관리자">
@@ -110,7 +101,7 @@ function App() {
 									aria-label="admin"
 								/>
 							</Tooltip>
-							<Tooltip label="관리자">
+							{/* <Tooltip label="관리자">
 								<IconButton
 									fontSize="1.125rem"
 									isRound
@@ -121,7 +112,7 @@ function App() {
 									}}
 									aria-label="admin"
 								/>
-							</Tooltip>
+							</Tooltip> */}
 						</>
 					) : null}
 					<Divider orientation="vertical" height="32px" margin="4px" />

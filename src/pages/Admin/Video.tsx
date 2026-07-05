@@ -313,7 +313,7 @@ export function Video() {
 				</Text>
 			</Box>
 			<Flex gap={2}>
-				<InputGroup w="240px">
+				<InputGroup w="240px" size="sm">
 					<Input
 						placeholder="제목을 검색하세요.."
 						value={searchQuery}
@@ -326,7 +326,7 @@ export function Video() {
 					/>
 					{searchQuery.length !== 0 ? (
 						<InputRightElement>
-							<CloseButton onClick={() => setSearchQuery("")} />
+							<CloseButton size="sm" onClick={() => setSearchQuery("")} />
 						</InputRightElement>
 					) : null}
 				</InputGroup>
@@ -347,10 +347,10 @@ export function Video() {
 				border={`1px solid ${borderColor}`}
 			>
 				<Flex flex={1} justify="flex-end" gap={2}>
-					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
+					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
 						추가
 					</Button>
-					<Button leftIcon={<FiFolder />} colorScheme="gray" onClick={handleTagSetting} variant={"outline"}>
+					<Button size="sm" leftIcon={<FiFolder />} colorScheme="gray" onClick={handleTagSetting} variant={"outline"}>
 						태그 관리
 					</Button>
 				</Flex>
