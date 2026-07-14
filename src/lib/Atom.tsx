@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 import { createAtomKey } from "./functions/createAtomKey";
-import { LiteralUnion, YoutubeMusicData } from "./types";
+import { LiteralUnion, StellarV2State, YoutubeMusicData } from "./types";
 
 export const headerOffsetState = atom({
 	key: createAtomKey("headerOffset"),
@@ -28,6 +28,9 @@ export interface VideoDataDetail {
 	uuid: string;
 	name: string;
 	count: number | string;
+	/**
+	 * @deprecated
+	 */
 	thumbnail: string;
 	url: string;
 }
@@ -84,6 +87,11 @@ export type FetchInfoState = {
 
 export const stellarState = atom<StellarState[]>({
 	key: createAtomKey("stellar"),
+	default: [],
+});
+
+export const stellarV2State = atom<StellarV2State[]>({
+	key: createAtomKey("stellarv2"),
 	default: [],
 });
 

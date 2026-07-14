@@ -29,6 +29,7 @@ import {
 	liveStatusState,
 	nowState,
 	stellarState,
+	stellarV2State,
 } from "../lib/Atom";
 import { LiteralUnion, UserSettingStorage, YoutubeMusicData } from "../lib/types";
 import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
@@ -57,10 +58,10 @@ import { useResponsive } from "../lib/hooks/useResponsive";
 import { useLocalStorage } from "usehooks-ts";
 import { Carousel } from "../components/Carousel";
 
-//TODO: 메인화면에서 응답완료 메시지(Toast)가 두 번 중복되어 팝업되는 현상 원인 파악 필요
 export default function Home() {
 	useBackgroundColor("white");
 	const [stellar] = useRecoilState(stellarState);
+	const [stellarV2] = useRecoilState(stellarV2State);
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [isLiveFetching] = useRecoilState(isLiveFetchingState);
@@ -157,12 +158,8 @@ export default function Home() {
 				);
 			obj.mostViews = videos
 				.sort((a, b) => {
-					const A =
-						parseInt(a.viewCount || "0") +
-						a.statistics.reduce((a, c) => (a + c.type === "viewCount" ? parseInt(c.value) : 0), 0);
-					const B =
-						parseInt(b.viewCount || "0") +
-						b.statistics.reduce((a, c) => (a + c.type === "viewCount" ? parseInt(c.value) : 0), 0);
+					const A = parseInt(a.viewCount || "0") + a.statistics.reduce((a, c) => a + parseInt(c.value), 0);
+					const B = parseInt(b.viewCount || "0") + b.statistics.reduce((a, c) => a + parseInt(c.value), 0);
 					return B - A;
 				})
 				.slice(0, 30);

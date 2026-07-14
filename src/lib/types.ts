@@ -8,6 +8,9 @@ export type LiteralUnion<T extends U, U = string> = T | (U & {});
 export interface HomeVideoData {
 	id: string;
 	title: string;
+	/**
+	 * @deprecated
+	 */
 	thumbnailUrl: string;
 	videoUrl: string;
 	viewCount: number;
@@ -50,7 +53,13 @@ export interface YoutubeMusicData {
 	title: string;
 	titleAlias?: string;
 	channelId: string;
+	/**
+	 * @deprecated
+	 */
 	thumbnail: string;
+	/**
+	 * @deprecated
+	 */
 	thumbnails: string;
 	videoId: string;
 	viewCount?: string;
@@ -151,3 +160,83 @@ export interface MultiViewDataData {
 }
 
 export type DateInput = Date | string | number;
+
+export interface StellarV2Info {
+	n: string;
+	gp: number;
+	uid: string;
+	cc: string;
+	ls: boolean | undefined;
+	pi: string;
+	czi: string;
+	yi: string;
+	ycu: string;
+	jl: boolean | null;
+}
+export interface StellarV2State extends StellarV2Info {
+	cfc: string;
+	ysc: string;
+	ym: YoutubeMusicDataV2[];
+	db?: string | null | undefined;
+	gd?: string | null | undefined;
+	oi: string | null;
+	plm: string | null;
+}
+
+export interface YoutubeMusicDataV2 {
+	t?: LiteralUnion<"music" | "main" | "replay">; // "music", "main", "replay"
+	tl: string;
+	ta?: string;
+	ci: string;
+	/**
+	 * @deprecated
+	 */
+	th: string;
+	/**
+	 * @deprecated
+	 */
+	ths: string;
+	vi: string;
+	vc?: string;
+	lc?: string;
+	cua?: string;
+	oi?: string;
+	pa?: string;
+	lbc?: LiteralUnion<"live" | "upcoming" | "none">;
+	sst?: string;
+	mp: number;
+	mpm: number;
+	ia?: boolean;
+	tg?: TagV2[];
+	dt: VideoDetailV2[];
+	st: Statistics[];
+}
+
+export interface TagV2 extends DefaultDateFieldsV2 {
+	i?: number;
+	n: string;
+	cc?: string;
+	icv: boolean;
+}
+
+export interface VideoDetailV2 extends DefaultDateFieldsV2 {
+	t: string;
+	vi: string;
+	vc: string;
+	lc: string;
+	cua: string;
+	mp: number;
+	mpm: number;
+	st: Statistics[];
+}
+
+export interface StatisticsV2 extends Omit<DefaultDateFieldsV2, "ca"> {
+	u: string;
+	v: string;
+	at: string;
+}
+
+export interface DefaultDateFieldsV2 {
+	ca?: string;
+	ua?: string;
+}

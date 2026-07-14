@@ -1,3 +1,5 @@
+import { Thumbnails } from "../types";
+
 export interface ParamsObject {
 	part: (
 		| "auditDetails"
@@ -39,3 +41,19 @@ export function objectToUrlParams(object: object) {
 	});
 	return params;
 }
+
+export const generateThumbnails = (videoId: string): Thumbnails => {
+	const baseUrl = `https://i.ytimg.com/vi/${videoId}`;
+
+	return {
+		default: { url: `${baseUrl}/default.jpg`, width: 120, height: 90 },
+		medium: { url: `${baseUrl}/mqdefault.jpg`, width: 320, height: 180 },
+		high: { url: `${baseUrl}/hqdefault.jpg`, width: 480, height: 360 },
+		standard: { url: `${baseUrl}/sddefault.jpg`, width: 640, height: 480 },
+		maxres: { url: `${baseUrl}/maxresdefault.jpg`, width: 1280, height: 720 },
+	};
+};
+
+export const getStandardThumbnail = (videoId: string) => {
+	return `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`;
+};

@@ -5,7 +5,9 @@ import {
 	isLoadingState,
 	liveStatusState,
 	nowState,
+	StellarState,
 	stellarState,
+	stellarV2State,
 } from "../lib/Atom";
 import {
 	Avatar,
@@ -60,6 +62,7 @@ import isMobile from "is-mobile";
 import { Spacing } from "../components/Spacing";
 import { FaGraduationCap } from "react-icons/fa6";
 import { SiYoutubemusic } from "react-icons/si";
+import { restoreKeys } from "@/lib/keymap";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -87,7 +90,8 @@ export function Counter() {
 	const gridRef = useRef<HTMLDivElement>(null);
 	const { windowWidth } = useResponsive();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
-	const [data] = useRecoilState(stellarState);
+	// const [data] = useRecoilState(stellarState);
+	const [data] = useRecoilState(stellarV2State);
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
@@ -105,7 +109,7 @@ export function Counter() {
 	const [isFuncLoading, setIsFuncLoading] = useState(true);
 	const [isLegacyView, setIsLegacyView] = useState(true);
 
-	const currentStellar = data.find((s) => s.uuid === currentUuid);
+	const currentStellar: StellarState | undefined = restoreKeys(data.find((s) => s.uid === currentUuid));
 	const currentYoutubeData = modYoutubeData(
 		currentStellar?.youtubeId || "",
 		currentStellar?.youtubeSubscriberCount || "",
@@ -120,12 +124,12 @@ export function Counter() {
 	const { backgroundColor } = useBackgroundColor(!currentColorCode ? "white" : `${currentColorCode}aa`);
 	const isUnder720 = windowWidth < 720;
 
-	const stellive = data.filter((s) => s.group === 0 && !s.justLive);
-	const mystic = data.filter((s) => s.group === 1 && !s.justLive);
-	const universe = data.filter((s) => s.group === 2 && !s.justLive);
-	const cliche = data.filter((s) => s.group === 3 && !s.justLive);
-	const everys = data.filter((s) => s.group === 4 && !s.justLive);
-	const unclassified = data.filter((s) => !s.group && s.group !== 0 && !s.justLive);
+	const stellive = data.filter((s) => s.gp === 0 && !s.jl);
+	const mystic = data.filter((s) => s.gp === 1 && !s.jl);
+	const universe = data.filter((s) => s.gp === 2 && !s.jl);
+	const cliche = data.filter((s) => s.gp === 3 && !s.jl);
+	const everys = data.filter((s) => s.gp === 4 && !s.jl);
+	const unclassified = data.filter((s) => !s.gp && s.gp !== 0 && !s.jl);
 	const total = [stellive, everys, universe, cliche, mystic, unclassified];
 
 	const gridWidth = gridRef.current?.clientWidth || 0;
@@ -223,7 +227,7 @@ export function Counter() {
 			if (userSetting.homeStellar) {
 				setCurrentUuid(userSetting.homeStellar);
 			} else {
-				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
+				if (data.length > 0) setCurrentUuid(stellive[0].uid);
 			}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data]);
@@ -231,9 +235,8 @@ export function Counter() {
 	const musics = useMemo(
 		() =>
 			currentMusic
-				?.filter((m) => m.type === "music")
-				.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
-				.filter(tagFilterFunc(filter.tag)) || [],
+				?.filter(tagFilterFunc(filter.tag))
+				.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]])) || [],
 		[currentMusic, filter.tag, sort],
 	);
 
@@ -280,18 +283,17 @@ export function Counter() {
 										>
 											{isUnder720 || isMobile()
 												? idx
-												: typeof s[0].group === "number"
-													? stellarGroupName[s[0].group][1]
+												: typeof s[0].gp === "number"
+													? stellarGroupName[s[0].gp][1]
 													: "Unclassified"}
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
-										const graduated =
-											stellar.graduation && new Date(stellar.graduation.slice(0, -1)).getTime() < now.getTime();
+										const graduated = stellar.gd && new Date(stellar.gd).getTime() < now.getTime();
 										return (
 											<Tooltip
-												key={stellar.uuid}
-												label={isMobile() ? undefined : isUnder720 ? stellar.name : undefined}
+												key={stellar.uid}
+												label={isMobile() ? undefined : isUnder720 ? stellar.n : undefined}
 												placement="right"
 												hasArrow
 											>
@@ -301,14 +303,14 @@ export function Counter() {
 													leftIcon={
 														<Image
 															boxSize="24px"
-															src={stellar.name === "스텔라이브" ? stellarSymbols.스텔라이브 : stellar.profileImage}
+															src={stellar.n === "스텔라이브" ? stellarSymbols.스텔라이브 : stellar.pi}
 															borderRadius={"full"}
 														/>
 													}
-													colorScheme={currentUuid === stellar.uuid ? "" : graduated ? "green" : "blue"}
+													colorScheme={currentUuid === stellar.uid ? "" : graduated ? "green" : "blue"}
 													backgroundColor="ButtonFace"
-													onClick={handleClickStellar(stellar.uuid)}
-													cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
+													onClick={handleClickStellar(stellar.uid)}
+													cursor={currentUuid === stellar.uid ? "auto" : "pointer"}
 													iconSpacing={isUnder720 || isMobile() ? 0 : undefined}
 													boxSize={isMobile() ? "40px" : undefined}
 												>
@@ -318,7 +320,7 @@ export function Counter() {
 														</Text>
 													) : null}
 
-													{isUnder720 || isMobile() ? null : <Text>{stellar.name}</Text>}
+													{isUnder720 || isMobile() ? null : <Text>{stellar.n}</Text>}
 												</Button>
 											</Tooltip>
 										);
@@ -938,7 +940,7 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 										<ColorText as="span" value="green.500">
 											{
 												elapsedTimeTextForCard(
-													new Date(c.statistics.at(-1)?.createdAt || MIN_DATE),
+													new Date(c.statistics.at(-1)?.annie_at || MIN_DATE),
 													new Date(getLocale()),
 												)[1]
 											}
@@ -986,7 +988,7 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 					) : (
 						<>
 							<ColorText as="span" value="green.500">
-								{elapsedTimeTextForCard(new Date(statistics.at(-1)?.createdAt || MIN_DATE), new Date(getLocale()))[1]}
+								{elapsedTimeTextForCard(new Date(statistics.at(-1)?.annie_at || MIN_DATE), new Date(getLocale()))[1]}
 							</ColorText>
 							&nbsp;
 							<Text as="span" fontSize="0.75rem">
