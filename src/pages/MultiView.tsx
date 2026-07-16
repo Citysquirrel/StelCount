@@ -1,4 +1,7 @@
+import { getChosung, normalizeKeyword } from "@/lib/functions/search";
 import {
+	Avatar,
+	AvatarBadge,
 	Box,
 	Button,
 	ButtonGroup,
@@ -9,41 +12,41 @@ import {
 	FormLabel,
 	HStack,
 	IconButton,
+	IconButtonProps,
+	Input,
+	InputGroup,
 	// eslint-disable-next-line no-restricted-imports
 	Link,
 	Menu,
 	MenuButton,
 	MenuItem,
 	MenuList,
+	NumberDecrementStepper,
+	NumberIncrementStepper,
 	NumberInput,
 	NumberInputField,
 	NumberInputStepper,
-	NumberIncrementStepper,
-	NumberDecrementStepper,
-	Stack,
-	Switch,
-	Text,
-	useDisclosure,
+	Radio,
+	RadioGroup,
 	Slider,
-	SliderTrack,
 	SliderFilledTrack,
 	SliderThumb,
-	Tooltip,
-	InputGroup,
-	Input,
-	Avatar,
-	AvatarBadge,
-	IconButtonProps,
-	StackProps,
-	RadioGroup,
-	Radio,
+	SliderTrack,
+	Stack,
 	StackDivider,
+	StackProps,
+	Switch,
+	Text,
+	Tooltip,
 	chakra,
+	useDisclosure,
 } from "@chakra-ui/react";
+import Fuse from "fuse.js";
+import Inko from "inko";
 import { Dispatch, Fragment, SetStateAction, createRef, useCallback, useEffect, useRef, useState } from "react";
-import { naver } from "../lib/functions/platforms";
-import { useMultiView } from "../lib/hooks/useMultiView";
-import { CustomStreamsForUS, LiteralUnion, MultiViewData, UserSettingStorage } from "../lib/types";
+import { useHotkeys } from "react-hotkeys-hook";
+import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
+import { IoHome, IoList, IoPeople, IoReload, IoSettings } from "react-icons/io5";
 import {
 	MdClear,
 	MdKeyboardDoubleArrowRight,
@@ -53,41 +56,37 @@ import {
 	MdStar,
 	MdStarOutline,
 } from "react-icons/md";
-import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
 import { TbForbid, TbResize } from "react-icons/tb";
-import { useResponsive } from "../lib/hooks/useResponsive";
-import { Image, ImageV2 } from "../components/Image";
-import { IoHome, IoList, IoPeople, IoReload, IoSettings } from "react-icons/io5";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useRecoilState } from "recoil";
+import { useLocalStorage } from "usehooks-ts";
+import { v4 } from "uuid";
+import { Image, ImageV2 } from "../components/Image";
+import { LoadingCircle } from "../components/Loading";
+import { Spacing } from "../components/Spacing";
 import { nowState } from "../lib/Atom";
 import {
-	COLOR_CHZZK,
-	PRIVACY_POLICY_URL,
-	CHROME_EXTENSION_URL,
-	CHROME_EXTENSION_ID,
 	CHROME_EXTENSION_GITHUB_URL,
-	USER_SETTING_STORAGE,
+	CHROME_EXTENSION_ID,
+	CHROME_EXTENSION_URL,
+	COLOR_CHZZK,
 	FIREFOX_EXTENSION_URL,
+	PRIVACY_POLICY_URL,
+	USER_SETTING_STORAGE,
 } from "../lib/constant";
-import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
-import { Spacing } from "../components/Spacing";
-import { useLocalStorage } from "usehooks-ts";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { getBrowserInfo, lightenColor } from "../lib/functions/etc";
-import { LoadingCircle } from "../components/Loading";
-import { fetchServer } from "../lib/functions/fetch";
 import { createComponentMap } from "../lib/functions/createComponent";
-import { v4 } from "uuid";
+import { getBrowserInfo, lightenColor } from "../lib/functions/etc";
+import { fetchServer } from "../lib/functions/fetch";
+import { naver } from "../lib/functions/platforms";
 import { useAuth } from "../lib/hooks/useAuth";
-import { useHotkeys } from "react-hotkeys-hook";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
-import * as Hangul from "hangul-js";
-import { UserSettingModal } from "./MultiView/UserSetting";
+import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
+import { useMultiView } from "../lib/hooks/useMultiView";
+import { useResponsive } from "../lib/hooks/useResponsive";
+import { CustomStreamsForUS, LiteralUnion, MultiViewData, UserSettingStorage } from "../lib/types";
 import { ExtensionDataModal } from "./MultiView/ExtensionData";
 import { ExtensionSyncEditor } from "./MultiView/ExtensionSyncEditor";
-import { getChosung, normalizeKeyword } from "@/lib/functions/search";
-import Fuse from "fuse.js";
-import Inko from "inko";
+import { UserSettingModal } from "./MultiView/UserSetting";
 
 const inko = new Inko();
 
@@ -871,20 +870,27 @@ function SideMenu({
 		const value = e.target.value;
 		setSearchInputValue(value);
 
-		const temp = value
+		const normalizedSearchQuery = normalizeKeyword(value);
+
+		const temp = normalizedSearchQuery
 			? new Fuse(
-					customStreams.map((stream) => ({
-						...stream,
-						searchTitle: normalizeKeyword(stream.liveTitle || ""),
-						searchName: normalizeKeyword(stream.channelName || ""),
-						searchCategory: normalizeKeyword(stream.liveCategoryValue || ""),
-						searchTitleCho: getChosung(stream.liveTitle || ""),
-						searchNameCho: getChosung(stream.channelName || ""),
-						searchCategoryCho: getChosung(stream.liveCategoryValue || ""),
-						searchTitleEng: inko.ko2en(stream.liveTitle || ""),
-						searchNameEng: inko.ko2en(stream.channelName || ""),
-						searchCategoryEng: inko.ko2en(stream.liveCategoryValue || ""),
-					})),
+					customStreams.map((stream) => {
+						const normalizedTitle = normalizeKeyword(stream.liveTitle || "");
+						const normalizedName = normalizeKeyword(stream.channelName || "");
+						const normalizedCategory = normalizeKeyword(stream.liveCategoryValue || "");
+						return {
+							...stream,
+							searchTitle: normalizedTitle,
+							searchName: normalizedName,
+							searchCategory: normalizedCategory,
+							searchTitleCho: getChosung(normalizedTitle),
+							searchNameCho: getChosung(normalizedName),
+							searchCategoryCho: getChosung(normalizedCategory),
+							searchTitleEng: inko.ko2en(normalizedTitle),
+							searchNameEng: inko.ko2en(normalizedName),
+							searchCategoryEng: inko.ko2en(normalizedCategory),
+						};
+					}),
 					{
 						keys: [
 							"searchTitle",
@@ -901,7 +907,7 @@ function SideMenu({
 						ignoreLocation: true,
 					},
 				)
-					.search(value)
+					.search(normalizedSearchQuery)
 					.map((s) => s.item)
 			: customStreams;
 
@@ -1073,6 +1079,7 @@ function SideMenu({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const getCurrentStreams = (currentMode: number): any[] => {
 		switch (currentMode) {
 			case 0:
@@ -1562,14 +1569,11 @@ function MenuCard({
 	const {
 		chzzkId,
 		uuid,
-		categoryRange,
 		colorCode,
 		channelName,
-		channelNameRange,
 		channelImageUrl,
 		liveCategoryValue,
 		liveTitle,
-		liveTitleRange,
 		liveImageUrl,
 		openLive,
 		openDate,
@@ -2005,31 +2009,6 @@ const highlight = (text: string, keyword: string) => {
 		</>
 	);
 };
-
-/**
- * @deprecated
- */
-function applySearchHighlight(text: string | null | undefined, ranges: number[][] | undefined): JSX.Element {
-	if (!text) return <></>;
-	if (!ranges || ranges.length === 0) return <>{text}</>;
-	const elements: JSX.Element[] = [];
-	let lastIndex = 0;
-
-	ranges.forEach(([start, end], idx) => {
-		elements.push(<span key={`${idx}-normal`}>{text.slice(lastIndex, start)}</span>);
-		// 하이라이트된 텍스트
-		elements.push(
-			<Box as="span" key={`${idx}-highlight`} backgroundColor="yellow.600">
-				{text.slice(start, end + 1)}
-			</Box>,
-		);
-		lastIndex = end + 1;
-	});
-
-	elements.push(<span key="remaining">{text.slice(lastIndex)}</span>);
-
-	return <>{elements}</>;
-}
 
 function calculateColumnCount(isInnerChatOpen: boolean, chatWidth: number) {
 	const viewportWidth = window.innerWidth;

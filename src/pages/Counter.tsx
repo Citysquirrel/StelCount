@@ -1,3 +1,4 @@
+import { parseV2Date, parseV2Time } from "@/lib/functions/date";
 import {
 	Avatar,
 	AvatarBadge,
@@ -46,7 +47,7 @@ import {
 	nowState,
 	stellarV2State,
 } from "../lib/Atom";
-import { MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
+import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
 import {
 	elapsedTimeTextForCard,
 	getLocale,
@@ -67,7 +68,6 @@ import {
 	VideoDetailV2,
 	YoutubeMusicDataV2,
 } from "../lib/types";
-import { parseV2Date, parseV2Time } from "@/lib/functions/date";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
