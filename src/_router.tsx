@@ -1,25 +1,25 @@
 /* eslint-disable react-refresh/only-export-components */
+import HomeV2 from "@page/v2/Home";
+import { lazy } from "react";
 import { Navigate, RouteObject, createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import { OAuth } from "./pages/OAuth";
-import { Login } from "./pages/Login";
-import { NotExist } from "./pages/NotExist";
-import { lazy } from "react";
-import Home from "./pages/Home";
-import { Counter } from "./pages/Counter";
-import { ServerErrorPage } from "./pages/ServerErrorPage";
-import { MultiView } from "./pages/MultiView";
-import { Dashboard } from "./pages/Admin/Dashboard";
-import { Stellar } from "./pages/Admin/Stellar";
-import { Songbook } from "./pages/Admin/Songbook";
-import { Setting } from "./pages/Admin/Setting";
-import { Video } from "./pages/Admin/Video";
 import AppV2 from "./AppV2";
-import HomeV2 from "@page/v2/Home";
+import { Counter } from "./pages/Counter";
+import Home from "./pages/Home";
+import { Login } from "./pages/Login";
+import { MultiView } from "./pages/MultiView";
+import { NotExist } from "./pages/NotExist";
+import { OAuth } from "./pages/OAuth";
+import { ServerErrorPage } from "./pages/ServerErrorPage";
 
 const Admin = lazy(() => import("./pages/Admin").then((m) => ({ default: m.Admin })));
 const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminEdit })));
 const NewAdmin = lazy(() => import("./pages/Admin/Main").then((m) => ({ default: m.NewAdmin })));
+const Dashboard = lazy(() => import("./pages/Admin/Dashboard").then((m) => ({ default: m.Dashboard })));
+const Stellar = lazy(() => import("./pages/Admin/Stellar").then((m) => ({ default: m.Stellar })));
+const Video = lazy(() => import("./pages/Admin/Video").then((m) => ({ default: m.Video })));
+const Songbook = lazy(() => import("./pages/Admin/Songbook").then((m) => ({ default: m.Songbook })));
+const Setting = lazy(() => import("./pages/Admin/Setting").then((m) => ({ default: m.Setting })));
 
 const devRoutes: RouteObject[] = import.meta.env.DEV ? [] : [];
 
@@ -30,7 +30,6 @@ export const routeObj: RouteObject[] = [
 		errorElement: <ServerErrorPage isErrorComponent />,
 		children: [
 			{ path: "/home", element: <Home /> },
-			// { path: "/about", element: <About /> },
 			{ path: "/counter", element: <Counter /> },
 			{
 				path: "/old-admin",
