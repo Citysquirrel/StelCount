@@ -509,9 +509,7 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 												sx={{ display: "flex", flexDir: "row", gap: "4px" }}
 											>
 												<SiYoutubemusic />
-												<Text fontSize="xs" fontFamily={"Consolas"}>
-													Youtube Music
-												</Text>
+												<Text fontSize="xs">Youtube Music</Text>
 											</Text>
 											{item.dt.length > 0 ? (
 												<>

@@ -6,8 +6,8 @@ const config: ThemeConfig = {
 };
 
 const fonts = {
-	body: `"Spoqa Han Sans Neo", Consolas, Roboto, sans-serif`,
-	heading: `"Spoqa Han Sans Neo", Consolas, Roboto, sans-serif`,
+	body: `"LINE Seed Sans EN", "LINE Seed Sans JP", "LINE Seed Sans KR", -apple-system, BlinkMacSystemFont, sans-serif`,
+	heading: `"LINE Seed Sans EN", "LINE Seed Sans JP", "LINE Seed Sans KR", -apple-system, BlinkMacSystemFont, sans-serif`,
 };
 
 const breakpoints = {

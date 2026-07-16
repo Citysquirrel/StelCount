@@ -34,6 +34,15 @@ html[data-theme*="dark"] .default-text-color {
 
 #root {
 	position: relative;
+	--font-line-seed:
+		"LINE Seed Sans EN", "LINE Seed Sans JP", "LINE Seed Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+}
+
+.font-global {
+	font-family: var(--font-line-seed);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 /* Animation */
@@ -101,9 +110,7 @@ html[data-theme*="dark"] .default-text-color {
 	font-weight: 700;
 	src:
 		local("Spoqa Han Sans Neo Bold"),
-		url("/fonts/SpoqaHanSansNeo-Bold.woff2") format("woff2"),
-		url("/fonts/SpoqaHanSansNeo-Bold.woff") format("woff"),
-		url("/fonts/SpoqaHanSansNeo-Bold.ttf") format("truetype");
+		url("/fonts/SpoqaHanSansNeo-Bold.woff2") format("woff2");
 }
 
 @font-face {
@@ -111,9 +118,7 @@ html[data-theme*="dark"] .default-text-color {
 	font-weight: 500;
 	src:
 		local("Spoqa Han Sans Neo Medium"),
-		url("/fonts/SpoqaHanSansNeo-Medium.woff2") format("woff2"),
-		url("/fonts/SpoqaHanSansNeo-Medium.woff") format("woff"),
-		url("/fonts/SpoqaHanSansNeo-Medium.ttf") format("truetype");
+		url("/fonts/SpoqaHanSansNeo-Medium.woff2") format("woff2");
 }
 
 @font-face {
@@ -121,9 +126,7 @@ html[data-theme*="dark"] .default-text-color {
 	font-weight: 400;
 	src:
 		local("Spoqa Han Sans Neo Regular"),
-		url("/fonts/SpoqaHanSansNeo-Regular.woff2") format("woff2"),
-		url("/fonts/SpoqaHanSansNeo-Regular.woff") format("woff"),
-		url("/fonts/SpoqaHanSansNeo-Regular.ttf") format("truetype");
+		url("/fonts/SpoqaHanSansNeo-Regular.woff2") format("woff2");
 }
 
 @font-face {
@@ -131,9 +134,7 @@ html[data-theme*="dark"] .default-text-color {
 	font-weight: 300;
 	src:
 		local("Spoqa Han Sans Neo Light"),
-		url("/fonts/SpoqaHanSansNeo-Light.woff2") format("woff2"),
-		url("/fonts/SpoqaHanSansNeo-Light.woff") format("woff"),
-		url("/fonts/SpoqaHanSansNeo-Light.ttf") format("truetype");
+		url("/fonts/SpoqaHanSansNeo-Light.woff2") format("woff2");
 }
 
 @font-face {
@@ -141,9 +142,7 @@ html[data-theme*="dark"] .default-text-color {
 	font-weight: 100;
 	src:
 		local("Spoqa Han Sans Neo Thin"),
-		url("/fonts/SpoqaHanSansNeo-Thin.woff2") format("woff2"),
-		url("/fonts/SpoqaHanSansNeo-Thin.woff") format("woff"),
-		url("/fonts/SpoqaHanSansNeo-Thin.ttf") format("truetype");
+		url("/fonts/SpoqaHanSansNeo-Thin.woff2") format("woff2");
 }
 
 @font-face {
@@ -151,9 +150,8 @@ html[data-theme*="dark"] .default-text-color {
 	font-weight: 600;
 	src:
 		local("Consolas"),
-		url("/fonts/Consolas-Bold.woff2") format("woff2"),
-		url("/fonts/Consolas-Bold.woff") format("woff"),
-		url("/fonts/Consolas-Bold.ttf") format("truetype");
+		url("/fonts/Consolas-Bold.woff2") format("woff2");
+	unicode-range: U+0020-00FF;
 }
 
 @font-face {
@@ -161,7 +159,99 @@ html[data-theme*="dark"] .default-text-color {
 	font-weight: 400;
 	src:
 		local("Consolas"),
-		url("/fonts/Consolas.woff2") format("woff2"),
-		url("/fonts/Consolas.woff") format("woff"),
-		url("/fonts/Consolas.ttf") format("truetype");
+		url("/fonts/Consolas.woff2") format("woff2");
+	unicode-range: U+0020-00FF;
+}
+
+/* ==========================================================
+   1. ENGLISH (LINE Seed Sans EN) - 영문 우선순위 1
+========================================================== */
+@font-face {
+	font-family: "LINE Seed Sans EN";
+	src: url("/fonts/LINESeedSans_W_Th.woff2") format("woff2");
+	font-weight: 100;
+	font-display: swap;
+	unicode-range: U+0020-00FF;
+}
+@font-face {
+	font-family: "LINE Seed Sans EN";
+	src: url("/fonts/LINESeedSans_W_Rg.woff2") format("woff2");
+	font-weight: 400;
+	font-display: swap;
+	unicode-range: U+0020-00FF;
+}
+@font-face {
+	font-family: "LINE Seed Sans EN";
+	src: url("/fonts/LINESeedSans_W_Bd.woff2") format("woff2");
+	font-weight: 700;
+	font-display: swap;
+	unicode-range: U+0020-00FF;
+}
+@font-face {
+	font-family: "LINE Seed Sans EN";
+	src: url("/fonts/LINESeedSans_W_XBd.woff2") format("woff2");
+	font-weight: 800;
+	font-display: swap;
+	unicode-range: U+0020-00FF;
+}
+@font-face {
+	font-family: "LINE Seed Sans EN";
+	src: url("/fonts/LINESeedSans_W_He.woff2") format("woff2");
+	font-weight: 900;
+	font-display: swap;
+	unicode-range: U+0020-00FF;
+}
+
+/* ==========================================================
+   2. JAPANESE (LINE Seed Sans JP) - 일문 우선순위 2
+========================================================== */
+@font-face {
+	font-family: "LINE Seed Sans JP";
+	src: url("/fonts/LINESeedJP_OTF_Th.woff2") format("woff2");
+	font-weight: 100;
+	font-display: swap;
+	unicode-range: U+3040-309F, U+30A0-30FF, U+31F0-31FF, U+4E00-9FAF, U+3000-303F;
+}
+@font-face {
+	font-family: "LINE Seed Sans JP";
+	src: url("/fonts/LINESeedJP_OTF_Rg.woff2") format("woff2");
+	font-weight: 400;
+	font-display: swap;
+	unicode-range: U+3040-309F, U+30A0-30FF, U+31F0-31FF, U+4E00-9FAF, U+3000-303F;
+}
+@font-face {
+	font-family: "LINE Seed Sans JP";
+	src: url("/fonts/LINESeedJP_OTF_Bd.woff2") format("woff2");
+	font-weight: 700;
+	font-display: swap;
+	unicode-range: U+3040-309F, U+30A0-30FF, U+31F0-31FF, U+4E00-9FAF, U+3000-303F;
+}
+@font-face {
+	font-family: "LINE Seed Sans JP";
+	src: url("/fonts/LINESeedJP_OTF_Eb.woff2") format("woff2");
+	font-weight: 800;
+	font-display: swap;
+	unicode-range: U+3040-309F, U+30A0-30FF, U+31F0-31FF, U+4E00-9FAF, U+3000-303F;
+}
+
+/* ==========================================================
+   3. KOREAN (LINE Seed Sans KR) - 한글 우선순위 3
+========================================================== */
+@font-face {
+	font-family: "LINE Seed Sans KR";
+	src: url("/fonts/LINESeedKR-Th.woff2") format("woff2");
+	font-weight: 100;
+	font-display: swap;
+}
+@font-face {
+	font-family: "LINE Seed Sans KR";
+	src: url("/fonts/LINESeedKR-Rg.woff2") format("woff2");
+	font-weight: 400;
+	font-display: swap;
+}
+@font-face {
+	font-family: "LINE Seed Sans KR";
+	src: url("/fonts/LINESeedKR-Bd.woff2") format("woff2");
+	font-weight: 700;
+	font-display: swap;
 }

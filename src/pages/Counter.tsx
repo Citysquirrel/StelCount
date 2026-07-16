@@ -67,6 +67,7 @@ import {
 	VideoDetailV2,
 	YoutubeMusicDataV2,
 } from "../lib/types";
+import { parseV2Date, parseV2Time } from "@/lib/functions/date";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -292,7 +293,7 @@ export function Counter() {
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
-										const graduated = stellar.gd && new Date(stellar.gd).getTime() < now.getTime();
+										const graduated = stellar.gd && parseV2Time(stellar.gd) < now.getTime();
 										return (
 											<Tooltip
 												key={stellar.uid}
@@ -603,8 +604,8 @@ function musicSortV2(type: "publishedAt" | "viewCount" | "default", order: "ASC"
 			const B = musicDefaultSortValue(bInt);
 			return order === "ASC" ? A - B : B - A;
 		} else if (type === "publishedAt") {
-			const aDate = a.pa ? new Date(a.pa).getTime() : 0;
-			const bDate = b.pa ? new Date(b.pa).getTime() : 0;
+			const aDate = parseV2Time(a.pa);
+			const bDate = parseV2Time(b.pa);
 			return order === "ASC" ? aDate - bDate : bDate - aDate;
 		} else if (type === "viewCount") {
 			const aCnt = a.vc ? parseInt(a.vc) : 0;
@@ -639,13 +640,13 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 	const isLive = lbc === "live";
 
 	const isUpcoming = lbc === "upcoming";
-	const scheduledStartTimeDate = new Date((sst || 0) * 1000);
+	const scheduledStartTimeDate = parseV2Date(sst);
 	const [remainingDateGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
 	const upcomingCardBg = `linear-gradient(217deg, rgba(93, 57, 255, 0.8), rgba(255,0,0,0) 70.71%),
             linear-gradient(127deg, rgba(209, 57, 255, 0.8), rgba(0,255,0,0) 70.71%),
             linear-gradient(336deg, rgba(155, 142, 255, 0.8), rgba(0,0,255,0) 70.71%)`;
 
-	const publishedDate = new Date((pa || 0) * 1000);
+	const publishedDate = parseV2Date(pa);
 	const [dateGap, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
 	const isPlzInterest = !isUpcoming && Math.floor(dateGap / 86400) <= 14;
 
@@ -912,7 +913,7 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 								) : (
 									<>
 										<ColorText as="span" value="green.500">
-											{elapsedTimeTextForCard(new Date(c.statistics.at(-1)?.at || MIN_DATE), new Date(getLocale()))[1]}
+											{elapsedTimeTextForCard(parseV2Date(c.statistics.at(-1)?.at), new Date(getLocale()))[1]}
 										</ColorText>
 										&nbsp;
 										<Text as="span" fontSize="0.75rem">
@@ -957,7 +958,7 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 					) : (
 						<>
 							<ColorText as="span" value="green.500">
-								{elapsedTimeTextForCard(new Date(statistics.at(-1)?.at || MIN_DATE), new Date(getLocale()))[1]}
+								{elapsedTimeTextForCard(parseV2Date(statistics.at(-1)?.at), new Date(getLocale()))[1]}
 							</ColorText>
 							&nbsp;
 							<Text as="span" fontSize="0.75rem">

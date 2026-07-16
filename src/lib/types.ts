@@ -178,7 +178,7 @@ export interface StellarV2State extends StellarV2Info {
 	ysc: string;
 	ym: YoutubeMusicDataV2[];
 	db?: string | null | undefined;
-	gd?: string | null | undefined;
+	gd?: number | null | undefined;
 	oi: string | null;
 	plm: string | null;
 }
