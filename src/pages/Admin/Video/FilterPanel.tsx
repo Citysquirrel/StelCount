@@ -1,4 +1,4 @@
-import { stellarState } from "@/lib/Atom";
+import { stellarV2State } from "@/lib/Atom";
 import { Tag as TagType } from "@/lib/types";
 import {
 	Avatar,
@@ -26,7 +26,7 @@ interface FilterPanelProps {
 }
 
 export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags }: FilterPanelProps) {
-	const [stellarData] = useRecoilState(stellarState);
+	const [stellarData] = useRecoilState(stellarV2State);
 
 	// 상태
 	const [selectedStellar, setSelectedStellar] = useState<(string | number)[]>([]);
@@ -63,10 +63,10 @@ export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags 
 								>
 									<Stack direction="row" wrap="wrap" spacing={3}>
 										{stellarData.map((s) => (
-											<Fragment key={s.name}>
-												{s.playlistIdForMusic && (
-													<Checkbox size="md" value={s.playlistIdForMusic} cursor="pointer">
-														<Avatar size="sm" src={`${s.profileImage}?type=f60_60_na`} name={s.name} />
+											<Fragment key={s.n}>
+												{s.plm && (
+													<Checkbox size="md" value={s.plm} cursor="pointer">
+														<Avatar size="sm" src={`${s.pi}?type=f60_60_na`} name={s.n} />
 													</Checkbox>
 												)}
 											</Fragment>

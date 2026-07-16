@@ -142,6 +142,9 @@ export function minus9Hs(input?: string | Date) {
 	}
 }
 
+/**
+ * @deprecated
+ */
 export function getThumbnails(thumbnails: string | undefined): Thumbnails {
 	try {
 		if (!thumbnails) return {};

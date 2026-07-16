@@ -135,3 +135,6 @@ export function elapsedTimeText(targetDate: DateInput, referenceDate: DateInput 
 
 	return ""; // 논리상 도달하지 않지만 fallback으로 빈 문자열 반환
 }
+
+export const parseV2Time = (time: number | undefined) => (time || 0) * 1000;
+export const parseV2Date = (date: number | undefined) => new Date(parseV2Time(date));

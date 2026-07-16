@@ -1,3 +1,4 @@
+// 겹받침 딕셔너리
 const doubleConsonantMap: Record<string, string> = {
 	ㄳ: "ㄱㅅ",
 	ㄵ: "ㄴㅈ",
@@ -17,8 +18,6 @@ export const normalizeKeyword = (str: string) => {
 	processed = processed.replace(/[ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ]/g, (match) => doubleConsonantMap[match]);
 	return processed.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-z0-9+\-&]/gi, "");
 };
-
-// 겹받침 딕셔너리
 
 export const getChosung = (str: string) => {
 	if (!str) return "";

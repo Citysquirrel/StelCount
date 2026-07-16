@@ -1421,6 +1421,9 @@ interface VideoAdminData {
 	type: "music";
 	title: string;
 	titleAlias: string;
+	/**
+	 * @deprecated
+	 */
 	thumbnail: string;
 	videoId: string;
 	channelId: string;

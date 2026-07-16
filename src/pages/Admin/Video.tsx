@@ -1,6 +1,6 @@
 import { ImageV2 } from "@/components/Image";
 import { Link } from "@/components/Link";
-import { stellarState } from "@/lib/Atom";
+import { stellarV2State } from "@/lib/Atom";
 import { formatUtcToKst } from "@/lib/functions/date";
 import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
 import { normalizeKeyword } from "@/lib/functions/normalized";
@@ -83,9 +83,9 @@ export interface StellarGroup {
 //TODO: 업로드 날짜를 테이블에 입력
 export function Video() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
-	const [stellarData] = useRecoilState(stellarState);
+	const [stellarData] = useRecoilState(stellarV2State);
 
-	const stellarYoutubeChannelIds = stellarData.map((s) => s.youtubeId.split(",")).flat();
+	const stellarYoutubeChannelIds = stellarData.map((s) => s.yi.split(",")).flat();
 
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
@@ -153,7 +153,7 @@ export function Video() {
 			...currentVideoData,
 			id: videoId,
 			isInheritChannelId: !!currentVideoData.inheritChannelId,
-			inheritChannelId: stellarData.find((s) => s.playlistIdForMusic === currentVideoData.ownerId)?.youtubeId || "",
+			inheritChannelId: stellarData.find((s) => s.plm === currentVideoData.ownerId)?.yi || "",
 		});
 		setEditingIndex(index);
 		setIsModalOpen(true);

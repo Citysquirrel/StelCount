@@ -1,12 +1,3 @@
-import { useRecoilState } from "recoil";
-import {
-	headerOffsetState,
-	isLiveLoadingState,
-	isLoadingState,
-	liveStatusState,
-	nowState,
-	stellarState,
-} from "../lib/Atom";
 import {
 	Avatar,
 	AvatarBadge,
@@ -37,29 +28,45 @@ import {
 	Text,
 	Tooltip,
 } from "@chakra-ui/react";
-import { Image } from "../components/Image";
+import isMobile from "is-mobile";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { FaGraduationCap } from "react-icons/fa6";
+import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
+import { SiYoutubemusic } from "react-icons/si";
+import { useRecoilState } from "recoil";
+import { useLocalStorage } from "usehooks-ts";
+import { Image } from "../components/Image";
+import { Spacing } from "../components/Spacing";
+import { ColorText } from "../components/Text";
 import {
+	headerOffsetState,
+	isLiveLoadingState,
+	isLoadingState,
+	liveStatusState,
+	nowState,
+	stellarV2State,
+} from "../lib/Atom";
+import { MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
+import {
+	elapsedTimeTextForCard,
+	getLocale,
 	musicDefaultSortValue,
 	numberToLocaleString,
 	remainingCount,
-	elapsedTimeTextForCard,
 	remainingTimeText,
-	getLocale,
 	sortStatsByUnit,
 } from "../lib/functions/etc";
-import { naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
-import { useResponsive } from "../lib/hooks/useResponsive";
-import { MIN_DATE, USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
-import { MdCheck, MdClear, MdFilterList, MdHome, MdOpenInNew, MdSettings, MdTag } from "react-icons/md";
-import { useLocalStorage } from "usehooks-ts";
-import { Statistics, Tag as TagType, UserSettingStorage, VideoDetail, YoutubeMusicData } from "../lib/types";
-import { ColorText } from "../components/Text";
+import { generateStandardThumbnail, naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
-import isMobile from "is-mobile";
-import { Spacing } from "../components/Spacing";
-import { FaGraduationCap } from "react-icons/fa6";
-import { SiYoutubemusic } from "react-icons/si";
+import { useResponsive } from "../lib/hooks/useResponsive";
+import {
+	StatisticsV2,
+	StellarV2State,
+	TagV2,
+	UserSettingStorage,
+	VideoDetailV2,
+	YoutubeMusicDataV2,
+} from "../lib/types";
 
 const stellarSymbols = {
 	스텔라이브: "/images/symbol/symbol_stellive.svg",
@@ -87,7 +94,7 @@ export function Counter() {
 	const gridRef = useRef<HTMLDivElement>(null);
 	const { windowWidth } = useResponsive();
 	const [userSetting, setUserSetting] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
-	const [data] = useRecoilState(stellarState);
+	const [data] = useRecoilState(stellarV2State);
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [offsetY] = useRecoilState(headerOffsetState);
 	const [isLoading] = useRecoilState(isLoadingState);
@@ -105,27 +112,27 @@ export function Counter() {
 	const [isFuncLoading, setIsFuncLoading] = useState(true);
 	const [isLegacyView, setIsLegacyView] = useState(true);
 
-	const currentStellar = data.find((s) => s.uuid === currentUuid);
+	const currentStellar: StellarV2State | undefined = data.find((s) => s.uid === currentUuid);
 	const currentYoutubeData = modYoutubeData(
-		currentStellar?.youtubeId || "",
-		currentStellar?.youtubeSubscriberCount || "",
-		currentStellar?.youtubeCustomUrl || "",
+		currentStellar?.yi || "",
+		currentStellar?.ysc || "",
+		currentStellar?.ycu || "",
 	);
-	const currentMusic = currentStellar && currentStellar.youtubeMusic;
-	const currentExistTags = dedupeTagData(currentMusic?.map((m) => m.tags).flat()).filter((t) => t.id !== undefined);
+	const currentMusic = currentStellar && currentStellar.ym;
+	const currentExistTags = dedupeTagV2Data(currentMusic?.map((m) => m.tg).flat()).filter((t) => t.i !== undefined);
 
-	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uuid)?.liveStatus || false;
+	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uid)?.liveStatus || false;
 
-	const currentColorCode = (currentStellar && "#" + currentStellar.colorCode) || undefined;
+	const currentColorCode = (currentStellar && "#" + currentStellar.cc) || undefined;
 	const { backgroundColor } = useBackgroundColor(!currentColorCode ? "white" : `${currentColorCode}aa`);
 	const isUnder720 = windowWidth < 720;
 
-	const stellive = data.filter((s) => s.group === 0 && !s.justLive);
-	const mystic = data.filter((s) => s.group === 1 && !s.justLive);
-	const universe = data.filter((s) => s.group === 2 && !s.justLive);
-	const cliche = data.filter((s) => s.group === 3 && !s.justLive);
-	const everys = data.filter((s) => s.group === 4 && !s.justLive);
-	const unclassified = data.filter((s) => !s.group && s.group !== 0 && !s.justLive);
+	const stellive = data.filter((s) => s.gp === 0 && !s.jl);
+	const mystic = data.filter((s) => s.gp === 1 && !s.jl);
+	const universe = data.filter((s) => s.gp === 2 && !s.jl);
+	const cliche = data.filter((s) => s.gp === 3 && !s.jl);
+	const everys = data.filter((s) => s.gp === 4 && !s.jl);
+	const unclassified = data.filter((s) => !s.gp && s.gp !== 0 && !s.jl);
 	const total = [stellive, everys, universe, cliche, mystic, unclassified];
 
 	const gridWidth = gridRef.current?.clientWidth || 0;
@@ -223,7 +230,7 @@ export function Counter() {
 			if (userSetting.homeStellar) {
 				setCurrentUuid(userSetting.homeStellar);
 			} else {
-				if (data.length > 0) setCurrentUuid(stellive[0].uuid);
+				if (data.length > 0) setCurrentUuid(stellive[0].uid);
 			}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data]);
@@ -231,9 +238,8 @@ export function Counter() {
 	const musics = useMemo(
 		() =>
 			currentMusic
-				?.filter((m) => m.type === "music")
-				.sort(musicSort(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]]))
-				.filter(tagFilterFunc(filter.tag)) || [],
+				?.filter(tagV2FilterFunc(filter.tag))
+				.sort(musicSortV2(sort.sortBy[sort.current[0]], sort.direction[sort.current[1]])) || [],
 		[currentMusic, filter.tag, sort],
 	);
 
@@ -245,7 +251,7 @@ export function Counter() {
 		<Stack
 			direction={isMobile() ? "column-reverse" : "row"}
 			transition=".3s background-color"
-			backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
+			backgroundImage={`url(${stellarSymbols[currentStellar?.n || ""]})`}
 			backgroundRepeat={"no-repeat"}
 			backgroundPosition={"bottom 64px right 24px"}
 			backgroundSize={"128px"}
@@ -280,18 +286,17 @@ export function Counter() {
 										>
 											{isUnder720 || isMobile()
 												? idx
-												: typeof s[0].group === "number"
-													? stellarGroupName[s[0].group][1]
+												: typeof s[0].gp === "number"
+													? stellarGroupName[s[0].gp][1]
 													: "Unclassified"}
 										</Tag>
 									) : null}
 									{s.map((stellar) => {
-										const graduated =
-											stellar.graduation && new Date(stellar.graduation.slice(0, -1)).getTime() < now.getTime();
+										const graduated = stellar.gd && new Date(stellar.gd).getTime() < now.getTime();
 										return (
 											<Tooltip
-												key={stellar.uuid}
-												label={isMobile() ? undefined : isUnder720 ? stellar.name : undefined}
+												key={stellar.uid}
+												label={isMobile() ? undefined : isUnder720 ? stellar.n : undefined}
 												placement="right"
 												hasArrow
 											>
@@ -301,14 +306,14 @@ export function Counter() {
 													leftIcon={
 														<Image
 															boxSize="24px"
-															src={stellar.name === "스텔라이브" ? stellarSymbols.스텔라이브 : stellar.profileImage}
+															src={stellar.n === "스텔라이브" ? stellarSymbols.스텔라이브 : stellar.pi}
 															borderRadius={"full"}
 														/>
 													}
-													colorScheme={currentUuid === stellar.uuid ? "" : graduated ? "green" : "blue"}
+													colorScheme={currentUuid === stellar.uid ? "" : graduated ? "green" : "blue"}
 													backgroundColor="ButtonFace"
-													onClick={handleClickStellar(stellar.uuid)}
-													cursor={currentUuid === stellar.uuid ? "auto" : "pointer"}
+													onClick={handleClickStellar(stellar.uid)}
+													cursor={currentUuid === stellar.uid ? "auto" : "pointer"}
 													iconSpacing={isUnder720 || isMobile() ? 0 : undefined}
 													boxSize={isMobile() ? "40px" : undefined}
 												>
@@ -318,7 +323,7 @@ export function Counter() {
 														</Text>
 													) : null}
 
-													{isUnder720 || isMobile() ? null : <Text>{stellar.name}</Text>}
+													{isUnder720 || isMobile() ? null : <Text>{stellar.n}</Text>}
 												</Button>
 											</Tooltip>
 										);
@@ -362,22 +367,18 @@ export function Counter() {
 							alignItems={"center"}
 							spacing={"4"}
 							flexWrap={"wrap"}
-							backgroundImage={`url(${stellarSymbols[currentStellar?.name || ""]})`}
+							backgroundImage={`url(${stellarSymbols[currentStellar?.n || ""]})`}
 							backgroundRepeat={"no-repeat"}
 							backgroundPosition={"top 50% right 12px"}
 							backgroundSize={
-								currentStellar?.name === "스텔라이브"
-									? "48px"
-									: currentStellar?.name === "아라하시 타비"
-										? "70px"
-										: "72px"
+								currentStellar?.n === "스텔라이브" ? "48px" : currentStellar?.n === "아라하시 타비" ? "70px" : "72px"
 							}
 						>
-							<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.chzzkId)} isExternal>
+							<Link href={currentStellar && naver.chzzk.liveUrl(currentStellar.czi)} isExternal>
 								{isLoading || isFuncLoading ? (
 									<SkeletonCircle boxSize="72px" />
-								) : currentStellar?.chzzkId ? (
-									<Avatar boxSize="72px" src={`${currentStellar?.profileImage}?type=f120_120_na` || "/images/logo.png"}>
+								) : currentStellar?.czi ? (
+									<Avatar boxSize="72px" src={`${currentStellar?.pi}?type=f120_120_na` || "/images/logo.png"}>
 										<AvatarBadge
 											boxSize="28px"
 											bg={isLiveLoading ? "orange.400" : currentLiveStatus ? "green.400" : "red.400"}
@@ -385,7 +386,7 @@ export function Counter() {
 									</Avatar>
 								) : null}
 							</Link>
-							{currentStellar?.chzzkId ? (
+							{currentStellar?.czi ? (
 								<Divider orientation="vertical" height={windowWidth <= 840 ? "128px" : "64px"} />
 							) : null}
 							<Stack
@@ -412,11 +413,11 @@ export function Counter() {
 												/>
 											) : null,
 										)}
-										{currentStellar?.chzzkFollowerCount ? (
+										{currentStellar?.cfc ? (
 											<FollowerCard
-												href={naver.chzzk.channelUrl(currentStellar.chzzkId)}
+												href={naver.chzzk.channelUrl(currentStellar.czi)}
 												icon={"/images/i_chzzk_1.png"}
-												text={`팔로워 ${numberToLocaleString(currentStellar.chzzkFollowerCount)}`}
+												text={`팔로워 ${numberToLocaleString(currentStellar.cfc)}`}
 												currentColorCode={currentColorCode}
 											/>
 										) : null}
@@ -487,17 +488,17 @@ export function Counter() {
 											<Spacing direction="horizontal" size={4} />
 											{currentExistTags.map((t, idx) => (
 												<FilterTag
-													key={`${t.id}-${idx}`}
-													tagId={t.id!}
-													name={t.name}
-													color={t.colorCode}
+													key={`${t.i}-${idx}`}
+													tagId={t.i!}
+													name={t.n}
+													color={t.cc}
 													tagFilter={filter.tag}
-													onClick={handleTagFilter(t.id!)}
+													onClick={handleTagFilter(t.i!)}
 													minWidth="76px"
 													height="24px"
 													wordBreak={"keep-all"}
 												>
-													{t.name}
+													{t.n}
 												</FilterTag>
 											))}
 										</HStack>
@@ -524,7 +525,7 @@ export function Counter() {
 								) : musics !== undefined && musics.length > 0 ? (
 									musics.map((m) => (
 										<MusicCard
-											key={m.videoId}
+											key={m.vi}
 											data={m}
 											currentColorCode={currentColorCode}
 											width={cardWidth}
@@ -536,7 +537,7 @@ export function Counter() {
 									<Stack
 										alignItems={"center"}
 										justifyContent={"center"}
-										width={["100%", "100%", "200%", "200%", "300%"]}
+										width={"100%"}
 										height="240px"
 										userSelect={"none"}
 										gap={0}
@@ -592,22 +593,22 @@ function FollowerCard({ href, icon, text, currentColorCode, subText }: FollowerC
 	);
 }
 
-function musicSort(type: "publishedAt" | "viewCount" | "default", order: "ASC" | "DESC") {
-	return function (a: YoutubeMusicData, b: YoutubeMusicData) {
-		if (a.liveBroadcastContent === "upcoming") return -1;
+function musicSortV2(type: "publishedAt" | "viewCount" | "default", order: "ASC" | "DESC") {
+	return function (a: YoutubeMusicDataV2, b: YoutubeMusicDataV2) {
+		if (a.lbc === "upcoming") return -1;
 		if (type === "default") {
-			const aInt = parseInt(a.viewCount || "0");
-			const bInt = parseInt(b.viewCount || "0");
+			const aInt = parseInt(a.vc || "0");
+			const bInt = parseInt(b.vc || "0");
 			const A = musicDefaultSortValue(aInt);
 			const B = musicDefaultSortValue(bInt);
 			return order === "ASC" ? A - B : B - A;
 		} else if (type === "publishedAt") {
-			const aDate = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-			const bDate = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+			const aDate = a.pa ? new Date(a.pa).getTime() : 0;
+			const bDate = b.pa ? new Date(b.pa).getTime() : 0;
 			return order === "ASC" ? aDate - bDate : bDate - aDate;
 		} else if (type === "viewCount") {
-			const aCnt = a.viewCount ? parseInt(a.viewCount) : 0;
-			const bCnt = b.viewCount ? parseInt(b.viewCount) : 0;
+			const aCnt = a.vc ? parseInt(a.vc) : 0;
+			const bCnt = b.vc ? parseInt(b.vc) : 0;
 			return order === "ASC" ? aCnt - bCnt : bCnt - aCnt;
 		} else return 0;
 	};
@@ -631,44 +632,26 @@ function FilterTag({ tagId, name, color, tagFilter, children, ...props }: Filter
 	);
 }
 
-// function MusicFilter() {
-// 	return <IconButton boxSize={"24px"} minWidth={"32px"} icon={<MdFilterList />} aria-label="filter" />;
-// }
-
 function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCardProps) {
 	const [dateHover, setDateHover] = useState(false);
-	const {
-		title,
-		titleAlias,
-		videoId,
-		thumbnail,
-		viewCount,
-		publishedAt,
-		liveBroadcastContent,
-		scheduledStartTime,
-		details,
-		mostPopular,
-		statistics,
-	} = data;
+	const { tl, ta, vi, vc, pa, lbc, sst, dt, mp, st } = data;
 
-	const isLive = liveBroadcastContent === "live";
+	const isLive = lbc === "live";
 
-	const isUpcoming = liveBroadcastContent === "upcoming";
-	const scheduledStartTimeDate = new Date(scheduledStartTime || "1000-01-01T09:00:00.000Z");
+	const isUpcoming = lbc === "upcoming";
+	const scheduledStartTimeDate = new Date((sst || 0) * 1000);
 	const [remainingDateGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
 	const upcomingCardBg = `linear-gradient(217deg, rgba(93, 57, 255, 0.8), rgba(255,0,0,0) 70.71%),
             linear-gradient(127deg, rgba(209, 57, 255, 0.8), rgba(0,255,0,0) 70.71%),
             linear-gradient(336deg, rgba(155, 142, 255, 0.8), rgba(0,0,255,0) 70.71%)`;
 
-	const publishedDate = new Date(publishedAt || "1000-01-01T09:00:00.000Z");
+	const publishedDate = new Date((pa || 0) * 1000);
 	const [dateGap, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
 	const isPlzInterest = !isUpcoming && Math.floor(dateGap / 86400) <= 14;
 
-	const titleText = titleAlias || title;
-	const viewCountNum = parseInt(viewCount || "0");
+	const titleText = ta || tl;
+	const viewCountNum = parseInt(vc || "0");
 	const [calc, dir] = remainingCount(viewCountNum);
-	// const parsed: Thumbnails = JSON.parse(thumbnails);
-	// const maxresUrl = parsed.maxres.url;
 
 	const handleMouseEnter = () => {};
 
@@ -708,7 +691,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 				top={"6px"}
 				right={"6px"}
 				as={Link}
-				href={youtube.musicUrl(videoId)}
+				href={youtube.musicUrl(vi)}
 				isExternal
 				color="red.500"
 			>
@@ -738,9 +721,9 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 					</Tag>
 				) : null}
 			</HStack>
-			{mostPopular !== -1 ? (
+			{mp !== -1 ? (
 				<Text position="absolute" color="gray.600" fontSize="xs" right={"8px"} top={"2px"}>
-					인기 급상승 음악 #{mostPopular}
+					인기 급상승 음악 #{mp}
 				</Text>
 			) : null}
 			<CardBody
@@ -776,18 +759,11 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 							</Stack>
 						</Stack>
 					) : (
-						<ViewCount
-							viewCount={viewCount}
-							videoId={videoId}
-							calc={calc}
-							dir={dir}
-							details={details}
-							statistics={statistics}
-						/>
+						<ViewCount viewCount={vc} videoId={vi} calc={calc} dir={dir} details={dt} statistics={st} />
 					)}
 
 					<ThumbnailImage
-						src={thumbnail}
+						src={generateStandardThumbnail(vi)}
 						width={"116px"}
 						height={thumbWidth}
 						maxHeight="108px"
@@ -795,7 +771,7 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 					/>
 				</HStack>
 				<Stack position="relative" gap="auto" flexWrap={"nowrap"} flex={1}>
-					<Link href={youtube.videoUrl(videoId)} isExternal>
+					<Link href={youtube.videoUrl(vi)} isExternal>
 						<Text
 							title={titleText}
 							fontSize={"1.125rem"}
@@ -807,13 +783,13 @@ function MusicCard({ data, currentColorCode, width, thumbWidth, now }: MusicCard
 						</Text>
 					</Link>
 					<Box textAlign={"right"}>
-						{data.tags?.map((tag) => (
+						{data.tg?.map((tag) => (
 							<Tag
-								key={tag.id}
-								colorScheme={tag.colorCode || customTagColorScheme[tag.name] || customTagColorScheme.other}
+								key={tag.i}
+								colorScheme={tag.cc || customTagColorScheme[tag.n] || customTagColorScheme.other}
 								marginLeft="2px"
 							>
-								<TagLabel>{tag.name}</TagLabel>
+								<TagLabel>{tag.n}</TagLabel>
 							</Tag>
 						))}
 					</Box>
@@ -833,25 +809,25 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 			videoId,
 			calc,
 			dir,
-			totalCount: details.reduce((a, c) => a + parseInt(c.viewCount), 0) + parseInt(viewCount || "0"),
+			totalCount: details.reduce((a, c) => a + parseInt(c.vc), 0) + parseInt(viewCount || "0"),
 			type: undefined,
-			annieAt: statistics.filter((s) => sortStatsByUnit(s.unit)).at(-1)?.annie_at,
+			annieAt: statistics.filter((s) => sortStatsByUnit(s.u)).at(-1)?.at,
 			statistics,
 		},
 		...details.map((v) => {
-			const viewCountNum = parseInt(v.viewCount || "0");
+			const viewCountNum = parseInt(v.vc || "0");
 			const [calc, dir] = remainingCount(viewCountNum);
 
 			return {
-				viewCount: v.viewCount,
-				videoId: v.videoId,
+				viewCount: v.vc,
+				videoId: v.vi,
 				calc,
 				dir,
 				totalCount: undefined,
-				type: v.type,
-				countUpdatedAt: v.countUpdatedAt,
-				annieAt: statistics.filter((s) => sortStatsByUnit(s.unit)).at(-1)?.annie_at,
-				statistics: v.statistics,
+				type: v.t,
+				countUpdatedAt: v.cua,
+				annieAt: statistics.filter((s) => sortStatsByUnit(s.u)).at(-1)?.at,
+				statistics: v.st,
 			};
 		}),
 	];
@@ -936,17 +912,12 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 								) : (
 									<>
 										<ColorText as="span" value="green.500">
-											{
-												elapsedTimeTextForCard(
-													new Date(c.statistics.at(-1)?.createdAt || MIN_DATE),
-													new Date(getLocale()),
-												)[1]
-											}
+											{elapsedTimeTextForCard(new Date(c.statistics.at(-1)?.at || MIN_DATE), new Date(getLocale()))[1]}
 										</ColorText>
 										&nbsp;
 										<Text as="span" fontSize="0.75rem">
 											<ColorText as="span" value="teal.500">
-												{numberToLocaleString(c.statistics.at(-1)?.unit)}
+												{numberToLocaleString(c.statistics.at(-1)?.u)}
 											</ColorText>
 											&nbsp;달성
 										</Text>
@@ -986,12 +957,12 @@ function ViewCount({ viewCount, videoId, calc, dir, details, statistics }: ViewC
 					) : (
 						<>
 							<ColorText as="span" value="green.500">
-								{elapsedTimeTextForCard(new Date(statistics.at(-1)?.createdAt || MIN_DATE), new Date(getLocale()))[1]}
+								{elapsedTimeTextForCard(new Date(statistics.at(-1)?.at || MIN_DATE), new Date(getLocale()))[1]}
 							</ColorText>
 							&nbsp;
 							<Text as="span" fontSize="0.75rem">
 								<ColorText as="span" value="teal.500">
-									{numberToLocaleString(statistics.at(-1)?.unit)}
+									{numberToLocaleString(statistics.at(-1)?.u)}
 								</ColorText>
 								&nbsp;달성
 							</Text>
@@ -1058,23 +1029,22 @@ function modYoutubeData(id: string, subCnt: string, url: string) {
 	return storage;
 }
 
-function dedupeTagData(tags: (TagType | undefined)[] | undefined) {
+function dedupeTagV2Data(tags: (TagV2 | undefined)[] | undefined) {
 	if (!tags) {
 		return [];
 	}
 	return tags.reduce((acc, cur) => {
 		if (cur === undefined) return acc;
-		if (acc.findIndex(({ id }) => id === cur.id) === -1) {
+		if (acc.findIndex(({ i }) => i === cur.i) === -1) {
 			acc.push(cur);
 		}
 		return acc;
-	}, [] as TagType[]);
+	}, [] as TagV2[]);
 }
 
-function tagFilterFunc(includedTagIds: number[]) {
-	// const result: YoutubeMusicData[] = [];
-	return function (value: YoutubeMusicData): boolean {
-		const tagIds: number[] = (value.tags?.map((t) => t.id).filter(Boolean) as number[]) || [];
+function tagV2FilterFunc(includedTagIds: number[]) {
+	return function (value: YoutubeMusicDataV2): boolean {
+		const tagIds: number[] = (value.tg?.map((t) => t.i).filter(Boolean) as number[]) || [];
 		return includedTagIds.length === 0 ? true : tagIds.some((id) => includedTagIds.includes(id));
 	};
 }
@@ -1116,7 +1086,7 @@ interface FollowerCardProps {
 }
 
 interface MusicCardProps {
-	data: YoutubeMusicData;
+	data: YoutubeMusicDataV2;
 	currentColorCode?: string;
 	width: string[];
 	thumbWidth: string[];
@@ -1128,8 +1098,8 @@ interface ViewCountProps {
 	videoId: string;
 	calc: number;
 	dir: number;
-	details: VideoDetail[];
-	statistics: Statistics[];
+	details: VideoDetailV2[];
+	statistics: StatisticsV2[];
 }
 
 interface ThumbnailImageProps extends BoxProps {

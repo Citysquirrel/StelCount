@@ -27,7 +27,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 			</Suspense>
 		)}
 		{/* <MaintenanceComponent /> */}
-		<RouterProvider router={router} />
+		<RouterProvider router={router} future={{ v7_startTransition: true }} />
 	</MainProvider>,
 );
 

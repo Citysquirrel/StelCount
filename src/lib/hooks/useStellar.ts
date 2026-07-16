@@ -1,21 +1,20 @@
+import { useToast } from "@chakra-ui/react";
+import { useEffect } from "react";
 import { useRecoilState } from "recoil";
 import {
-	isLoadingState,
-	serverErrorState,
-	isStellarLoadingState,
-	stellarState,
-	liveStatusState,
-	isLiveLoadingState,
-	isLiveFetchingState,
 	fetchInfoState,
-	StellarState,
+	isLiveFetchingState,
+	isLiveLoadingState,
+	isLoadingState,
+	isStellarLoadingState,
+	liveStatusState,
+	serverErrorState,
+	stellarV2State,
 } from "../Atom";
-import { useEffect } from "react";
-import { fetchServer } from "../functions/fetch";
-import { useToast } from "@chakra-ui/react";
 import { getLocale } from "../functions/etc";
+import { fetchServer } from "../functions/fetch";
+import { MultiViewDataData, StellarV2State } from "../types";
 import { useImprovedInterval } from "./useInterval";
-import { MultiViewDataData } from "../types";
 
 export function useStellar() {
 	const fbImages = [
@@ -25,7 +24,7 @@ export function useStellar() {
 		},
 	];
 	const toast = useToast();
-	const [data, setData] = useRecoilState(stellarState);
+	const [, setDataV2] = useRecoilState(stellarV2State);
 	const [, setLiveStatus] = useRecoilState(liveStatusState);
 	const [, setServerError] = useRecoilState(serverErrorState);
 	const [, setIsLoading] = useRecoilState(isLoadingState);
@@ -59,11 +58,11 @@ export function useStellar() {
 		if (isTimer) {
 			setIsStellarLoading(true);
 		}
-		fetchServer("v1", "/current")
+		fetchServer("v2", "/current")
 			.then((res) => {
 				if (res) {
 					if (res.status === 200) {
-						const data: StellarState[] = res.data.current;
+						const data: StellarV2State[] = res.data.data;
 
 						const fbImageMap = fbImages.reduce(
 							(acc, cur) => {
@@ -75,13 +74,11 @@ export function useStellar() {
 
 						const mod = data.map((s) => ({
 							...s,
-							profileImage:
-								(!s.profileImage || s.profileImage.trim() === "") && fbImageMap[s.name]
-									? fbImageMap[s.name]
-									: s.profileImage,
+							profileImage: (!s.pi || s.pi.trim() === "") && fbImageMap[s.n] ? fbImageMap[s.n] : s.pi,
 						}));
 
-						setData(mod || []);
+						setDataV2(mod || []);
+						// setData(mod || []);
 						// isTimer &&
 						// 	toast({
 						// 		description: "데이터를 새로 불러왔습니다.",
@@ -138,5 +135,5 @@ export function useStellar() {
 		{ executeCallbackWhenWindowFocused: true },
 	);
 
-	return { data, setData, refetch: f, intervalRef: intervalId };
+	return { refetch: f, intervalRef: intervalId };
 }
