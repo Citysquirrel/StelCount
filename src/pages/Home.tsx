@@ -1,3 +1,4 @@
+import { parseV2Date, parseV2Time } from "@/lib/functions/date";
 import {
 	Box,
 	Button,
@@ -18,9 +19,21 @@ import {
 	useClipboard,
 	useToast,
 } from "@chakra-ui/react";
+import update from "immutability-helper";
+import isMobile from "is-mobile";
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import useBackgroundColor from "../lib/hooks/useBackgroundColor";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { FaArrowAltCircleDown } from "react-icons/fa";
+import { FaEye } from "react-icons/fa6";
+import { MdClear, MdContentCopy, MdOpenInNew } from "react-icons/md";
+import { SiYoutubemusic } from "react-icons/si";
 import { useRecoilState } from "recoil";
+import { useLocalStorage } from "usehooks-ts";
+import { Carousel } from "../components/Carousel";
+import { Image } from "../components/Image";
+import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
+import { Spacing } from "../components/Spacing";
 import {
 	LiveStatusState,
 	isLiveDetailFetchingState,
@@ -28,40 +41,25 @@ import {
 	isLiveLoadingState,
 	liveStatusState,
 	nowState,
-	stellarState,
 	stellarV2State,
 } from "../lib/Atom";
-import { LiteralUnion, UserSettingStorage, YoutubeMusicData } from "../lib/types";
-import { LoadingCircle, LoadingThreeDot } from "../components/Loading";
+import { USER_SETTING_STORAGE } from "../lib/constant";
 import {
 	elapsedTimeTextForCard,
 	getLocale,
-	getThumbnails,
 	numberToLocaleString,
 	remainingTimeText,
 	sortStatsByUnit,
 	sortStatsByUnitForBigNews,
 } from "../lib/functions/etc";
-import { Image } from "../components/Image";
-import { naver, youtube } from "../lib/functions/platforms";
-import { FaEye } from "react-icons/fa6";
-import isMobile from "is-mobile";
-import { MdClear, MdContentCopy, MdOpenInNew } from "react-icons/md";
-import { SiYoutubemusic } from "react-icons/si";
-import { FaArrowAltCircleDown } from "react-icons/fa";
-import { Spacing } from "../components/Spacing";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import update from "immutability-helper";
-import { MIN_DATE, USER_SETTING_STORAGE } from "../lib/constant";
+import { generateStandardThumbnail, generateThumbnails, naver, youtube } from "../lib/functions/platforms";
+import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 import { useResponsive } from "../lib/hooks/useResponsive";
-import { useLocalStorage } from "usehooks-ts";
-import { Carousel } from "../components/Carousel";
+import { LiteralUnion, UserSettingStorage, YoutubeMusicDataV2 } from "../lib/types";
 
 export default function Home() {
 	useBackgroundColor("white");
-	const [stellar] = useRecoilState(stellarState);
-	const [stellarV2] = useRecoilState(stellarV2State);
+	const [stellar] = useRecoilState(stellarV2State);
 	const [liveStatus] = useRecoilState(liveStatusState);
 	const [isLiveLoading] = useRecoilState(isLiveLoadingState);
 	const [isLiveFetching] = useRecoilState(isLiveFetchingState);
@@ -106,7 +104,7 @@ export default function Home() {
 
 	useEffect(() => {
 		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
-		const videos = stellar.map((s) => s.youtubeMusic).flat();
+		const videos = stellar.map((s) => s.ym).flat();
 		const currentTime = new Date(getLocale()).getTime();
 
 		setData((prev) => {
@@ -114,84 +112,71 @@ export default function Home() {
 
 			const approachTemp = videos.reduce(
 				(a, c) =>
-					c.details.length > 0
+					c.dt.length > 0
 						? [
 								...a,
 								c,
-								...c.details.map((d) => ({
+								...c.dt.map((d) => ({
 									...d,
-									title: c.title,
-									titleAlias: c.titleAlias,
-									channelId: c.channelId,
-									thumbnail: c.thumbnail,
-									thumbnails: c.thumbnails,
-									mostPopular: c.mostPopular,
-									mostPopularMusic: c.mostPopularMusic,
-									liveBroadcastContent: c.liveBroadcastContent,
-									details: [],
+									tl: c.tl,
+									ta: c.ta,
+									ci: c.ci,
+									mp: c.mp,
+									mpm: c.mpm,
+									lbc: c.lbc,
+									dt: [],
 								})),
 							]
 						: [...a, c],
-				[] as YoutubeMusicData[],
+				[] as YoutubeMusicDataV2[],
 			);
 
 			obj.upcoming = videos
-				.filter((v) => v.liveBroadcastContent === "upcoming" || v.liveBroadcastContent === "live")
-				.sort(
-					(a, b) =>
-						new Date(a.scheduledStartTime || MIN_DATE).getTime() - new Date(b.scheduledStartTime || MIN_DATE).getTime(),
-				);
-			obj.mostPopular = videos.filter((v) => v.mostPopular !== -1).sort((a, b) => a.mostPopular - b.mostPopular);
-			obj.mostPopularMusic = videos
-				.filter((v) => v.mostPopularMusic !== -1)
-				.sort((a, b) => a.mostPopularMusic - b.mostPopularMusic);
+				.filter((v) => v.lbc === "upcoming" || v.lbc === "live")
+				.sort((a, b) => parseV2Time(a.sst) - parseV2Time(b.sst));
+			obj.mostPopular = videos.filter((v) => v.mp !== -1).sort((a, b) => a.mp - b.mp);
+			obj.mostPopularMusic = videos.filter((v) => v.mpm !== -1).sort((a, b) => a.mpm - b.mpm);
 			obj.recent = videos
 				.filter(
-					(v) =>
-						v.liveBroadcastContent === "none" &&
-						currentTime - new Date(v.publishedAt || MIN_DATE).getTime() < config.recent.period, // 2 months
+					(v) => v.lbc === "none" && currentTime - parseV2Time(v.pa) < config.recent.period, // 2 months
 				)
-				.sort(
-					(a, b) =>
-						(b.publishedAt ? new Date(b.publishedAt).getTime() : 0) -
-						(a.publishedAt ? new Date(a.publishedAt).getTime() : 0),
-				);
+				.sort((a, b) => parseV2Time(b.pa) - parseV2Time(a.pa));
 			obj.mostViews = videos
 				.sort((a, b) => {
-					const A = parseInt(a.viewCount || "0") + a.statistics.reduce((a, c) => a + parseInt(c.value), 0);
-					const B = parseInt(b.viewCount || "0") + b.statistics.reduce((a, c) => a + parseInt(c.value), 0);
+					const A = parseInt(a.vc || "0") + a.st.reduce((a, c) => a + parseInt(c.v), 0);
+					const B = parseInt(b.vc || "0") + b.st.reduce((a, c) => a + parseInt(c.v), 0);
 					return B - A;
 				})
 				.slice(0, 30);
 			obj.approach = approachTemp
-				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnit(s.unit)) }))
+				.map((v) => ({ ...v, statistics: v.st.filter((s) => sortStatsByUnit(s.u)) }))
 				.filter(
 					(v) =>
-						v.liveBroadcastContent === "none" &&
+						v.lbc === "none" &&
 						v.statistics.filter(
-							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approach.period, // 5 days
+							(s) => currentTime - parseV2Time(s.ua) < config.approach.period, // 5 days
 						).length > 0,
 				)
 				.sort((a, b) => {
 					return (
-						new Date(b.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime() -
-						new Date(a.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime()
+						new Date(parseV2Time(b.statistics.at(-1)?.ua) || new Date(getLocale())).getTime() -
+						new Date(parseV2Time(a.statistics.at(-1)?.ua) || new Date(getLocale())).getTime()
 					);
 				})
 				.slice(0, 100);
 			obj.approachForNews = approachTemp
-				.map((v) => ({ ...v, statistics: v.statistics.filter((s) => sortStatsByUnitForBigNews(s.unit)) }))
+				.map((v) => ({ ...v, statistics: v.st.filter((s) => sortStatsByUnitForBigNews(s.u)) }))
 				.filter(
 					(v) =>
-						v.liveBroadcastContent === "none" &&
+						v.lbc === "none" &&
 						v.statistics.filter(
-							(s) => currentTime - new Date(s.updatedAt || MIN_DATE).getTime() < config.approachForNews.period, // 5 days
+							(s) => currentTime - parseV2Time(s.ua) < config.approachForNews.period, // 5 days
 						).length > 0,
 				)
 				.sort((a, b) => {
 					return (
-						new Date(b.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime() -
-						new Date(a.statistics.at(-1)?.updatedAt || new Date(getLocale())).getTime()
+						new Date(parseV2Time(b.statistics.at(-1)?.ua) || new Date(getLocale())).getTime() -
+						new Date(parseV2Time(a.statistics.at(-1)?.ua) || new Date(getLocale())).getTime()
 					);
 				})
 				.slice(0, 3);
@@ -205,7 +190,7 @@ export default function Home() {
 		const arr = liveStatus.map((l) => ({
 			...l,
 			profileImage: l.channelImageUrl || "",
-			name: stellar.find((s) => s.uuid === l.uuid)?.name || "",
+			name: stellar.find((s) => s.uid === l.uuid)?.n || "",
 			gap: l.openLive
 				? elapsedTimeTextForCard(new Date(l.openDate!), new Date(getLocale()))
 				: elapsedTimeTextForCard(new Date(l.closeDate!), new Date(getLocale())),
@@ -223,7 +208,7 @@ export default function Home() {
 			const arr = [...prev];
 			for (const v of arr) {
 				v.profileImage = v.channelImageUrl || "";
-				v.name = stellar.find((s) => s.uuid === v.uuid)?.name || "";
+				v.name = stellar.find((s) => s.uid === v.uuid)?.n || "";
 				v.gap = v.openLive
 					? elapsedTimeTextForCard(new Date(v.openDate!), new Date(getLocale()))
 					: elapsedTimeTextForCard(new Date(v.closeDate!), new Date(getLocale()));
@@ -286,20 +271,20 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 	const [isAutoScrollOn, setIsAutoScrollOn] = useState(true);
 	// 최초공개 > 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수  순서로
 	// 최근 게시 영상은 3일 이내일 경우 최상단(최초공개 다음)으로 이동
-	function createHeadingText(data: YoutubeMusicData, condition: number, isLive: boolean) {
+	function createHeadingText(data: YoutubeMusicDataV2, condition: number, isLive: boolean) {
 		// 인급음 > 최근 게시영상 > 최근 이벤트 달성 > 최다 조회수
-		const publishedDate = new Date(data.publishedAt || MIN_DATE);
+		const publishedDate = parseV2Date(data.pa);
 		const [, elapsedDateText] = elapsedTimeTextForCard(publishedDate, now);
-		const scheduledStartTimeDate = new Date(data.scheduledStartTime || MIN_DATE);
-		const [startTimeGap, remainingDateText] = remainingTimeText(scheduledStartTimeDate, now);
+		const sstDate = parseV2Date(data.sst);
+		const [startTimeGap, remainingDateText] = remainingTimeText(sstDate, now);
 
 		const messages = {
 			"-1": `최초 공개 ${isLive ? "진행중" : startTimeGap <= 0 ? "곧 시작" : remainingDateText}`,
-			"0": `인기 급상승 동영상 #${data.mostPopular}`,
+			"0": `인기 급상승 동영상 #${data.mp}`,
 			"1": `${elapsedDateText} 게시된 새 영상`,
-			"2": `최근 ${data.statistics.at(-1)?.unit + " " || ""}조회수 달성`,
-			"3": `인기 급상승 음악 #${data.mostPopularMusic}`,
-			default: `최다 조회수: ${numberToLocaleString(data.viewCount)}`,
+			"2": `최근 ${data.st.at(-1)?.u + " " || ""}조회수 달성`,
+			"3": `인기 급상승 음악 #${data.mpm}`,
+			default: `최다 조회수: ${numberToLocaleString(data.vc)}`,
 		};
 
 		return messages[condition] || messages.default;
@@ -342,13 +327,13 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 		"3": "mostPopularMusic",
 	};
 
-	const reOgData: ({ condition: number } & YoutubeMusicData)[] = [
+	const reOgData: ({ condition: number } & YoutubeMusicDataV2)[] = [
 		...upcoming.map((v) => ({ ...v, condition: -1 })),
 		...mostPopularMusic.map((v) => ({ ...v, condition: 3 })),
 		...mostPopular.map((v) => ({ ...v, condition: 0 })),
 		...recent
 			.filter(
-				(v) => new Date(getLocale()).getTime() - new Date(v.publishedAt || MIN_DATE).getTime() < 86400000 * 7, // 1 weeks
+				(v) => new Date(getLocale()).getTime() - parseV2Time(v.pa) < 86400000 * 7, // 1 weeks
 			)
 			.map((v) => ({ ...v, condition: 1 })),
 		...approach.slice(0, 3).map((v) => ({ ...v, condition: 2 })),
@@ -449,16 +434,16 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 				<Carousel
 					list={reOgData}
 					SlideComponent={(item, idx) => {
-						const isUpcoming = item.liveBroadcastContent === "upcoming";
-						const isLive = item.liveBroadcastContent === "live";
+						const isUpcoming = item.lbc === "upcoming";
+						const isLive = item.lbc === "live";
 						const headingText = createHeadingText(item, item.condition, isLive);
-						const timeTextDate = isLive ? item.scheduledStartTime || MIN_DATE : item.publishedAt || MIN_DATE;
+						const timeTextDate = isLive ? parseV2Time(item.sst) : parseV2Time(item.pa);
 						const timeText = createTimeText(item, conditionDict[item.condition]);
 						return (
 							<Stack key={idx} direction={["column", "column", "row", "row", "row"]} minWidth="100%">
 								<Stack flex={1} direction={["column", "column", "row", "row", "row"]} alignItems={"center"} gap="12px">
 									<Link
-										href={isLoading ? undefined : youtube.videoUrl(item.videoId)}
+										href={isLoading ? undefined : youtube.videoUrl(item.vi)}
 										isExternal
 										transition="all .3s"
 										_hover={{
@@ -471,7 +456,7 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 									>
 										<Image
 											className="news-thumbnail"
-											src={item.thumbnail}
+											src={generateStandardThumbnail(item.vi)}
 											alt="thumbnail"
 											width={["300px", "432px", "360px", "360px", "360px"]}
 											height={["150px", "216px", "180px", "180px", "180px"]}
@@ -503,7 +488,7 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 										</Heading>
 										<Text
 											as={Link}
-											href={isLoading ? undefined : youtube.videoUrl(item.videoId)}
+											href={isLoading ? undefined : youtube.videoUrl(item.vi)}
 											isExternal
 											overflow="hidden"
 											textOverflow={"ellipsis"}
@@ -512,13 +497,13 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 											maxHeight="3rem"
 											animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}
 										>
-											{item.titleAlias || item.title}
+											{item.ta || item.tl}
 										</Text>
 
 										<HStack paddingLeft="8px" animation={`fadeIn 0.3s ease-in-out 0.2s 1 normal both`}>
 											<Text
 												as={Link}
-												href={youtube.musicUrl(item.videoId)}
+												href={youtube.musicUrl(item.vi)}
 												isExternal
 												color="red.600"
 												sx={{ display: "flex", flexDir: "row", gap: "4px" }}
@@ -528,21 +513,21 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 													Youtube Music
 												</Text>
 											</Text>
-											{item.details.length > 0 ? (
+											{item.dt.length > 0 ? (
 												<>
 													<Text fontSize="xs">부가 영상</Text>
-													{item.details.map((detail) => {
-														const { id, type, videoId } = detail;
+													{item.dt.map((detail) => {
+														const { t, vi } = detail;
 														return (
 															<Text
 																as={Link}
-																href={youtube.videoUrl(videoId)}
-																key={`${id}_${videoId}`}
+																href={youtube.videoUrl(vi)}
+																key={vi}
 																color="blue.800"
 																fontSize="sm"
 																isExternal
 															>
-																{type}
+																{t}
 															</Text>
 														);
 													})}
@@ -557,12 +542,12 @@ function RecentNews({ isLoading, now, recent, mostPopular, mostPopularMusic, upc
 											{isUpcoming ? null : (
 												<HStack animation={`fadeIn 0.3s ease-in-out 0.4s 1 normal both`}>
 													<FaEye />
-													<Text fontWeight={"bold"}>{numberToLocaleString(item.viewCount)}</Text>
+													<Text fontWeight={"bold"}>{numberToLocaleString(item.vc)}</Text>
 												</HStack>
 											)}
 											{isUpcoming || timeText.value ? null : (
 												<Text fontSize={"sm"} color="gray.700" animation={`fadeIn 0.3s ease-in-out 0.5s 1 normal both`}>
-													{elapsedTimeTextForCard(new Date(new Date(timeTextDate)), new Date(getLocale()))[1]}
+													{elapsedTimeTextForCard(new Date(timeTextDate), new Date(getLocale()))[1]}
 												</Text>
 											)}
 											{timeText.value ? (
@@ -653,9 +638,9 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 							return (
 								<Stack
 									as={Link}
-									href={youtube.videoUrl(c.videoId)}
+									href={youtube.videoUrl(c.vi)}
 									isExternal
-									key={c.videoId}
+									key={c.vi}
 									sx={{
 										position: "relative",
 										minWidth: "100px",
@@ -675,7 +660,7 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 								>
 									<Image
 										boxSize="100px"
-										src={getThumbnails(c.thumbnails).medium?.url || "/images/no_thb.png"}
+										src={generateThumbnails(c.vi).medium?.url || "/images/no_thb.png"}
 										alt="thumbnail"
 										objectFit={"cover"}
 										transform={"scale(1.35)"}
@@ -690,13 +675,13 @@ function CarouselList({ heading, musics, type, lives, isDataLoading, isLiveFetch
 										transition="all .3s"
 										gap="0"
 									>
-										{c.type !== "music" ? (
+										{c.t !== "music" ? (
 											<Text fontSize="2xs" color="blue.600">
-												{c.type}
+												{c.t}
 											</Text>
 										) : null}
 										<FaEye />
-										<Text fontWeight={"bold"}>{numberToLocaleString(c.viewCount)}</Text>
+										<Text fontWeight={"bold"}>{numberToLocaleString(c.vc)}</Text>
 										<Text fontSize="sm">{timeText.value}</Text>
 										{timeText.unit ? <Text fontSize={"2xs"}>{numberToLocaleString(timeText.unit)} 달성</Text> : null}
 									</Stack>
@@ -1091,29 +1076,26 @@ function MultiViewItem({ id, index, moveItem, profileImage, setList }: MultiView
 
 //! Functions
 
-function createTimeText(data: YoutubeMusicData, type?: CarouselListType) {
+function createTimeText(data: YoutubeMusicDataV2, type?: CarouselListType) {
 	if (type === "recent") {
 		return {
-			value: elapsedTimeTextForCard(new Date(new Date(data.publishedAt || MIN_DATE)), new Date(getLocale()))[1],
+			value: elapsedTimeTextForCard(new Date(parseV2Time(data.pa)), new Date(getLocale()))[1],
 		};
 	} else if (type === "approach") {
 		return {
-			value: elapsedTimeTextForCard(
-				new Date(new Date(data.statistics.at(-1)?.updatedAt || MIN_DATE)),
-				new Date(getLocale()),
-			)[1],
-			unit: data.statistics.at(-1)?.unit,
+			value: elapsedTimeTextForCard(new Date(parseV2Time(data.st.at(-1)?.ua)), new Date(getLocale()))[1],
+			unit: data.st.at(-1)?.u,
 		};
 	} else return { value: "" };
 }
 interface Data {
-	upcoming: YoutubeMusicData[];
-	mostPopular: YoutubeMusicData[];
-	mostPopularMusic: YoutubeMusicData[];
-	recent: YoutubeMusicData[];
-	approach: YoutubeMusicData[];
-	approachForNews: YoutubeMusicData[];
-	mostViews: YoutubeMusicData[];
+	upcoming: YoutubeMusicDataV2[];
+	mostPopular: YoutubeMusicDataV2[];
+	mostPopularMusic: YoutubeMusicDataV2[];
+	recent: YoutubeMusicDataV2[];
+	approach: YoutubeMusicDataV2[];
+	approachForNews: YoutubeMusicDataV2[];
+	mostViews: YoutubeMusicDataV2[];
 	isUpdated: boolean;
 }
 
@@ -1128,19 +1110,19 @@ interface RecentNewsProps {
 	isDataLoading: boolean;
 	now: Date;
 
-	recent: YoutubeMusicData[];
-	mostPopular: YoutubeMusicData[];
-	mostPopularMusic: YoutubeMusicData[];
-	upcoming: YoutubeMusicData[];
-	approach: YoutubeMusicData[];
-	mostViews: YoutubeMusicData[];
+	recent: YoutubeMusicDataV2[];
+	mostPopular: YoutubeMusicDataV2[];
+	mostPopularMusic: YoutubeMusicDataV2[];
+	upcoming: YoutubeMusicDataV2[];
+	approach: YoutubeMusicDataV2[];
+	mostViews: YoutubeMusicDataV2[];
 }
 
 type CarouselListType = LiteralUnion<"recent" | "approach">;
 interface CarouselListProps {
 	type?: CarouselListType;
 	heading: string;
-	musics?: YoutubeMusicData[];
+	musics?: YoutubeMusicDataV2[];
 	lives?: LiveData[];
 	isDataLoading: boolean;
 	isLiveFetching?: boolean;

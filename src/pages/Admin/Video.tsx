@@ -1,6 +1,6 @@
 import { ImageV2 } from "@/components/Image";
 import { Link } from "@/components/Link";
-import { stellarState, stellarV2State } from "@/lib/Atom";
+import { stellarV2State } from "@/lib/Atom";
 import { formatUtcToKst } from "@/lib/functions/date";
 import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
 import { normalizeKeyword } from "@/lib/functions/normalized";

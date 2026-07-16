@@ -188,28 +188,20 @@ export interface YoutubeMusicDataV2 {
 	tl: string;
 	ta?: string;
 	ci: string;
-	/**
-	 * @deprecated
-	 */
-	th: string;
-	/**
-	 * @deprecated
-	 */
-	ths: string;
 	vi: string;
 	vc?: string;
 	lc?: string;
-	cua?: string;
+	cua?: number;
 	oi?: string;
-	pa?: string;
+	pa?: number;
 	lbc?: LiteralUnion<"live" | "upcoming" | "none">;
-	sst?: string;
+	sst?: number;
 	mp: number;
 	mpm: number;
 	ia?: boolean;
 	tg?: TagV2[];
 	dt: VideoDetailV2[];
-	st: Statistics[];
+	st: StatisticsV2[];
 }
 
 export interface TagV2 extends DefaultDateFieldsV2 {
@@ -224,19 +216,19 @@ export interface VideoDetailV2 extends DefaultDateFieldsV2 {
 	vi: string;
 	vc: string;
 	lc: string;
-	cua: string;
+	cua: number;
 	mp: number;
 	mpm: number;
-	st: Statistics[];
+	st: StatisticsV2[];
 }
 
 export interface StatisticsV2 extends Omit<DefaultDateFieldsV2, "ca"> {
 	u: string;
 	v: string;
-	at: string;
+	at: number;
 }
 
 export interface DefaultDateFieldsV2 {
-	ca?: string;
-	ua?: string;
+	ca?: number;
+	ua?: number;
 }

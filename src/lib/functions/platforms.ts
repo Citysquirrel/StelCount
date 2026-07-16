@@ -54,6 +54,6 @@ export const generateThumbnails = (videoId: string): Thumbnails => {
 	};
 };
 
-export const getStandardThumbnail = (videoId: string) => {
+export const generateStandardThumbnail = (videoId: string) => {
 	return `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`;
 };
