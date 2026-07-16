@@ -122,7 +122,7 @@ export function Counter() {
 	const currentMusic = currentStellar && currentStellar.ym;
 	const currentExistTags = dedupeTagV2Data(currentMusic?.map((m) => m.tg).flat()).filter((t) => t.i !== undefined);
 
-	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uid)?.liveStatus || false;
+	const currentLiveStatus = liveStatus.find((l) => l.uuid === currentStellar?.uid)?.openLive || false;
 
 	const currentColorCode = (currentStellar && "#" + currentStellar.cc) || undefined;
 	const { backgroundColor } = useBackgroundColor(!currentColorCode ? "white" : `${currentColorCode}aa`);

@@ -66,7 +66,6 @@ export interface LiveStatusState {
 	channelImageUrl?: string | null | undefined;
 	channelName?: string;
 	name?: string;
-	liveStatus?: boolean;
 	uuid: string;
 	openDate?: string;
 	closeDate?: string;
