@@ -508,6 +508,7 @@ export function Counter() {
 							</HStack>
 							<SimpleGrid
 								ref={gridRef}
+								minH="272px"
 								columns={
 									(musics !== undefined && musics.length > 0) || isLoading || isFuncLoading ? [1, 1, 2, 2, 3] : 1
 								}
