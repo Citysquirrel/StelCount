@@ -859,6 +859,7 @@ function SideMenu({
 	];
 
 	const onSearch = () => {
+		if (searchInputValue.length === 0) return;
 		fetchServer("v1", "/search-streamer", { body: { keyword: searchInputValue }, method: "POST" }).then((res) => {
 			const data: SearchData[] = res.data;
 			setSearchResult(data || []);
@@ -1441,6 +1442,7 @@ function SideMenu({
 									onClick={() => {
 										onSearch();
 									}}
+									isDisabled={searchInputValue.length === 0}
 								/>
 							</InputGroup>
 							<Spacing size={2} />
