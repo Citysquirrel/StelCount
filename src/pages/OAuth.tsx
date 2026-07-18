@@ -15,12 +15,37 @@ export function OAuth() {
 			const error = searchParams.get("error");
 			const errorDesc = searchParams.get("error_description");
 			toast({ title: `${error}`, description: `${errorDesc}`, status: "error" });
+
+			if (window.opener) {
+				window.opener.postMessage({ type: "AUTH_FAILED" }, window.location.origin);
+				window.close();
+			} else {
+				navigate("/");
+			}
 		} else {
-			fetchServer("v1", `/naver?code=${code}&state=${state}`).then((res) => {
-				if (res.data && res.data.state) {
-					navigate(res.data.state);
-				} else navigate("/");
-			});
+			fetchServer("v1", `/naver?code=${code}&state=${state}`)
+				.then((res) => {
+					if (window.opener) {
+						window.opener.postMessage({ type: "AUTH_COMPLETED" }, window.location.origin);
+						window.close();
+					} else {
+						if (res.data && res.data.state) {
+							navigate(res.data.state);
+						} else {
+							navigate("/");
+						}
+					}
+				})
+				.catch((err) => {
+					toast({ title: "인증 실패", description: "서버 처리 중 오류가 발생했습니다.", status: "error" });
+
+					if (window.opener) {
+						window.opener.postMessage({ type: "AUTH_FAILED" }, window.location.origin);
+						window.close();
+					} else {
+						navigate("/");
+					}
+				});
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
