@@ -2,20 +2,36 @@ import { useEffect } from "react";
 import { useAuth } from "./useAuth";
 
 export function useMessage() {
-	const { query } = useAuth();
+	const { query, setIsLogin, setIsAdmin, setIsLoading } = useAuth();
 	useEffect(() => {
 		const handleMessage = (event: MessageEvent) => {
 			if (event.origin !== window.location.origin) return;
 
 			if (event.data.type === "AUTH_COMPLETED") {
-				query();
+				setIsLoading(true);
+				query()
+					.then((res) => {
+						if (res) {
+							if (res.status === 200) {
+								setIsLogin(true);
+								const { userToken } = res.data;
+								if (userToken.role === "ADMIN") {
+									setIsAdmin(true);
+								}
+							}
+						}
+					})
+					.catch(() => {
+						setIsLogin(false);
+					})
+					.finally(() => {
+						setIsLoading(false);
+					});
 			}
 		};
 
-		// 이벤트 리스너 등록
 		window.addEventListener("message", handleMessage);
 
-		// 컴포넌트 언마운트 시 클린업
 		return () => {
 			window.removeEventListener("message", handleMessage);
 		};

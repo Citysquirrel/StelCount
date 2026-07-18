@@ -433,7 +433,6 @@ export function MultiView() {
 
 	useEffect(() => {
 		if (streams.length === 0) {
-			// setIsInnerChatOpen(false);
 			disableConfirmOnExit();
 		} else {
 			enableConfirmOnExit();
