@@ -18,6 +18,7 @@ import { CAFE_WRITE_URL } from "./lib/constant";
 import { elapsedTimeText } from "./lib/functions/etc";
 import { useNow } from "./lib/hooks/useNow";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useMessage } from "./lib/hooks/useMessage";
 
 function App() {
 	const nav = useNavigateEvent();
@@ -43,8 +44,16 @@ function App() {
 	useHotkeys("ctrl+alt+l", () => {
 		nav("/login")();
 	});
+	useHotkeys("ctrl+shift+l", () => {
+		const width = 500;
+		const height = 600;
+		const left = window.innerWidth / 2 - width / 2;
+		const top = window.innerHeight / 2 - height / 2;
 
-	// useWebSocket();
+		window.open("/login", "LoginPopup", `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`);
+	});
+
+	useMessage();
 
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 

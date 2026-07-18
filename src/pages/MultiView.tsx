@@ -87,6 +87,7 @@ import { CustomStreamsForUS, LiteralUnion, MultiViewData, UserSettingStorage } f
 import { ExtensionDataModal } from "./MultiView/ExtensionData";
 import { ExtensionSyncEditor } from "./MultiView/ExtensionSyncEditor";
 import { UserSettingModal } from "./MultiView/UserSetting";
+import { useMessage } from "@/lib/hooks/useMessage";
 
 const inko = new Inko();
 
@@ -432,7 +433,6 @@ export function MultiView() {
 
 	useEffect(() => {
 		if (streams.length === 0) {
-			// setIsInnerChatOpen(false);
 			disableConfirmOnExit();
 		} else {
 			enableConfirmOnExit();
@@ -443,6 +443,8 @@ export function MultiView() {
 	useHotkeys("ctrl+alt+l", () => {
 		navigate("/login");
 	});
+
+	useMessage();
 
 	const streamContainerWidth = isInnerChatOpen ? `calc(100vw - 350px)` : "100vw";
 	const browser = getBrowserInfo();

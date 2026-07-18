@@ -35,5 +35,5 @@ export function useAuth() {
 				});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-	return { isLoading, isLogin, isAdmin, query };
+	return { isLoading, isLogin, isAdmin, setIsAdmin, setIsLogin, setIsLoading, query };
 }
