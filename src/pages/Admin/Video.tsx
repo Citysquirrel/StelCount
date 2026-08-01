@@ -472,7 +472,7 @@ export function Video() {
 																e.stopPropagation();
 															}}
 														>
-															{dt.type.split(" ")[0]}
+															{dt.type}
 														</Link>
 													))
 												: null}
