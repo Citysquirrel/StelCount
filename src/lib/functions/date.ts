@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { DateInput } from "../types";
 
 type DateFormatType = "input" | "text" | "date" | "time" | "korean" | "iso";
@@ -138,3 +139,27 @@ export function elapsedTimeText(targetDate: DateInput, referenceDate: DateInput 
 
 export const parseV2Time = (time: number | undefined) => (time || 0) * 1000;
 export const parseV2Date = (date: number | undefined) => new Date(parseV2Time(date));
+
+/**
+ * 서버에서 온 UTC 날짜를 사용자의 로컬 시간에 맞춘 datetime-local 포맷으로 변환합니다.
+ *
+ * @param {string|Date} serverDate - 서버에서 넘겨받은 날짜 (예: "2026-08-01T06:00:00.000Z")
+ * @returns {string} "YYYY-MM-DDTHH:mm" 포맷 (값이 없으면 빈 문자열 반환)
+ */
+export const toDateTimeInputValue = (serverDate: string | Date) => {
+	if (!serverDate) return "";
+
+	// 서버에서 주는 UTC date는 Fake UTC(실제로는 KST임)이므로 slice 처리함
+	return typeof serverDate === "string" ? serverDate.slice(0, 16) : dayjs(serverDate).format("YYYY-MM-DDTHH:mm");
+};
+
+// /**
+//  * datetime-local 인풋의 로컬 시간을 서버 전송을 위한 표준 UTC(ISO) 문자열로 변환합니다.
+//  *
+//  * @param {string} inputValue - 인풋에서 읽은 값 (예: "2026-08-01T15:00")
+//  * @returns {string|null} "YYYY-MM-DDTHH:mm:ss.SSSZ" 포맷 (값이 없으면 null 반환)
+//  */
+// export const toServerIsoString = (inputValue: string) => {
+// 	if (!inputValue) return null;
+// 	return dayjs(inputValue).toISOString();
+// };

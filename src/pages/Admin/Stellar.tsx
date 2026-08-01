@@ -38,6 +38,7 @@ import { FaYoutube } from "react-icons/fa6";
 import { TbPlaylist } from "react-icons/tb";
 import { Image } from "@/components/Image";
 import { Link } from "@/components/Link";
+import { toDateTimeInputValue } from "@/lib/functions/date";
 
 interface StellarInputValue {
 	name: string;
@@ -107,7 +108,10 @@ export function Stellar() {
 
 	// 행 클릭 시 상세 모달 열기
 	const handleRowClick = (index: number) => {
-		setEditingStellar({ ...stellarData[index] });
+		const temp = { ...stellarData[index] };
+		temp.debut = toDateTimeInputValue(temp.debut);
+		temp.graduation = toDateTimeInputValue(temp.graduation);
+		setEditingStellar(temp);
 		setEditingIndex(index);
 		setIsModalOpen(true);
 	};
@@ -165,6 +169,8 @@ export function Stellar() {
 
 		if (editingIndex === -1) {
 			// 신규 추가
+			// editingStellar.debut = toServerIsoString(editingStellar.debut) || "";
+			// editingStellar.graduation = toServerIsoString(editingStellar.graduation) || "";
 			createStellar.mutate(editingStellar, {
 				onSuccess: (data) => {
 					setStellarData((prev) => [...prev, data.data]);
@@ -176,6 +182,8 @@ export function Stellar() {
 			});
 		} else {
 			// 기존 데이터 수정
+			// editingStellar.debut = toServerIsoString(editingStellar.debut) || "";
+			// editingStellar.graduation = toServerIsoString(editingStellar.graduation) || "";
 			editStellar.mutate(editingStellar as Required<StellarData>, {
 				onSuccess: () => {
 					const targetOriginalStellar = stellarData[editingIndex!];
