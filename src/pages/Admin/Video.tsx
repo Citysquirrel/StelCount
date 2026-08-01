@@ -107,7 +107,11 @@ export function Video() {
 				normalizeKeyword(video.titleAlias || "").includes(normalizedQuery);
 			const matchStellar = filterStellar.length > 0 ? filterStellar.includes(video.ownerId || "") : true;
 			const matchTag =
-				filterTag.length > 0 ? filterTag.some((filterId) => video.tags?.some((t) => String(t.id) === filterId)) : true;
+				filterTag.length > 0
+					? filterTag.includes("none")
+						? video.tags?.length === 0
+						: filterTag.some((filterId) => video.tags?.some((t) => String(t.id) === filterId))
+					: true;
 			return matchSearch && matchStellar && matchTag;
 		});
 	}, [videoData, searchQuery, filterStellar, filterTag]);

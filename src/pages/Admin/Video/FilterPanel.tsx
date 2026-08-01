@@ -85,7 +85,11 @@ export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags 
 					<Button variant="outline" size="sm">
 						태그 필터
 						<Text as={"span"} fontSize="xs" color="gray" fontWeight={"400"} display="inline-block">
-							{selectedTag.length > 0 ? `(${selectedTag.length} 항목 선택됨)` : null}
+							{selectedTag.length > 0
+								? selectedTag.includes("none")
+									? "(태그 없음)"
+									: `(${selectedTag.length} 항목 선택됨)`
+								: null}
 						</Text>
 					</Button>
 				</PopoverTrigger>
@@ -107,8 +111,17 @@ export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags 
 									}}
 								>
 									<Stack direction="row" wrap="wrap" spacing={3}>
+										<Checkbox size="md" value={"none"} cursor="pointer">
+											<Tag colorScheme="gray">태그 없음</Tag>
+										</Checkbox>
 										{tags.map((tag) => (
-											<Checkbox key={tag.id} size="md" value={String(tag.id)} cursor="pointer">
+											<Checkbox
+												key={tag.id}
+												size="md"
+												value={String(tag.id)}
+												cursor="pointer"
+												isDisabled={selectedTag.includes("none")}
+											>
 												<Tag colorScheme={tag.colorCode || undefined}>{tag.name}</Tag>
 											</Checkbox>
 										))}
