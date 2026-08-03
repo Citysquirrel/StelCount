@@ -1248,21 +1248,22 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 				// setIsError(finalValue !== "" && !SEC_REGEX.test(finalValue));
 			} else {
 				const limitedNums = nums.slice(0, 6);
+				const len = limitedNums.length;
 
 				// 00:00:00 포맷팅
-				if (limitedNums.length <= 2) {
-					finalValue = limitedNums;
-				} else if (limitedNums.length <= 4) {
-					finalValue = `${limitedNums.slice(0, 2)}:${limitedNums.slice(2)}`;
+				if (len <= 2) {
+					finalValue = limitedNums; // 예: 12
+				} else if (len <= 4) {
+					// 예: 123 -> 1:23 / 1234 -> 12:34
+					finalValue = `${limitedNums.slice(0, len - 2)}:${limitedNums.slice(len - 2)}`;
 				} else {
-					finalValue = `${limitedNums.slice(0, 2)}:${limitedNums.slice(2, 4)}:${limitedNums.slice(4, 6)}`;
+					// 예: 12345 -> 1:23:45 / 123456 -> 12:34:56
+					finalValue = `${limitedNums.slice(0, len - 4)}:${limitedNums.slice(len - 4, len - 2)}:${limitedNums.slice(len - 2)}`;
 				}
 
 				// 특정 자리에서만 콜론 입력을 제한
-				if (rawValue.endsWith(":")) {
-					if ((limitedNums.length === 2 || limitedNums.length === 4) && !finalValue.endsWith(":")) {
-						finalValue += ":";
-					}
+				if (rawValue.endsWith(":") && (len === 2 || len === 4)) {
+					finalValue += ":";
 				}
 
 				// 에러 검증
