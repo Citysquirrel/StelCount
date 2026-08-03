@@ -58,6 +58,7 @@ import { LuClipboardPaste } from "react-icons/lu";
 import { formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
 import useColor from "../../lib/hooks/useColor";
 import { LiteralUnion } from "@/lib/types";
+import VALIDATION from "@/lib/functions/validation";
 
 // --- [타입 정의] ---
 export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
@@ -1162,6 +1163,8 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 
 	// 시간 포맷(MM:SS)과 초(Seconds) 단위 토글
 	const [isTimeFormat, setIsTimeFormat] = useState<boolean>(true);
+	// const TIME_REGEX = /^\d{2}:[0-5]\d:[0-5]\d$/;
+	// const SEC_REGEX = /^\d+$/;
 
 	// 타이핑 중 커서가 튀는 현상을 막기 위해, 시간 입력값은 모달 내 로컬 string 상태로 관리
 	const [timeStrStart, setTimeStrStart] = useState<string>("");
@@ -1223,6 +1226,55 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 			};
 		});
 	};
+
+	// ---
+
+	const handleChangeTimeText =
+		(setState: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
+			const rawValue = e.target.value;
+
+			// 한글 입력에 의한 글자 씹힘 방지
+			if ((e.nativeEvent as any).isComposing) {
+				setState(rawValue);
+				return;
+			}
+
+			// 조합이 끝난 문자열에서 순수 숫자만 추출
+			const nums = rawValue.replace(/[^0-9]/g, "");
+			let finalValue = "";
+
+			if (!isTimeFormat) {
+				finalValue = nums;
+				// setIsError(finalValue !== "" && !SEC_REGEX.test(finalValue));
+			} else {
+				const limitedNums = nums.slice(0, 6);
+
+				// 00:00:00 포맷팅
+				if (limitedNums.length <= 2) {
+					finalValue = limitedNums;
+				} else if (limitedNums.length <= 4) {
+					finalValue = `${limitedNums.slice(0, 2)}:${limitedNums.slice(2)}`;
+				} else {
+					finalValue = `${limitedNums.slice(0, 2)}:${limitedNums.slice(2, 4)}:${limitedNums.slice(4, 6)}`;
+				}
+
+				// 특정 자리에서만 콜론 입력을 제한
+				if (rawValue.endsWith(":")) {
+					if ((limitedNums.length === 2 || limitedNums.length === 4) && !finalValue.endsWith(":")) {
+						finalValue += ":";
+					}
+				}
+
+				// 에러 검증
+				// if (finalValue === "" || finalValue.length < 8) {
+				// 	setIsError(false);
+				// } else {
+				// 	setIsError(!TIME_REGEX.test(finalValue));
+				// }
+			}
+
+			setState(finalValue);
+		};
 
 	// --- 핸들러: 모달 저장 ---
 	const handleSaveHistory = () => {
@@ -1378,7 +1430,9 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 									/>
 								</FormControl>
 
-								<FormControl>
+								<FormControl
+									isInvalid={modalData.youtubeVideoId.length > 0 && !VALIDATION.youtubeId(modalData.youtubeVideoId)}
+								>
 									<FormLabel fontSize="sm" mb={1}>
 										유튜브 Video ID
 										<IconButton
@@ -1397,6 +1451,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 										size="sm"
 										value={modalData.youtubeVideoId || ""}
 										onChange={(e) => setModalData({ ...modalData, youtubeVideoId: e.target.value })}
+										_invalid={{ color: "#E53E3E", borderColor: "#E53E3E", boxShadow: "0 0 0 1px #E53E3E" }}
 									/>
 								</FormControl>
 
@@ -1428,9 +1483,9 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 											<Input
 												size="sm"
 												type={isTimeFormat ? "text" : "number"}
-												placeholder={isTimeFormat ? "예: 01:25" : "예: 85"}
+												placeholder={isTimeFormat ? "예) 01:25" : "예) 85"}
 												value={timeStrStart || ""}
-												onChange={(e) => setTimeStrStart(e.target.value)}
+												onChange={handleChangeTimeText(setTimeStrStart)}
 											/>
 										</FormControl>
 										<FormControl>
@@ -1440,9 +1495,9 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 											<Input
 												size="sm"
 												type={isTimeFormat ? "text" : "number"}
-												placeholder="없음"
+												placeholder={isTimeFormat ? "예) 04:25" : "예) 265"}
 												value={timeStrEnd || ""}
-												onChange={(e) => setTimeStrEnd(e.target.value)}
+												onChange={handleChangeTimeText(setTimeStrEnd)}
 											/>
 										</FormControl>
 									</Grid>
