@@ -81,6 +81,7 @@ export interface StellarGroup {
 
 //? id, sungAt, youtubeVideoId, start, end, memo, hamkubby_id, historyId, priority, isActive
 //TODO: historyId, hamkubby_id는 필수값. 대부분의 값에 대해 필터기능
+//TODO: 기본적으로 sungAt 순서에 따라 최신순 정렬, 같은 sungAt 끼리 묶어 리스트업
 export function SongHistory() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
 	const [stellarData] = useRecoilState(stellarState);

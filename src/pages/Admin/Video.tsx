@@ -100,20 +100,22 @@ export function Video() {
 	const [isTagOpen, setIsTagOpen] = useState(false);
 
 	const filteredData = useMemo(() => {
-		return videoData.filter((video) => {
-			const normalizedQuery = normalizeKeyword(searchQuery);
-			const matchSearch =
-				normalizeKeyword(video.title).includes(normalizedQuery) ||
-				normalizeKeyword(video.titleAlias || "").includes(normalizedQuery);
-			const matchStellar = filterStellar.length > 0 ? filterStellar.includes(video.ownerId || "") : true;
-			const matchTag =
-				filterTag.length > 0
-					? filterTag.includes("none")
-						? video.tags?.length === 0
-						: filterTag.some((filterId) => video.tags?.some((t) => String(t.id) === filterId))
-					: true;
-			return matchSearch && matchStellar && matchTag;
-		});
+		return videoData
+			.filter((video) => {
+				const normalizedQuery = normalizeKeyword(searchQuery);
+				const matchSearch =
+					normalizeKeyword(video.title).includes(normalizedQuery) ||
+					normalizeKeyword(video.titleAlias || "").includes(normalizedQuery);
+				const matchStellar = filterStellar.length > 0 ? filterStellar.includes(video.ownerId || "") : true;
+				const matchTag =
+					filterTag.length > 0
+						? filterTag.includes("none")
+							? video.tags?.length === 0
+							: filterTag.some((filterId) => video.tags?.some((t) => String(t.id) === filterId))
+						: true;
+				return matchSearch && matchStellar && matchTag;
+			})
+			.sort((a, b) => (b.id as number) - (a.id as number));
 	}, [videoData, searchQuery, filterStellar, filterTag]);
 
 	// Hooks
