@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export function NotExist() {
 	const nav = useNavigate();
 	useEffect(() => {
-		nav("/home");
+		nav("/home", { replace: true });
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	return <></>;
