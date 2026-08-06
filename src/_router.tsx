@@ -11,6 +11,7 @@ import { MultiView } from "./pages/MultiView";
 import { NotExist } from "./pages/NotExist";
 import { OAuth } from "./pages/OAuth";
 import { ServerErrorPage } from "./pages/ServerErrorPage";
+import { SongHistoryComponent } from "./pages/Admin/SongHistory";
 
 const Admin = lazy(() => import("./pages/Admin").then((m) => ({ default: m.Admin })));
 const AdminEdit = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminEdit })));
@@ -59,7 +60,7 @@ export const routeObj: RouteObject[] = [
 					},
 					{
 						path: "song-history",
-						element: <Songbook />,
+						element: <SongHistoryComponent />,
 					},
 					{
 						path: "setting",

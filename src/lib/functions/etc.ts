@@ -355,3 +355,5 @@ export function getComplementaryColor(hex: string) {
 
 	return `#${hexR}${hexG}${hexB}`;
 }
+
+export const createHistoryId = () => `HISTORY::${Date.now()}::${crypto.randomUUID()}`;

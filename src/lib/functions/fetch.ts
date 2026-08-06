@@ -38,6 +38,7 @@ export interface ServerAPIMap {
 		| "/dashboard"
 		| "/songbook"
 		| "/songbook/import"
+		| "/songbook/minify"
 		| "/stellars"
 		| "/stellar"
 		| "/stellar/:id"
@@ -49,7 +50,10 @@ export interface ServerAPIMap {
 		| "/video/:id"
 		| "/tags"
 		| "/tag"
-		| "/tag/:id";
+		| "/tag/:id"
+		| "/histories"
+		| "/history"
+		| "/history/:id";
 }
 
 export type Version = keyof ServerAPIMap;

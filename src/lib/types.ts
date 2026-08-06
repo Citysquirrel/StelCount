@@ -232,3 +232,17 @@ export interface DefaultDateFieldsV2 {
 	ca?: number;
 	ua?: number;
 }
+
+export interface SongHistory extends DefaultDateFields {
+	id?: number;
+	historyId: string;
+	sungAt: string;
+	youtubeVideoId: string;
+	start: number;
+	end: number | null;
+	memo: string;
+	priority: number | null;
+	isActive: boolean;
+	hamkubby_id?: number;
+	deletedAt?: string | null;
+}

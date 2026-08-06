@@ -55,10 +55,12 @@ import { isEqual, omit } from "lodash";
 import { MdAdd, MdClose, MdOpenInNew, MdSearch } from "react-icons/md";
 import { IoIosArrowDown } from "react-icons/io";
 import { LuClipboardPaste } from "react-icons/lu";
-import { formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
+import { createHistoryId, formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "../../lib/functions/etc";
 import useColor from "../../lib/hooks/useColor";
-import { LiteralUnion } from "@/lib/types";
+import { LiteralUnion, SongHistory } from "@/lib/types";
 import VALIDATION from "@/lib/functions/validation";
+import { displayPriority } from "@/lib/functions/display";
+import { youtube } from "@/lib/functions/platforms";
 
 // --- [타입 정의] ---
 export type SyncStatus = "UNCHANGED" | "NEW" | "MODIFIED";
@@ -83,22 +85,6 @@ export interface SongData {
 	actionStatus: ActionStatus;
 
 	song_histories: SongHistory[];
-}
-
-interface SongHistory {
-	id?: number;
-	historyId: string;
-	sungAt: string;
-	youtubeVideoId: string;
-	start: number;
-	end: number | null;
-	memo: string;
-	priority: number | null;
-	isActive: boolean;
-	hamkubby_id?: number;
-	createdAt?: string | null;
-	updatedAt?: string | null;
-	deletedAt?: string | null;
 }
 
 interface SyncDataData {
@@ -1185,7 +1171,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 	const handleAddHistory = () => {
 		const newHistory: SongHistory = {
 			sungAt: formatDateToYYYYMMDD(new Date().toDateString()),
-			historyId: `HISTORY::${Date.now()}::${crypto.randomUUID()}`,
+			historyId: createHistoryId(),
 			youtubeVideoId: "",
 			start: 0,
 			end: null,
@@ -1336,8 +1322,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 		}
 	};
 
-	const youtubeLink = (youtubeVideoId: string, start: number) =>
-		`https://www.youtube.com/watch?v=${youtubeVideoId}&t=${start}s`;
+	const youtubeLink = youtube.videoUrl;
 
 	return (
 		<>
@@ -1397,7 +1382,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 								{his.memo || "메모 없음"}
 							</Text>
 							<Text fontSize="xs" isTruncated>
-								중요도 {his.priority === 7 ? "⭐" : his.priority}
+								중요도 {displayPriority(his.priority)}
 							</Text>
 						</Grid>
 					</Flex>

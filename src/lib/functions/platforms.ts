@@ -20,7 +20,8 @@ export const youtube = {
 	channelUrl: (channelId?: string) => (channelId ? `https://www.youtube.com/${channelId}` : undefined),
 	channelUrlByYoutubeId: (youtubeId?: string) =>
 		youtubeId ? `https://www.youtube.com/channel/${youtubeId}` : undefined,
-	videoUrl: (videoId: string) => (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
+	videoUrl: (videoId: string, start?: number) =>
+		videoId ? `https://www.youtube.com/watch?v=${videoId}${start ? `&t=${start}s` : ""}` : undefined,
 	musicUrl: (videoId: string) => (videoId ? `https://music.youtube.com/watch?v=${videoId}` : undefined),
 	playlistUrl: (playlistId: string) => (playlistId ? `https://www.youtube.com/playlist?list=${playlistId}` : undefined),
 };

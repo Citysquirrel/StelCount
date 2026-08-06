@@ -1,13 +1,27 @@
+import * as CSS from "csstype";
 import { ImageV2 } from "@/components/Image";
-import { Link } from "@/components/Link";
+import { CustomLink, Link } from "@/components/Link";
 import { stellarState } from "@/lib/Atom";
 import { formatUtcToKst } from "@/lib/functions/date";
-import { getThumbnails, numberToLocaleString } from "@/lib/functions/etc";
+import {
+	createHistoryId,
+	formatDateToYYYYMMDD,
+	formatTime,
+	getThumbnails,
+	numberToLocaleString,
+} from "@/lib/functions/etc";
 import { normalizeKeyword } from "@/lib/functions/normalized";
 import { youtube } from "@/lib/functions/platforms";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
-import { Statistics, Tag as TagType, VideoDetail, YoutubeMusicData } from "@/lib/types";
 import {
+	type SongHistory as SongHistoryType,
+	Statistics,
+	Tag as TagType,
+	VideoDetail,
+	YoutubeMusicData,
+} from "@/lib/types";
+import {
+	Badge,
 	Box,
 	Button,
 	Card,
@@ -44,117 +58,141 @@ import { AiFillLike } from "react-icons/ai";
 import { FaEye } from "react-icons/fa6";
 import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
 import { IoRefreshCircle } from "react-icons/io5";
-import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdPublish } from "react-icons/md";
+import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew, MdPublish } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
-import { useRecoilState } from "recoil";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import useColor from "../../lib/hooks/useColor";
 import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
 import FilterPanel from "./Video/FilterPanel";
 import TagInputAutocomplete from "./Video/TagInput";
 import TagModal from "./Video/TagModal";
+import { Genre } from "./Songbook";
+import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
+import { displayPriority } from "@/lib/functions/display";
 
-interface VideoData extends Omit<
-	YoutubeMusicData,
-	"details" | "statistics" | "mostPopular" | "mostPopularMusic" | "thumbnail" | "thumbnails"
-> {
-	id?: number;
-	thumbnail?: string;
-	thumbnails?: string;
-	mostPopular?: number;
-	mostPopularMusic?: number;
-	details?: VideoDetail[];
-	statistics?: Statistics[];
-	inheritChannelId?: string;
-	isInheritChannelId: boolean;
+interface MinifiedSongData {
+	i: number;
+	tl: string;
+	a: string;
+	g: Genre;
+	iof: boolean;
+	ia: boolean;
 }
-
-export interface StellarGroup {
-	id?: number;
-	name: string;
-	engName: string;
-	numbering: string;
-	description: string;
-	isActive: boolean;
-	sortOrder: number;
+interface SongHistory extends SongHistoryType {
+	title?: string;
+	artist?: string;
 }
 
 //? id, sungAt, youtubeVideoId, start, end, memo, hamkubby_id, historyId, priority, isActive
 //TODO: historyId, hamkubby_id는 필수값. 대부분의 값에 대해 필터기능
 //TODO: 기본적으로 sungAt 순서에 따라 최신순 정렬, 같은 sungAt 끼리 묶어 리스트업
-export function SongHistory() {
-	const [videoData, setVideoData] = useState<VideoData[]>([]);
-	const [stellarData] = useRecoilState(stellarState);
+//TODO: id 정렬 추가
+export function SongHistoryComponent() {
+	const [historyData, setHistoryData] = useState<SongHistory[]>([]);
+	// const [stellarData] = useRecoilState(stellarState);
 
-	const stellarYoutubeChannelIds = stellarData.map((s) => s.youtubeId.split(",")).flat();
+	// const stellarYoutubeChannelIds = stellarData.map((s) => s.youtubeId.split(",")).flat();
 
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
-	const [filterStellar, setFilterStellar] = useState<string[]>([]);
-	const [filterTag, setFilterTag] = useState<string[]>([]);
+	// const [filterStellar, setFilterStellar] = useState<string[]>([]);
+	// const [filterTag, setFilterTag] = useState<string[]>([]);
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [editingVideo, setEditingVideo] = useState<VideoData | null>(null);
+	const [editingHistory, setEditingHistory] = useState<SongHistory | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
 	const [isTagOpen, setIsTagOpen] = useState(false);
 
 	const filteredData = useMemo(() => {
-		return videoData.filter((video) => {
-			const normalizedQuery = normalizeKeyword(searchQuery);
-			const matchSearch =
-				normalizeKeyword(video.title).includes(normalizedQuery) ||
-				normalizeKeyword(video.titleAlias || "").includes(normalizedQuery);
-			const matchStellar = filterStellar.length > 0 ? filterStellar.includes(video.ownerId || "") : true;
-			const matchTag =
-				filterTag.length > 0 ? filterTag.some((filterId) => video.tags?.some((t) => String(t.id) === filterId)) : true;
-			return matchSearch && matchStellar && matchTag;
-		});
-	}, [videoData, searchQuery, filterStellar, filterTag]);
+		return historyData
+			.filter((his) => {
+				const normalizedQuery = normalizeKeyword(searchQuery);
+				const matchSearch =
+					normalizeKeyword(his.title || "").includes(normalizedQuery) ||
+					normalizeKeyword(his.artist || "").includes(normalizedQuery);
+				return matchSearch;
+			})
+			.sort((a, b) => (b.id || 0) - (a.id || 0));
+	}, [historyData, searchQuery]);
 
 	// Hooks
 	const toast = useToast();
 	const { bgCard, borderColor, headerBg, fieldHoverBgColor } = useColor();
-	const getAllVideos = useServerQuery<DefaultResponseData<VideoData[]>>({
+	const getAllSongbookData = useServerQuery<DefaultResponseData<MinifiedSongData[]>>({
 		version: "admin",
-		api: "/videos",
+		api: "/songbook/minify",
 	});
-	const getAllTags = useServerQuery<DefaultResponseData<TagType[]>>({
+
+	const getAllHistories = useServerQuery<DefaultResponseData<SongHistory[]>>({
 		version: "admin",
-		api: "/tags",
+		api: "/histories",
 	});
-	const createVideo = useServerMutation<DefaultResponseData<VideoData>, VideoData, "admin">({
+
+	const createHistory = useServerMutation<DefaultResponseData<SongHistory>, SongHistory, "admin">({
 		version: "admin",
-		api: "/video",
+		api: "/history",
 		method: "POST",
 	});
-	const editVideo = useServerMutation<void, { id: number }, "admin">({
+	const editHistory = useServerMutation<void, { id: number }, "admin">({
 		version: "admin",
-		api: "/video/:id",
+		api: "/history/:id",
 		method: "PATCH",
 	});
-	const deleteVideo = useServerMutation<void, { id: number }, "admin">({
+	const deleteHistory = useServerMutation<void, { id: number }, "admin">({
 		version: "admin",
-		api: "/video/:id",
+		api: "/history/:id",
 		method: "DELETE",
 	});
+
+	const songbookMap = useMemo(() => {
+		const data = getAllSongbookData.data?.data || [];
+		return new Map(data.map((item) => [item.i, item]));
+	}, [getAllSongbookData]);
+
+	// sungAt과 youtubeId가 일치하지 않는 개체가 있는 경우를 위한 set
+	const invalidSungAtSet = useMemo(() => {
+		const videoIdGroupMap = new Map<string, Set<string | null>>();
+
+		filteredData.forEach((his) => {
+			const sungAt = his.sungAt;
+			if (!sungAt) return;
+
+			if (!videoIdGroupMap.has(sungAt)) {
+				videoIdGroupMap.set(sungAt, new Set());
+			}
+
+			const videoId = his.youtubeVideoId || null;
+			videoIdGroupMap.get(sungAt)!.add(videoId);
+		});
+
+		const invalidSet = new Set<string>();
+
+		videoIdGroupMap.forEach((videoIds, sungAt) => {
+			if (videoIds.size > 1) {
+				invalidSet.add(sungAt);
+			}
+		});
+
+		return invalidSet;
+	}, [filteredData]);
 
 	const parentRef = useRef<HTMLDivElement>(null);
 
 	// 행 클릭 시 상세 모달 열기
-	const handleRowClick = (index: number, videoId: number | undefined) => {
-		if (!videoId) {
+	const handleRowClick = (index: number, id: number | undefined) => {
+		if (!id) {
 			toast({ status: "error", description: "ID가 존재하지 않습니다! 코드 또는 데이터에 이상이 있는 경우입니다!" });
 			return;
 		}
 		const currentVideoData = filteredData[index];
 
-		setEditingVideo({
+		setEditingHistory({
 			...currentVideoData,
-			id: videoId,
-			isInheritChannelId: !!currentVideoData.inheritChannelId,
-			inheritChannelId: stellarData.find((s) => s.playlistIdForMusic === currentVideoData.ownerId)?.youtubeId || "",
+			id: id,
+			// isInheritChannelId: !!currentVideoData.inheritChannelId,
+			// inheritChannelId: stellarData.find((s) => s.playlistIdForMusic === currentVideoData.ownerId)?.youtubeId || "",
 		});
 		setEditingIndex(index);
 		setIsModalOpen(true);
@@ -163,18 +201,18 @@ export function SongHistory() {
 	const handleRowDelete = (id?: number) => {
 		if (!id) return;
 		if (confirm(`${id}번 데이터를 정말로 삭제하시겠습니까?`))
-			deleteVideo.mutate(
+			deleteHistory.mutate(
 				{ id },
 				{
 					onSuccess: () => {
-						setVideoData((prev) => {
+						setHistoryData((prev) => {
 							const idx = prev.findIndex((p) => p.id === id);
 							prev.splice(idx, 1);
 							return prev;
 						});
 					},
 					onError: () => {
-						toast({ description: "영상 데이터 편집 중 서버 에러 발생" });
+						toast({ description: "데이터 삭제 중 서버 에러 발생" });
 					},
 				},
 			);
@@ -189,30 +227,29 @@ export function SongHistory() {
 		const nextIndex = editingIndex - 1;
 		setEditingIndex(nextIndex);
 		const prev = filteredData[nextIndex];
-		setEditingVideo({ ...prev, id: prev.id });
+		setEditingHistory({ ...prev, id: prev.id });
 	};
 	const handleModalPageDown = () => {
 		if (editingIndex === null || isPageEnd) return;
 		const nextIndex = editingIndex + 1;
 		setEditingIndex(nextIndex);
 		const prev = filteredData[nextIndex];
-		setEditingVideo({ ...prev, id: prev.id });
+		setEditingHistory({ ...prev, id: prev.id });
 	};
 
 	// 버튼 핸들러
 	const handleAddNewVideo = () => {
-		const newSong: VideoData = {
-			type: "music",
-			title: "",
-			titleAlias: "",
-			channelId: "",
-			videoId: "",
+		const newSong: SongHistory = {
+			sungAt: formatDateToYYYYMMDD(new Date().toDateString()),
+			historyId: createHistoryId(),
+			youtubeVideoId: "",
+			start: 0,
+			end: null,
+			memo: "",
+			priority: 0,
 			isActive: true,
-			inheritChannelId: "",
-			isInheritChannelId: false,
-			tags: [],
 		};
-		setEditingVideo(newSong);
+		setEditingHistory(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
 		setIsModalOpen(true);
 	};
@@ -222,15 +259,15 @@ export function SongHistory() {
 
 	// 모달 내 저장 버튼
 	const handleSaveEdit = () => {
-		if (!editingVideo) return;
+		if (!editingHistory) return;
 
 		if (editingIndex === -1) {
 			// 신규 추가
-			createVideo.mutate(editingVideo, {
+			createHistory.mutate(editingHistory, {
 				onSuccess: (data) => {
-					setVideoData((prev) => [...prev, data.data]);
+					setHistoryData((prev) => [...prev, data.data]);
 					setIsModalOpen(false);
-					getAllVideos.refetch();
+					getAllHistories.refetch();
 				},
 				onError: () => {
 					toast({ description: "영상 추가 중 서버 에러 발생" });
@@ -238,19 +275,19 @@ export function SongHistory() {
 			});
 		} else {
 			// 기존 데이터 수정
-			editVideo.mutate(editingVideo as Required<VideoData>, {
+			editHistory.mutate(editingHistory as Required<SongHistory>, {
 				onSuccess: () => {
 					const targetOriginalStellar = filteredData[editingIndex!];
-					setVideoData((prev) =>
+					setHistoryData((prev) =>
 						prev.map((s) => {
 							if (s === targetOriginalStellar) {
-								return { ...editingVideo };
+								return { ...editingHistory };
 							}
 							return s;
 						}),
 					);
 					setIsModalOpen(false);
-					getAllVideos.refetch();
+					getAllHistories.refetch();
 				},
 				onError: () => {
 					toast({ description: "영상 편집 중 서버 에러 발생" });
@@ -261,7 +298,7 @@ export function SongHistory() {
 
 	// 태그 변화 핸들러
 	const onChangeTags = (tags: TagType[]) => {
-		setEditingVideo((prev) => {
+		setEditingHistory((prev) => {
 			if (!prev) return prev;
 			return { ...prev, tags };
 		});
@@ -269,40 +306,50 @@ export function SongHistory() {
 
 	// Details 변화 핸들러
 	const onChangeDetails = (details: AdditionalInputValue[]) => {
-		if (!editingVideo || editingIndex === null) return;
-		setEditingVideo({
-			...editingVideo,
-			details: details.map((dt) => ({
-				...dt,
-				id: filteredData[editingIndex].id,
-				viewCount: "",
-				likeCount: "",
-				countUpdatedAt: "",
-				statistics: [],
-				youtube_video_detail_id: null,
-				youtube_video_id: null,
-			})) as VideoDetail[],
+		if (!editingHistory || editingIndex === null) return;
+		setEditingHistory({
+			...editingHistory,
+			// details: details.map((dt) => ({
+			// 	...dt,
+			// 	id: filteredData[editingIndex].id,
+			// 	viewCount: "",
+			// 	likeCount: "",
+			// 	countUpdatedAt: "",
+			// 	statistics: [],
+			// 	youtube_video_detail_id: null,
+			// 	youtube_video_id: null,
+			// })) as VideoDetail[],
 		});
 	};
 
 	// 필터 핸들러
-	const onChangeStellarsFilter = (playlistIds: (string | number)[]) => {
-		setFilterStellar(playlistIds.map(String));
-	};
-	const onChangeTagsFilter = (tagIds: (string | number)[]) => {
-		setFilterTag(tagIds.map(String));
-	};
+	// const onChangeStellarsFilter = (playlistIds: (string | number)[]) => {
+	// 	setFilterStellar(playlistIds.map(String));
+	// };
+	// const onChangeTagsFilter = (tagIds: (string | number)[]) => {
+	// 	setFilterTag(tagIds.map(String));
+	// };
 
 	useEffect(() => {
-		if (getAllVideos.data?.data) setVideoData(getAllVideos.data.data);
-	}, [getAllVideos.data?.data]);
+		if (getAllHistories.data?.data) setHistoryData(getAllHistories.data.data);
+	}, [getAllHistories.data?.data]);
 	// --- [가상화 스크롤 설정] ---
 	const rowVirtualizer = useVirtualizer({
 		count: filteredData.length,
 		getScrollElement: () => parentRef.current,
-		estimateSize: () => 60,
+		estimateSize: () => 64,
 		overscan: 10,
 	});
+	const TABLE_WIDTHS: { [key: string]: Token<CSS.Property.Width | number, "sizes"> } = {
+		id: "40px",
+		sungAt: "80px",
+		videoId: "140px",
+		playbackRange: "180px",
+		memo: "120px",
+		priority: "60px",
+		controlPanel: "80px",
+	};
+
 	return (
 		<Box>
 			<Box mb={8}>
@@ -331,11 +378,11 @@ export function SongHistory() {
 						</InputRightElement>
 					) : null}
 				</InputGroup>
-				<FilterPanel
+				{/* <FilterPanel
 					tags={getAllTags.data?.data}
 					onChangeStellars={onChangeStellarsFilter}
 					onChangeTags={onChangeTagsFilter}
-				/>
+				/> */}
 			</Flex>
 			<Flex
 				gap={4}
@@ -368,20 +415,24 @@ export function SongHistory() {
 						fontWeight="bold"
 						fontSize="sm"
 					>
-						<Box w="40px">ID</Box>
-						<Box w="54px" textAlign={"center"}>
-							상속
+						{/* id, sungAt, youtubeVideoId, start, end, memo, hamkubby_id, historyId, priority, isActive */}
+						<Box w={TABLE_WIDTHS.id}>ID</Box>
+						<Box w={TABLE_WIDTHS.sungAt} textAlign={"center"}>
+							날짜
 						</Box>
-						<Box w="100px" textAlign={"center"}>
-							썸네일
+						<Box w={TABLE_WIDTHS.videoId} textAlign={"center"}>
+							유튜브 ID
 						</Box>
 						<Box flex={1} ml={2}>
-							상세
+							곡 정보 / 메모
 						</Box>
-						<Box w="120px" textAlign={"center"}>
-							부가 영상
+						<Box w={TABLE_WIDTHS.playbackRange} textAlign={"center"}>
+							재생 구간
 						</Box>
-						<Box w="60px" textAlign={"center"}>
+						<Box w={TABLE_WIDTHS.priority} textAlign={"center"}>
+							중요도
+						</Box>
+						<Box w={TABLE_WIDTHS.controlPanel} textAlign={"center"}>
 							조작
 						</Box>
 					</Flex>
@@ -395,8 +446,10 @@ export function SongHistory() {
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
-								const video = filteredData[virtualRow.index];
-								const isFaded = !video.isActive;
+								const his = filteredData[virtualRow.index];
+								const isFaded = !his.isActive;
+								const songbookData = songbookMap.get(his.hamkubby_id || -1);
+								const isInvalid = his.sungAt ? invalidSungAtSet.has(his.sungAt) : false;
 
 								return (
 									<Flex
@@ -413,76 +466,87 @@ export function SongHistory() {
 										borderBottom={`1px solid ${borderColor}`}
 										cursor="pointer"
 										_hover={{ bg: fieldHoverBgColor }}
-										onClick={() => handleRowClick(virtualRow.index, video.id)}
+										onClick={() => handleRowClick(virtualRow.index, his.id)}
 									>
 										{/* ID */}
-										<Box w="40px">{video.id}</Box>
-										{/* 상속 */}
-										<Box w="54px" textAlign="center">
-											{video.inheritChannelId ? (
-												<Icon as={FiCheckCircle} color="blue.500" boxSize={5} />
-											) : !stellarYoutubeChannelIds.includes(video.channelId) ? (
-												<Icon as={VscWarning} color="orange.500" boxSize={5} />
+										<Box w={TABLE_WIDTHS.id}>{his.id}</Box>
+										{/* 날짜 */}
+										<Box w={TABLE_WIDTHS.sungAt} textAlign="center" fontSize="sm">
+											{formatDateToYYYYMMDD(his.sungAt).slice(2) || "날짜 미상"}
+										</Box>
+										{/* 비디오 ID */}
+										<Box w={TABLE_WIDTHS.videoId} textAlign="center" fontSize="sm" position="relative">
+											{isInvalid ? (
+												<Icon
+													as={VscWarning}
+													color="orange.500"
+													boxSize={5}
+													position="absolute"
+													top="calc(50% - 10px)"
+													left="calc(50% - 10px)"
+												/>
 											) : null}
+											{his.youtubeVideoId}
 										</Box>
-										{/* 썸네일 */}
-										<Flex w="100px" textAlign="center" align={"center"} justify={"center"}>
-											<ImageV2
-												src={getThumbnails(video.thumbnails).default?.url || ""}
-												display="block"
-												borderRadius={"4px"}
-												mx="auto"
-												w="92px"
-												maxH="54px"
-												objectPosition="center"
-											/>
-										</Flex>
-										{/* 상세 */}
-										<Box flex={1} fontSize="2xs" ml={2} opacity={isFaded ? 0.5 : 1}>
-											<Text fontSize="16px" fontWeight={"bold"}>
-												{video.titleAlias ? `${video.titleAlias}` : video.title}
-												{video.titleAlias && (
-													<Text as="span" display="inline-block" fontSize="12px" color="gray" fontWeight="400">
-														(수정됨)
+										{/* 곡 정보 / 메모 */}
+										<HStack flex={1} ml={2} align={"center"} justify={"flex-start"} gap={"2px"}>
+											<VStack gap={"2px"}>
+												<Text w="300px" noOfLines={1} fontWeight={"bold"}>
+													{songbookData?.tl}
+												</Text>
+												<HStack w="100%">
+													<Badge
+														ml={1}
+														colorScheme={
+															songbookData?.g === "K-POP" ? "green" : songbookData?.g === "J-POP" ? "blue" : "yellow"
+														}
+													>
+														{songbookData?.g}
+													</Badge>
+													<Text color={"gray.500"} fontSize="sm">
+														{songbookData?.a}
 													</Text>
-												)}
-											</Text>
-											<Text>
-												{video.tags &&
-													video.tags.map((tag) => (
-														<Tag key={tag.id} colorScheme={tag.colorCode ? tag.colorCode : "gray"} mr={1}>
-															{tag.name}
-														</Tag>
-													))}
-											</Text>
+												</HStack>
+											</VStack>
+											<HStack>
+												<Text fontSize="sm">{his.memo ? `📝 ${his.memo}` : ""}</Text>
+											</HStack>
+										</HStack>
+										{/* 재생 구간 */}
+										<Box w={TABLE_WIDTHS.playbackRange} fontSize="sm" textAlign="center">
+											{`${formatTime(his.start)}${his.end ? " ~ " + formatTime(his.end) : ""}`}
 										</Box>
-										{/* 부가 영상 */}
-										<VStack w="120px" gap={0}>
-											{video.details && video.details.length > 0
-												? video.details.map((dt) => (
-														<Link
-															key={dt.videoId}
-															href={youtube.videoUrl(dt.videoId) || ""}
-															isExternal
-															fontSize="10px"
-															onClick={(e) => {
-																e.stopPropagation();
-															}}
-														>
-															{dt.type.split(" ")[0]}
-														</Link>
-													))
-												: null}
-										</VStack>
+										{/* 중요도 */}
+										<Flex w={TABLE_WIDTHS.priority} justify={"center"} fontSize="sm">
+											{displayPriority(his.priority)}
+										</Flex>
 										{/* 조작 */}
-										<Flex w="60px" justify={"center"}>
+										<Flex w={TABLE_WIDTHS.controlPanel} justify={"center"} gap={"2px"}>
+											{his.youtubeVideoId ? (
+												<IconButton
+													as={CustomLink}
+													aria-label="Open History"
+													size="sm"
+													variant={"outline"}
+													colorScheme="blackAlpha"
+													href={youtube.videoUrl(his.youtubeVideoId, his.start)}
+													target="_blank"
+													onClick={(e) => {
+														e.stopPropagation();
+													}}
+												>
+													<MdOpenInNew />
+												</IconButton>
+											) : null}
+
 											<IconButton
-												aria-label="Delete video"
+												aria-label="Delete History"
 												size="sm"
-												variant={"ghost"}
+												variant={"outline"}
+												colorScheme="red"
 												onClick={(e) => {
 													e.stopPropagation();
-													handleRowDelete(video.id);
+													handleRowDelete(his.id);
 												}}
 											>
 												<MdDelete />
@@ -494,14 +558,14 @@ export function SongHistory() {
 						</Box>
 					</Box>
 					{/* 태그 편집 모달 */}
-					<TagModal
+					{/* <TagModal
 						isModalOpen={isTagOpen}
 						setIsModalOpen={setIsTagOpen}
 						data={getAllTags.data?.data}
 						refetch={getAllTags.refetch}
-					/>
+					/> */}
 
-					{/* 비디오 편집 모달 */}
+					{/* 이력 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
 						<ModalOverlay />
 						<ModalContent>
@@ -530,34 +594,34 @@ export function SongHistory() {
 									</IconButton>
 								</HStack>
 								<Text fontSize="xs" color="gray" fontWeight="400">
-									{editingVideo?.id || ""}
+									{editingHistory?.id || ""}
 								</Text>
 							</ModalHeader>
 
 							<ModalCloseButton />
 
-							{editingVideo && (
+							{editingHistory && (
 								<ModalBody>
 									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
 										<VStack spacing={2} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
 											{/* 상단: 제목 및 썸네일, 태그 */}
 											<Flex gap={4}>
-												<VStack flex={1}>
+												{/* <VStack flex={1}>
 													<FormControl>
 														<FormLabel fontSize="sm">제목</FormLabel>
-														<Input size="sm" value={editingVideo.title || ""} isDisabled />
+														<Input size="sm" value={editingHistory.title || ""} isDisabled />
 													</FormControl>
 													<FormControl>
 														<FormLabel fontSize="sm">대체 제목</FormLabel>
 														<Input
 															size="sm"
-															value={editingVideo.titleAlias || ""}
-															onChange={(e) => setEditingVideo({ ...editingVideo, titleAlias: e.target.value })}
+															value={editingHistory.titleAlias || ""}
+															onChange={(e) => setEditingHistory({ ...editingHistory, titleAlias: e.target.value })}
 														/>
 													</FormControl>
 													<FormControl>
 														<TagInputAutocomplete
-															data={editingVideo.tags}
+															data={editingHistory.tags}
 															tagData={getAllTags.data?.data}
 															size="sm"
 															wrapperProps={{ maxW: "512px" }}
@@ -565,13 +629,13 @@ export function SongHistory() {
 														/>
 													</FormControl>
 												</VStack>
-												<Link href={youtube.videoUrl(editingVideo.videoId) || ""} isExternal>
+												<Link href={youtube.videoUrl(editingHistory.videoId) || ""} isExternal>
 													<ImageV2
 														src={
-															getThumbnails(editingVideo.thumbnails).maxres?.url ||
-															getThumbnails(editingVideo.thumbnails).standard?.url ||
-															getThumbnails(editingVideo.thumbnails).high?.url ||
-															getThumbnails(editingVideo.thumbnails).medium?.url ||
+															getThumbnails(editingHistory.thumbnails).maxres?.url ||
+															getThumbnails(editingHistory.thumbnails).standard?.url ||
+															getThumbnails(editingHistory.thumbnails).high?.url ||
+															getThumbnails(editingHistory.thumbnails).medium?.url ||
 															""
 														}
 														display="block"
@@ -581,15 +645,15 @@ export function SongHistory() {
 														maxH="240px"
 														objectPosition="center"
 													/>
-												</Link>
+												</Link> */}
 											</Flex>
 
 											{/* 하단: Details 이외 체크박스, 기록 칸 */}
 											<Flex gap={3}>
 												<VStack flex={3}>
-													<Card variant={"outline"} height="fit-content" width="100%">
+													{/* <Card variant={"outline"} height="fit-content" width="100%">
 														<CardBody display="flex" p={3} flexDirection="row">
-															<DetailsEditor data={editingVideo.details} onChangeDetails={onChangeDetails} />
+															<DetailsEditor data={editingHistory.details} onChangeDetails={onChangeDetails} />
 														</CardBody>
 													</Card>
 													<Card variant={"outline"} height="fit-content" width="100%">
@@ -597,26 +661,26 @@ export function SongHistory() {
 															<VStack flex={1} align={"flex-start"}>
 																<Checkbox
 																	size="sm"
-																	isChecked={editingVideo.isInheritChannelId}
+																	isChecked={editingHistory.isInheritChannelId}
 																	onChange={(e) =>
-																		setEditingVideo({ ...editingVideo, isInheritChannelId: e.target.checked })
+																		setEditingHistory({ ...editingHistory, isInheritChannelId: e.target.checked })
 																	}
 																>
 																	채널 ID 상속(다른 채널에 업로드 된 경우 사용합니다)
 																</Checkbox>
 																<Checkbox
 																	size="sm"
-																	isChecked={editingVideo.isActive}
-																	onChange={(e) => setEditingVideo({ ...editingVideo, isActive: e.target.checked })}
+																	isChecked={editingHistory.isActive}
+																	onChange={(e) => setEditingHistory({ ...editingHistory, isActive: e.target.checked })}
 																>
 																	활성화
 																</Checkbox>
 															</VStack>
 														</CardBody>
-													</Card>
+													</Card> */}
 												</VStack>
 												{/* 기록 */}
-												<Card flex={2} variant={"outline"} height="fit-content">
+												{/* <Card flex={2} variant={"outline"} height="fit-content">
 													<CardBody display="flex" p={3} flexDirection="row">
 														<Box flex={1}>
 															<Heading fontSize="md" fontWeight={"600"}>
@@ -626,41 +690,33 @@ export function SongHistory() {
 															<Flex align={"center"} gap={2}>
 																<Icon boxSize="14px" as={FaEye} />
 																<Text display="inline-block" fontSize="xs">
-																	{numberToLocaleString(editingVideo.viewCount)}
+																	{numberToLocaleString(editingHistory.viewCount)}
 																</Text>
 															</Flex>
 															<Flex align={"center"} gap={2}>
 																<Icon boxSize="14px" as={AiFillLike} />
 																<Text display="inline-block" fontSize="xs">
-																	{numberToLocaleString(editingVideo.likeCount)}
+																	{numberToLocaleString(editingHistory.likeCount)}
 																</Text>
 															</Flex>
-															{editingVideo.countUpdatedAt && (
+															{editingHistory.countUpdatedAt && (
 																<Flex align={"center"} gap={2}>
 																	<Icon boxSize="14px" as={IoRefreshCircle} />
 																	<Text display="inline-block" fontSize="xs">
-																		{formatUtcToKst(editingVideo.countUpdatedAt) || ""}
+																		{formatUtcToKst(editingHistory.countUpdatedAt) || ""}
 																	</Text>
 																</Flex>
 															)}
 															<Flex align={"center"} gap={2} pt={1}>
 																<Icon boxSize="14px" as={MdPublish} />
 																<Text display="inline-block" fontSize="xs">
-																	{formatUtcToKst(editingVideo.publishedAt) || ""}
+																	{formatUtcToKst(editingHistory.publishedAt) || ""}
 																</Text>
 															</Flex>
 														</Box>
 													</CardBody>
-												</Card>
+												</Card> */}
 											</Flex>
-
-											{/* 
-											details
-											
-											scheduledStartTime
-											liveBroadcastContent
-											
-											*/}
 										</VStack>
 									</HStack>
 								</ModalBody>
@@ -673,7 +729,7 @@ export function SongHistory() {
 								<Button
 									colorScheme="blue"
 									onClick={handleSaveEdit}
-									disabled={editVideo.isPending || createVideo.isPending}
+									disabled={editHistory.isPending || createHistory.isPending}
 								>
 									적용하기
 								</Button>
