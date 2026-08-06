@@ -1,37 +1,16 @@
-import * as CSS from "csstype";
-import { ImageV2 } from "@/components/Image";
-import { CustomLink, Link } from "@/components/Link";
-import { stellarState } from "@/lib/Atom";
-import { formatUtcToKst } from "@/lib/functions/date";
-import {
-	createHistoryId,
-	formatDateToYYYYMMDD,
-	formatTime,
-	getThumbnails,
-	numberToLocaleString,
-} from "@/lib/functions/etc";
+import { CustomLink } from "@/components/Link";
+import { displayPriority } from "@/lib/functions/display";
+import { createHistoryId, formatDateToYYYYMMDD, formatTime } from "@/lib/functions/etc";
 import { normalizeKeyword } from "@/lib/functions/normalized";
 import { youtube } from "@/lib/functions/platforms";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
-import {
-	type SongHistory as SongHistoryType,
-	Statistics,
-	Tag as TagType,
-	VideoDetail,
-	YoutubeMusicData,
-} from "@/lib/types";
+import { type SongHistory as SongHistoryType, Tag as TagType } from "@/lib/types";
 import {
 	Badge,
 	Box,
 	Button,
-	Card,
-	CardBody,
-	Checkbox,
 	CloseButton,
-	Divider,
 	Flex,
-	FormControl,
-	FormLabel,
 	HStack,
 	Heading,
 	Icon,
@@ -47,28 +26,21 @@ import {
 	ModalHeader,
 	ModalOverlay,
 	Stack,
-	Tag,
 	Text,
 	VStack,
 	useToast,
 } from "@chakra-ui/react";
+import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import * as CSS from "csstype";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AiFillLike } from "react-icons/ai";
-import { FaEye } from "react-icons/fa6";
-import { FiCheckCircle, FiFolder, FiPlus } from "react-icons/fi";
-import { IoRefreshCircle } from "react-icons/io5";
-import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew, MdPublish } from "react-icons/md";
+import { FiFolder, FiPlus } from "react-icons/fi";
+import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import useColor from "../../lib/hooks/useColor";
-import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
-import FilterPanel from "./Video/FilterPanel";
-import TagInputAutocomplete from "./Video/TagInput";
-import TagModal from "./Video/TagModal";
 import { Genre } from "./Songbook";
-import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
-import { displayPriority } from "@/lib/functions/display";
+import { AdditionalInputValue } from "./Video/Details";
 
 interface MinifiedSongData {
 	i: number;
@@ -89,35 +61,17 @@ interface SongHistory extends SongHistoryType {
 //TODO: id 정렬 추가
 export function SongHistoryComponent() {
 	const [historyData, setHistoryData] = useState<SongHistory[]>([]);
-	// const [stellarData] = useRecoilState(stellarState);
-
-	// const stellarYoutubeChannelIds = stellarData.map((s) => s.youtubeId.split(",")).flat();
 
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
-	// const [filterStellar, setFilterStellar] = useState<string[]>([]);
-	// const [filterTag, setFilterTag] = useState<string[]>([]);
+	const [filterSungAt, setFilterSungAt] = useState<string[]>([]);
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingHistory, setEditingHistory] = useState<SongHistory | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-	const [isTagOpen, setIsTagOpen] = useState(false);
-
-	const filteredData = useMemo(() => {
-		return historyData
-			.filter((his) => {
-				const normalizedQuery = normalizeKeyword(searchQuery);
-				const matchSearch =
-					normalizeKeyword(his.title || "").includes(normalizedQuery) ||
-					normalizeKeyword(his.artist || "").includes(normalizedQuery);
-				return matchSearch;
-			})
-			.sort((a, b) => (b.id || 0) - (a.id || 0));
-	}, [historyData, searchQuery]);
-
-	// Hooks
+	// MARK: - Hooks
 	const toast = useToast();
 	const { bgCard, borderColor, headerBg, fieldHoverBgColor } = useColor();
 	const getAllSongbookData = useServerQuery<DefaultResponseData<MinifiedSongData[]>>({
@@ -150,6 +104,21 @@ export function SongHistoryComponent() {
 		const data = getAllSongbookData.data?.data || [];
 		return new Map(data.map((item) => [item.i, item]));
 	}, [getAllSongbookData]);
+
+	// MARK: - filteredData
+	const filteredData = useMemo(() => {
+		return historyData
+			.filter((his) => {
+				const songbookData = songbookMap.get(his.hamkubby_id || -1);
+
+				const normalizedQuery = normalizeKeyword(searchQuery);
+				const matchSearch =
+					normalizeKeyword(songbookData?.tl || "").includes(normalizedQuery) ||
+					normalizeKeyword(songbookData?.a || "").includes(normalizedQuery);
+				return matchSearch;
+			})
+			.sort((a, b) => (b.id || 0) - (a.id || 0));
+	}, [historyData, searchQuery]);
 
 	// sungAt과 youtubeId가 일치하지 않는 개체가 있는 경우를 위한 set
 	const invalidSungAtSet = useMemo(() => {
@@ -252,9 +221,6 @@ export function SongHistoryComponent() {
 		setEditingHistory(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
 		setIsModalOpen(true);
-	};
-	const handleTagSetting = () => {
-		setIsTagOpen(true);
 	};
 
 	// 모달 내 저장 버튼
@@ -398,9 +364,6 @@ export function SongHistoryComponent() {
 					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
 						추가
 					</Button>
-					<Button leftIcon={<FiFolder />} colorScheme="gray" onClick={handleTagSetting} variant={"outline"}>
-						태그 관리
-					</Button>
 				</Flex>
 			</Flex>
 			<Stack>
@@ -461,7 +424,9 @@ export function SongHistoryComponent() {
 										transform={`translateY(${virtualRow.start}px)`}
 										h={`${virtualRow.size}px`}
 										px={4}
-										bg={isFaded ? "red.50" : index % 2 ? "gray.50" : undefined}
+										bg={index % 2 ? "gray.50" : undefined}
+										opacity={isFaded ? 0.5 : 1}
+										textDecoration={isFaded ? "line-through" : "none"}
 										align="center"
 										borderBottom={`1px solid ${borderColor}`}
 										cursor="pointer"
@@ -557,13 +522,6 @@ export function SongHistoryComponent() {
 							})}
 						</Box>
 					</Box>
-					{/* 태그 편집 모달 */}
-					{/* <TagModal
-						isModalOpen={isTagOpen}
-						setIsModalOpen={setIsTagOpen}
-						data={getAllTags.data?.data}
-						refetch={getAllTags.refetch}
-					/> */}
 
 					{/* 이력 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
