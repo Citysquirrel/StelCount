@@ -1,16 +1,22 @@
+import { type KeyboardEvent } from "react";
 import { CustomLink } from "@/components/Link";
 import { displayPriority } from "@/lib/functions/display";
-import { createHistoryId, formatDateToYYYYMMDD, formatTime } from "@/lib/functions/etc";
+import { createHistoryId, formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "@/lib/functions/etc";
 import { normalizeKeyword } from "@/lib/functions/normalized";
 import { youtube } from "@/lib/functions/platforms";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
-import { type SongHistory as SongHistoryType, Tag as TagType } from "@/lib/types";
+import { type SongHistory as SongHistoryType } from "@/lib/types";
 import {
 	Badge,
 	Box,
 	Button,
+	Checkbox,
 	CloseButton,
+	Divider,
 	Flex,
+	FormControl,
+	FormLabel,
+	Grid,
 	HStack,
 	Heading,
 	Icon,
@@ -18,6 +24,8 @@ import {
 	Input,
 	InputGroup,
 	InputRightElement,
+	List,
+	ListItem,
 	Modal,
 	ModalBody,
 	ModalCloseButton,
@@ -25,7 +33,14 @@ import {
 	ModalFooter,
 	ModalHeader,
 	ModalOverlay,
+	NumberDecrementStepper,
+	NumberIncrementStepper,
+	NumberInput,
+	NumberInputField,
+	NumberInputStepper,
+	Spacer,
 	Stack,
+	Switch,
 	Text,
 	VStack,
 	useToast,
@@ -34,13 +49,12 @@ import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import * as CSS from "csstype";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiFolder, FiPlus } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import useColor from "../../lib/hooks/useColor";
 import { Genre } from "./Songbook";
-import { AdditionalInputValue } from "./Video/Details";
 
 interface MinifiedSongData {
 	i: number;
@@ -70,6 +84,19 @@ export function SongHistoryComponent() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingHistory, setEditingHistory] = useState<SongHistory | null>(null);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+	const [isTimeFormat, setIsTimeFormat] = useState<boolean>(true);
+	const [timeStrStart, setTimeStrStart] = useState<string>("");
+	const [timeStrEnd, setTimeStrEnd] = useState<string>("");
+
+	const [songbookSelectorValue, setSongbookSelectorValue] = useState("");
+	const [songbookSelectorObject, setSongbookSelectorObject] = useState<{ i: number; tl: string; a: string }>({
+		i: -1,
+		tl: "",
+		a: "",
+	});
+	const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
+	const [highlightedIndex, setHighlightedIndex] = useState(0);
 
 	// MARK: - Hooks
 	const toast = useToast();
@@ -104,6 +131,11 @@ export function SongHistoryComponent() {
 		const data = getAllSongbookData.data?.data || [];
 		return new Map(data.map((item) => [item.i, item]));
 	}, [getAllSongbookData]);
+
+	const getSongbookDataWithHistory = useMemo<MinifiedSongData | undefined>(() => {
+		if (!editingHistory) return undefined;
+		return songbookMap.get(editingHistory.hamkubby_id || -1);
+	}, [editingHistory, songbookMap]);
 
 	// MARK: - filteredData
 	const filteredData = useMemo(() => {
@@ -157,11 +189,20 @@ export function SongHistoryComponent() {
 		}
 		const currentVideoData = filteredData[index];
 
+		setTimeStrStart(isTimeFormat ? formatTime(currentVideoData.start) || "00:00" : String(currentVideoData.start || 0));
+		setTimeStrEnd(
+			isTimeFormat
+				? formatTime(currentVideoData.end)
+				: currentVideoData.end !== undefined && currentVideoData.end !== null
+					? String(currentVideoData.end)
+					: "",
+		);
+
 		setEditingHistory({
 			...currentVideoData,
+
 			id: id,
-			// isInheritChannelId: !!currentVideoData.inheritChannelId,
-			// inheritChannelId: stellarData.find((s) => s.playlistIdForMusic === currentVideoData.ownerId)?.youtubeId || "",
+			sungAt: formatDateToYYYYMMDD(currentVideoData.sungAt || ""),
 		});
 		setEditingIndex(index);
 		setIsModalOpen(true);
@@ -207,7 +248,7 @@ export function SongHistoryComponent() {
 	};
 
 	// 버튼 핸들러
-	const handleAddNewVideo = () => {
+	const handleAddNewHistory = () => {
 		const newSong: SongHistory = {
 			sungAt: formatDateToYYYYMMDD(new Date().toDateString()),
 			historyId: createHistoryId(),
@@ -220,16 +261,38 @@ export function SongHistoryComponent() {
 		};
 		setEditingHistory(newSong);
 		setEditingIndex(-1); // -1은 신규 추가를 의미
+		setTimeStrStart("00:00");
+		setTimeStrEnd("");
 		setIsModalOpen(true);
 	};
 
 	// 모달 내 저장 버튼
 	const handleSaveEdit = () => {
-		if (!editingHistory) return;
+		if (!editingHistory) return toast({ description: "정상적인 접근이 아닙니다. 처음부터 다시 시도해주세요." });
+
+		if (editingHistory.sungAt === "") return toast({ description: "날짜가 입력되지 않았습니다." });
+
+		// 로컬 텍스트 상태(timeStr)를 파싱하여 modalData의 실제 start, end(숫자)로 변환
+		let finalStart = 0;
+		let finalEnd: number | null = null;
+
+		if (isTimeFormat) {
+			finalStart = parseTimeToSeconds(timeStrStart) ?? 0;
+			finalEnd = parseTimeToSeconds(timeStrEnd);
+		} else {
+			finalStart = Number(timeStrStart) || 0;
+			finalEnd = timeStrEnd.trim() !== "" ? Number(timeStrEnd) : null;
+		}
+
+		const historyToSave = {
+			...editingHistory,
+			start: finalStart,
+			end: finalEnd,
+		};
 
 		if (editingIndex === -1) {
 			// 신규 추가
-			createHistory.mutate(editingHistory, {
+			createHistory.mutate(historyToSave, {
 				onSuccess: (data) => {
 					setHistoryData((prev) => [...prev, data.data]);
 					setIsModalOpen(false);
@@ -241,12 +304,12 @@ export function SongHistoryComponent() {
 			});
 		} else {
 			// 기존 데이터 수정
-			editHistory.mutate(editingHistory as Required<SongHistory>, {
+			editHistory.mutate(historyToSave as Required<SongHistory>, {
 				onSuccess: () => {
-					const targetOriginalStellar = filteredData[editingIndex!];
+					const targetOriginalHistory = filteredData[editingIndex!];
 					setHistoryData((prev) =>
 						prev.map((s) => {
-							if (s === targetOriginalStellar) {
+							if (s === targetOriginalHistory) {
 								return { ...editingHistory };
 							}
 							return s;
@@ -262,39 +325,120 @@ export function SongHistoryComponent() {
 		}
 	};
 
-	// 태그 변화 핸들러
-	const onChangeTags = (tags: TagType[]) => {
-		setEditingHistory((prev) => {
-			if (!prev) return prev;
-			return { ...prev, tags };
-		});
+	// MARK: - time text handler
+	const handleChangeTimeText =
+		(setState: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
+			const rawValue = e.target.value;
+
+			// 한글 입력에 의한 글자 씹힘 방지
+			if ((e.nativeEvent as any).isComposing) {
+				setState(rawValue);
+				return;
+			}
+
+			// 조합이 끝난 문자열에서 순수 숫자만 추출
+			const nums = rawValue.replace(/[^0-9]/g, "");
+			let finalValue = "";
+
+			if (!isTimeFormat) {
+				finalValue = nums;
+				// setIsError(finalValue !== "" && !SEC_REGEX.test(finalValue));
+			} else {
+				const limitedNums = nums.slice(0, 6);
+				const len = limitedNums.length;
+
+				// 00:00:00 포맷팅
+				if (len <= 2) {
+					finalValue = limitedNums; // 예: 12
+				} else if (len <= 4) {
+					// 예: 123 -> 1:23 / 1234 -> 12:34
+					finalValue = `${limitedNums.slice(0, len - 2)}:${limitedNums.slice(len - 2)}`;
+				} else {
+					// 예: 12345 -> 1:23:45 / 123456 -> 12:34:56
+					finalValue = `${limitedNums.slice(0, len - 4)}:${limitedNums.slice(len - 4, len - 2)}:${limitedNums.slice(len - 2)}`;
+				}
+
+				// 특정 자리에서만 콜론 입력을 제한
+				if (rawValue.endsWith(":") && (len === 2 || len === 4)) {
+					finalValue += ":";
+				}
+
+				// 에러 검증
+				// if (finalValue === "" || finalValue.length < 8) {
+				// 	setIsError(false);
+				// } else {
+				// 	setIsError(!TIME_REGEX.test(finalValue));
+				// }
+			}
+
+			setState(finalValue);
+		};
+
+	const handleToggleFormat = (checked: boolean) => {
+		setIsTimeFormat(checked);
+
+		// 현재 입력되어 있는 값을 기반으로 즉시 포맷팅 스왑
+		const currentStartSec = isTimeFormat ? parseTimeToSeconds(timeStrStart) : Number(timeStrStart);
+		const currentEndSec = isTimeFormat ? parseTimeToSeconds(timeStrEnd) : timeStrEnd ? Number(timeStrEnd) : undefined;
+
+		if (checked) {
+			// 초 -> MM:SS 전환
+			setTimeStrStart(formatTime(currentStartSec) || "00:00");
+			setTimeStrEnd(formatTime(currentEndSec));
+		} else {
+			// MM:SS -> 초 전환
+			setTimeStrStart(String(currentStartSec || 0));
+			setTimeStrEnd(currentEndSec !== undefined ? String(currentEndSec) : "");
+		}
 	};
 
-	// Details 변화 핸들러
-	const onChangeDetails = (details: AdditionalInputValue[]) => {
-		if (!editingHistory || editingIndex === null) return;
-		setEditingHistory({
-			...editingHistory,
-			// details: details.map((dt) => ({
-			// 	...dt,
-			// 	id: filteredData[editingIndex].id,
-			// 	viewCount: "",
-			// 	likeCount: "",
-			// 	countUpdatedAt: "",
-			// 	statistics: [],
-			// 	youtube_video_detail_id: null,
-			// 	youtube_video_id: null,
-			// })) as VideoDetail[],
-		});
-	};
+	// Mark: - custom selector handler
+	const availableOptions = useMemo(
+		() =>
+			getAllSongbookData.data?.data.filter(
+				(item) => item.tl.toLowerCase().includes(songbookSelectorObject.tl.toLowerCase()),
+				// &&
+				// !selectedTags.some((selected) => selected.id === item.id),
+			) || [],
+		[getAllSongbookData.data?.data, songbookSelectorObject],
+	);
 
-	// 필터 핸들러
-	// const onChangeStellarsFilter = (playlistIds: (string | number)[]) => {
-	// 	setFilterStellar(playlistIds.map(String));
-	// };
-	// const onChangeTagsFilter = (tagIds: (string | number)[]) => {
-	// 	setFilterTag(tagIds.map(String));
-	// };
+	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+		if (!isSelectorOpen && songbookSelectorObject) setIsSelectorOpen(true);
+
+		switch (e.key) {
+			case "ArrowDown":
+				e.preventDefault();
+				setHighlightedIndex((prev) => Math.min(prev + 1, availableOptions.length - 1));
+				break;
+			case "ArrowUp":
+				e.preventDefault();
+				setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+				break;
+			case "Enter": {
+				e.preventDefault();
+				const available = availableOptions.find((o) => o.i === highlightedIndex);
+				if (isSelectorOpen && available) {
+					setSongbookSelectorObject(available);
+				}
+				break;
+			}
+			// case "Backspace":
+			// 	// 입력창이 비어있을 때 백스페이스 누르면 맨 마지막 태그 삭제
+			// 	if (!songbookSelectorValue && selectedTags.length > 0) {
+			// 		const nextTags = [...selectedTags];
+			// 		nextTags.pop();
+			// 		setSelectedTags(nextTags);
+			// 		onChangeTags?.(nextTags);
+			// 	}
+			// 	break;
+			case "Escape":
+				setIsSelectorOpen(false);
+				break;
+			default:
+				break;
+		}
+	};
 
 	useEffect(() => {
 		if (getAllHistories.data?.data) setHistoryData(getAllHistories.data.data);
@@ -361,7 +505,7 @@ export function SongHistoryComponent() {
 				border={`1px solid ${borderColor}`}
 			>
 				<Flex flex={1} justify="flex-end" gap={2}>
-					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
+					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewHistory}>
 						추가
 					</Button>
 				</Flex>
@@ -468,7 +612,7 @@ export function SongHistoryComponent() {
 													>
 														{songbookData?.g}
 													</Badge>
-													<Text color={"gray.500"} fontSize="sm">
+													<Text w="240px" color={"gray.500"} fontSize="sm">
 														{songbookData?.a}
 													</Text>
 												</HStack>
@@ -524,7 +668,7 @@ export function SongHistoryComponent() {
 					</Box>
 
 					{/* 이력 편집 모달 */}
-					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
+					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="2xl">
 						<ModalOverlay />
 						<ModalContent>
 							<ModalHeader pb={1}>
@@ -552,7 +696,7 @@ export function SongHistoryComponent() {
 									</IconButton>
 								</HStack>
 								<Text fontSize="xs" color="gray" fontWeight="400">
-									{editingHistory?.id || ""}
+									{editingHistory?.id || ""} - {editingHistory?.historyId || ""}
 								</Text>
 							</ModalHeader>
 
@@ -562,119 +706,232 @@ export function SongHistoryComponent() {
 								<ModalBody>
 									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
 										<VStack spacing={2} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
-											{/* 상단: 제목 및 썸네일, 태그 */}
-											<Flex gap={4}>
-												{/* <VStack flex={1}>
-													<FormControl>
-														<FormLabel fontSize="sm">제목</FormLabel>
-														<Input size="sm" value={editingHistory.title || ""} isDisabled />
-													</FormControl>
-													<FormControl>
-														<FormLabel fontSize="sm">대체 제목</FormLabel>
-														<Input
-															size="sm"
-															value={editingHistory.titleAlias || ""}
-															onChange={(e) => setEditingHistory({ ...editingHistory, titleAlias: e.target.value })}
-														/>
-													</FormControl>
-													<FormControl>
-														<TagInputAutocomplete
-															data={editingHistory.tags}
-															tagData={getAllTags.data?.data}
-															size="sm"
-															wrapperProps={{ maxW: "512px" }}
-															onChangeTags={onChangeTags}
-														/>
-													</FormControl>
-												</VStack>
-												<Link href={youtube.videoUrl(editingHistory.videoId) || ""} isExternal>
-													<ImageV2
-														src={
-															getThumbnails(editingHistory.thumbnails).maxres?.url ||
-															getThumbnails(editingHistory.thumbnails).standard?.url ||
-															getThumbnails(editingHistory.thumbnails).high?.url ||
-															getThumbnails(editingHistory.thumbnails).medium?.url ||
-															""
-														}
-														display="block"
-														borderRadius={"4px"}
-														mx="auto"
-														w="320px"
-														maxH="240px"
-														objectPosition="center"
-													/>
-												</Link> */}
-											</Flex>
+											{/* 상단: 노래 정보 */}
+											{getSongbookDataWithHistory && (
+												<>
+													<VStack gap={1}>
+														<HStack w="100%">
+															<Text noOfLines={1} fontWeight={"bold"}>
+																{getSongbookDataWithHistory.tl}
+															</Text>
+														</HStack>
+														<HStack w="100%">
+															<Badge
+																ml={1}
+																colorScheme={
+																	getSongbookDataWithHistory.g === "K-POP"
+																		? "green"
+																		: getSongbookDataWithHistory.g === "J-POP"
+																			? "blue"
+																			: "yellow"
+																}
+															>
+																{getSongbookDataWithHistory.g}
+															</Badge>
+															<Text color={"gray.500"} fontSize="sm">
+																{getSongbookDataWithHistory.a}
+															</Text>
+														</HStack>
+													</VStack>
+													<Box position="relative" padding={2}>
+														<Divider />
+													</Box>
+												</>
+											)}
 
-											{/* 하단: Details 이외 체크박스, 기록 칸 */}
-											<Flex gap={3}>
-												<VStack flex={3}>
-													{/* <Card variant={"outline"} height="fit-content" width="100%">
-														<CardBody display="flex" p={3} flexDirection="row">
-															<DetailsEditor data={editingHistory.details} onChangeDetails={onChangeDetails} />
-														</CardBody>
-													</Card>
-													<Card variant={"outline"} height="fit-content" width="100%">
-														<CardBody display="flex" p={3} flexDirection="row">
-															<VStack flex={1} align={"flex-start"}>
-																<Checkbox
-																	size="sm"
-																	isChecked={editingHistory.isInheritChannelId}
-																	onChange={(e) =>
-																		setEditingHistory({ ...editingHistory, isInheritChannelId: e.target.checked })
-																	}
-																>
-																	채널 ID 상속(다른 채널에 업로드 된 경우 사용합니다)
-																</Checkbox>
-																<Checkbox
-																	size="sm"
-																	isChecked={editingHistory.isActive}
-																	onChange={(e) => setEditingHistory({ ...editingHistory, isActive: e.target.checked })}
-																>
-																	활성화
-																</Checkbox>
-															</VStack>
-														</CardBody>
-													</Card> */}
-												</VStack>
-												{/* 기록 */}
-												{/* <Card flex={2} variant={"outline"} height="fit-content">
-													<CardBody display="flex" p={3} flexDirection="row">
-														<Box flex={1}>
-															<Heading fontSize="md" fontWeight={"600"}>
-																기록
-															</Heading>
-															<Divider marginBlock={2} />
-															<Flex align={"center"} gap={2}>
-																<Icon boxSize="14px" as={FaEye} />
-																<Text display="inline-block" fontSize="xs">
-																	{numberToLocaleString(editingHistory.viewCount)}
-																</Text>
-															</Flex>
-															<Flex align={"center"} gap={2}>
-																<Icon boxSize="14px" as={AiFillLike} />
-																<Text display="inline-block" fontSize="xs">
-																	{numberToLocaleString(editingHistory.likeCount)}
-																</Text>
-															</Flex>
-															{editingHistory.countUpdatedAt && (
-																<Flex align={"center"} gap={2}>
-																	<Icon boxSize="14px" as={IoRefreshCircle} />
-																	<Text display="inline-block" fontSize="xs">
-																		{formatUtcToKst(editingHistory.countUpdatedAt) || ""}
-																	</Text>
-																</Flex>
+											{/* 하단: 이외 수정 가능한 데이터 */}
+											{editingHistory && (
+												<Flex gap={3} flexDir={"column"}>
+													<FormControl flex={1}>
+														<FormLabel fontSize="sm">노래책 연결</FormLabel>
+														{/* 
+														//? 가짜 input 준비여부? => X
+														//? input 뒤쪽에 Badge형태로 등록 (badge가 떠있으면 연결된 것으로) => X
+														//? 상단에 마련된 노래 정보에 가시화. 카드 형태로 변경
+														//? 여기서는 메인 input이 살아있도록 간단히 구성.
+														*/}
+														{/* <Input
+															ref={inputRef}
+															size={"sm"}
+															variant="unstyled"
+															placeholder={selectedTags.length === 0 ? "노래 검색하기..." : ""}
+															value={songbookSelectorValue}
+															onChange={handleInputChange}
+															onKeyDown={handleKeyDown}
+															onFocus={() => setIsOpen(true)}
+															minW="120px"
+															flex="1"
+															autoComplete="off"
+															spellCheck="false"
+														/> */}
+														<List
+															position="absolute"
+															top="100%"
+															left={0}
+															right={0}
+															mt={2}
+															bg="white"
+															boxShadow="md"
+															borderRadius="md"
+															maxH="200px"
+															overflowY="auto"
+															zIndex={10}
+															border="1px solid"
+															borderColor="gray.200"
+														>
+															{getAllSongbookData.data && getAllSongbookData.data.data.length > 0 ? (
+																getAllSongbookData.data.data
+																	.filter((sb) => sb.ia)
+																	.map((sb) => (
+																		<ListItem
+																			key={sb.i}
+																			p={3}
+																			cursor="pointer"
+																			// bg={index === highlightedIndex ? "blue.50" : "transparent"}
+																			_hover={{ bg: "blue.50" }}
+																		>{`${sb.i}) ${sb.tl} - ${sb.a}`}</ListItem>
+																	))
+															) : (
+																<option>데이터 없음</option>
 															)}
-															<Flex align={"center"} gap={2} pt={1}>
-																<Icon boxSize="14px" as={MdPublish} />
-																<Text display="inline-block" fontSize="xs">
-																	{formatUtcToKst(editingHistory.publishedAt) || ""}
+														</List>
+														{/* <Select
+															size="sm"
+															placeholder="노래를 선택해주세요"
+															onChange={(e) =>
+																setEditingHistory({ ...editingHistory, hamkubby_id: Number(e.target.value) || -1 })
+															}
+															value={(editingHistory.hamkubby_id && editingHistory.hamkubby_id) || ""}
+															isDisabled={getAllSongbookData.data?.data.length === 0}
+														>
+															{getAllSongbookData.data && getAllSongbookData.data.data.length > 0 ? (
+																getAllSongbookData.data.data.map((sb) => (
+																	<option key={sb.i} value={sb.i}>
+																		{`${sb.i}) ${sb.tl} - ${sb.a}`}
+																	</option>
+																))
+															) : (
+																<option>그룹 데이터 없음</option>
+															)}
+														</Select> */}
+													</FormControl>
+													<HStack flex={1}>
+														<FormControl flex={1}>
+															<FormLabel fontSize="sm">날짜</FormLabel>
+															<Input
+																size="sm"
+																type="date"
+																value={editingHistory.sungAt || ""}
+																onChange={(e) => setEditingHistory({ ...editingHistory, sungAt: e.target.value })}
+															/>
+														</FormControl>
+														<FormControl flex={1}>
+															<FormLabel fontSize="sm">유튜브 Video ID</FormLabel>
+															<Input
+																size="sm"
+																value={editingHistory.youtubeVideoId || ""}
+																onChange={(e) =>
+																	setEditingHistory({ ...editingHistory, youtubeVideoId: e.target.value })
+																}
+															/>
+														</FormControl>
+													</HStack>
+
+													<Box p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+														<Flex alignItems="center" mb={3}>
+															<Text fontSize="sm" fontWeight="bold">
+																재생 구간
+															</Text>
+															<Spacer />
+															<Flex alignItems="center" gap={2}>
+																<Text fontSize="xs" color="gray.500">
+																	{isTimeFormat ? "시간 포맷" : "초 단위"}
 																</Text>
+																<Switch
+																	size="sm"
+																	colorScheme="teal"
+																	isChecked={isTimeFormat}
+																	onChange={(e) => handleToggleFormat(e.target.checked)}
+																/>
 															</Flex>
-														</Box>
-													</CardBody>
-												</Card> */}
-											</Flex>
+														</Flex>
+
+														<Grid templateColumns="1fr 1fr" gap={2}>
+															<FormControl>
+																<FormLabel fontSize="xs" mb={1}>
+																	시작
+																</FormLabel>
+																<Input
+																	size="sm"
+																	type={isTimeFormat ? "text" : "number"}
+																	placeholder={isTimeFormat ? "예) 01:25" : "예) 85"}
+																	value={timeStrStart || ""}
+																	onChange={handleChangeTimeText(setTimeStrStart)}
+																/>
+															</FormControl>
+															<FormControl>
+																<FormLabel fontSize="xs" mb={1}>
+																	종료 (선택)
+																</FormLabel>
+																<Input
+																	size="sm"
+																	type={isTimeFormat ? "text" : "number"}
+																	placeholder={isTimeFormat ? "예) 04:25" : "예) 265"}
+																	value={timeStrEnd || ""}
+																	onChange={handleChangeTimeText(setTimeStrEnd)}
+																/>
+															</FormControl>
+														</Grid>
+													</Box>
+
+													<HStack flex={1}>
+														<FormControl flex={1}>
+															<FormLabel fontSize="sm">메모</FormLabel>
+															<Input
+																size="sm"
+																value={editingHistory.memo || ""}
+																onChange={(e) => setEditingHistory({ ...editingHistory, memo: e.target.value })}
+															/>
+														</FormControl>
+													</HStack>
+
+													<Flex>
+														<FormControl>
+															<FormLabel fontSize="sm" mb={1}>
+																중요도
+															</FormLabel>
+															<NumberInput
+																value={editingHistory.priority || 0}
+																defaultValue={0}
+																min={0}
+																max={255}
+																size="sm"
+																maxW={32}
+																onChange={(_, number) => setEditingHistory({ ...editingHistory, priority: number })}
+															>
+																<NumberInputField />
+																<NumberInputStepper>
+																	<NumberIncrementStepper />
+																	<NumberDecrementStepper />
+																</NumberInputStepper>
+															</NumberInput>
+															<Text fontSize="xs" color="gray.500">
+																(높을수록 중요, 7로 설정시 ⭐표시)
+															</Text>
+														</FormControl>
+														<Checkbox
+															flexBasis={"100px"}
+															alignSelf={"flex-end"}
+															isChecked={editingHistory.isActive}
+															onChange={(e) => {
+																setEditingHistory({ ...editingHistory, isActive: e.target.checked });
+															}}
+														>
+															활성화
+														</Checkbox>
+													</Flex>
+												</Flex>
+											)}
 										</VStack>
 									</HStack>
 								</ModalBody>
