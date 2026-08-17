@@ -733,17 +733,8 @@ export function SongHistoryComponent() {
 															</Text>
 														</HStack>
 													</VStack>
-													<Box position="relative" padding={2}>
-														<Divider />
-													</Box>
-												</>
-											)}
-
-											{/* 하단: 이외 수정 가능한 데이터 */}
-											{editingHistory && (
-												<Flex gap={3} flexDir={"column"}>
 													<FormControl flex={1}>
-														<FormLabel fontSize="sm">노래책 연결</FormLabel>
+														{/* <FormLabel fontSize="sm">노래책 연결</FormLabel> */}
 														{/* 
 														//? 가짜 input 준비여부? => X
 														//? input 뒤쪽에 Badge형태로 등록 (badge가 떠있으면 연결된 것으로) => X
@@ -751,19 +742,22 @@ export function SongHistoryComponent() {
 														//? 여기서는 메인 input이 살아있도록 간단히 구성.
 														*/}
 														{/* <Input
-															ref={inputRef}
 															size={"sm"}
 															variant="unstyled"
-															placeholder={selectedTags.length === 0 ? "노래 검색하기..." : ""}
+															placeholder={
+																getAllSongbookData.data && getAllSongbookData.data.data.length === 0
+																	? "노래 검색하기..."
+																	: ""
+															}
 															value={songbookSelectorValue}
-															onChange={handleInputChange}
+															// onChange={handleInputChange}
 															onKeyDown={handleKeyDown}
-															onFocus={() => setIsOpen(true)}
+															// onFocus={() => setIsOpen(true)}
 															minW="120px"
 															flex="1"
 															autoComplete="off"
 															spellCheck="false"
-														/> */}
+														/>
 														<List
 															position="absolute"
 															top="100%"
@@ -794,27 +788,17 @@ export function SongHistoryComponent() {
 															) : (
 																<option>데이터 없음</option>
 															)}
-														</List>
-														{/* <Select
-															size="sm"
-															placeholder="노래를 선택해주세요"
-															onChange={(e) =>
-																setEditingHistory({ ...editingHistory, hamkubby_id: Number(e.target.value) || -1 })
-															}
-															value={(editingHistory.hamkubby_id && editingHistory.hamkubby_id) || ""}
-															isDisabled={getAllSongbookData.data?.data.length === 0}
-														>
-															{getAllSongbookData.data && getAllSongbookData.data.data.length > 0 ? (
-																getAllSongbookData.data.data.map((sb) => (
-																	<option key={sb.i} value={sb.i}>
-																		{`${sb.i}) ${sb.tl} - ${sb.a}`}
-																	</option>
-																))
-															) : (
-																<option>그룹 데이터 없음</option>
-															)}
-														</Select> */}
+														</List> */}
 													</FormControl>
+													<Box position="relative" padding={2}>
+														<Divider />
+													</Box>
+												</>
+											)}
+
+											{/* 하단: 이외 수정 가능한 데이터 */}
+											{editingHistory && (
+												<Flex gap={3} flexDir={"column"}>
 													<HStack flex={1}>
 														<FormControl flex={1}>
 															<FormLabel fontSize="sm">날짜</FormLabel>
