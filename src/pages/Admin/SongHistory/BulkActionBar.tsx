@@ -45,7 +45,6 @@ export default function BulkActionBar({ isOpen, setIsOpen, selectedIds, onCloseB
 							colorScheme="blue"
 							variant="outline"
 							onClick={() => {
-								alert(`선택된 ${selectedIds.length}개 항목 삭제`);
 								onEdit && onEdit();
 							}}
 						>

@@ -1014,6 +1014,10 @@ export function SongHistoryComponent() {
 						onCloseBar={() => {
 							setBulkEditingIndex([]);
 						}}
+						onEdit={() => {
+							setIsBulkModalOn(true);
+							setBulkEditingIndex((prev) => prev.sort((a, b) => a - b));
+						}}
 					/>
 				</Box>
 			</Stack>
