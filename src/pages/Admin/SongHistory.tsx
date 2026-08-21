@@ -55,6 +55,8 @@ import { VscWarning } from "react-icons/vsc";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import useColor from "../../lib/hooks/useColor";
 import { Genre } from "./Songbook";
+import BulkUpdateModal from "./SongHistory/BulkModal";
+import BulkActionBar from "./SongHistory/BulkActionBar";
 
 interface MinifiedSongData {
 	i: number;
@@ -94,6 +96,11 @@ export function SongHistoryComponent() {
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
 
 	const [isEditingMode, setIsEditingMode] = useState(false);
+	const [isBulkModalOn, setIsBulkModalOn] = useState(false);
+	const [bulkEditingIndex, setBulkEditingIndex] = useState<number[]>([]);
+	const [isDragging, setIsDragging] = useState(false);
+	const [draggingType, setDraggingType] = useState<"check" | "uncheck">("check");
+	const [isActionBarOpen, setIsActionBarOpen] = useState(false);
 
 	// MARK: - Hooks
 	const toast = useToast();
@@ -178,7 +185,12 @@ export function SongHistoryComponent() {
 
 	const parentRef = useRef<HTMLDivElement>(null);
 
-	const handleEditingMode = () => setIsEditingMode((prev) => !prev);
+	const handleEditingMode = () => {
+		if (isEditingMode) {
+			setBulkEditingIndex([]);
+		}
+		setIsEditingMode((prev) => !prev);
+	};
 
 	// 행 클릭 시 상세 모달 열기
 	const handleRowClick = (index: number, id: number | undefined) => {
@@ -186,27 +198,36 @@ export function SongHistoryComponent() {
 			toast({ status: "error", description: "ID가 존재하지 않습니다! 코드 또는 데이터에 이상이 있는 경우입니다!" });
 			return;
 		}
-		const currentVideoData = filteredData[index];
 
-		setTimeStrStart(isTimeFormat ? formatTime(currentVideoData.start) || "00:00" : String(currentVideoData.start || 0));
-		setTimeStrEnd(
-			isTimeFormat
-				? formatTime(currentVideoData.end)
-				: currentVideoData.end !== undefined && currentVideoData.end !== null
-					? String(currentVideoData.end)
-					: "",
-		);
+		if (isEditingMode) {
+			setBulkEditingIndex((prev) =>
+				draggingType === "uncheck" ? prev.filter((p) => p !== id) : prev.includes(id) ? prev : [...prev, id],
+			);
+		} else {
+			const currentVideoData = filteredData[index];
 
-		setEditingHistory({
-			...currentVideoData,
+			setTimeStrStart(
+				isTimeFormat ? formatTime(currentVideoData.start) || "00:00" : String(currentVideoData.start || 0),
+			);
+			setTimeStrEnd(
+				isTimeFormat
+					? formatTime(currentVideoData.end)
+					: currentVideoData.end !== undefined && currentVideoData.end !== null
+						? String(currentVideoData.end)
+						: "",
+			);
 
-			id: id,
-			sungAt: formatDateToYYYYMMDD(currentVideoData.sungAt || ""),
-		});
-		setEditingIndex(index);
-		setIsModalOpen(true);
-		setSongbookSelectorValue("");
-		setIsSelectorOpen(false);
+			setEditingHistory({
+				...currentVideoData,
+
+				id: id,
+				sungAt: formatDateToYYYYMMDD(currentVideoData.sungAt || ""),
+			});
+			setEditingIndex(index);
+			setIsModalOpen(true);
+			setSongbookSelectorValue("");
+			setIsSelectorOpen(false);
+		}
 	};
 
 	const handleRowDelete = (id?: number) => {
@@ -395,6 +416,24 @@ export function SongHistoryComponent() {
 		}
 	};
 
+	// Mark: - 묶음 편집을 위한 다중 선택 이벤트
+	const handleMouseUp = () => {
+		setIsDragging(false);
+	};
+
+	useEffect(() => {
+		setIsActionBarOpen(bulkEditingIndex.length !== 0);
+	}, [bulkEditingIndex]);
+
+	// TODO: 드래그앤드롭으로 row 선택
+	useEffect(() => {
+		document.addEventListener("mouseup", handleMouseUp);
+
+		return () => {
+			document.removeEventListener("mouseup", handleMouseUp);
+		};
+	}, []);
+
 	// Mark: - custom selector handler
 	const availableOptions = useMemo(
 		() =>
@@ -463,10 +502,10 @@ export function SongHistoryComponent() {
 		<Box>
 			<Box mb={8}>
 				<Heading size="lg" mb={2}>
-					영상 데이터 관리
+					가창 기록 관리
 				</Heading>
 				<Text color="gray.500" fontSize="sm">
-					스텔라들의 영상 데이터를 관리합니다.
+					햄쿠비 노래책의 기록을 관리합니다.
 				</Text>
 			</Box>
 			<Flex gap={2}>
@@ -570,14 +609,29 @@ export function SongHistoryComponent() {
 										transform={`translateY(${virtualRow.start}px)`}
 										h={`${virtualRow.size}px`}
 										px={4}
-										bg={index % 2 ? "gray.50" : undefined}
+										bg={bulkEditingIndex.includes(his.id || -1) ? "orange.100" : index % 2 ? "gray.50" : undefined}
 										opacity={isFaded ? 0.5 : 1}
 										textDecoration={isFaded ? "line-through" : "none"}
 										align="center"
 										borderBottom={`1px solid ${borderColor}`}
 										cursor="pointer"
-										_hover={{ bg: fieldHoverBgColor }}
-										onClick={() => handleRowClick(virtualRow.index, his.id)}
+										userSelect={"none"}
+										_hover={{ bg: bulkEditingIndex.includes(his.id || -1) ? "orange.200" : fieldHoverBgColor }}
+										onClick={() => {
+											if (!isEditingMode) handleRowClick(virtualRow.index, his.id);
+										}}
+										onMouseDown={() => {
+											const isChecked = bulkEditingIndex.includes(his.id || -1);
+											setDraggingType(isChecked ? "uncheck" : "check");
+											setIsDragging(true);
+										}}
+										onMouseMove={() => {
+											if (isEditingMode && isDragging) handleRowClick(virtualRow.index, his.id);
+										}}
+										onMouseUp={() => {
+											if (isDragging) handleRowClick(virtualRow.index, his.id);
+										}}
+										draggable="false"
 									>
 										{/* ID */}
 										<Box w={TABLE_WIDTHS.id}>{his.id}</Box>
@@ -948,6 +1002,19 @@ export function SongHistoryComponent() {
 							</ModalFooter>
 						</ModalContent>
 					</Modal>
+
+					{/* 묶음 편집 모달 */}
+					<BulkUpdateModal isModalOpen={isBulkModalOn} setIsModalOpen={setIsBulkModalOn} bulkIndex={bulkEditingIndex} />
+
+					{/* 묶음 편집 액션 바 */}
+					<BulkActionBar
+						isOpen={isActionBarOpen}
+						setIsOpen={setIsActionBarOpen}
+						selectedIds={bulkEditingIndex}
+						onCloseBar={() => {
+							setBulkEditingIndex([]);
+						}}
+					/>
 				</Box>
 			</Stack>
 		</Box>
