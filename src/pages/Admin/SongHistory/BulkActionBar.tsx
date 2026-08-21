@@ -1,6 +1,7 @@
 import { ActionBar } from "@/components/ActionBar";
 import { Button, SlideFade } from "@chakra-ui/react";
 import { Dispatch, SetStateAction } from "react";
+import { FiEdit } from "react-icons/fi";
 
 interface BulkActionBarProps {
 	isOpen: boolean;
@@ -26,14 +27,23 @@ export default function BulkActionBar({ isOpen, setIsOpen, selectedIds, onCloseB
 			>
 				<ActionBar.Positioner>
 					<ActionBar.Content>
-						<ActionBar.SelectionTrigger>{selectedIds.length}개 선택됨</ActionBar.SelectionTrigger>
+						<ActionBar.SelectionTrigger
+							paddingBlock={2}
+							paddingInline={4}
+							bg={"transparent"}
+							border={"1px dashed"}
+							borderColor="gray.500"
+						>
+							{selectedIds.length}개 선택됨
+						</ActionBar.SelectionTrigger>
 
 						<ActionBar.Separator />
 
 						<Button
+							leftIcon={<FiEdit />}
 							size="sm"
-							colorScheme="red"
-							variant="subtle"
+							colorScheme="blue"
+							variant="outline"
 							onClick={() => {
 								alert(`선택된 ${selectedIds.length}개 항목 삭제`);
 								onEdit && onEdit();

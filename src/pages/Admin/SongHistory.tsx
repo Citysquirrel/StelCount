@@ -547,7 +547,7 @@ export function SongHistoryComponent() {
 						colorScheme={isEditingMode ? "orange" : "blue"}
 						onClick={handleEditingMode}
 					>
-						{isEditingMode ? "편집중.." : "묶음편집"}
+						{isEditingMode ? "선택중.." : "다중 선택 모드"}
 					</Button>
 				</Flex>
 			</Flex>
