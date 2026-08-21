@@ -49,7 +49,7 @@ import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import * as CSS from "csstype";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiPlus } from "react-icons/fi";
+import { FiEdit, FiPlus, FiSettings } from "react-icons/fi";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
 import { DefaultResponseData } from "../../lib/functions/fetch";
@@ -90,13 +90,10 @@ export function SongHistoryComponent() {
 	const [timeStrEnd, setTimeStrEnd] = useState<string>("");
 
 	const [songbookSelectorValue, setSongbookSelectorValue] = useState("");
-	const [songbookSelectorObject, setSongbookSelectorObject] = useState<{ i: number; tl: string; a: string }>({
-		i: -1,
-		tl: "",
-		a: "",
-	});
 	const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+	const [isEditingMode, setIsEditingMode] = useState(false);
 
 	// MARK: - Hooks
 	const toast = useToast();
@@ -150,7 +147,7 @@ export function SongHistoryComponent() {
 				return matchSearch;
 			})
 			.sort((a, b) => (b.id || 0) - (a.id || 0));
-	}, [historyData, searchQuery]);
+	}, [historyData, searchQuery, songbookMap]);
 
 	// sungAt과 youtubeId가 일치하지 않는 개체가 있는 경우를 위한 set
 	const invalidSungAtSet = useMemo(() => {
@@ -181,6 +178,8 @@ export function SongHistoryComponent() {
 
 	const parentRef = useRef<HTMLDivElement>(null);
 
+	const handleEditingMode = () => setIsEditingMode((prev) => !prev);
+
 	// 행 클릭 시 상세 모달 열기
 	const handleRowClick = (index: number, id: number | undefined) => {
 		if (!id) {
@@ -206,6 +205,8 @@ export function SongHistoryComponent() {
 		});
 		setEditingIndex(index);
 		setIsModalOpen(true);
+		setSongbookSelectorValue("");
+		setIsSelectorOpen(false);
 	};
 
 	const handleRowDelete = (id?: number) => {
@@ -264,6 +265,8 @@ export function SongHistoryComponent() {
 		setTimeStrStart("00:00");
 		setTimeStrEnd("");
 		setIsModalOpen(true);
+		setSongbookSelectorValue("");
+		setIsSelectorOpen(false);
 	};
 
 	// 모달 내 저장 버튼
@@ -395,16 +398,20 @@ export function SongHistoryComponent() {
 	// Mark: - custom selector handler
 	const availableOptions = useMemo(
 		() =>
-			getAllSongbookData.data?.data.filter(
-				(item) => item.tl.toLowerCase().includes(songbookSelectorObject.tl.toLowerCase()),
-				// &&
-				// !selectedTags.some((selected) => selected.id === item.id),
+			getAllSongbookData.data?.data.filter((item) =>
+				item.tl.toLowerCase().includes(songbookSelectorValue.toLowerCase()),
 			) || [],
-		[getAllSongbookData.data?.data, songbookSelectorObject],
+		[getAllSongbookData.data?.data, songbookSelectorValue],
 	);
 
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSongbookSelectorValue(e.target.value);
+		setIsSelectorOpen(true);
+		setHighlightedIndex(0);
+	};
+
 	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (!isSelectorOpen && songbookSelectorObject) setIsSelectorOpen(true);
+		if (!isSelectorOpen && songbookSelectorValue) setIsSelectorOpen(true);
 
 		switch (e.key) {
 			case "ArrowDown":
@@ -417,21 +424,13 @@ export function SongHistoryComponent() {
 				break;
 			case "Enter": {
 				e.preventDefault();
-				const available = availableOptions.find((o) => o.i === highlightedIndex);
+				const available = availableOptions.find((o, i) => i === highlightedIndex);
 				if (isSelectorOpen && available) {
-					setSongbookSelectorObject(available);
+					setSongbookSelectorValue("");
+					setEditingHistory((prev) => (prev ? { ...prev, hamkubby_id: available.i } : prev));
 				}
 				break;
 			}
-			// case "Backspace":
-			// 	// 입력창이 비어있을 때 백스페이스 누르면 맨 마지막 태그 삭제
-			// 	if (!songbookSelectorValue && selectedTags.length > 0) {
-			// 		const nextTags = [...selectedTags];
-			// 		nextTags.pop();
-			// 		setSelectedTags(nextTags);
-			// 		onChangeTags?.(nextTags);
-			// 	}
-			// 	break;
 			case "Escape":
 				setIsSelectorOpen(false);
 				break;
@@ -488,11 +487,6 @@ export function SongHistoryComponent() {
 						</InputRightElement>
 					) : null}
 				</InputGroup>
-				{/* <FilterPanel
-					tags={getAllTags.data?.data}
-					onChangeStellars={onChangeStellarsFilter}
-					onChangeTags={onChangeTagsFilter}
-				/> */}
 			</Flex>
 			<Flex
 				gap={4}
@@ -505,8 +499,16 @@ export function SongHistoryComponent() {
 				border={`1px solid ${borderColor}`}
 			>
 				<Flex flex={1} justify="flex-end" gap={2}>
-					<Button leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewHistory}>
+					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewHistory}>
 						추가
+					</Button>
+					<Button
+						size="sm"
+						leftIcon={isEditingMode ? <FiEdit /> : <FiSettings />}
+						colorScheme={isEditingMode ? "orange" : "blue"}
+						onClick={handleEditingMode}
+					>
+						{isEditingMode ? "편집중.." : "묶음편집"}
 					</Button>
 				</Flex>
 			</Flex>
@@ -668,13 +670,13 @@ export function SongHistoryComponent() {
 					</Box>
 
 					{/* 이력 편집 모달 */}
-					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="2xl">
+					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="2xl" closeOnEsc={false}>
 						<ModalOverlay />
 						<ModalContent>
 							<ModalHeader pb={1}>
 								<HStack gap={1}>
 									<Text as="span" mr={4}>
-										{editingIndex === -1 ? "새 영상 추가" : "영상 상세 정보 수정"}
+										{editingIndex === -1 ? "새 기록 추가" : "기록 상세 정보 수정"}
 									</Text>
 									<IconButton
 										size="sm"
@@ -733,68 +735,79 @@ export function SongHistoryComponent() {
 															</Text>
 														</HStack>
 													</VStack>
-													<FormControl flex={1}>
-														{/* <FormLabel fontSize="sm">노래책 연결</FormLabel> */}
-														{/* 
-														//? 가짜 input 준비여부? => X
-														//? input 뒤쪽에 Badge형태로 등록 (badge가 떠있으면 연결된 것으로) => X
-														//? 상단에 마련된 노래 정보에 가시화. 카드 형태로 변경
-														//? 여기서는 메인 input이 살아있도록 간단히 구성.
-														*/}
-														{/* <Input
-															size={"sm"}
-															variant="unstyled"
-															placeholder={
-																getAllSongbookData.data && getAllSongbookData.data.data.length === 0
-																	? "노래 검색하기..."
-																	: ""
-															}
-															value={songbookSelectorValue}
-															// onChange={handleInputChange}
-															onKeyDown={handleKeyDown}
-															// onFocus={() => setIsOpen(true)}
-															minW="120px"
-															flex="1"
-															autoComplete="off"
-															spellCheck="false"
-														/>
-														<List
-															position="absolute"
-															top="100%"
-															left={0}
-															right={0}
-															mt={2}
-															bg="white"
-															boxShadow="md"
-															borderRadius="md"
-															maxH="200px"
-															overflowY="auto"
-															zIndex={10}
-															border="1px solid"
-															borderColor="gray.200"
-														>
-															{getAllSongbookData.data && getAllSongbookData.data.data.length > 0 ? (
-																getAllSongbookData.data.data
-																	.filter((sb) => sb.ia)
-																	.map((sb) => (
-																		<ListItem
-																			key={sb.i}
-																			p={3}
-																			cursor="pointer"
-																			// bg={index === highlightedIndex ? "blue.50" : "transparent"}
-																			_hover={{ bg: "blue.50" }}
-																		>{`${sb.i}) ${sb.tl} - ${sb.a}`}</ListItem>
-																	))
-															) : (
-																<option>데이터 없음</option>
-															)}
-														</List> */}
-													</FormControl>
-													<Box position="relative" padding={2}>
-														<Divider />
-													</Box>
 												</>
 											)}
+
+											<FormControl flex={1}>
+												<FormLabel fontSize="sm">노래책 연결</FormLabel>
+												<Input
+													size={"sm"}
+													variant="outline"
+													placeholder={
+														getAllSongbookData.data && getAllSongbookData.data.data.length === 0
+															? "노래 검색하기..."
+															: ""
+													}
+													value={songbookSelectorValue}
+													onChange={handleInputChange}
+													onKeyDown={handleKeyDown}
+													onFocus={() => setIsSelectorOpen(true)}
+													// onBlur={() => setIsSelectorOpen(false)}
+													minW="120px"
+													flex="1"
+													autoComplete="off"
+													spellCheck="false"
+												/>
+												{isSelectorOpen ? (
+													<List
+														position="absolute"
+														top="100%"
+														left={0}
+														right={0}
+														mt={2}
+														bg="white"
+														boxShadow="md"
+														borderRadius="md"
+														maxH="200px"
+														overflowY="auto"
+														zIndex={10}
+														border="1px solid"
+														borderColor="gray.200"
+													>
+														{availableOptions.length > 0 ? (
+															availableOptions
+																.filter((sb) => sb.ia)
+																.map((sb, index) => (
+																	<ListItem
+																		key={sb.i}
+																		display="flex"
+																		p={2}
+																		gap={2}
+																		cursor="pointer"
+																		onClick={(e) => {
+																			e.preventDefault();
+																			setSongbookSelectorValue("");
+																			setEditingHistory((prev) => (prev ? { ...prev, hamkubby_id: sb.i } : prev));
+																			setIsSelectorOpen(false);
+																		}}
+																		bg={index === highlightedIndex ? "blue.50" : "transparent"}
+																		_hover={{ bg: "blue.50" }}
+																	>
+																		<Text color="gray.500" fontSize="xs">
+																			{sb.i}
+																		</Text>
+																		{`${sb.tl} - ${sb.a}`}
+																	</ListItem>
+																))
+														) : (
+															<ListItem p={2}>데이터 없음</ListItem>
+														)}
+													</List>
+												) : null}
+											</FormControl>
+											<Box position="relative" padding={2}>
+												<Divider />
+											</Box>
 
 											{/* 하단: 이외 수정 가능한 데이터 */}
 											{editingHistory && (
@@ -928,7 +941,7 @@ export function SongHistoryComponent() {
 								<Button
 									colorScheme="blue"
 									onClick={handleSaveEdit}
-									disabled={editHistory.isPending || createHistory.isPending}
+									disabled={editHistory.isPending || createHistory.isPending || !editingHistory?.hamkubby_id}
 								>
 									적용하기
 								</Button>
