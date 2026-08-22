@@ -22,7 +22,7 @@ export function useMultiView() {
 	const refetch = (activeLoading?: boolean) => {
 		activeLoading && setIsLoading(true);
 
-		fetchServer("v1", `/multiview`)
+		fetchServer("v1", `/multiview`, { timeout: 3000 })
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, main: res.status }));
 				if (res.status === 200) {
@@ -71,7 +71,7 @@ export function useMultiView() {
 			},
 			{} as Record<string, string>,
 		);
-		fetchServer("v2", `/multiview`, { method: "POST", body: requestBody })
+		fetchServer("v2", `/multiview`, { method: "POST", body: requestBody, timeout: 5000 })
 			.then((res) => {
 				setStatusCode((prev) => ({ ...prev, custom: res.status }));
 				if (res.status === 200) {
