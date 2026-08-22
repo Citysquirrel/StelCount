@@ -32,6 +32,8 @@ import {
 	ModalFooter,
 	ModalHeader,
 	ModalOverlay,
+	NumberInput,
+	NumberInputField,
 	Stack,
 	Tag,
 	Text,
@@ -53,6 +55,7 @@ import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
 import FilterPanel from "./Video/FilterPanel";
 import TagInputAutocomplete from "./Video/TagInput";
 import TagModal from "./Video/TagModal";
+import { useLocalStorage } from "usehooks-ts";
 
 interface VideoData extends Omit<
 	YoutubeMusicData,
@@ -84,6 +87,8 @@ export interface StellarGroup {
 export function Video() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
 	const [stellarData] = useRecoilState(stellarV2State);
+	const TABLE_HEIGHT_VIDEO = "table-height_video";
+	const [tableHeight, setTableHeight] = useLocalStorage<number>(TABLE_HEIGHT_VIDEO, 384);
 
 	const stellarYoutubeChannelIds = stellarData.map((s) => s.yi.split(",")).flat();
 
@@ -352,6 +357,19 @@ export function Video() {
 				shadow="sm"
 				border={`1px solid ${borderColor}`}
 			>
+				<Flex justifySelf={"flex-start"} gap={2}>
+					<NumberInput
+						size="sm"
+						maxW="100px"
+						colorScheme="teal"
+						min={300}
+						max={800}
+						value={tableHeight}
+						onChange={(value) => setTableHeight(Number(value) || 384)}
+					>
+						<NumberInputField />
+					</NumberInput>
+				</Flex>
 				<Flex flex={1} justify="flex-end" gap={2}>
 					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
 						추가
@@ -396,7 +414,7 @@ export function Video() {
 						</Flex>
 					) : null}
 					{/* 가상화 컨테이너 */}
-					<Box ref={parentRef} h="384px" overflowY="scroll">
+					<Box ref={parentRef} h={`${tableHeight}px`} overflowY="scroll">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {

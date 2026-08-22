@@ -57,6 +57,8 @@ import useColor from "../../lib/hooks/useColor";
 import { Genre } from "./Songbook";
 import BulkUpdateModal from "./SongHistory/BulkModal";
 import BulkActionBar from "./SongHistory/BulkActionBar";
+import { useLocalStorage } from "usehooks-ts";
+import VALIDATION from "@/lib/functions/validation";
 
 interface MinifiedSongData {
 	i: number;
@@ -77,6 +79,8 @@ interface SongHistory extends SongHistoryType {
 //TODO: id 정렬 추가
 export function SongHistoryComponent() {
 	const [historyData, setHistoryData] = useState<SongHistory[]>([]);
+	const TABLE_HEIGHT_SONG_HISTORY = "table-height_song-history";
+	const [tableHeight, setTableHeight] = useLocalStorage<number>(TABLE_HEIGHT_SONG_HISTORY, 384);
 
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
@@ -509,7 +513,7 @@ export function SongHistoryComponent() {
 				</Text>
 			</Box>
 			<Flex gap={2}>
-				<InputGroup w="240px">
+				<InputGroup w="240px" size="sm">
 					<Input
 						placeholder="제목을 검색하세요.."
 						value={searchQuery}
@@ -537,6 +541,19 @@ export function SongHistoryComponent() {
 				shadow="sm"
 				border={`1px solid ${borderColor}`}
 			>
+				<Flex justifySelf={"flex-start"} gap={2}>
+					<NumberInput
+						size="sm"
+						maxW="100px"
+						colorScheme="teal"
+						min={300}
+						max={800}
+						value={tableHeight}
+						onChange={(value) => setTableHeight(Number(value) || 384)}
+					>
+						<NumberInputField />
+					</NumberInput>
+				</Flex>
 				<Flex flex={1} justify="flex-end" gap={2}>
 					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewHistory}>
 						추가
@@ -590,7 +607,7 @@ export function SongHistoryComponent() {
 						</Flex>
 					) : null}
 					{/* 가상화 컨테이너 */}
-					<Box ref={parentRef} h="384px" overflowY="scroll">
+					<Box ref={parentRef} h={`${tableHeight}px`} overflowY="scroll">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
@@ -876,7 +893,13 @@ export function SongHistoryComponent() {
 																onChange={(e) => setEditingHistory({ ...editingHistory, sungAt: e.target.value })}
 															/>
 														</FormControl>
-														<FormControl flex={1}>
+														<FormControl
+															flex={1}
+															isInvalid={
+																editingHistory.youtubeVideoId.length > 0 &&
+																!VALIDATION.youtubeId(editingHistory.youtubeVideoId)
+															}
+														>
 															<FormLabel fontSize="sm">유튜브 Video ID</FormLabel>
 															<Input
 																size="sm"
@@ -1004,7 +1027,19 @@ export function SongHistoryComponent() {
 					</Modal>
 
 					{/* 묶음 편집 모달 */}
-					<BulkUpdateModal isModalOpen={isBulkModalOn} setIsModalOpen={setIsBulkModalOn} bulkIndex={bulkEditingIndex} />
+					<BulkUpdateModal
+						isModalOpen={isBulkModalOn}
+						setIsModalOpen={setIsBulkModalOn}
+						bulkIndex={bulkEditingIndex}
+						data={
+							(getAllHistories.data?.data &&
+								getAllHistories.data?.data.filter((his) => bulkEditingIndex.includes(his.id || -1))) ||
+							null
+						}
+						onSave={() => {
+							getAllHistories.refetch();
+						}}
+					/>
 
 					{/* 묶음 편집 액션 바 */}
 					<BulkActionBar
