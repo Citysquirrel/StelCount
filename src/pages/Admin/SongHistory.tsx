@@ -43,6 +43,7 @@ import {
 	Switch,
 	Text,
 	VStack,
+	useOutsideClick,
 	useToast,
 } from "@chakra-ui/react";
 import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
@@ -96,6 +97,7 @@ export function SongHistoryComponent() {
 	const [timeStrEnd, setTimeStrEnd] = useState<string>("");
 
 	const [songbookSelectorValue, setSongbookSelectorValue] = useState("");
+	const selectorRef = useRef(null);
 	const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
 
@@ -459,16 +461,17 @@ export function SongHistoryComponent() {
 		switch (e.key) {
 			case "ArrowDown":
 				e.preventDefault();
-				setHighlightedIndex((prev) => Math.min(prev + 1, availableOptions.length - 1));
+				setHighlightedIndex((prev) => (prev > availableOptions.length - 1 ? prev : prev + 1));
 				break;
 			case "ArrowUp":
 				e.preventDefault();
-				setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+				setHighlightedIndex((prev) => (prev < 1 ? prev : prev - 1));
 				break;
 			case "Enter": {
 				e.preventDefault();
 				const available = availableOptions.find((o, i) => i === highlightedIndex);
 				if (isSelectorOpen && available) {
+					setIsSelectorOpen(false);
 					setSongbookSelectorValue("");
 					setEditingHistory((prev) => (prev ? { ...prev, hamkubby_id: available.i } : prev));
 				}
@@ -481,6 +484,11 @@ export function SongHistoryComponent() {
 				break;
 		}
 	};
+
+	useOutsideClick({
+		ref: selectorRef,
+		handler: () => setIsSelectorOpen(false),
+	});
 
 	useEffect(() => {
 		if (getAllHistories.data?.data) setHistoryData(getAllHistories.data.data);
@@ -809,7 +817,7 @@ export function SongHistoryComponent() {
 												</>
 											)}
 
-											<FormControl flex={1}>
+											<FormControl flex={1} ref={selectorRef}>
 												<FormLabel fontSize="sm">노래책 연결</FormLabel>
 												<Input
 													size={"sm"}
@@ -823,7 +831,12 @@ export function SongHistoryComponent() {
 													onChange={handleInputChange}
 													onKeyDown={handleKeyDown}
 													onFocus={() => setIsSelectorOpen(true)}
-													// onBlur={() => setIsSelectorOpen(false)}
+													onMouseDown={() => setIsSelectorOpen(true)}
+													onBlur={(e) => {
+														if (!e.currentTarget.contains(e.relatedTarget)) {
+															setIsSelectorOpen(false);
+														}
+													}}
 													minW="120px"
 													flex="1"
 													autoComplete="off"
@@ -831,6 +844,7 @@ export function SongHistoryComponent() {
 												/>
 												{isSelectorOpen ? (
 													<List
+														tabIndex={-1}
 														position="absolute"
 														top="100%"
 														left={0}
@@ -844,6 +858,7 @@ export function SongHistoryComponent() {
 														zIndex={10}
 														border="1px solid"
 														borderColor="gray.200"
+														onMouseDown={(e) => e.preventDefault()}
 													>
 														{availableOptions.length > 0 ? (
 															availableOptions
@@ -857,6 +872,7 @@ export function SongHistoryComponent() {
 																		cursor="pointer"
 																		onClick={(e) => {
 																			e.preventDefault();
+																			e.stopPropagation();
 																			setSongbookSelectorValue("");
 																			setEditingHistory((prev) => (prev ? { ...prev, hamkubby_id: sb.i } : prev));
 																			setIsSelectorOpen(false);
