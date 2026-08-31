@@ -1,9 +1,9 @@
-import { type KeyboardEvent } from "react";
 import { CustomLink } from "@/components/Link";
 import { displayPriority } from "@/lib/functions/display";
 import { createHistoryId, formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "@/lib/functions/etc";
 import { normalizeKeyword } from "@/lib/functions/normalized";
 import { youtube } from "@/lib/functions/platforms";
+import VALIDATION from "@/lib/functions/validation";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
 import { type SongHistory as SongHistoryType } from "@/lib/types";
 import {
@@ -49,17 +49,16 @@ import {
 import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import * as CSS from "csstype";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { FiEdit, FiPlus, FiSettings } from "react-icons/fi";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
+import { useLocalStorage } from "usehooks-ts";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import useColor from "../../lib/hooks/useColor";
 import { Genre } from "./Songbook";
-import BulkUpdateModal from "./SongHistory/BulkModal";
 import BulkActionBar from "./SongHistory/BulkActionBar";
-import { useLocalStorage } from "usehooks-ts";
-import VALIDATION from "@/lib/functions/validation";
+import BulkUpdateModal from "./SongHistory/BulkModal";
 
 interface MinifiedSongData {
 	i: number;
@@ -86,6 +85,7 @@ export function SongHistoryComponent() {
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filterSungAt, setFilterSungAt] = useState<string[]>([]);
+	const [sort, setSort] = useState();
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -152,8 +152,9 @@ export function SongHistoryComponent() {
 		return historyData
 			.filter((his) => {
 				const songbookData = songbookMap.get(his.hamkubby_id || -1);
-
 				const normalizedQuery = normalizeKeyword(searchQuery);
+
+				// const matchLyric = filterSungAt !== "" ? !!his.sungAt === (filterLyric === "true") : true;
 				const matchSearch =
 					normalizeKeyword(songbookData?.tl || "").includes(normalizedQuery) ||
 					normalizeKeyword(songbookData?.a || "").includes(normalizedQuery);
