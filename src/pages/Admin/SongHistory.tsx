@@ -193,6 +193,7 @@ export function SongHistoryComponent() {
 	const parentRef = useRef<HTMLDivElement>(null);
 
 	const handleRefreshTable = () => {
+		getAllSongbookData.refetch();
 		getAllHistories.refetch();
 	};
 
@@ -555,9 +556,9 @@ export function SongHistoryComponent() {
 				border={`1px solid ${borderColor}`}
 			>
 				<Flex justifySelf={"flex-start"} gap={2}>
-					\
 					<IconButton
 						size="sm"
+						colorScheme="blue"
 						aria-label="Refresh Table"
 						onClick={handleRefreshTable}
 						isLoading={getAllHistories.isLoading}
