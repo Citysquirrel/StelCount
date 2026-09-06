@@ -50,7 +50,7 @@ import { Token } from "@chakra-ui/styled-system/dist/types/utils/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import * as CSS from "csstype";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { FiEdit, FiPlus, FiSettings } from "react-icons/fi";
+import { FiEdit, FiPlus, FiRefreshCw, FiSettings } from "react-icons/fi";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
 import { useLocalStorage } from "usehooks-ts";
@@ -191,6 +191,10 @@ export function SongHistoryComponent() {
 	}, [filteredData]);
 
 	const parentRef = useRef<HTMLDivElement>(null);
+
+	const handleRefreshTable = () => {
+		getAllHistories.refetch();
+	};
 
 	const handleEditingMode = () => {
 		if (isEditingMode) {
@@ -551,6 +555,15 @@ export function SongHistoryComponent() {
 				border={`1px solid ${borderColor}`}
 			>
 				<Flex justifySelf={"flex-start"} gap={2}>
+					\
+					<IconButton
+						size="sm"
+						aria-label="Refresh Table"
+						onClick={handleRefreshTable}
+						isLoading={getAllHistories.isLoading}
+					>
+						<FiRefreshCw />
+					</IconButton>
 					<NumberInput
 						size="sm"
 						maxW="100px"
