@@ -6,10 +6,12 @@ import { SongHistory } from "@/lib/types";
 import {
 	Box,
 	Button,
+	Checkbox,
 	Flex,
 	FormControl,
 	FormHelperText,
 	FormLabel,
+	HStack,
 	Input,
 	Modal,
 	ModalBody,
@@ -37,6 +39,8 @@ interface Updates {
 	sungAt: string;
 	youtubeVideoId: string;
 	memo: string;
+	editState: boolean;
+	isActive: boolean;
 }
 
 export default function BulkUpdateModal({
@@ -47,11 +51,14 @@ export default function BulkUpdateModal({
 	onSave,
 }: BulkUpdateModalProps) {
 	const toast = useToast();
-	const [updates, setUpdates] = useState<Updates>({
+	const defaultUpdates = {
 		sungAt: "",
 		youtubeVideoId: "",
 		memo: "",
-	});
+		editState: false,
+		isActive: false,
+	};
+	const [updates, setUpdates] = useState<Updates>(defaultUpdates);
 
 	const editHistory = useServerMutation<void, { ids: number[]; updates: Updates }, "admin">({
 		version: "admin",
@@ -61,11 +68,19 @@ export default function BulkUpdateModal({
 
 	const isSungAtEmpty = updates.sungAt === "";
 
-	const handleClose = () => setIsModalOpen(false);
+	const handleClose = () => {
+		setUpdates(defaultUpdates);
+		setIsModalOpen(false);
+	};
 
 	const handleInputValue = (key: keyof Updates, value?: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		setUpdates((prev) => ({ ...prev, [key]: value || e.target.value }));
 	};
+
+	const handleCheckboxValue = (key: keyof Updates) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		setUpdates((prev) => ({ ...prev, [key]: e.target.checked }));
+	};
+
 	const handleSave = () => {
 		if (isSungAtEmpty) return;
 		editHistory.mutate(
@@ -166,6 +181,18 @@ export default function BulkUpdateModal({
 									{renderHelperText(new Set(group.memo))}
 								</FormHelperText>
 							</FormControl>
+							<VStack w="100%" alignItems={"flex-end"} gap={1}>
+								<Checkbox isChecked={updates.editState} onChange={handleCheckboxValue("editState")}>
+									활성화 여부 변경하기
+								</Checkbox>
+								<Checkbox
+									isChecked={updates.isActive}
+									onChange={handleCheckboxValue("isActive")}
+									isDisabled={!updates.editState}
+								>
+									활성화
+								</Checkbox>
+							</VStack>
 						</VStack>
 					</Flex>
 				</ModalBody>
