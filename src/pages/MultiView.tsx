@@ -897,13 +897,13 @@ function SideMenu({
 					{
 						keys: [
 							"searchTitle",
-							"searchName",
+							{ name: "searchName", weight: 2.0 },
 							"searchCategory",
 							"searchTitleCho",
-							"searchNameCho",
+							{ name: "searchNameCho", weight: 2.0 },
 							"searchCategoryCho",
 							"searchTitleEng",
-							"searchNameEng",
+							{ name: "searchNameEng", weight: 2.0 },
 							"searchCategoryEng",
 						],
 						threshold: 0.4,
