@@ -622,8 +622,8 @@ export function MultiView() {
 							<Stack color="white" justifyContent={"center"} alignItems="center" width="100%" transition="all .3s">
 								<Stack>
 									<Text color="red.500" fontWeight={"bold"}>
-										더 이상 iframe을 통한 접근이 불가능한 것으로 확인됩니다. 그 동안 사용해주셔서 감사합니다. 이
-										페이지는 확인 작업 후 폐쇄될 예정입니다.
+										남아계신 사용자 분들을 위해 사이트 폐쇄는 잠정 보류하고 서버 유지 보수만 진행합니다. 치지직 측에서의
+										추가적인 업데이트로 더 이상 사용할 수 없을 것으로 판단되면 폐쇄할 예정입니다.
 									</Text>
 									<Text>
 										<Box as="span" fontWeight={"bold"}>
