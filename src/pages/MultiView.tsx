@@ -621,6 +621,10 @@ export function MultiView() {
 						) : (
 							<Stack color="white" justifyContent={"center"} alignItems="center" width="100%" transition="all .3s">
 								<Stack>
+									<Text color="red.500" fontWeight={"bold"}>
+										더 이상 iframe을 통한 접근이 불가능한 것으로 확인됩니다. 그 동안 사용해주셔서 감사합니다. 이
+										페이지는 확인 작업 후 폐쇄될 예정입니다.
+									</Text>
 									<Text>
 										<Box as="span" fontWeight={"bold"}>
 											좌측 메뉴
