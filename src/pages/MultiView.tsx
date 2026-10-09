@@ -622,8 +622,8 @@ export function MultiView() {
 							<Stack color="white" justifyContent={"center"} alignItems="center" width="100%" transition="all .3s">
 								<Stack>
 									<Text color="red.500" fontWeight={"bold"}>
-										남아계신 사용자 분들을 위해 사이트 폐쇄는 잠정 보류하고 서버 유지 보수만 진행합니다. 치지직 측에서의
-										추가적인 업데이트로 더 이상 사용할 수 없을 것으로 판단되면 폐쇄할 예정입니다.
+										멀티뷰 서비스는 지속 제공될 예정이나, 예정된 업데이트 사항은 모두 중단합니다.
+										<br />본 사이트에서는 확장 프로그램을 통한 우회 기능을 따로 제공하지 않습니다.
 									</Text>
 									<Text>
 										<Box as="span" fontWeight={"bold"}>
