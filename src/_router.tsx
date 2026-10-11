@@ -22,10 +22,6 @@ const Video = lazy(() => import("./pages/Admin/Video").then((m) => ({ default: m
 const Songbook = lazy(() => import("./pages/Admin/Songbook").then((m) => ({ default: m.Songbook })));
 const Setting = lazy(() => import("./pages/Admin/Setting").then((m) => ({ default: m.Setting })));
 
-const devRoutes: RouteObject[] = import.meta.env.DEV
-	? [{ path: "/v2", element: <AppV2 />, children: [{ element: <HomeV2 />, index: true }] }]
-	: [];
-
 export const routeObj: RouteObject[] = [
 	{
 		path: "/",
@@ -73,7 +69,7 @@ export const routeObj: RouteObject[] = [
 			{ path: "/", element: <NotExist /> },
 		],
 	},
-	...devRoutes,
+	{ path: "/v2", element: <AppV2 />, children: [{ element: <HomeV2 />, index: true }], errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/multiview", element: <MultiView />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/login", element: <Login />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/oauth", element: <OAuth />, errorElement: <ServerErrorPage isErrorComponent /> },

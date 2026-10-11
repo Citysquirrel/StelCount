@@ -114,8 +114,7 @@ export function elapsedTimeText(targetDate: DateInput, referenceDate: DateInput 
 		return "방금 전";
 	}
 
-	// 60초 미만에 대한 처리
-	if (diffInSeconds < 60) {
+	if (diffInSeconds < 5) {
 		return "방금 전";
 	}
 
@@ -125,6 +124,7 @@ export function elapsedTimeText(targetDate: DateInput, referenceDate: DateInput 
 		{ name: "일", seconds: 60 * 60 * 24 },
 		{ name: "시간", seconds: 60 * 60 },
 		{ name: "분", seconds: 60 },
+		{ name: "초", seconds: 1 },
 	];
 
 	for (const time of times) {

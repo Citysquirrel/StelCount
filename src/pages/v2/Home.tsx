@@ -1,8 +1,12 @@
-import { Avatar, Badge, Box, Flex, Heading, HStack, Image, SimpleGrid, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Avatar, Badge, Box, DarkMode, Flex, Heading, HStack, Image, SimpleGrid, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { MdChevronLeft, MdChevronRight, MdEmojiEvents, MdPause, MdPlayArrow } from "react-icons/md";
+import { useLocalStorage } from "usehooks-ts";
+import { elapsedTimeText, parseV2Time } from "../../lib/functions/date";
 import { useOutletContext } from "react-router-dom";
 import { ObservatoryButton, ObservatoryExplore, ObservatoryShelf } from "../../components/layout/Observatory";
+import { HomeVideoPreview } from "../../components/layout/HomeVideoPreview";
 import { Link } from "../../components/Link";
 import type { LiveStatusState } from "../../lib/Atom";
 import { HOME_LIMITS, homeCount, homeDate, selectHomeVideos, type HomeVideo } from "../../lib/functions/homeV2";
@@ -65,7 +69,7 @@ function HomeState({ title, children, loading, onRetry }: { title: string; child
 
 function HomeHero({ items }: { items: HomeVideo[] }) {
 	const [selectedId, setSelectedId] = useState(items[0].video.vi);
-	const [paused, setPaused] = useState(false);
+	const [autoEnabled, setAutoEnabled] = useLocalStorage("obs-hero-autoplay", true);
 	const [hovered, setHovered] = useState(false);
 	const [focused, setFocused] = useState(false);
 	const [inView, setInView] = useState(false);
@@ -75,8 +79,11 @@ function HomeHero({ items }: { items: HomeVideo[] }) {
 	const index = Math.max(0, items.findIndex((item) => item.video.vi === selectedId));
 	const item = items[index];
 	const { video, member } = item;
+	const title = video.ta || video.tl;
 	const premiere = video.lbc === "upcoming" || video.lbc === "live";
-	const autoPlaying = items.length > 1 && !paused && !reduceMotion && !hovered && !focused && inView && pageVisible;
+	const autoPlaying = items.length > 1 && autoEnabled && !reduceMotion && !hovered && !focused && inView && pageVisible;
+	const autoStatus = reduceMotion ? "동작 줄이기 적용" : !autoEnabled ? "자동 넘김 꺼짐" : items.length < 2 ? "영상 1개" : autoPlaying ? "자동 넘김 중" : "자동 넘김 대기";
+	const nextId = items[(index + 1) % items.length].video.vi;
 
 	useEffect(() => {
 		const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting && entry.intersectionRatio >= .25), { threshold: .25 });
@@ -91,9 +98,9 @@ function HomeHero({ items }: { items: HomeVideo[] }) {
 
 	useEffect(() => {
 		if (!autoPlaying) return;
-		const timeout = window.setTimeout(() => setSelectedId(items[(index + 1) % items.length].video.vi), 8000);
+		const timeout = window.setTimeout(() => setSelectedId(nextId), 8000);
 		return () => window.clearTimeout(timeout);
-	}, [autoPlaying, index, items]);
+	}, [autoPlaying, nextId, selectedId]);
 
 	const move = (step: number) => setSelectedId(items[(index + step + items.length) % items.length].video.vi);
 	return (
@@ -102,7 +109,7 @@ function HomeHero({ items }: { items: HomeVideo[] }) {
 			onPointerLeave={() => setHovered(false)}
 			onFocusCapture={() => setFocused(true)}
 			onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
-			minH={{ base: "clamp(480px, calc(100svh - 112px), 720px)", md: "clamp(480px, calc(100svh - 80px), 820px)" }}>
+			h={{ base: "clamp(540px, calc(100svh - 112px), 720px)", md: "clamp(560px, calc(100svh - 80px), 820px)" }}>
 			<AnimatePresence initial={false}>
 				<Box as={motion.div} key={video.vi} position="absolute" inset={0}
 					initial={{ opacity: reduceMotion ? 1 : 0, scale: reduceMotion ? 1 : 1.035 }}
@@ -114,46 +121,91 @@ function HomeHero({ items }: { items: HomeVideo[] }) {
 						}} />
 				</Box>
 			</AnimatePresence>
+			{!premiere && !reduceMotion && inView && pageVisible && (
+				<HomeVideoPreview key={video.vi} videoId={video.vi} />
+			)}
 			<Box position="absolute" inset={0} pointerEvents="none" bg="linear-gradient(0deg, #12101f 0%, #19102cd9 35%, #23133426 100%), linear-gradient(90deg, #130e2566, transparent 80%)" />
-			<Box position="relative" w="100%" maxW="1440px" mx="auto" pt={{ base: "60px", md: "80px" }} pb={{ base: "30px", md: "48px" }} pl={{ base: 5, md: "38px" }} pr={{ base: 5, md: "140px" }}>
+			<Box position="relative" w="100%" maxW="1440px" mx="auto" pt={{ base: "40px", md: "60px" }} pb={{ base: "30px", md: "48px" }} pl={{ base: 5, md: "38px" }} pr={{ base: 5, md: "140px" }}>
 				<Box aria-live={autoPlaying ? "off" : "polite"} aria-atomic="true">
-				<Box as={motion.div} key={video.vi} initial={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : 10 }}
-					animate={{ opacity: 1, y: 0, transition: { duration: reduceMotion ? 0 : .45, ease: "easeOut" } }}>
-					<Flex wrap="wrap" gap={2}>{item.labels.map((label) => <HomeBadge key={label}>{label}</HomeBadge>)}</Flex>
-					<Heading as="h1" fontSize={{ base: "clamp(32px, 8vw, 48px)", md: "clamp(36px, 5vw, 64px)" }} fontWeight="500" lineHeight="1.22" letterSpacing="-.04em" my={4} maxW="920px">{video.ta || video.tl}</Heading>
-					<Text fontSize={{ base: "16px", md: "19px" }} color="#e0d3f0" mb={3}>{member.n}</Text>
-					<Text fontSize="12px" color="#ded2ed">{homeDate(premiere ? video.sst : video.pa)} · {premiere ? "공개" : "게시"}{video.tg?.some((tag) => tag.icv) ? " · Cover" : ""}</Text>
-					{item.milestone && (
-						<Box mt={2}>
-							<HomeBadge gold>{homeCount(item.milestone.record.u)} 달성</HomeBadge>
-							<Text fontSize="12px" color="#ded2ed" mt={1}>{homeDate(item.milestone.record.at)} 달성</Text>
+					<Box as={motion.div} key={video.vi} initial={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : 10 }}
+						animate={{ opacity: 1, y: 0, transition: { duration: reduceMotion ? 0 : .45, ease: "easeOut" } }}>
+						<Flex gap={2} h="44px" align="center" overflowX="auto" sx={{ scrollbarWidth: "none" }}>
+							{item.milestone && (
+								<Badge display="inline-flex" alignItems="center" gap={2} px={3} py="6px" flexShrink={0} maxW="100%"
+									fontSize={{ base: "14px", md: "16px" }} fontWeight="700" textTransform="none" borderRadius="full"
+									color="#342219" bg="linear-gradient(120deg, #ffe4b8, #eac18b)" border="1px solid #fff0d1"
+									boxShadow="0 4px 22px #eac18b26">
+									<MdEmojiEvents size={20} aria-hidden="true" />
+									<Text isTruncated>{homeCount(item.milestone.record.u)} 달성</Text>
+								</Badge>
+							)}
+							{item.labels.filter((label) => label !== "조회수 달성").map((label) => <HomeBadge key={label}>{label}</HomeBadge>)}
+						</Flex>
+						<Link href={`https://www.youtube.com/watch?v=${encodeURIComponent(video.vi)}`} isExternal display="block" my={4} maxW="920px" title={title} _hover={{ color: "#e1cffb", textDecoration: "none" }}>
+							<Heading as="h1" fontSize={{ base: "clamp(28px, 7vw, 40px)", md: "clamp(36px, 4.5vw, 58px)" }} fontWeight="500" lineHeight="1.22" letterSpacing="-.04em" h="2.44em" noOfLines={2} overflowWrap="anywhere">{title}</Heading>
+						</Link>
+						<Text fontSize={{ base: "16px", md: "19px" }} color="#e0d3f0" mb={3} isTruncated>{member.n}</Text>
+						<Text fontSize="12px" color="#ded2ed" isTruncated>{homeDate(premiere ? video.sst : video.pa)} · {premiere ? "공개" : "게시"}</Text>
+						<Flex gap={2} h="28px" mt={2} align="center" overflowX="auto" sx={{ scrollbarWidth: "none" }}>
+							{video.tg?.map((tag) => <HomeBadge key={tag.i ?? tag.n} colorScheme={tag.cc}>{tag.n}</HomeBadge>)}
+						</Flex>
+						<Box h="20px" mt={2} fontSize="12px" color="#dec19c">
+							{item.milestone && <HomeElapsedTime timestamp={item.milestone.record.at} />}
 						</Box>
-					)}
+					</Box>
 				</Box>
-				</Box>
-				<Flex wrap="wrap" gap={2} mt={7}>
-					<ObservatoryButton href={`https://www.youtube.com/watch?v=${encodeURIComponent(video.vi)}`} isExternal primary>영상 보러 가기 ↗</ObservatoryButton>
-					<ObservatoryButton onClick={() => document.getElementById("obs-recent")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })}>새 영상 둘러보기 ↓</ObservatoryButton>
+				<Flex align="center" wrap="wrap" gap={3} mt={5} fontSize="11px" sx={{ fontVariantNumeric: "tabular-nums" }}>
+					<HStack spacing={1}>
+						<ObservatoryButton aria-label="이전 주요 영상" boxSize="32px" minH="32px" minW={0} p={0} isDisabled={items.length < 2} onClick={() => move(-1)}><MdChevronLeft size={18} /></ObservatoryButton>
+						<Text minW="42px" textAlign="center">{index + 1} / {items.length}</Text>
+						<ObservatoryButton aria-label="다음 주요 영상" boxSize="32px" minH="32px" minW={0} p={0} isDisabled={items.length < 2} onClick={() => move(1)}><MdChevronRight size={18} /></ObservatoryButton>
+					</HStack>
+					<HStack spacing={2}>
+						<ObservatoryButton aria-label={autoEnabled ? "주요 영상 자동 넘김 끄기" : "주요 영상 자동 넘김 켜기"} aria-pressed={autoEnabled}
+							boxSize="32px" minH="32px" minW={0} p={0} primary={autoEnabled && !reduceMotion} isDisabled={items.length < 2 || !!reduceMotion}
+							onClick={() => { setAutoEnabled((value) => !value); setFocused(false); }}>
+							{autoEnabled && !reduceMotion ? <MdPause size={18} /> : <MdPlayArrow size={18} />}
+						</ObservatoryButton>
+						<Box w="108px">
+							<HStack spacing={1.5} mb={1} color={autoPlaying ? "#dec9fa" : "var(--obs-muted)"}>
+								<Box boxSize="6px" borderRadius="full" bg={autoPlaying ? "#c1a4ef" : "#766785"} boxShadow={autoPlaying ? "0 0 10px #c1a4ef" : "none"} />
+								<Text>{autoStatus}</Text>
+							</HStack>
+							<Box h="3px" bg="#ffffff1a" borderRadius="full" overflow="hidden" aria-hidden="true">
+								<Box key={`${video.vi}-${autoPlaying}`} h="100%" bg="#c1a4ef" transform="scaleX(0)" transformOrigin="left"
+									animation={autoPlaying ? "obs-autoplay 8s linear forwards" : undefined}
+									sx={{ "@keyframes obs-autoplay": { to: { transform: "scaleX(1)" } } }} />
+							</Box>
+						</Box>
+					</HStack>
 				</Flex>
-				<HStack spacing={3} mt={7} fontSize="12px" sx={{ fontVariantNumeric: "tabular-nums" }}>
-					<ObservatoryButton aria-label="이전 주요 영상" isDisabled={items.length < 2} onClick={() => move(-1)}>←</ObservatoryButton>
-					<Text>{index + 1} / {items.length}</Text>
-					<ObservatoryButton aria-label="다음 주요 영상" isDisabled={items.length < 2} onClick={() => move(1)}>→</ObservatoryButton>
-					<ObservatoryButton aria-label={paused || reduceMotion ? "주요 영상 자동 넘김 시작" : "주요 영상 자동 넘김 일시정지"}
-						isDisabled={items.length < 2 || !!reduceMotion} onClick={() => {
-							setPaused((value) => !value);
-							setFocused(false);
-						}}>
-						{paused || reduceMotion ? "자동 넘김" : "일시정지"}
-					</ObservatoryButton>
-				</HStack>
 			</Box>
 		</Flex>
 	);
 }
 
-function HomeBadge({ children, gold }: { children: ReactNode; gold?: boolean }) {
-	return <Badge px="6px" py="2px" borderRadius="4px" fontSize="11px" fontWeight="500" textTransform="none" whiteSpace="normal" color={gold ? "#dec19c" : "var(--obs-accent)"} bg={gold ? "#392c30" : "#2b2541"}>{children}</Badge>;
+function HomeBadge({ children, gold, colorScheme }: { children: ReactNode; gold?: boolean; colorScheme?: string }) {
+	return (
+		<DarkMode>
+			<Badge px="8px" py="3px" border="1px solid" borderRadius="full" fontSize="10px" fontWeight="500"
+				textTransform="none" whiteSpace="nowrap" maxW="180px" flexShrink={0} isTruncated
+				colorScheme={colorScheme} variant="subtle"
+				borderColor={colorScheme ? `${colorScheme}.600` : gold ? "#dec19c33" : "#c1a4ef33"}
+				color={colorScheme ? undefined : gold ? "#efcda0" : "#d6c0f4"}
+				bg={colorScheme ? undefined : gold ? "#392c30cc" : "#302445cc"}>
+				{children}
+			</Badge>
+		</DarkMode>
+	);
+}
+
+function HomeElapsedTime({ timestamp }: { timestamp: number }) {
+	const [now, setNow] = useState(Date.now);
+	useEffect(() => {
+		const timer = window.setInterval(() => setNow(Date.now()), 1000);
+		return () => window.clearInterval(timer);
+	}, []);
+	return <Text title={homeDate(timestamp)} aria-live="off">{elapsedTimeText(parseV2Time(timestamp), now)} 달성</Text>;
 }
 
 function HomeVideoCard({ item, showMilestone }: { item: HomeVideo; showMilestone?: boolean }) {
@@ -161,34 +213,37 @@ function HomeVideoCard({ item, showMilestone }: { item: HomeVideo; showMilestone
 	const milestone = showMilestone ? item.milestone : undefined;
 	const videoId = milestone?.videoId || video.vi;
 	const url = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+	const title = video.ta || video.tl;
 	return (
-		<Flex as="article" direction="column" align="stretch" flex={{ base: "0 0 200px", md: "0 0 228px" }} minW={0} gap={2} fontSize="12px" sx={{ scrollSnapAlign: "start" }}>
-			<Link href={url} isExternal tabIndex={-1} aria-hidden="true" display="block">
-				<Image src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`} alt="" loading="lazy" draggable={false} w="100%" aspectRatio={16 / 9} objectFit="cover" borderRadius="7px" bg="#1b192c" pointerEvents="none" userSelect="none" />
-			</Link>
-			<Text color="var(--obs-muted)">{member.n}</Text>
-			{(video.tg?.some((tag) => tag.icv) || (showMilestone && item.labels.includes("새 영상"))) && (
-				<Flex wrap="wrap" gap={1}>
-					{video.tg?.some((tag) => tag.icv) && <HomeBadge>Cover</HomeBadge>}
-					{showMilestone && item.labels.includes("새 영상") && <HomeBadge>NEW · 새 영상</HomeBadge>}
+		<Flex as="article" role="group" direction="column" align="stretch" flex={{ base: "0 0 200px", md: "0 0 228px" }} minW={0} gap={2} fontSize="12px" sx={{ scrollSnapAlign: "start" }}>
+			<Link href={url} isExternal tabIndex={-1} aria-hidden="true" display="block" position="relative" overflow="hidden" borderRadius="12px">
+				<Image src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`} alt="" loading="lazy" draggable={false} w="100%" aspectRatio={16 / 9} objectFit="cover" bg="#1b192c" pointerEvents="none" userSelect="none" />
+				<Flex position="absolute" inset={0} align="flex-end" p={3} bg="linear-gradient(transparent 30%, #100b1ee6)" opacity={0} transition="opacity .2s" _groupHover={{ opacity: 1 }} _groupFocusWithin={{ opacity: 1 }} pointerEvents="none">
+					<Text color="#f1edf8">조회수 · {homeCount(milestone ? milestone.views : video.vc)}</Text>
 				</Flex>
-			)}
-			<Link href={url} isExternal _hover={{ color: "var(--obs-accent)", textDecoration: "none" }}><Heading as="h3" fontSize="15px" fontWeight="600" lineHeight="1.5">{video.ta || video.tl}</Heading></Link>
-			{milestone && <Box><HomeBadge gold>{homeCount(milestone.record.u)} 달성</HomeBadge></Box>}
-			<Text color="var(--obs-muted)">{homeDate(milestone ? milestone.record.at : video.pa)} {milestone ? "달성" : "게시"}</Text>
-			<Text color="var(--obs-muted)">조회수 · {homeCount(milestone ? milestone.views : video.vc)}</Text>
-			<ObservatoryButton href={url} isExternal mt="auto">영상 보러 가기 ↗</ObservatoryButton>
+			</Link>
+			<Text color="var(--obs-muted)" isTruncated>{member.n}</Text>
+			<Link href={url} isExternal title={title} _hover={{ color: "var(--obs-accent)", textDecoration: "none" }}>
+				<Heading as="h3" fontSize="15px" fontWeight="600" lineHeight="1.5" h="3em" noOfLines={2} overflowWrap="anywhere">{title}</Heading>
+			</Link>
+			<Flex gap={1} h="28px" align="center" overflowX="auto" sx={{ scrollbarWidth: "none" }}>
+				{milestone && <HomeBadge gold>{homeCount(milestone.record.u)} 달성</HomeBadge>}
+				{video.tg?.map((tag) => <HomeBadge key={tag.i ?? tag.n} colorScheme={tag.cc}>{tag.n}</HomeBadge>)}
+				{showMilestone && item.labels.includes("새 영상") && <HomeBadge>새 영상</HomeBadge>}
+			</Flex>
+			<Box color="var(--obs-muted)" h="20px" mt="auto">
+				{milestone ? <HomeElapsedTime timestamp={milestone.record.at} /> : <Text isTruncated>{homeDate(video.pa)} 게시</Text>}
+			</Box>
 		</Flex>
 	);
 }
-
 function HomeLives({ items, members, now }: { items: LiveStatusState[]; members: StellarV2State[]; now: number }) {
 	const list = items.filter((item) => item.openLive || !item.graduation || new Date(item.graduation).getTime() > now)
 		.slice().sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive) ||
 			(new Date(b.openLive ? b.openDate || 0 : b.closeDate || 0).getTime() || 0) - (new Date(a.openLive ? a.openDate || 0 : a.closeDate || 0).getTime() || 0));
 	if (!list.length) return <Text color="var(--obs-muted)">표시할 방송 정보가 없어요.</Text>;
 	return (
-		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="10px">
+		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="12px">
 			{list.map((item) => {
 				const member = members.find((candidate) => candidate.uid === item.uuid);
 				const name = member?.n || item.channelName || item.name || "채널";
@@ -198,14 +253,24 @@ function HomeLives({ items, members, now }: { items: LiveStatusState[]; members:
 				const elapsed = !Number.isFinite(timestamp) ? "시간 정보 없음" : minutes >= 1440 ? `${Math.floor(minutes / 1440)}일` : minutes >= 60 ? `${Math.floor(minutes / 60)}시간 ${minutes % 60}분` : `${minutes}분`;
 				return (
 					<Link key={item.uuid} href={channel ? `https://chzzk.naver.com/live/${encodeURIComponent(channel)}` : "https://chzzk.naver.com"} isExternal
-						display="flex" alignItems="center" minW={0} gap={3} p={{ base: "14px 12px", md: 4 }} borderRadius="8px" bg="#1b182ae6" _hover={{ bg: "#2b2541", textDecoration: "none" }}>
-						<Avatar name={name} src={item.channelImageUrl || member?.pi} boxSize="36px" flexShrink={0} bg="#2b2541" color="var(--obs-accent)" />
+						display="flex" alignItems="center" minW={0} gap={3} p={{ base: "16px 14px", md: 5 }} borderRadius="16px" border="1px solid"
+						borderColor={item.openLive ? "#69dfb755" : "#76678526"} borderLeftWidth={item.openLive ? "3px" : "1px"}
+						bg={item.openLive ? "linear-gradient(120deg, #20483ee6, #211d35e6)" : "#1b182aa6"}
+						boxShadow={item.openLive ? "0 6px 24px #52d6a80d, inset 0 1px 0 #b1ffe80d" : "none"}
+						transition="background .2s, border-color .2s, box-shadow .2s"
+						_hover={{ bg: item.openLive ? "linear-gradient(120deg, #285548, #29213f)" : "#242031", borderColor: item.openLive ? "#69dfb799" : "#76678566", textDecoration: "none" }}>
+						<Avatar name={name} src={item.channelImageUrl || member?.pi} boxSize="42px" flexShrink={0} bg="#2b2541" color="var(--obs-accent)" filter={item.openLive ? "none" : "grayscale(.8)"} opacity={item.openLive ? 1 : .65} />
 						<Box flex={1} minW={0}>
-							<Heading as="h3" fontSize="14px" fontWeight="600">{name}</Heading>
-							<Text isTruncated color="var(--obs-muted)" fontSize="12px">{item.openLive ? item.liveTitle || "방송 중" : "마지막 방송 종료"}{item.openLive && item.liveCategoryValue ? ` · ${item.liveCategoryValue}` : ""}</Text>
-							<Text color="var(--obs-muted)" fontSize="12px">{elapsed}{Number.isFinite(timestamp) ? item.openLive ? " 방송 중" : " 전 종료" : ""}</Text>
+							<Flex align="center" gap={2} mb={1}>
+								<Heading as="h3" fontSize="14px" fontWeight="600" isTruncated color={item.openLive ? "#f1fff9" : "#b4aacb"}>{name}</Heading>
+								<Badge flexShrink={0} borderRadius="full" px={2} fontSize="10px" color={item.openLive ? "#85f3c8" : "#a69db7"} bg={item.openLive ? "#6af3bb1a" : "#a69db70d"}>{item.openLive ? "● LIVE" : "OFFLINE"}</Badge>
+							</Flex>
+							<Text noOfLines={1} color={item.openLive ? "#d9ede4" : "var(--obs-muted)"} fontSize="12px" title={item.liveTitle || undefined}>{item.openLive ? item.liveTitle || "방송 중" : "마지막 방송 종료"}</Text>
+							<Flex align="center" gap={2} mt={2} minW={0}>
+								{item.openLive && item.liveCategoryValue && <HomeBadge>{item.liveCategoryValue}</HomeBadge>}
+								<Text color="var(--obs-muted)" fontSize="11px" isTruncated>{elapsed}{Number.isFinite(timestamp) ? item.openLive ? " 방송 중" : " 전 종료" : ""}</Text>
+							</Flex>
 						</Box>
-						<HomeBadge>{item.openLive ? "● LIVE" : "OFFLINE"}</HomeBadge>
 					</Link>
 				);
 			})}

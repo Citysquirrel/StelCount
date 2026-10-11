@@ -11,11 +11,14 @@ import {
 	MenuList,
 	MenuItem,
 	Heading,
+	Portal,
+	Divider,
 } from "@chakra-ui/react";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "../Link";
 import { CAFE_WRITE_URL } from "@/lib/constant";
 import { NebulaGlow } from "./space/NebulaGlow";
+import { MdBarChart, MdChevronLeft, MdChevronRight, MdClose, MdEdit, MdGridView, MdHome, MdMenu, MdOpenInNew } from "react-icons/md";
 
 export function ObservatoryShell({ children }: { children: ReactNode }) {
 	return (
@@ -69,19 +72,22 @@ export function ObservatoryButton({ href, isExternal, primary, ...props }: Obser
 			rel={href && isExternal ? "noopener noreferrer" : undefined}
 			h="auto"
 			minH={{ base: "44px", md: "36px" }}
-			px="13px"
-			py="6px"
+			px="15px"
+			py="8px"
 			fontSize="13px"
 			fontWeight="500"
 			lineHeight="1.5"
 			whiteSpace="normal"
 			border="1px solid"
-			borderColor={primary ? "var(--obs-accent)" : "var(--obs-line)"}
-			borderRadius="7px"
-			bg={primary ? "var(--obs-accent)" : "#1b192ce6"}
-			color={primary ? "#20162e" : "#f1edf8"}
-			_hover={{ bg: primary ? "#d2baf7" : "#2b2541", textDecoration: "none" }}
-			_active={{ bg: primary ? "#d2baf7" : "#362c4c" }}
+			borderColor={primary ? "#d2b5fb80" : "#c1a4ef29"}
+			borderRadius="full"
+			bg={primary ? "linear-gradient(135deg, #cdb3f1, #ac88d9)" : "#c1a4ef0d"}
+			color={primary ? "#241633" : "#e5daef"}
+			backdropFilter="blur(12px)"
+			boxShadow={primary ? "0 4px 18px #9c70ce26, inset 0 1px 0 #ffffff40" : "inset 0 1px 0 #ffffff08"}
+			transition="background .2s, border-color .2s, box-shadow .2s"
+			_hover={{ bg: primary ? "linear-gradient(135deg, #decbf8, #c09be9)" : "#c1a4ef1f", borderColor: "#c1a4ef70", textDecoration: "none" }}
+			_active={{ bg: primary ? "#b796de" : "#c1a4ef30", boxShadow: "none" }}
 			{...props}
 		/>
 	);
@@ -138,7 +144,7 @@ export function ObservatoryBackground() {
 	);
 }
 
-export function ObservatoryHeader({ refreshing, onRefresh }: { refreshing: boolean; onRefresh: () => void }) {
+export function ObservatoryHeader() {
 	const [compact, setCompact] = useState(false);
 	const [hidden, setHidden] = useState(false);
 	const headerRef = useRef<HTMLElement>(null);
@@ -163,9 +169,9 @@ export function ObservatoryHeader({ refreshing, onRefresh }: { refreshing: boole
 		return () => window.removeEventListener("scroll", update);
 	}, [menu.isOpen]);
 	const links = [
-		{ label: "Home", href: "/v2" },
-		{ label: "Counter", href: "/counter" },
-		{ label: "멀티뷰 ↗", href: "/multiview", external: true },
+		{ label: "Home", mobileLabel: "홈", description: "새로운 영상과 함께 만든 기록", icon: MdHome, href: "/v2" },
+		{ label: "Counter", mobileLabel: "카운터", description: "멤버별 노래와 조회수", icon: MdBarChart, href: "/counter" },
+		{ label: "멀티뷰 ↗", mobileLabel: "멀티뷰", description: "여러 방송을 한 화면에서", icon: MdGridView, href: "/multiview", external: true },
 	];
 	return (
 		<>
@@ -248,59 +254,75 @@ export function ObservatoryHeader({ refreshing, onRefresh }: { refreshing: boole
 								</ObservatoryButton>
 							))}
 						</HStack>
-						<ObservatoryButton
-							isLoading={refreshing}
-							onClick={onRefresh}
-							aria-label="데이터 새로고침"
-							minW="40px"
-							px={2}
-						>
-							↻
-						</ObservatoryButton>
 						<ObservatoryButton href={CAFE_WRITE_URL} isExternal display={{ base: "none", lg: "inline-flex" }}>
 							축하 글쓰기 ↗
 						</ObservatoryButton>
 						<Box display={{ base: "block", md: "none" }}>
-							<Menu isOpen={menu.isOpen} onOpen={menu.onOpen} onClose={menu.onClose}>
+							<Menu isOpen={menu.isOpen} onOpen={menu.onOpen} onClose={menu.onClose} placement="bottom-end" gutter={12} isLazy>
 								<MenuButton
 									as={Button}
-									aria-label="메뉴 열기"
+									aria-label={menu.isOpen ? "메뉴 닫기" : "메뉴 열기"}
+									boxSize="44px"
 									minW="44px"
-									h="44px"
 									p={0}
-									bg="#1b192c"
-									border="1px solid var(--obs-line)"
-									color="inherit"
-									_hover={{ bg: "#2b2541" }}
-									_active={{ bg: "#2b2541" }}
+									bg={menu.isOpen ? "#c1a4ef24" : "linear-gradient(135deg, #c1a4ef18, #c1a4ef05)"}
+									border="1px solid"
+									borderColor={menu.isOpen ? "#c1a4ef70" : "#c1a4ef29"}
+									borderRadius="14px"
+									boxShadow="inset 0 1px 0 #ffffff0a"
+									color="#e4d3fa"
+									_hover={{ bg: "#c1a4ef24", borderColor: "#c1a4ef60" }}
+									_active={{ bg: "#c1a4ef30" }}
 								>
-									☰
+									<Flex align="center" justify="center" w="100%" h="100%">
+										<Box as={menu.isOpen ? MdClose : MdMenu} boxSize="22px" aria-hidden="true" />
+									</Flex>
 								</MenuButton>
-								<MenuList bg="#1b192c" color="#f1edf8" borderColor="var(--obs-line)" minW="180px">
+								<Portal>
+								<MenuList bg="#1c162bee" color="#f1edf8" border="1px solid #c1a4ef33" borderRadius="20px"
+									minW={0} w="min(288px, calc(100vw - 32px))" p={2} zIndex={1100}
+									maxH="calc(100dvh - 100px)" overflowY="auto" backdropFilter="blur(28px) saturate(150%)"
+									boxShadow="0 20px 60px #08051280, inset 0 1px 0 #ffffff0a">
+									<Text px={3} pt={2} pb={3} fontSize="10px" letterSpacing=".16em" color="#ad9cc5">둘러보기</Text>
 									{links.map((link) => (
 										<MenuItem
 											key={link.href}
 											as={Link}
 											href={link.href}
 											isExternal={link.external}
-											bg="transparent"
-											minH="44px"
-											_focus={{ bg: "#2b2541" }}
+											bg={link.href === "/v2" ? "#c1a4ef18" : "transparent"}
+											gap={3} px={3} py={3} minH="60px" borderRadius="12px"
+											_hover={{ bg: "#c1a4ef24", textDecoration: "none" }}
+											_focus={{ bg: "#c1a4ef24" }}
+											_focusVisible={{ outline: "2px solid #c1a4ef", outlineOffset: "-2px" }}
 										>
-											{link.label}
+											<Flex boxSize="34px" flexShrink={0} align="center" justify="center" borderRadius="10px" bg="#c1a4ef12" color="#d3b5f7">
+												<Box as={link.icon} boxSize="20px" aria-hidden="true" />
+											</Flex>
+											<Box flex={1} minW={0}>
+												<Text fontSize="14px" fontWeight="600">{link.mobileLabel}</Text>
+												<Text fontSize="11px" color="#b4a5c8" mt="2px">{link.description}</Text>
+											</Box>
+											{link.external ? <MdOpenInNew size={15} aria-hidden="true" /> : link.href === "/v2" ? <Box boxSize="5px" borderRadius="full" bg="#d3b5f7" aria-hidden="true" /> : null}
 										</MenuItem>
 									))}
+									<Divider my={2} borderColor="#c1a4ef20" />
 									<MenuItem
 										as={Link}
 										href={CAFE_WRITE_URL}
 										isExternal
 										bg="transparent"
-										minH="44px"
-										_focus={{ bg: "#2b2541" }}
+										minH="44px" px={3} gap={3} borderRadius="12px" fontSize="13px" color="#d4c5e7"
+										_hover={{ bg: "#c1a4ef24", textDecoration: "none" }}
+										_focus={{ bg: "#c1a4ef24" }}
+										_focusVisible={{ outline: "2px solid #c1a4ef", outlineOffset: "-2px" }}
 									>
-										축하 글쓰기 ↗
+										<MdEdit size={18} aria-hidden="true" />
+										<Text flex={1}>축하 글쓰기</Text>
+										<MdOpenInNew size={15} aria-hidden="true" />
 									</MenuItem>
 								</MenuList>
+								</Portal>
 							</Menu>
 						</Box>
 					</HStack>
@@ -342,7 +364,8 @@ export function ObservatoryExplore({ hasHero }: { hasHero: boolean }) {
 			zIndex={30}
 			maxW="1440px"
 			mx="auto"
-			bg={{ base: "#161021f2", md: "transparent" }}
+			bg={{ base: "#16102199", md: "transparent" }}
+			backdropFilter={{ base: "blur(24px) saturate(150%)", md: "none" }}
 			transition="top .2s"
 		>
 			<Flex
@@ -355,8 +378,9 @@ export function ObservatoryExplore({ hasHero }: { hasHero: boolean }) {
 				p={{ base: "2px 6px", md: "7px" }}
 				border={{ base: 0, md: "1px solid #59477570" }}
 				borderRadius={{ base: 0, md: "28px" }}
-				bg={{ base: "transparent", md: "#211a31ed" }}
-				backdropFilter="blur(14px)"
+				bg={{ base: "transparent", md: "#211a3173" }}
+				backdropFilter={{ base: "none", md: "blur(24px) saturate(150%)" }}
+				boxShadow={{ base: "none", md: "0 12px 36px #09061240, inset 0 1px 0 #ffffff0d" }}
 			>
 				{items.map(([id, label]) => (
 					<Link
@@ -370,7 +394,7 @@ export function ObservatoryExplore({ hasHero }: { hasHero: boolean }) {
 						px={{ base: 3, md: 2 }}
 						borderRadius="22px"
 						fontSize="11px"
-						bg={active === id ? "#2b2541" : "transparent"}
+						bg={active === id ? "#c1a4ef24" : "transparent"}
 						color={active === id ? "#f1edf8" : "var(--obs-muted)"}
 						_hover={{ bg: "#2b2541", textDecoration: "none" }}
 						onClick={(event) => {
@@ -482,7 +506,7 @@ export function ObservatoryShelf({ id, title, eyebrow, description, count, child
 						minW={0}
 						p={0}
 					>
-						←
+						<MdChevronLeft size={22} />
 					</ObservatoryButton>
 					<ObservatoryButton
 						isDisabled={edges.end}
@@ -493,7 +517,7 @@ export function ObservatoryShelf({ id, title, eyebrow, description, count, child
 						minW={0}
 						p={0}
 					>
-						→
+						<MdChevronRight size={22} />
 					</ObservatoryButton>
 				</HStack>
 			</Flex>

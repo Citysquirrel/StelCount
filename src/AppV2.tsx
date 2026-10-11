@@ -17,10 +17,7 @@ function ObservatoryApp() {
 	return (
 		<ObservatoryShell>
 			<ObservatoryBackground />
-			<ObservatoryHeader refreshing={data.videos.isFetching || data.live.isFetching} onRefresh={() => {
-				void data.videos.refetch();
-				void data.live.refetch();
-			}} />
+			<ObservatoryHeader />
 			<Box as="main" position="relative" minH="65svh" id="obs-main" tabIndex={-1}>
 				<Outlet context={data} />
 			</Box>
