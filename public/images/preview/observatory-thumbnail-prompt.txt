@@ -1,0 +1,5 @@
+Generation mode: built-in image_gen.
+Use case: stylized-concept. Create ONE common test thumbnail bitmap for music video cards in a dark navy and muted mint observatory-themed Korean fan site. Landscape composition, 16:9 aspect ratio. A refined cinematic anime background illustration of a small white astronomical observatory on a coastal hill at blue hour, a luminous moon and delicate starfield above a calm sea, soft mint glow, restrained pale lavender clouds, hand-painted texture and clear focal subject. Visually read as actual cover art, not a UI panel or diagram. Calm polished music-cover mood. No people, no text, no letters, no logos, no borders, no UI, no watermark. Keep the main observatory and moon within the middle 70% for thumbnail readability.
+
+Original: observatory-thumbnail.png
+Web thumbnail: observatory-thumbnail.jpg (960 x 540, 16:9)

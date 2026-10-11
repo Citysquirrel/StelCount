@@ -47,7 +47,7 @@ import {
 	nowState,
 	stellarV2State,
 } from "../lib/Atom";
-import { USER_SETTING_STORAGE, stellarGroupName } from "../lib/constant";
+import { USER_SETTING_STORAGE } from "../lib/constant";
 import {
 	elapsedTimeTextForCard,
 	getLocale,
@@ -128,13 +128,24 @@ export function Counter() {
 	const { backgroundColor } = useBackgroundColor(!currentColorCode ? "white" : `${currentColorCode}aa`);
 	const isUnder720 = windowWidth < 720;
 
-	const stellive = data.filter((s) => s.gp === 0 && !s.jl);
-	const mystic = data.filter((s) => s.gp === 1 && !s.jl);
-	const universe = data.filter((s) => s.gp === 2 && !s.jl);
-	const cliche = data.filter((s) => s.gp === 3 && !s.jl);
-	const everys = data.filter((s) => s.gp === 4 && !s.jl);
-	const unclassified = data.filter((s) => !s.gp && s.gp !== 0 && !s.jl);
-	const total = [stellive, everys, universe, cliche, mystic, unclassified];
+	const groupSortOrders = new Map<string, number>();
+	data.forEach((stellar) =>
+		stellar.gps.forEach((group) => {
+			groupSortOrders.set(group.n, Math.max(groupSortOrders.get(group.n) ?? Number.NEGATIVE_INFINITY, group.so));
+		}),
+	);
+	const total = [
+		...[...groupSortOrders]
+			.sort(([, firstSortOrder], [, secondSortOrder]) => secondSortOrder - firstSortOrder)
+			.map(([name]) => ({
+				name,
+				members: data.filter((s) => !s.jl && s.gps.some((group) => group.n === name)),
+			})),
+		{
+			name: "Unclassified",
+			members: data.filter((s) => !s.jl && s.gps.length === 0),
+		},
+	];
 
 	const gridWidth = gridRef.current?.clientWidth || 0;
 	const imageHeightOffset = 4;
@@ -231,7 +242,8 @@ export function Counter() {
 			if (userSetting.homeStellar) {
 				setCurrentUuid(userSetting.homeStellar);
 			} else {
-				if (data.length > 0) setCurrentUuid(stellive[0].uid);
+				const firstMember = total.find((group) => group.members.length > 0)?.members[0];
+				if (firstMember) setCurrentUuid(firstMember.uid);
 			}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data]);
@@ -275,9 +287,9 @@ export function Counter() {
 						? Array.from({ length: 4 }, () => true).map((_, idx) => (
 								<Skeleton key={idx} height="40px" borderRadius={"0.375rem"} />
 							))
-						: total.map((s, idx) => (
+						: total.map((group, idx) => (
 								<Fragment key={idx}>
-									{s.length > 0 ? (
+									{group.members.length > 0 ? (
 										<Tag
 											colorScheme="purple"
 											fontSize="sm"
@@ -287,12 +299,10 @@ export function Counter() {
 										>
 											{isUnder720 || isMobile()
 												? idx
-												: typeof s[0].gp === "number"
-													? stellarGroupName[s[0].gp][1]
-													: "Unclassified"}
+												: group.name}
 										</Tag>
 									) : null}
-									{s.map((stellar) => {
+									{group.members.map((stellar) => {
 										const graduated = stellar.gd && parseV2Time(stellar.gd) < now.getTime();
 										return (
 											<Tooltip

@@ -28,3 +28,4 @@ analysis
 .env*
 memo.md
 .codegpt
+AGENTS.md

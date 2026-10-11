@@ -16,28 +16,28 @@ const fetchServerAdaptor = async <TData = any, V extends Version = Version>(
 	//? 기존 fetchServer(fetch_) 형태로 바로 return 들어가면
 	//? react-query 측에서는 success로 간주하기 때문에 throw로 명시해주어야함
 	if (response.status >= 400 || response.status === 0) {
-		throw new Error((response.data as DefaultResponseData).msg || response.statusText || "API Request Failed");
+		throw new Error((response.data as DefaultResponseData | undefined)?.msg || response.statusText || "API Request Failed");
 	}
 
 	return response.data as TData;
 };
 
-interface UseServerQueryProps<TData, V extends Version> {
+interface UseServerQueryProps<TData, V extends Version, TSelected = TData> {
 	version: V;
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	api: ServerAPIMap[V] | (string & {});
 	options?: FetchOptions;
-	queryOptions?: Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn">;
+	queryOptions?: Omit<UseQueryOptions<TData, Error, TSelected>, "queryKey" | "queryFn">;
 }
 
 // GET
-export function useServerQuery<TData = any, V extends Version = Version>({
+export function useServerQuery<TData = any, V extends Version = Version, TSelected = TData>({
 	version,
 	api,
 	options,
 	queryOptions,
-}: UseServerQueryProps<TData, V>) {
-	return useQuery<TData, Error>({
+}: UseServerQueryProps<TData, V, TSelected>) {
+	return useQuery<TData, Error, TSelected>({
 		// 캐싱 키를 자동으로 생성 (엔드포인트와 파라미터를 배열로 구성)
 		queryKey: [version, api, options?.body],
 		queryFn: () => fetchServerAdaptor<TData, V>(version, api, options),

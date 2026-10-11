@@ -45,7 +45,7 @@ export const CustomLink = forwardRef<HTMLAnchorElement, CustomLinkProps>(
 			<ChakraLink
 				ref={ref}
 				href={href}
-				target={target}
+				target={target ?? (props.isExternal ? "_blank" : undefined)}
 				onClick={handleClick}
 				aria-current={isActive ? "page" : undefined}
 				{...props}

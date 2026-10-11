@@ -163,7 +163,7 @@ export type DateInput = Date | string | number;
 
 export interface StellarV2Info {
 	n: string;
-	gp: number;
+	gps: { n: string; so: number }[];
 	uid: string;
 	cc: string;
 	ls: boolean | undefined;

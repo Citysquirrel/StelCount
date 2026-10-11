@@ -258,6 +258,16 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 											onChange={(e) => setInputValue((prev) => ({ ...prev, description: e.target.value }))}
 										/>
 									</FormControl>
+									<FormControl>
+										<FormLabel fontSize="md">정렬 순서</FormLabel>
+										<Input
+											size="sm"
+											type="number"
+											step={1}
+											value={inputValue.sortOrder}
+											onChange={(e) => setInputValue((prev) => ({ ...prev, sortOrder: Number(e.target.value) }))}
+										/>
+									</FormControl>
 									<Checkbox
 										isChecked={inputValue.isActive}
 										onChange={(e) => setInputValue((prev) => ({ ...prev, isActive: e.target.checked }))}
