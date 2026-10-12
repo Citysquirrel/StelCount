@@ -1,7 +1,8 @@
 import { StatisticsV2, StellarV2State, YoutubeMusicDataV2 } from "../types";
-import { sortStatsByUnit } from "./etc";
+import { sortStatsByUnit, sortStatsByUnitForBigNews } from "./etc";
 
-export const HOME_LIMITS = { recentDays: 60, milestoneDays: 5, shelf: 20, hero: 20 };
+export const HOME_LIMITS = { recentDays: 60, milestoneDays: 5, shelf: 20 };
+const HERO_LIMITS = { recentDays: 7, milestoneDays: 5, milestones: 5, total: 8 };
 
 export interface HomeVideo {
 	video: YoutubeMusicDataV2;
@@ -26,6 +27,8 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 	const premiere: HomeVideo[] = [];
 	const recent: HomeVideo[] = [];
 	const milestones: HomeVideo[] = [];
+	const heroRecent: HomeVideo[] = [];
+	const heroMilestones: HomeVideo[] = [];
 	for (const item of byId.values()) {
 		const { video } = item;
 		if (video.lbc === "upcoming" || video.lbc === "live") {
@@ -42,10 +45,14 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 			{ source: "Main", videoId: video.vi, views: video.vc, records: video.st },
 			...video.dt.map((detail) => ({ source: detail.t, videoId: detail.vi, views: detail.vc, records: detail.st })),
 		];
+		let heroMilestone: HomeVideo["milestone"];
 		for (const source of sources) {
-			const record = source.records
-				.filter((stat) => sortStatsByUnit(stat.u) && within(stat.at, HOME_LIMITS.milestoneDays))
-				.sort((a, b) => b.at - a.at || Number(b.u) - Number(a.u))[0];
+			const records = [...source.records].sort((a, b) => b.at - a.at || Number(b.u) - Number(a.u));
+			const heroRecord = records.find((stat) => sortStatsByUnitForBigNews(stat.u) && within(stat.at, HERO_LIMITS.milestoneDays));
+			if (heroRecord && (!heroMilestone || heroRecord.at > heroMilestone.record.at)) {
+				heroMilestone = { source: source.source, videoId: source.videoId, views: source.views, record: heroRecord };
+			}
+			const record = records.find((stat) => sortStatsByUnit(stat.u) && within(stat.at, HOME_LIMITS.milestoneDays));
 			if (!record) continue;
 			const milestone = { source: source.source, videoId: source.videoId, views: source.views, record };
 			milestones.push({ ...item, labels: [...item.labels, "조회수 달성"], milestone, eventTime: record.at * 1000 });
@@ -53,6 +60,16 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 			item.eventTime = Math.max(item.eventTime, record.at * 1000);
 		}
 		if (item.milestone) item.labels.push("조회수 달성");
+		if (within(video.pa, HERO_LIMITS.recentDays)) {
+			heroRecent.push({
+				...item,
+				labels: heroMilestone ? ["새 영상", "조회수 달성"] : ["새 영상"],
+				milestone: heroMilestone,
+				eventTime: (video.pa || 0) * 1000,
+			});
+		} else if (heroMilestone) {
+			heroMilestones.push({ ...item, labels: ["조회수 달성"], milestone: heroMilestone, eventTime: heroMilestone.record.at * 1000 });
+		}
 	}
 	const latest = (a: HomeVideo, b: HomeVideo) => b.eventTime - a.eventTime || a.video.vi.localeCompare(b.video.vi);
 	premiere.sort(
@@ -62,9 +79,10 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 	);
 	recent.sort((a, b) => (b.video.pa || 0) - (a.video.pa || 0) || a.video.vi.localeCompare(b.video.vi));
 	milestones.sort(latest);
-	const featured = [...byId.values()].filter((item) => item.labels.length && !premiere.includes(item)).sort(latest);
+	heroRecent.sort(latest);
+	heroMilestones.sort(latest);
 	return {
-		hero: [...premiere, ...featured].slice(0, HOME_LIMITS.hero),
+		hero: [...premiere, ...heroRecent, ...heroMilestones.slice(0, HERO_LIMITS.milestones)].slice(0, HERO_LIMITS.total),
 		recent: recent.slice(0, HOME_LIMITS.shelf),
 		milestones: milestones.slice(0, HOME_LIMITS.shelf),
 	};

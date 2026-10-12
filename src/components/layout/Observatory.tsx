@@ -15,6 +15,7 @@ import {
 	Divider,
 } from "@chakra-ui/react";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Link } from "../Link";
 import { CAFE_WRITE_URL } from "@/lib/constant";
 import { NebulaGlow } from "./space/NebulaGlow";
@@ -145,6 +146,7 @@ export function ObservatoryBackground() {
 }
 
 export function ObservatoryHeader() {
+	const { pathname } = useLocation();
 	const [compact, setCompact] = useState(false);
 	const [hidden, setHidden] = useState(false);
 	const headerRef = useRef<HTMLElement>(null);
@@ -170,7 +172,7 @@ export function ObservatoryHeader() {
 	}, [menu.isOpen]);
 	const links = [
 		{ label: "Home", mobileLabel: "홈", description: "새로운 영상과 함께 만든 기록", icon: MdHome, href: "/v2" },
-		{ label: "Counter", mobileLabel: "카운터", description: "멤버별 노래와 조회수", icon: MdBarChart, href: "/counter" },
+		{ label: "Counter", mobileLabel: "카운터", description: "멤버별 노래와 조회수", icon: MdBarChart, href: "/v2/counter" },
 		{ label: "멀티뷰 ↗", mobileLabel: "멀티뷰", description: "여러 방송을 한 화면에서", icon: MdGridView, href: "/multiview", external: true },
 	];
 	return (
@@ -226,6 +228,7 @@ export function ObservatoryHeader() {
 				>
 					<Link
 						href="/v2"
+						isExact
 						fontSize={{ base: "20px", md: "22px" }}
 						fontWeight="700"
 						letterSpacing="-1px"
@@ -247,7 +250,8 @@ export function ObservatoryHeader() {
 								<ObservatoryButton
 									key={link.href}
 									href={link.href}
-									primary={link.href === "/v2"}
+									primary={pathname === link.href}
+									aria-current={pathname === link.href ? "page" : undefined}
 									isExternal={link.external}
 								>
 									{link.label}
@@ -290,7 +294,8 @@ export function ObservatoryHeader() {
 											as={Link}
 											href={link.href}
 											isExternal={link.external}
-											bg={link.href === "/v2" ? "#c1a4ef18" : "transparent"}
+											aria-current={pathname === link.href ? "page" : undefined}
+											bg={pathname === link.href ? "#c1a4ef18" : "transparent"}
 											gap={3} px={3} py={3} minH="60px" borderRadius="12px"
 											_hover={{ bg: "#c1a4ef24", textDecoration: "none" }}
 											_focus={{ bg: "#c1a4ef24" }}
@@ -303,7 +308,7 @@ export function ObservatoryHeader() {
 												<Text fontSize="14px" fontWeight="600">{link.mobileLabel}</Text>
 												<Text fontSize="11px" color="#b4a5c8" mt="2px">{link.description}</Text>
 											</Box>
-											{link.external ? <MdOpenInNew size={15} aria-hidden="true" /> : link.href === "/v2" ? <Box boxSize="5px" borderRadius="full" bg="#d3b5f7" aria-hidden="true" /> : null}
+											{link.external ? <MdOpenInNew size={15} aria-hidden="true" /> : pathname === link.href ? <Box boxSize="5px" borderRadius="full" bg="#d3b5f7" aria-hidden="true" /> : null}
 										</MenuItem>
 									))}
 									<Divider my={2} borderColor="#c1a4ef20" />

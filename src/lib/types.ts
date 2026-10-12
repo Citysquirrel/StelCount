@@ -45,6 +45,7 @@ export interface Tag extends DefaultDateFields {
 	name: string;
 	colorCode?: string;
 	isCover: boolean;
+	isOriginal: boolean;
 	count?: number;
 }
 
@@ -161,9 +162,16 @@ export interface MultiViewDataData {
 
 export type DateInput = Date | string | number;
 
+export interface StellarGroupV2 {
+	n: string;
+	en?: string | null;
+	nur?: string | null;
+	so: number;
+}
+
 export interface StellarV2Info {
 	n: string;
-	gps: { n: string; so: number }[];
+	gps: StellarGroupV2[];
 	uid: string;
 	cc: string;
 	ls: boolean | undefined;
@@ -209,6 +217,7 @@ export interface TagV2 extends DefaultDateFieldsV2 {
 	n: string;
 	cc?: string;
 	icv: boolean;
+	io?: boolean;
 }
 
 export interface VideoDetailV2 extends DefaultDateFieldsV2 {

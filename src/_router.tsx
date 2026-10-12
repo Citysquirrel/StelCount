@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import HomeV2 from "@page/v2/Home";
+import CounterV2 from "@page/v2/Counter";
 import { lazy } from "react";
 import { Navigate, RouteObject, createBrowserRouter } from "react-router-dom";
 import App from "./App";
@@ -69,7 +70,12 @@ export const routeObj: RouteObject[] = [
 			{ path: "/", element: <NotExist /> },
 		],
 	},
-	{ path: "/v2", element: <AppV2 />, children: [{ element: <HomeV2 />, index: true }], errorElement: <ServerErrorPage isErrorComponent /> },
+	{
+		path: "/v2",
+		element: <AppV2 />,
+		children: [{ element: <HomeV2 />, index: true }, { path: "counter", element: <CounterV2 /> }],
+		errorElement: <ServerErrorPage isErrorComponent />,
+	},
 	{ path: "/multiview", element: <MultiView />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/login", element: <Login />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/oauth", element: <OAuth />, errorElement: <ServerErrorPage isErrorComponent /> },

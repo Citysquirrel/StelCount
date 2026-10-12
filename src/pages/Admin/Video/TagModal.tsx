@@ -64,7 +64,7 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 	const [types, setTypes] = useState<TagType[]>(data || []);
 	const [viewMode, setViewMode] = useState<ViewMode>("list");
 	const [selectedType, setSelectedType] = useState<TagType | null>(null);
-	const initTag: TagType = { name: "", colorCode: "", isCover: false };
+	const initTag: TagType = { name: "", colorCode: "", isCover: false, isOriginal: false };
 	const [inputValue, setInputValue] = useState<TagType>(initTag);
 
 	// 핸들러: 새 태그 추가 시작
@@ -173,6 +173,7 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 										>
 											<HStack spacing={1}>
 												{type.isCover && <Text>⭐</Text>}
+												{type.isOriginal && <Text>🎵</Text>}
 												<Tag colorScheme={type.colorCode}>{type.name}</Tag>
 												{type.count && (
 													<Text ml={2} fontSize="xs" color="gray">
@@ -251,13 +252,22 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 										<Box>
 											<Tag colorScheme={inputValue.colorCode || undefined}>{inputValue.name}</Tag>
 										</Box>
-										<Checkbox
-											isChecked={inputValue.isCover}
-											onChange={(e) => setInputValue((prev) => ({ ...prev, isCover: e.target.checked }))}
-											alignSelf={"flex-end"}
-										>
-											커버곡임을 명시합니다.
-										</Checkbox>
+										<Flex direction="column" gap={2}>
+											<Checkbox
+												isChecked={inputValue.isCover}
+												onChange={(e) => setInputValue((prev) => ({ ...prev, isCover: e.target.checked }))}
+												alignSelf={"flex-end"}
+											>
+												커버곡임을 명시합니다.
+											</Checkbox>
+											<Checkbox
+												isChecked={inputValue.isOriginal}
+												onChange={(e) => setInputValue((prev) => ({ ...prev, isOriginal: e.target.checked }))}
+												alignSelf={"flex-end"}
+											>
+												원곡임을 명시합니다.
+											</Checkbox>
+										</Flex>
 									</Flex>
 
 									<HStack justify="flex-end" pb={1}>

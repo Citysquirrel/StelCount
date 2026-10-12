@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { ObservatoryBackground, ObservatoryFooter, ObservatoryHeader, ObservatoryShell } from "./components/layout/Observatory";
 import { useAuth } from "./lib/hooks/useAuth";
 import { useObservatoryData } from "./lib/hooks/useObservatoryData";
@@ -14,6 +14,7 @@ export default function AppV2() {
 
 function ObservatoryApp() {
 	const data = useObservatoryData();
+	const { pathname } = useLocation();
 	return (
 		<ObservatoryShell>
 			<ObservatoryBackground />
@@ -21,7 +22,9 @@ function ObservatoryApp() {
 			<Box as="main" position="relative" minH="65svh" id="obs-main" tabIndex={-1}>
 				<Outlet context={data} />
 			</Box>
-			<ObservatoryFooter />
+			<Box pb={{ base: pathname === "/v2/counter" ? "calc(81px + env(safe-area-inset-bottom, 0px))" : 0, lg: 0 }}>
+				<ObservatoryFooter />
+			</Box>
 		</ObservatoryShell>
 	);
 }

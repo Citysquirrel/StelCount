@@ -1,8 +1,9 @@
-import { ImageProps as ChakraImageProps, Image as ChakraImage, AspectRatio, AspectRatioProps } from "@chakra-ui/react";
+import { ImageProps as ChakraImageProps, Image as ChakraImage, AspectRatio, AspectRatioProps, Box } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 
-interface ImageV2Props extends AspectRatioProps {
+interface ImageV2Props extends Omit<AspectRatioProps, "ratio"> {
 	src: string;
+	ratio?: AspectRatioProps["ratio"] | null;
 	alt?: string;
 	loading?: "eager" | "lazy"; // 성능 최적화용
 	objectFit?: ChakraImageProps["objectFit"];
@@ -15,6 +16,7 @@ const DARK_COLORS = ["gray.800", "orange.900", "green.900", "blue.900", "pink.90
 
 export function ImageV2({
 	src,
+	ratio = 16 / 9,
 	alt,
 	loading = "lazy",
 	objectFit = "cover",
@@ -22,7 +24,9 @@ export function ImageV2({
 	imageProps,
 	...wrapperProps
 }: ImageV2Props) {
-	const [isLoaded, setIsLoaded] = useState(false);
+	const [loadedSrc, setLoadedSrc] = useState<string>();
+	const isLoaded = loadedSrc === src;
+	const Wrapper = ratio === null ? Box : AspectRatio;
 
 	const colorIndex = useMemo(() => {
 		return Math.floor(Math.random() * LIGHT_COLORS.length);
@@ -30,8 +34,8 @@ export function ImageV2({
 
 	const placeholderColor = isDarkMode ? DARK_COLORS[colorIndex] : LIGHT_COLORS[colorIndex];
 	return (
-		<AspectRatio
-			ratio={16 / 9}
+		<Wrapper
+			{...(ratio === null ? {} : { ratio })}
 			w="100%"
 			// 색상 삐져나옴 방지
 			bg={isLoaded ? "transparent" : placeholderColor}
@@ -41,22 +45,25 @@ export function ImageV2({
 			{...wrapperProps}
 		>
 			<ChakraImage
+				key={src}
 				src={src}
 				alt={alt}
 				loading={loading}
 				objectFit={objectFit}
+				w="100%"
+				h="100%"
 				borderRadius="inherit"
 				opacity={isLoaded ? 1 : 0}
 				transition="opacity 0.3s ease-in-out"
 				{...imageProps}
 				onLoad={(e) => {
-					setIsLoaded(true);
+					setLoadedSrc(src);
 					if (imageProps?.onLoad) {
 						imageProps.onLoad(e);
 					}
 				}}
 			/>
-		</AspectRatio>
+		</Wrapper>
 	);
 }
 

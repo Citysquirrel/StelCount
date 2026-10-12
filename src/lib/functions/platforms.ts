@@ -31,6 +31,16 @@ export const naver = {
 		liveUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}` : undefined),
 		liveChatUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/live/${channelId}/chat` : undefined),
 		channelUrl: (channelId?: string) => (channelId ? `https://chzzk.naver.com/${channelId}` : undefined),
+		profileImageUrl: (imageUrl: string | undefined, size: 40 | 60 | 120 | 240) => {
+			if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) return imageUrl;
+			try {
+				const url = new URL(imageUrl);
+				url.searchParams.set("type", `f${size}_${size}_na`);
+				return url.toString();
+			} catch {
+				return imageUrl;
+			}
+		},
 	},
 };
 
