@@ -4,6 +4,34 @@ import { convertKstInputToUtc, toDateTimeInputValue } from "./date";
 
 export const DEBUT_EVENT_DAYS = 7;
 
+export function debutColor(...colors: (string | undefined)[]) {
+	const color = colors.find(value => value && /^#?[0-9a-f]{6}$/i.test(value));
+	if (!color) return undefined;
+	const hex = color.replace(/^#/, "");
+	const [r, g, b] = [0, 2, 4].map(offset => parseInt(hex.slice(offset, offset + 2), 16));
+	const brightness = r * .299 + g * .587 + b * .114;
+	const nearTextColor = Math.hypot(r - 169, g - 154, b - 191) < 70; // #a99abf
+	if (brightness >= 160 && !nearTextColor) return `#${hex}`;
+
+	const max = Math.max(r, g, b);
+	const min = Math.min(r, g, b);
+	const delta = max - min;
+	const lightness = (max + min) / 510;
+	if (delta === 0) {
+		const gray = Math.round(Math.max(lightness, .8) * 255).toString(16).padStart(2, "0");
+		return `#${gray.repeat(3)}`;
+	}
+	const hue = ((max === r ? (g - b) / delta : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4) + 6) % 6;
+	// 색상각을 보존하고 채도를 확보해, 밝기 보정으로 멤버 색이 회색에 가까워지지 않도록 한다.
+	const saturation = Math.max(delta / (255 * (1 - Math.abs(2 * lightness - 1))), .55);
+	const adjustedLightness = Math.max(lightness, .68);
+	const chroma = (1 - Math.abs(2 * adjustedLightness - 1)) * saturation;
+	const x = chroma * (1 - Math.abs(hue % 2 - 1));
+	const offset = adjustedLightness - chroma / 2;
+	const channels = [[chroma, x, 0], [x, chroma, 0], [0, chroma, x], [0, x, chroma], [x, 0, chroma], [chroma, 0, x]][Math.floor(hue)];
+	return `#${channels.map(channel => Math.round((channel + offset) * 255).toString(16).padStart(2, "0")).join("")}`;
+}
+
 export const DEBUT_PV = {
 	videoId: "tlCeLkw8Upc",
 	members: [

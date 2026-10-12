@@ -2,7 +2,7 @@ import { Avatar, Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/reac
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { MdArrowForward, MdAutoAwesome, MdPlayArrow, MdSchedule, MdSensors } from "react-icons/md";
-import { debutPvSegment, type DebutEvent } from "../../lib/functions/debut";
+import { debutColor, debutPvSegment, type DebutEvent } from "../../lib/functions/debut";
 import { homeDate } from "../../lib/functions/homeV2";
 import { formatUtcToKst } from "../../lib/functions/date";
 import { generateStandardThumbnail, naver, youtube, youtubeThumbnailImageProps } from "../../lib/functions/platforms";
@@ -39,15 +39,45 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 	const countdown = remainingMinutes >= 1440 ? `D-${Math.ceil(remainingMinutes / 1440)}` : remainingMinutes >= 60 ? `${Math.floor(remainingMinutes / 60)}시간 ${remainingMinutes % 60}분 후` : `${remainingMinutes}분 후`;
 	const videoLive = video?.lbc === "live";
 	const videoUpcoming = video?.lbc === "upcoming";
-	const memberColor = member?.cc || profile.colorCode || "";
-	const accent = /^#[0-9a-f]{6}$/i.test(memberColor) ? memberColor : "#c1a4ef";
-	const portrait = <Box position="relative" p={5} border="1px solid #c1a4ef33" borderRadius="full" boxShadow="0 0 80px #c1a4ef15">
-		<Avatar name={name} src={naver.chzzk.profileImageUrl(image || undefined, 240)} boxSize={{ base: "128px", md: "176px" }} bg="#30243e" color="#dfcef6" border="2px solid" borderColor="var(--debut-accent)" />
+	const accent = debutColor(member?.cc, profile.colorCode) || "#c1a4ef";
+	const portrait = <Box className="debut-portrait" position="relative" isolation="isolate" p={5} border={`1px solid ${accent}33`} borderRadius="full" boxShadow={`0 0 80px ${accent}15`} transition="box-shadow .6s ease, border-color .6s ease">
+		<Box className="debut-galaxy" position="absolute" inset={{ base: "-65px -90px", md: "-85px -125px" }} opacity={0} transition="opacity .7s ease" pointerEvents="none" aria-hidden="true" zIndex={-1}>
+			<Box position="absolute" inset={0} borderRadius="50%" bg={`radial-gradient(ellipse, ${accent}50 0%, ${accent}20 38%, transparent 70%)`} />
+			<Box position="absolute" inset="15% -5%" transform="rotate(-28deg)" overflow="hidden" sx={{ maskImage: "radial-gradient(ellipse, #000 15%, transparent 70%)" }}>
+				<Box className="debut-flow" position="absolute" inset="-15%" filter="blur(12px)" background={`radial-gradient(ellipse at 30% 52%, ${accent}99, transparent 48%), radial-gradient(ellipse at 70% 45%, #e8ddff66, transparent 42%)`} animation="debut-nebula-flow 9s ease-in-out infinite alternate" sx={{ animationPlayState: "paused" }} />
+				<Box className="debut-flow" position="absolute" inset="-45px" backgroundImage={`radial-gradient(circle, #fff 0 1px, transparent 1.6px), radial-gradient(circle, ${accent} 0 1.2px, transparent 2px), radial-gradient(circle, #ffffff99 0 .6px, transparent 1.2px)`} backgroundSize="47px 43px, 71px 67px, 29px 37px" backgroundPosition="0 0, 19px 27px, 11px 9px" animation="debut-stardust-flow 12s linear infinite" sx={{ animationPlayState: "paused" }} />
+			</Box>
+		</Box>
+		<Avatar position="relative" name={name} src={naver.chzzk.profileImageUrl(image || undefined, 240)} boxSize={{ base: "128px", md: "176px" }} bg="#30243e" color="#dfcef6" border="2px solid" borderColor="var(--debut-accent)" />
 		<Box position="absolute" top={4} right={5} color="#eadbfc" aria-hidden="true"><MdAutoAwesome size={25} /></Box>
 	</Box>;
 	return (
 		<Box as="section" ref={heroRef} id="obs-featured" aria-label="데뷔 스페셜" position="relative" overflow="hidden" bg="#171322"
-			sx={{ "--debut-accent": accent }}>
+			sx={{
+				"--debut-accent": accent,
+				"@keyframes debut-member-shimmer": {
+					"0%, 60%, 100%": { textShadow: "0 0 3px transparent" },
+					"78%": { textShadow: "0 0 8px var(--member-glow), 0 0 18px var(--member-glow)" },
+				},
+				"@keyframes debut-nebula-flow": {
+					from: { transform: "translateX(-6%) scale(.95)", opacity: .55 },
+					to: { transform: "translateX(6%) scale(1.08)", opacity: .9 },
+				},
+				"@keyframes debut-stardust-flow": {
+					"0%": { transform: "translate(-22px, 8px)", opacity: 0 },
+					"20%, 80%": { opacity: .85 },
+					"100%": { transform: "translate(22px, -8px)", opacity: 0 },
+				},
+				"& .debut-portrait:hover, & a:focus-visible .debut-portrait": {
+					borderColor: `${accent}aa`, boxShadow: `0 0 45px ${accent}55, 0 0 105px 28px ${accent}33, 0 0 160px 45px ${accent}18`,
+					"& .debut-galaxy": { opacity: 1 },
+					"& .debut-flow": { animationPlayState: inView && pageVisible && !reduceMotion ? "running" : "paused" },
+				},
+				"@media (prefers-reduced-motion: reduce)": {
+					"& .debut-flow, & .debut-member-name": { animation: "none" },
+					"& .debut-portrait, & .debut-galaxy": { transition: "none" },
+				},
+			}}>
 			<Box position="absolute" inset={0} pointerEvents="none" aria-hidden="true" bg="radial-gradient(ellipse at 75% 35%, #8060b533, transparent 60%), linear-gradient(135deg, #231a37, #12101f 80%)" />
 			{pv && !reduceMotion && inView && pageVisible && <HomeVideoPreview key={`${profile.uuid}-${pv.start}-${pv.end}`} {...pv} />}
 			{pv && <Box position="absolute" inset={0} pointerEvents="none" aria-hidden="true" bg="linear-gradient(0deg, #12101f 0%, #19102c99 40%, #23133426 100%), linear-gradient(90deg, #130e25d9, #130e2533 80%)" />}
@@ -80,7 +110,7 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 								<Text mt={2} fontSize="12px" color="#b4aacb">{videoUpcoming ? `${homeDate(video.sst)} · YouTube에서 알림 받기` : "YouTube에서 함께 듣기 ↗"}</Text>
 							</Box>
 						</Link> : <Stack align="center" justify="center" minH={{ base: "220px", lg: "300px" }} spacing={5}>
-							{channel ? <Link href={naver.chzzk.channelUrl(channel)!} isExternal aria-label={`${name} 치지직 채널 보기`} display="block" borderRadius="full" transition="box-shadow .2s" _hover={{ boxShadow: "0 0 40px #c1a4ef33" }}>{portrait}</Link> : portrait}
+							{channel ? <Link href={naver.chzzk.channelUrl(channel)!} isExternal aria-label={`${name} 치지직 채널 보기`} display="block" borderRadius="full" _hover={{ textDecoration: "none" }}>{portrait}</Link> : portrait}
 							<Text color="#b4aacb" fontSize="13px">{beforeDebut ? "곧, 여기서 만나요." : "새로운 시작을 함께 응원해 주세요."}</Text>
 						</Stack>}
 					</Box>
@@ -92,15 +122,15 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 						{events.map(({ profile: item, member: current, debutAt: scheduledAt }, index) => {
 							const selected = item.uuid === profile.uuid;
 							const label = item.name || current?.n || item.channelName || "새로운 스텔라";
-							const color = [current?.cc, item.colorCode].find(value => value && /^#[0-9a-f]{6}$/i.test(value));
+							const color = debutColor(current?.cc, item.colorCode);
 							const date = new Date(scheduledAt).toISOString();
 							const schedule = formatUtcToKst(date, "text").slice(5, 16).replace("-", ".");
 							return <Box as="li" key={item.uuid} position="relative" flexShrink={0} pr={index < events.length - 1 ? { base: 6, md: 9 } : 0}
 								_before={index < events.length - 1 ? { content: '""', position: "absolute", bg: "#c1a4ef26", left: "4px", top: "4px", w: "100%", h: "1px" } : undefined}>
-								<Button variant="unstyled" aria-pressed={selected} aria-label={`${label}, ${homeDate(scheduledAt / 1000)} 데뷔`} onClick={() => setSelectedId(item.uuid)} position="relative" display="flex" flexDirection="column" alignItems="flex-start" justifyContent="center" h="auto" minH="60px" minW={0} pt={4} pb={1} px={0} borderRadius="2px" color={selected ? color || "#f3edf9" : "#a99abf"} fontWeight="400" _hover={{ color: color || "#f3edf9" }}>
+								<Button variant="unstyled" aria-pressed={selected} aria-label={`${label}, ${homeDate(scheduledAt / 1000)} 데뷔`} onClick={() => setSelectedId(item.uuid)} position="relative" display="flex" flexDirection="column" alignItems="flex-start" justifyContent="center" h="auto" minH="60px" minW={0} pt={4} pb={1} px={0} borderRadius="2px" color={color || (selected ? "#f3edf9" : "#a99abf")} fontWeight="400" _hover={{ color: color || "#f3edf9" }}>
 									<Box as="span" position="absolute" top="1px" left={0} boxSize="7px" borderRadius="full" bg={selected ? color || "#e3ccff" : color ? `${color}99` : "#675573"} boxShadow={selected ? `0 0 0 3px ${color || "#c1a4ef"}18` : "none"} aria-hidden="true" />
 									<Text as="time" dateTime={date} fontSize="10px" color={selected ? color || "#ccb5e7" : "#9788ad"} letterSpacing=".04em" sx={{ fontVariantNumeric: "tabular-nums" }}>{schedule}</Text>
-									<Text as="span" fontSize="13px" fontWeight={selected ? "500" : "400"} mt={1}>{label}</Text>
+									<Text as="span" className="debut-member-name" fontSize="13px" fontWeight={selected ? "500" : "400"} mt={1} animation={selected && !reduceMotion ? "debut-member-shimmer 4.8s ease-in-out infinite" : "none"} sx={{ "--member-glow": color || "#c1a4ef", animationPlayState: inView && pageVisible ? "running" : "paused" }}>{label}</Text>
 								</Button>
 							</Box>;
 						})}
