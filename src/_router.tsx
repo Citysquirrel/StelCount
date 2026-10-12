@@ -2,11 +2,9 @@
 import HomeV2 from "@page/v2/Home";
 import CounterV2 from "@page/v2/Counter";
 import { lazy } from "react";
-import { Navigate, RouteObject, createBrowserRouter } from "react-router-dom";
+import { Navigate, RouteObject, createBrowserRouter, useLocation } from "react-router-dom";
 import App from "./App";
 import AppV2 from "./AppV2";
-import { Counter } from "./pages/Counter";
-import Home from "./pages/Home";
 import { Login } from "./pages/Login";
 import { MultiView } from "./pages/MultiView";
 import { NotExist } from "./pages/NotExist";
@@ -23,14 +21,26 @@ const Video = lazy(() => import("./pages/Admin/Video").then((m) => ({ default: m
 const Songbook = lazy(() => import("./pages/Admin/Songbook").then((m) => ({ default: m.Songbook })));
 const Setting = lazy(() => import("./pages/Admin/Setting").then((m) => ({ default: m.Setting })));
 
+function PageRedirect({ to }: { to: string }) {
+	const { search, hash } = useLocation();
+	return <Navigate to={{ pathname: to, search, hash }} replace />;
+}
+
 export const routeObj: RouteObject[] = [
 	{
 		path: "/",
+		element: <AppV2 />,
+		errorElement: <ServerErrorPage isErrorComponent />,
+		children: [
+			{ index: true, element: <PageRedirect to="/home" /> },
+			{ path: "home", element: <HomeV2 /> },
+			{ path: "counter", element: <CounterV2 /> },
+		],
+	},
+	{
 		element: <App />,
 		errorElement: <ServerErrorPage isErrorComponent />,
 		children: [
-			{ path: "/home", element: <Home /> },
-			{ path: "/counter", element: <Counter /> },
 			{
 				path: "/old-admin",
 				element: <Admin />,
@@ -67,15 +77,10 @@ export const routeObj: RouteObject[] = [
 					},
 				],
 			},
-			{ path: "/", element: <NotExist /> },
 		],
 	},
-	{
-		path: "/v2",
-		element: <AppV2 />,
-		children: [{ element: <HomeV2 />, index: true }, { path: "counter", element: <CounterV2 /> }],
-		errorElement: <ServerErrorPage isErrorComponent />,
-	},
+	{ path: "/v2", element: <PageRedirect to="/home" /> },
+	{ path: "/v2/counter", element: <PageRedirect to="/counter" /> },
 	{ path: "/multiview", element: <MultiView />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/login", element: <Login />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/oauth", element: <OAuth />, errorElement: <ServerErrorPage isErrorComponent /> },

@@ -1,20 +1,22 @@
 import { Avatar, Badge, Box, Collapse, DarkMode, Flex, Heading, Input, InputGroup, InputLeftElement, Select, Spinner, Stack, Text, useDisclosure } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
-import { MdCheck, MdExpandLess, MdExpandMore, MdOpenInNew, MdSearch } from "react-icons/md";
+import { MdArrowDownward, MdArrowUpward, MdCheck, MdDragIndicator, MdEmojiEvents, MdExpandLess, MdExpandMore, MdHome, MdOpenInNew, MdSchedule, MdSearch, MdSensors, MdSwapVert } from "react-icons/md";
+import { Reorder, useDragControls, useReducedMotion } from "framer-motion";
 import { FaYoutube } from "react-icons/fa6";
 import { SiYoutubemusic } from "react-icons/si";
 import { useLocalStorage } from "usehooks-ts";
 import { Link } from "../../components/Link";
 import { ImageV2 } from "../../components/Image";
+import { CustomModal } from "../../components/Modal";
 import { ObservatoryButton } from "../../components/layout/Observatory";
 import { USER_SETTING_STORAGE } from "../../lib/constant";
 import { elapsedTimeText, parseV2Time } from "../../lib/functions/date";
 import { numberToLocaleString } from "../../lib/functions/etc";
-import { homeCount, homeDate } from "../../lib/functions/homeV2";
-import { counterCategoryTagIds, counterChannels, counterGoal, counterGroupLabel, counterProfileImage, counterTagKey, counterValue, selectCounterVideos, type CounterKind, type CounterSort } from "../../lib/functions/counterV2";
+import { HOME_LIMITS, homeCount, homeDate, recentMilestone } from "../../lib/functions/homeV2";
+import { counterCategoryTagIds, counterChannels, counterGoal, counterGroupLabel, counterProfileImage, counterTagKey, counterValue, moveCounterGroup, orderCounterGroups, resolveCounterSort, selectCounterVideos, type CounterKind } from "../../lib/functions/counterV2";
 import type { DefaultResponseData } from "../../lib/functions/fetch";
-import { generateStandardThumbnail, naver, youtube } from "../../lib/functions/platforms";
+import { generateStandardThumbnail, naver, youtube, youtubeThumbnailImageProps } from "../../lib/functions/platforms";
 import type { useObservatoryData } from "../../lib/hooks/useObservatoryData";
 import { useServerQuery } from "../../lib/hooks/useServerApi";
 import type { StellarV2State, Tag, TagV2, UserSettingStorage, YoutubeMusicDataV2 } from "../../lib/types";
@@ -28,8 +30,13 @@ interface CounterGroup {
 
 export default function Counter() {
 	const { videos, live } = useOutletContext<ReturnType<typeof useObservatoryData>>();
-	const tagCatalog = useServerQuery<DefaultResponseData<Tag[]>, "admin", TagV2[]>({
-		version: "admin",
+	const [now, setNow] = useState(Date.now);
+	useEffect(() => {
+		const timer = window.setInterval(() => setNow(Date.now()), 60000);
+		return () => window.clearInterval(timer);
+	}, []);
+	const tagCatalog = useServerQuery<DefaultResponseData<Omit<Tag, "count">[]>, "v2", TagV2[]>({
+		version: "v2",
 		api: "/tags",
 		queryOptions: {
 			select: (response) => {
@@ -43,7 +50,7 @@ export default function Counter() {
 	});
 	const categoryTagIds = useMemo(() => counterCategoryTagIds(tagCatalog.data || []), [tagCatalog.data]);
 	const [params, setParams] = useSearchParams();
-	const [settings] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
+	const [settings, setSettings] = useLocalStorage<UserSettingStorage>(USER_SETTING_STORAGE, {});
 	const members = useMemo(() => (videos.data || []).filter((member) => !member.jl), [videos.data]);
 	const groups = useMemo(() => {
 		const grouped = new Map<string, CounterGroup>();
@@ -58,19 +65,21 @@ export default function Counter() {
 		}
 		return [...grouped.values()].sort((a, b) => Number(!a.name) - Number(!b.name) || b.sortOrder - a.sortOrder || a.name.localeCompare(b.name, "ko"));
 	}, [members]);
+	const displayGroups = useMemo(() => orderCounterGroups(groups, settings.counterGroupOrder), [groups, settings.counterGroupOrder]);
 	const requestedMember = members.find((member) => member.uid === params.get("member"));
 	const requestedGroup = groups.find((group) => group.name === params.get("group"));
-	const selectedMember = requestedMember || requestedGroup?.members[0] || members.find((member) => member.uid === settings.homeStellar) || groups[0]?.members[0];
+	const homeMember = members.find((member) => member.uid === settings.homeStellar) || groups[0]?.members[0];
+	const selectedMember = requestedMember || requestedGroup?.members[0] || homeMember;
 	const selectedGroup = requestedGroup?.members.some((member) => member.uid === selectedMember?.uid) ? requestedGroup
 		: groups.find((group) => group.members.some((member) => member.uid === selectedMember?.uid)) || groups[0];
 	const allVideos = useMemo(() => (selectedMember?.ym || []).filter((video) => video.ia !== false), [selectedMember]);
 	const query = params.get("q") || "";
 	const kind: CounterKind = params.get("kind") === "cover" ? "cover" : params.get("kind") === "original" ? "original" : params.get("kind") === "other" ? "other" : "all";
-	const sort: CounterSort = ["oldest", "remaining-asc", "remaining-desc"].includes(params.get("sort") || "") ? params.get("sort") as CounterSort : "newest";
-	const tags = params.getAll("tag");
+	const sort = resolveCounterSort(params.get("sort"), settings.counterSort);
+	const tags = useMemo(() => params.getAll("tag"), [params]);
 	const availableTags = useMemo(() => [...new Map(allVideos.flatMap((video) => video.tg || []).map((tag) => [counterTagKey(tag), tag])).values()], [allVideos]);
 	const categoryUnavailable = kind !== "all" && !tagCatalog.data;
-	const selectedVideos = categoryUnavailable ? [] : selectCounterVideos(allVideos, { query, kind, tags, sort }, categoryTagIds);
+	const selectedVideos = useMemo(() => selectCounterVideos(allVideos, { query, kind, tags, sort }, categoryTagIds), [allVideos, query, kind, tags, sort, categoryTagIds]);
 	const filtered = !!query || kind !== "all" || tags.length > 0;
 	const updateFilter = (key: string, value: string) => {
 		if ((params.get(key) || "") === value) return;
@@ -82,6 +91,11 @@ export default function Counter() {
 		const next = new URLSearchParams(params);
 		["q", "kind", "tag"].forEach((key) => next.delete(key));
 		setParams(next, { replace: true });
+	};
+	const updateSort = (value: string) => {
+		const nextSort = resolveCounterSort(value);
+		setSettings((previous) => ({ ...previous, counterSort: nextSort }));
+		updateFilter("sort", nextSort);
 	};
 
 	useEffect(() => {
@@ -100,12 +114,15 @@ export default function Counter() {
 		next.set("member", member.uid);
 		["q", "kind", "tag"].forEach((key) => next.delete(key));
 		setParams(next);
+		window.scrollTo({ top: 0, behavior: "instant" });
 	};
 	const liveStatus = live.data?.find((entry) => entry.uuid === selectedMember?.uid);
 
 	return (
 		<Flex maxW="1440px" mx="auto" px={{ base: 4, md: 8 }} pt={{ base: 5, lg: 7 }} pb={12} gap={{ lg: 7, xl: 10 }} align="flex-start">
-			{!!selectedMember && !!selectedGroup && <CounterMembers groups={groups} selectedId={selectedMember.uid} selectedGroup={selectedGroup.name} onSelect={select} />}
+			{!!selectedMember && !!selectedGroup && <CounterMembers groups={displayGroups} selectedId={selectedMember.uid} selectedGroup={selectedGroup.name} onSelect={select}
+				hasCustomOrder={Array.isArray(settings.counterGroupOrder) && settings.counterGroupOrder.length > 0}
+				onOrderChange={(order) => setSettings((previous) => ({ ...previous, counterGroupOrder: order }))} />}
 			<Box flex={1} minW={0}>
 			{videos.isPending ? (
 				<Stack align="center" py={16} role="status"><Spinner color="var(--obs-accent)" /><Text>멤버와 영상 정보를 불러오고 있어요.</Text></Stack>
@@ -116,7 +133,9 @@ export default function Counter() {
 			) : (
 				<>
 					{videos.isError && <Text role="status" color="var(--obs-muted)" mb={4}>최신 정보를 갱신하지 못해 이전 정보를 보여드리고 있어요.</Text>}
-					<CounterProfile member={selectedMember} isLive={!!liveStatus?.openLive} />
+					<CounterProfile member={selectedMember} isLive={!!liveStatus?.openLive} homeMember={homeMember}
+						isHome={settings.homeStellar === selectedMember.uid}
+						onSetHome={() => setSettings((previous) => ({ ...previous, homeStellar: selectedMember.uid }))} />
 					<Box as="section" aria-labelledby="counter-videos-title">
 						<Flex align="baseline" justify="space-between" gap={4} mb={2}>
 							<Heading as="h2" id="counter-videos-title" fontSize="21px" fontWeight="500">{selectedMember.n}의 영상</Heading>
@@ -125,8 +144,8 @@ export default function Counter() {
 						<Stack spacing={3} py={4} mb={2}>
 							<Flex gap={3} wrap="wrap">
 								<CounterSearchInput key={selectedMember.uid} query={query} onCommit={(value) => updateFilter("q", value)} />
-								<Select aria-label="영상 정렬" value={sort} onChange={(event) => updateFilter("sort", event.target.value)} w={{ base: "100%", sm: "186px" }} borderColor="var(--obs-line)" borderRadius="10px" fontSize="13px" sx={{ option: { bg: "#211a31" } }}>
-									<option value="newest">최신 게시순</option><option value="oldest">오래된 게시순</option><option value="remaining-asc">목표까지 가까운 순</option><option value="remaining-desc">목표까지 많이 남은 순</option>
+								<Select aria-label="영상 정렬" value={sort} onChange={(event) => updateSort(event.target.value)} w={{ base: "100%", sm: "186px" }} borderColor="var(--obs-line)" borderRadius="10px" fontSize="13px" sx={{ option: { bg: "#211a31" } }}>
+									<option value="recommended">추천순</option><option value="newest">최신 게시순</option><option value="oldest">오래된 게시순</option><option value="remaining-asc">목표까지 가까운 순</option><option value="remaining-desc">목표까지 많이 남은 순</option>
 								</Select>
 							</Flex>
 							<Flex gap={2} align="center" wrap="wrap" role="group" aria-label="영상 분류">
@@ -140,8 +159,8 @@ export default function Counter() {
 								{availableTags.map((tag) => { const key = counterTagKey(tag); const active = tags.includes(key); return <ObservatoryButton key={key} aria-pressed={active} onClick={() => { const next = new URLSearchParams(params); next.delete("tag"); (active ? tags.filter((value) => value !== key) : [...tags, key]).forEach((value) => next.append("tag", value)); setParams(next, { replace: true }); }} leftIcon={active ? <MdCheck /> : undefined} bg={active ? "#c1a4ef24" : "transparent"} borderColor={active ? "#c1a4ef60" : "#c1a4ef20"} fontSize="11px" px={3} py={1}>{tag.n}</ObservatoryButton>; })}
 							</Flex>}
 						</Stack>
-						{categoryUnavailable ? null : selectedVideos.length ? selectedVideos.map((video) => <CounterVideo key={`${selectedMember.uid}-${video.vi}`} video={video} />)
-							: <Stack align="center" py={12} color="var(--obs-muted)"><Text>{allVideos.length ? "조건에 맞는 영상이 없어요." : "아직 등록된 영상이 없어요."}</Text>{filtered && <ObservatoryButton onClick={clearFilters}>필터 초기화</ObservatoryButton>}</Stack>}
+						{categoryUnavailable ? null : selectedVideos.length ? selectedVideos.map((video) => <CounterVideo key={`${selectedMember.uid}-${video.vi}`} video={video} now={now} />)
+							: <Stack align="center" py={12} color="var(--obs-muted)" textAlign="center"><Text>{allVideos.length ? "조건에 맞는 영상이 없어요." : "아직 등록된 영상이 없어요."}</Text>{!allVideos.length && <Text fontSize="13px">새로운 스텔라를 응원해 주세요!</Text>}{filtered && <ObservatoryButton onClick={clearFilters}>필터 초기화</ObservatoryButton>}</Stack>}
 					</Box>
 				</>
 			)}
@@ -175,13 +194,17 @@ function CounterSearchInput({ query, onCommit }: { query: string; onCommit: (val
 	);
 }
 
-function CounterMembers({ groups, selectedId, selectedGroup, onSelect }: {
+function CounterMembers({ groups, selectedId, selectedGroup, onSelect, hasCustomOrder, onOrderChange }: {
 	groups: CounterGroup[];
 	selectedId: string;
 	selectedGroup: string;
 	onSelect: (group: CounterGroup, member: StellarV2State) => void;
+	hasCustomOrder: boolean;
+	onOrderChange: (order: string[] | undefined) => void;
 }) {
 	const railRef = useRef<HTMLDivElement>(null);
+	const drag = useRef({ start: 0, scroll: 0, pointer: -1, moved: false });
+	const orderEditor = useDisclosure();
 	const [browsingGroup, setBrowsingGroup] = useState<string | null>(null);
 	const visibleGroups = browsingGroup === null ? groups : groups.filter((group) => group.name === browsingGroup);
 	useEffect(() => {
@@ -201,6 +224,10 @@ function CounterMembers({ groups, selectedId, selectedGroup, onSelect }: {
 		observer.observe(rail);
 		return () => observer.disconnect();
 	}, [groups, selectedId, selectedGroup, browsingGroup]);
+	const finishDrag = () => {
+		drag.current.pointer = -1;
+		if (railRef.current) railRef.current.dataset.dragging = "false";
+	};
 	return (
 		<Box as="nav" aria-label="그룹별 멤버 선택" position={{ base: "fixed", lg: "sticky" }}
 			bottom={{ base: 0, lg: "auto" }} insetX={{ base: 0, lg: "auto" }} top={{ lg: "96px" }}
@@ -209,7 +236,10 @@ function CounterMembers({ groups, selectedId, selectedGroup, onSelect }: {
 			borderTop={{ base: "1px solid #ffffff12", lg: "none" }} borderRight={{ lg: "1px solid #ffffff0f" }} pr={{ lg: 4 }}
 			backdropFilter={{ base: "blur(24px)", lg: "none" }}>
 			<Box display={{ base: "none", lg: "block" }} px={2} pt={2} pb={4}>
-				<Text fontSize="10px" letterSpacing=".16em" color="var(--obs-muted)" mb={3}>ARTISTS</Text>
+				<Flex align="center" justify="space-between" mb={3}>
+					<Text fontSize="10px" letterSpacing=".16em" color="var(--obs-muted)">ARTISTS</Text>
+					<ObservatoryButton onClick={orderEditor.onOpen} aria-label="그룹 순서 편집" title="그룹 순서 편집" isDisabled={groups.length < 2} p={1} minH="28px" minW="28px" borderColor="transparent" bg="transparent"><MdSwapVert size={18} /></ObservatoryButton>
+				</Flex>
 				<Select aria-label="탐색할 그룹" value={browsingGroup ?? "__all"} onChange={(event) => setBrowsingGroup(event.target.value === "__all" ? null : event.target.value)} size="sm" fontSize="12px" borderColor="#ffffff18" borderRadius="8px" sx={{ option: { bg: "#211a31" } }}>
 					<option value="__all">모든 그룹</option>{groups.map((group) => <option key={group.name} value={group.name}>{group.label}</option>)}
 				</Select>
@@ -217,8 +247,47 @@ function CounterMembers({ groups, selectedId, selectedGroup, onSelect }: {
 			</Box>
 			<Flex ref={railRef} direction={{ base: "row", lg: "column" }} gap={{ base: 2, lg: 0 }}
 				h={{ base: "80px", lg: "auto" }} maxH={{ lg: "calc(100dvh - 240px)" }}
-				px={{ base: 2, lg: 2 }} py={1} overflowX={{ base: "auto", lg: "hidden" }} overflowY={{ base: "hidden", lg: "auto" }}
-				overscrollBehavior="contain" sx={{ scrollbarWidth: { base: "none", lg: "thin" }, scrollbarColor: "#67517d transparent", scrollPadding: "8px" }}>
+				px={2} py={{ base: .5, lg: 1 }} overflowX={{ base: "auto", lg: "hidden" }} overflowY={{ base: "hidden", lg: "auto" }}
+				tabIndex={0} aria-label="멤버 목록" overscrollBehavior="contain"
+				sx={{
+					scrollbarWidth: "none", scrollbarColor: "#67517d #171320", scrollPadding: "8px",
+					"&::-webkit-scrollbar": { width: 0, height: 0 },
+					"@media (hover: hover) and (pointer: fine)": {
+						scrollbarWidth: "thin", cursor: { base: "grab", lg: "auto" },
+						"&::-webkit-scrollbar": { width: "6px", height: "6px" },
+					},
+					"&[data-dragging=true], &[data-dragging=true] button": { cursor: "grabbing", userSelect: "none" },
+				}}
+				onPointerDown={(event) => {
+					drag.current.moved = false;
+					const rail = event.currentTarget;
+					if (event.pointerType !== "mouse" || event.button !== 0 || window.getComputedStyle(rail).flexDirection !== "row" || rail.scrollWidth <= rail.clientWidth) return;
+					drag.current = { start: event.clientX, scroll: rail.scrollLeft, pointer: event.pointerId, moved: false };
+				}}
+				onPointerMove={(event) => {
+					if (drag.current.pointer !== event.pointerId) return;
+					const delta = event.clientX - drag.current.start;
+					if (!drag.current.moved && Math.abs(delta) > 6) {
+						drag.current.moved = true;
+						event.currentTarget.dataset.dragging = "true";
+						event.currentTarget.setPointerCapture(event.pointerId);
+					}
+					if (drag.current.moved) {
+						event.preventDefault();
+						event.currentTarget.scrollLeft = drag.current.scroll - delta;
+					}
+				}}
+				onPointerUp={finishDrag} onPointerCancel={finishDrag} onLostPointerCapture={finishDrag}
+				onPointerLeave={() => { if (!drag.current.moved) finishDrag(); }}
+				onDragStart={(event) => { if (drag.current.pointer !== -1) event.preventDefault(); }}
+				onClickCapture={(event) => {
+					if (drag.current.moved && event.detail !== 0) {
+						event.preventDefault();
+						event.stopPropagation();
+					}
+				}}>
+				<ObservatoryButton display={{ base: "inline-flex", lg: "none" }} alignSelf="center" flexShrink={0} onClick={orderEditor.onOpen}
+					aria-label="그룹 순서 편집" title="그룹 순서 편집" isDisabled={groups.length < 2} boxSize="36px" minH="44px" minW="36px" p={0} borderColor="transparent" bg="transparent"><MdSwapVert size={20} /></ObservatoryButton>
 				{groups.map((group, groupIndex) => (
 					<Box key={group.name} role="group" aria-label={`${group.label} 멤버`} flexShrink={0}
 						display={{ base: "block", lg: visibleGroups.includes(group) ? "block" : "none" }}
@@ -245,11 +314,93 @@ function CounterMembers({ groups, selectedId, selectedGroup, onSelect }: {
 					</Box>
 				))}
 			</Flex>
+			<CounterGroupOrderEditor groups={groups} isOpen={orderEditor.isOpen} onClose={orderEditor.onClose} hasCustomOrder={hasCustomOrder} onOrderChange={onOrderChange} />
 		</Box>
 	);
 }
 
-function CounterProfile({ member, isLive }: { member: StellarV2State; isLive: boolean }) {
+function CounterGroupOrderEditor({ groups, isOpen, onClose, hasCustomOrder, onOrderChange }: {
+	groups: CounterGroup[];
+	isOpen: boolean;
+	onClose: () => void;
+	hasCustomOrder: boolean;
+	onOrderChange: (order: string[] | undefined) => void;
+}) {
+	const reduceMotion = useReducedMotion();
+	const [order, setOrder] = useState(() => groups.map((group) => group.name));
+	const pendingOrder = useRef(order);
+	useEffect(() => {
+		const next = groups.map((group) => group.name);
+		pendingOrder.current = next;
+		setOrder(next);
+	}, [groups]);
+	const orderedGroups = useMemo(() => orderCounterGroups(groups, order), [groups, order]);
+	const updateOrder = (next: string[]) => {
+		pendingOrder.current = next;
+		setOrder(next);
+	};
+	const saveOrder = () => {
+		const next = pendingOrder.current;
+		if (next.some((name, index) => groups[index]?.name !== name)) onOrderChange(next);
+	};
+	const close = () => { saveOrder(); onClose(); };
+	return <DarkMode><CustomModal isOpen={isOpen} onClose={close}
+		customProps={{ Modal: { size: "sm", isCentered: true }, ModalContent: { bg: "#171320", color: "#f3edf9", border: "1px solid #c1a4ef33", borderRadius: "16px", mx: 4 }, ModalHeader: { fontSize: "17px" } }}
+		properties={{
+			title: "그룹 순서",
+			body: <>
+				<Text fontSize="12px" color="#b4aacb" mb={3}>손잡이를 끌어 놓으면 자동으로 저장돼요.</Text>
+				<Reorder.Group axis="y" values={order} onReorder={updateOrder} layoutScroll aria-label="그룹 순서 편집 목록"
+					style={{ listStyle: "none", margin: 0, padding: "4px", maxHeight: "50dvh", overflowY: "auto" }}>
+					{orderedGroups.map((group, index) => <CounterGroupOrderItem key={group.name} group={group} index={index} count={groups.length} reduceMotion={!!reduceMotion}
+						onDragEnd={saveOrder} onMove={(offset) => { updateOrder(moveCounterGroup(pendingOrder.current, group.name, offset)); saveOrder(); }} />)}
+				</Reorder.Group>
+			</>,
+			footer: <Flex w="100%" justify="space-between" gap={3}>
+				<ObservatoryButton isDisabled={!hasCustomOrder} onClick={() => onOrderChange(undefined)}>기본 순서</ObservatoryButton>
+				<ObservatoryButton primary onClick={close}>완료</ObservatoryButton>
+			</Flex>,
+		}} /></DarkMode>;
+}
+
+function CounterGroupOrderItem({ group, index, count, reduceMotion, onMove, onDragEnd }: {
+	group: CounterGroup;
+	index: number;
+	count: number;
+	reduceMotion: boolean;
+	onMove: (offset: -1 | 1) => void;
+	onDragEnd: () => void;
+}) {
+	const controls = useDragControls();
+	return <Reorder.Item value={group.name} dragListener={false} dragControls={controls} onDragEnd={onDragEnd}
+		transition={{ duration: reduceMotion ? 0 : .15 }}
+		style={{ position: "relative", marginBottom: "8px", borderRadius: "10px", background: "#211a31", border: "1px solid #c1a4ef26" }}
+		whileDrag={{ boxShadow: "0 8px 24px #00000066", borderColor: "#c1a4ef" }}>
+		<Flex align="center" gap={1} pr={1}>
+			<ObservatoryButton aria-label={`${group.label} 순서 이동. 위아래 방향키로도 이동할 수 있어요.`} title="끌어서 이동 · ↑↓ 키로 이동"
+				onPointerDown={(event) => { if (event.button === 0) controls.start(event); }}
+				onKeyDown={(event) => {
+					if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+					event.preventDefault();
+					onMove(event.key === "ArrowUp" ? -1 : 1);
+				}}
+				cursor="grab" sx={{ touchAction: "none" }} userSelect="none" boxSize="44px" minW="44px" minH="44px" p={0} bg="transparent" borderColor="transparent" _active={{ cursor: "grabbing" }}>
+				<MdDragIndicator size={20} aria-hidden="true" />
+			</ObservatoryButton>
+			<Text flex={1} minW={0} fontSize="12px" isTruncated title={group.label}>{group.label}</Text>
+			<ObservatoryButton aria-label={`${group.label} 위로 이동`} isDisabled={index === 0} onClick={() => onMove(-1)} boxSize="32px" minH="32px" minW="32px" p={0} bg="transparent" borderColor="transparent"><MdArrowUpward aria-hidden="true" /></ObservatoryButton>
+			<ObservatoryButton aria-label={`${group.label} 아래로 이동`} isDisabled={index === count - 1} onClick={() => onMove(1)} boxSize="32px" minH="32px" minW="32px" p={0} bg="transparent" borderColor="transparent"><MdArrowDownward aria-hidden="true" /></ObservatoryButton>
+		</Flex>
+	</Reorder.Item>;
+}
+
+function CounterProfile({ member, isLive, homeMember, isHome, onSetHome }: {
+	member: StellarV2State;
+	isLive: boolean;
+	homeMember?: StellarV2State;
+	isHome: boolean;
+	onSetHome: () => void;
+}) {
 	const channels = counterChannels(member);
 	const followers = counterValue(member.cfc);
 	return (
@@ -259,6 +410,16 @@ function CounterProfile({ member, isLive }: { member: StellarV2State; isLive: bo
 				<Box minW={0}>
 					<Text color="var(--obs-accent)" fontSize="11px">{member.gps?.map(counterGroupLabel).join(" / ") || "미분류"}</Text>
 					<Heading as="h1" fontSize={{ base: "26px", md: "34px" }} letterSpacing="-.04em" fontWeight="500" mt={1}>{member.n}</Heading>
+					<Flex gap={2} align="center" wrap="wrap" mt={2}>
+						<Flex align="center" gap={1} color="var(--obs-muted)" fontSize="11px">
+							<MdHome aria-hidden="true" /><Text role="status">첫화면 · {homeMember?.n || "미지정"}</Text>
+						</Flex>
+						<ObservatoryButton onClick={onSetHome} isDisabled={isHome} leftIcon={isHome ? <MdCheck aria-hidden="true" /> : undefined}
+							fontSize="11px" px={2} py={1} minH="28px" borderRadius="8px" bg="transparent"
+							aria-label={isHome ? `${member.n}, 첫화면으로 지정됨` : `${member.n}, 첫화면으로 지정`}>
+							{isHome ? "지정됨" : "첫화면으로 지정"}
+						</ObservatoryButton>
+					</Flex>
 					<Flex gap={2} align="center" mt={2}>
 						{member.czi && isLive && <Link href={naver.chzzk.liveUrl(member.czi)!} isExternal fontSize="12px" color="#85f3c8">● 치지직 방송 중 ↗</Link>}
 						{!!member.gd && parseV2Time(member.gd) <= Date.now() && <Text fontSize="12px" color="var(--obs-muted)">졸업 멤버</Text>}
@@ -284,24 +445,46 @@ function CounterProfile({ member, isLive }: { member: StellarV2State; isLive: bo
 	);
 }
 
-function CounterVideo({ video }: { video: YoutubeMusicDataV2 }) {
+function CounterVideo({ video, now }: { video: YoutubeMusicDataV2; now: number }) {
 	const details = useDisclosure();
 	const title = video.ta || video.tl;
 	const premiere = video.lbc === "upcoming" || video.lbc === "live";
+	const milestones = premiere ? [] : [
+		{ source: "", videoId: video.vi, record: recentMilestone(video.st, now) },
+		...video.dt.map((detail) => ({ source: detail.t, videoId: detail.vi, record: recentMilestone(detail.st, now) })),
+	].filter((entry) => entry.record);
+	const highlight = premiere || milestones.length > 0;
+	const accent = premiere ? video.lbc === "live" ? "#ffabba" : "#aedbff" : "#edc78f";
 	const counts = [video.vc, ...video.dt.map((detail) => detail.vc)].map(counterValue);
 	const total = counts.every((count) => count !== null) ? counts.reduce<number>((sum, count) => sum + (count ?? 0), 0) : null;
+	const milestoneSummary = milestones.length > 0 && <Stack as="section" aria-label={`최근 ${HOME_LIMITS.milestoneDays}일 달성 기록`} spacing={1} mt={2}>
+		{milestones.map(({ source, videoId, record }, index) => <Flex key={`${videoId}-${index}`} align="start" justify={{ base: "flex-start", md: "flex-end" }} gap={1.5} color="#edc78f" fontSize="11px" title={`${source ? `${source} · ` : ""}${homeDate(record!.at)}`}>
+			<Box flexShrink={0} pt="2px"><MdEmojiEvents aria-hidden="true" /></Box>
+			<Box minW={0}>
+				{source && <Text isTruncated>{source}</Text>}
+				<Text><Text as="span" whiteSpace="nowrap">{elapsedTimeText(parseV2Time(record!.at), now)}</Text>{" "}<Text as="span" fontWeight="600" whiteSpace="nowrap">{homeCount(record!.u)} 달성</Text></Text>
+			</Box>
+		</Flex>)}
+	</Stack>;
 	return (
-		<Flex as="article" direction={{ base: "column", sm: "row" }} gap={{ base: 4, md: 5 }} py={6} borderTop="1px solid var(--obs-line)">
-			<Link href={youtube.videoUrl(video.vi)!} isExternal flexShrink={0} w={{ base: "100%", sm: "160px", md: "208px" }} alignSelf="start" borderRadius="14px" overflow="hidden" aria-label={`${title} 영상 보기`}>
-				<ImageV2 src={generateStandardThumbnail(video.vi)} alt="" w="100%" ratio={16 / 9} objectFit="cover" loading="lazy" bg="#211a31" isDarkMode
-					imageProps={{ onError: (event) => {
-						if (!event.currentTarget.src.endsWith("/hqdefault.jpg")) event.currentTarget.src = `https://i.ytimg.com/vi/${encodeURIComponent(video.vi)}/hqdefault.jpg`;
-					} }} />
-			</Link>
+		<Flex as="article" direction={{ base: "column", sm: "row" }} gap={{ base: 4, md: 5 }} py={6}
+			px={highlight ? 4 : 0} my={highlight ? 3 : 0} borderRadius={highlight ? "16px" : 0}
+			borderTop={`1px solid ${highlight ? `${accent}55` : "var(--obs-line)"}`}
+			borderLeft={highlight ? `3px solid ${accent}` : undefined}
+			bg={highlight ? `linear-gradient(110deg, ${accent}12, ${accent}03)` : undefined}>
+			<Box flexShrink={0} w={{ base: "100%", sm: "160px", md: "208px" }} alignSelf="start">
+				<Link href={youtube.videoUrl(video.vi)!} isExternal display="block" borderRadius="14px" overflow="hidden" aria-label={`${title} 영상 보기`}>
+					<ImageV2 src={generateStandardThumbnail(video.vi)} alt="" w="100%" ratio={16 / 9} objectFit="cover" loading="lazy" bg="#211a31" isDarkMode
+						imageProps={youtubeThumbnailImageProps} />
+				</Link>
+				<Box display={{ base: "block", md: "none" }}>{milestoneSummary}</Box>
+			</Box>
 			<Box flex={1} minW={0}>
 				<Flex gap={1.5} wrap="wrap" mb={2}>
 					<DarkMode>
-						{premiere && <Badge colorScheme={video.lbc === "live" ? "pink" : "blue"} borderRadius="full" px={2} py={.5}>{video.lbc === "live" ? "지금 최초공개 중" : "최초공개 예정"}</Badge>}
+						{premiere && <Badge display="inline-flex" alignItems="center" gap={1.5} color="#241b2e" bg={accent} borderRadius="full" px={3} py={1}>
+							{video.lbc === "live" ? <MdSensors aria-hidden="true" /> : <MdSchedule aria-hidden="true" />}{video.lbc === "live" ? "지금 최초공개 중" : "최초공개 예정"}
+						</Badge>}
 						{video.tg?.map((tag) => <Badge key={tag.i ?? tag.n} colorScheme={tag.cc || "purple"} borderRadius="full" px={2} py={.5} fontWeight="500" textTransform="none" whiteSpace="normal">{tag.n}</Badge>)}
 					</DarkMode>
 				</Flex>
@@ -313,9 +496,10 @@ function CounterVideo({ video }: { video: YoutubeMusicDataV2 }) {
 						<Text fontSize="12px" color="var(--obs-muted)" mt={2}>{homeDate(premiere ? video.sst : video.pa)} · {premiere ? "공개" : "게시"}</Text>
 						{!premiere && !!video.pa && <Text fontSize="12px" color="var(--obs-muted)">{elapsedTimeText(parseV2Time(video.pa))}</Text>}
 					</Box>
-					<Box flexShrink={0} textAlign={{ base: "left", md: "right" }}>
+					<Box flexShrink={0} maxW={{ md: "210px" }} textAlign={{ base: "left", md: "right" }}>
 						<Flex align="center" gap={1.5} justify={{ base: "flex-start", md: "flex-end" }} fontSize="11px" color="var(--obs-muted)"><FaYoutube aria-hidden="true" /><Text>조회수</Text></Flex>
 						<Text fontSize="24px" fontWeight="500" color="#e2cef9" sx={{ fontVariantNumeric: "tabular-nums" }}>{premiere ? video.lbc === "live" ? "최초공개 중" : "공개 대기" : homeCount(video.vc)}</Text>
+						<Box display={{ base: "none", md: "block" }}>{milestoneSummary}</Box>
 					</Box>
 				</Flex>
 				{!premiere && <CounterMetrics count={video.vc} likes={video.lc} updatedAt={video.cua} />}

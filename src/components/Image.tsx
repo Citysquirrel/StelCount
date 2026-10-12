@@ -57,10 +57,9 @@ export function ImageV2({
 				transition="opacity 0.3s ease-in-out"
 				{...imageProps}
 				onLoad={(e) => {
-					setLoadedSrc(src);
-					if (imageProps?.onLoad) {
-						imageProps.onLoad(e);
-					}
+					const loadedUrl = e.currentTarget.src;
+					imageProps?.onLoad?.(e);
+					if (e.currentTarget.src === loadedUrl) setLoadedSrc(src);
 				}}
 			/>
 		</Wrapper>

@@ -149,7 +149,8 @@ export const parseV2Date = (date: number | undefined) => new Date(parseV2Time(da
 export const toDateTimeInputValue = (serverDate: string | Date) => {
 	if (!serverDate) return "";
 
-	// 서버에서 주는 UTC date는 Fake UTC(실제로는 KST임)이므로 slice 처리함
+	// 서버에서 주는 UTC date는 Fake UTC(실제로는 KST임)이므로 slice 처리함: 이유는 서버에 저장할 당시 +9 시간을 하기 때문임.
+	// !이러한 방식은 기존 코드에서 변경되지 않을 것이며(혼동되지 않기 위해), 앞으로 새로 작성되는 코드에서는 정상적인 방식으로 바꿔 구현할것임.
 	return typeof serverDate === "string" ? serverDate.slice(0, 16) : dayjs(serverDate).format("YYYY-MM-DDTHH:mm");
 };
 

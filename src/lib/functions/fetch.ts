@@ -30,7 +30,7 @@ export interface ServerAPIMap {
 		| `/ypat/${string}` // GET /ypat/:videoId
 		| `/tag/${number}`; // GET, PATCH, DELETE /tag/:id
 
-	v2: "/maintenance" | "/songbook" | "/multiview";
+	v2: "/maintenance" | "/songbook" | "/multiview" | "/current" | "/tags";
 	admin:
 		| "/renew/playlist"
 		| "/renew/detail"

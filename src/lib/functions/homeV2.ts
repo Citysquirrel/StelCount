@@ -12,6 +12,15 @@ export interface HomeVideo {
 	milestone?: { source: string; videoId: string; views?: string; record: StatisticsV2 };
 }
 
+export function recentMilestone(records: StatisticsV2[], now = Date.now()) {
+	return records.filter((record) => {
+		const age = now - record.at * 1000;
+		const unit = Number(record.u);
+		return record.at > 0 && age >= 0 && age <= HOME_LIMITS.milestoneDays * 86400000
+			&& Number.isSafeInteger(unit) && unit > 0 && sortStatsByUnit(record.u);
+	}).sort((a, b) => b.at - a.at || Number(b.u) - Number(a.u))[0];
+}
+
 export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 	const byId = new Map<string, HomeVideo>();
 	for (const member of stellar) {
@@ -52,7 +61,7 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 			if (heroRecord && (!heroMilestone || heroRecord.at > heroMilestone.record.at)) {
 				heroMilestone = { source: source.source, videoId: source.videoId, views: source.views, record: heroRecord };
 			}
-			const record = records.find((stat) => sortStatsByUnit(stat.u) && within(stat.at, HOME_LIMITS.milestoneDays));
+			const record = recentMilestone(records, now);
 			if (!record) continue;
 			const milestone = { source: source.source, videoId: source.videoId, views: source.views, record };
 			milestones.push({ ...item, labels: [...item.labels, "조회수 달성"], milestone, eventTime: record.at * 1000 });
@@ -82,6 +91,7 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 	heroRecent.sort(latest);
 	heroMilestones.sort(latest);
 	return {
+		premiere,
 		hero: [...premiere, ...heroRecent, ...heroMilestones.slice(0, HERO_LIMITS.milestones)].slice(0, HERO_LIMITS.total),
 		recent: recent.slice(0, HOME_LIMITS.shelf),
 		milestones: milestones.slice(0, HOME_LIMITS.shelf),

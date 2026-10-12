@@ -12,10 +12,91 @@ const searchExports = {};
 vm.runInNewContext(compile("search"), { exports: searchExports });
 const exported = {};
 vm.runInNewContext(compile("counterV2"), { exports: exported, require: (name) => name === "./search" ? searchExports : require(name) });
-const { counterValue, counterGoal, counterGroupLabel, counterChannels, counterCategoryTagIds, selectCounterVideos } = exported;
+const { counterValue, counterGoal, counterGroupLabel, counterChannels, counterCategoryTagIds, moveCounterGroup, orderCounterGroups, resolveCounterSort, selectCounterVideos } = exported;
 const video = (vi, fields = {}) => ({ vi, tl: vi, dt: [], st: [], ...fields });
 const tagCatalog = [{ i: 1, n: "커버", icv: true }, { i: 3, n: "오리지널", io: true }];
 const select = (videos, filters = {}, catalog = tagCatalog) => Array.from(selectCounterVideos(videos, { query: "", kind: "all", tags: [], sort: "newest", ...filters }, counterCategoryTagIds(catalog)), (item) => item.vi);
+
+test("그룹 순서 설정이 없거나 손상된 경우 서버 기본 순서를 유지한다", () => {
+	const groups = [{ name: "Universe" }, { name: "Mystic" }, { name: "" }];
+	for (const saved of [undefined, null, "Mystic", {}, [], [123, null]]) {
+		assert.deepEqual(Array.from(orderCounterGroups(groups, saved), (group) => group.name), ["Universe", "Mystic", ""]);
+	}
+});
+
+test("저장된 그룹 순서를 복원하고 중복·삭제된 그룹을 제외하며 새 그룹은 기본 순서로 붙인다", () => {
+	const groups = [{ name: "New-1" }, { name: "Universe" }, { name: "New-2" }, { name: "Mystic" }, { name: "" }];
+	const saved = JSON.parse('["Mystic","removed","Mystic","Universe",""]');
+	const ordered = orderCounterGroups(groups, saved);
+	assert.deepEqual(Array.from(ordered, (group) => group.name), ["Mystic", "Universe", "", "New-1", "New-2"]);
+	assert.equal(ordered[0], groups[3]);
+	assert.equal(groups[0].name, "New-1");
+	assert.deepEqual(saved, ["Mystic", "removed", "Mystic", "Universe", ""]);
+});
+
+test("그룹 이동은 원본을 보존하고 양 끝 및 없는 그룹은 이동시키지 않는다", () => {
+	const order = ["Universe", "Mystic", ""];
+	assert.deepEqual(Array.from(moveCounterGroup(order, "Mystic", -1)), ["Mystic", "Universe", ""]);
+	assert.deepEqual(Array.from(moveCounterGroup(order, "Mystic", 1)), ["Universe", "", "Mystic"]);
+	assert.equal(moveCounterGroup(order, "Universe", -1), order);
+	assert.equal(moveCounterGroup(order, "", 1), order);
+	assert.equal(moveCounterGroup(order, "missing", 1), order);
+	assert.deepEqual(order, ["Universe", "Mystic", ""]);
+});
+
+test("사용자 순서를 초기화하면 갱신된 서버 기본 순서로 돌아간다", () => {
+	const groups = [{ name: "New" }, { name: "Universe" }, { name: "Mystic" }];
+	assert.deepEqual(Array.from(orderCounterGroups(groups, ["Mystic", "Universe"]), (group) => group.name), ["Mystic", "Universe", "New"]);
+	assert.equal(orderCounterGroups(groups, undefined), groups);
+});
+
+test("정렬은 URL, 저장 설정, 추천순 순서로 복원하고 유효하지 않은 설정은 무시한다", () => {
+	for (const sort of ["recommended", "newest", "oldest", "remaining-asc", "remaining-desc"]) {
+		assert.equal(resolveCounterSort(null, sort), sort);
+		assert.equal(resolveCounterSort(sort, "oldest"), sort);
+	}
+	assert.equal(resolveCounterSort("invalid", "remaining-asc"), "remaining-asc");
+	assert.equal(resolveCounterSort(null, { value: "oldest" }), "recommended");
+	assert.equal(resolveCounterSort("", ""), "recommended");
+	assert.equal(resolveCounterSort(), "recommended");
+});
+
+test("추천순은 최초공개 진행 중, 예정 시각순, 달성 근접순, 미집계순이다", () => {
+	const items = [
+		video("unknown"), video("far", { vc: "50000" }), video("near", { vc: "99999" }),
+		video("upcoming-later", { lbc: "upcoming", sst: 200 }), video("live", { lbc: "live", sst: 300 }),
+		video("upcoming-soon", { lbc: "upcoming", sst: 100 }), video("upcoming-undated", { lbc: "upcoming" }),
+	];
+	const expected = ["live", "upcoming-soon", "upcoming-later", "upcoming-undated", "far", "near", "unknown"];
+	// 5만 회를 막 달성한 영상은 10만 회에 한 회 남은 영상보다 먼저 온다.
+	assert.deepEqual(select(items, { sort: "recommended" }), expected);
+	assert.deepEqual(select([...items].reverse(), { sort: "recommended" }), expected);
+});
+
+test("추천순은 화면 목표 단위로 막 달성한 영상과 다음 목표에 가까운 영상을 비교한다", () => {
+	const items = [
+		video("far", { vc: "170000", pa: 9 }), video("below", { vc: "99990", pa: 1 }),
+		video("above", { vc: "100002", pa: 2 }), video("near-next", { vc: "199995", pa: 3 }),
+		video("zero", { vc: "0", pa: 4 }), video("missing", { pa: 5 }),
+	];
+	assert.deepEqual(select(items, { sort: "recommended" }), ["above", "near-next", "below", "zero", "far", "missing"]);
+	assert.deepEqual(select(items, { sort: "remaining-asc" }), ["near-next", "below", "zero", "far", "above", "missing"]);
+});
+
+test("추천순 동률은 최신 게시순이며 연결 영상 수치를 합산하지 않는다", () => {
+	const items = [video("old", { vc: "99999", pa: 1, dt: [{ vc: "99999999" }] }), video("new", { vc: "199999", pa: 2 }), video("zero", { vc: "0" })];
+	assert.deepEqual(select(items, { sort: "recommended" }), ["new", "old", "zero"]);
+});
+
+test("추천순에서도 최초공개에 검색·분류·태그·비활성 필터를 적용한다", () => {
+	const items = [
+		video("live", { tl: "별의 노래", lbc: "live", tg: [{ i: 1 }, { i: 2 }] }),
+		video("near", { tl: "별의 노래", vc: "99999", tg: [{ i: 1 }, { i: 2 }] }),
+		video("hidden", { tl: "별의 노래", lbc: "live", tg: [{ i: 1 }, { i: 2 }], ia: false }),
+		video("other", { tl: "별의 노래", lbc: "live", tg: [{ i: 3 }] }),
+	];
+	assert.deepEqual(select(items, { query: "ㅂㅇㄴㄹ", kind: "cover", tags: ["id:2"], sort: "recommended" }), ["live", "near"]);
+});
 
 test("빈 값과 잘못된 수치는 숨기고 실제 0은 유지한다", () => {
 	for (const value of [undefined, null, "", " ", "NaN", "-1", "2.5", "Infinity"]) assert.equal(counterValue(value), null);

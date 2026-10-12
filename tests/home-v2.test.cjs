@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
-import vm from "node:vm";
-import { test } from "node:test";
-import ts from "typescript";
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const { test } = require("node:test");
+const ts = require("typescript");
 
 const root = path.resolve(__dirname, "..");
 const homeSource = ts.createSourceFile(
@@ -23,8 +23,8 @@ const existing = ts.createSourceFile(
 	true,
 );
 const unitFilter = existing.statements
-	.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "sortStatsByUnit")
-	.getText(existing);
+	.filter((node) => ts.isFunctionDeclaration(node) && ["sortStatsByUnit", "sortStatsByUnitForBigNews"].includes(node.name?.text))
+	.map((node) => node.getText(existing)).join("\n");
 const compiled = ts.transpileModule(`${unitFilter}\n${source}`, {
 	compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
@@ -55,7 +55,7 @@ test("최초공개가 없어도 최신 영상과 달성 영상으로 히어로�
 		video("release", { pa: seconds - day }),
 		video("record", { pa: seconds - 100 * day, st: [{ u: "1000000", v: "1000100", at: seconds - 10 }] }),
 	]);
-	assert.deepEqual(ids(result.hero), ["record", "release"]);
+	assert.deepEqual(ids(result.hero), ["release", "record"]);
 });
 
 test("최초공개 중, 예정, 일반 이벤트 순으로 배치한다", () => {
@@ -89,12 +89,12 @@ test("본편과 연결 영상의 기록·조회수·출처를 분리한다", () 
 		video("main", {
 			vc: "150001",
 			st: [{ u: "150000", at: seconds - 100 }],
-			dt: [{ t: "music", vi: "music-id", vc: "50001", st: [{ u: "50000", at: seconds - 10 }] }],
+			dt: [{ t: "music", vi: "music-id", vc: "100001", st: [{ u: "100000", at: seconds - 10 }] }],
 		}),
 	]);
 	assert.equal(result.milestones.length, 2);
 	assert.equal(result.milestones[0].milestone.videoId, "music-id");
-	assert.equal(result.milestones[0].milestone.views, "50001");
+	assert.equal(result.milestones[0].milestone.views, "100001");
 	assert.equal(result.milestones[1].milestone.source, "Main");
 	assert.equal(result.hero.length, 1);
 	assert.equal(result.hero[0].milestone.source, "music");
@@ -107,19 +107,23 @@ test("60일·5일 경계는 포함하고 미래 기록과 비활성 영상은 �
 		video("future", { pa: seconds + 1, st: [{ u: "50000", at: seconds + 1 }] }),
 		video("inactive", { ia: false, pa: seconds - 1 }),
 	]);
-	assert.deepEqual(ids(result.hero), ["boundary"]);
+	assert.deepEqual(ids(result.recent), ["boundary"]);
+	assert.deepEqual(ids(result.milestones), ["boundary"]);
+	assert.deepEqual(ids(result.hero), []);
 });
 
-test("일반 영상 목록은 게시일로, 히어로는 최신 이벤트로 정렬한다", () => {
+test("최신 영상은 게시일 순서를 유지하고 작은 달성 기록은 별도 목록에 표시한다", () => {
 	const result = select([
 		video("older", { pa: seconds - 2 * day, st: [{ u: "50000", at: seconds - 1 }] }),
 		video("newer", { pa: seconds - day }),
 	]);
 	assert.deepEqual(ids(result.recent), ["newer", "older"]);
-	assert.deepEqual(ids(result.hero), ["older", "newer"]);
+	assert.deepEqual(ids(result.hero), ["newer", "older"]);
+	assert.deepEqual(ids(result.milestones), ["older"]);
+	assert.equal(result.hero[1].milestone, undefined);
 });
 
-test("각 목록과 히어로는 최대 20개이고 입력 객체를 변경하지 않는다", () => {
+test("목록은 최대 20개, 히어로는 최대 8개이며 입력 객체를 변경하지 않는다", () => {
 	const input = Array.from({ length: 25 }, (_, i) =>
 		video(`v${i}`, { pa: seconds - i, st: [{ u: "100000", at: seconds - i }] }),
 	);
@@ -127,7 +131,7 @@ test("각 목록과 히어로는 최대 20개이고 입력 객체를 변경하�
 	const result = select(input);
 	assert.equal(result.recent.length, 20);
 	assert.equal(result.milestones.length, 20);
-	assert.equal(result.hero.length, 20);
+	assert.equal(result.hero.length, 8);
 	assert.equal(JSON.stringify(input), before);
 });
 
@@ -140,6 +144,16 @@ test("0회와 집계 대기를 구분하고 날짜는 KST로 표시한다", () =
 	assert.equal(homeCount("0"), "0회");
 	assert.equal(homeCount(undefined), "집계 대기");
 	assert.equal(homeCount("invalid"), "집계 대기");
-	assert.match(homeDate(seconds), /12:00.*KST/);
+	assert.match(homeDate(seconds), /12:00/);
+});
+
+test("히어로는 최신 영상 7일 경계와 큰 달성 기록 최대 5개를 적용한다", () => {
+	const result = select([
+		video("boundary", { pa: seconds - 7 * day }),
+		video("expired", { pa: seconds - 7 * day - 1 }),
+		...Array.from({ length: 6 }, (_, i) => video(`record${i}`, { st: [{ u: "100000", at: seconds - i }] })),
+	]);
+	assert.deepEqual(ids(result.recent), ["boundary", "expired"]);
+	assert.deepEqual(ids(result.hero), ["boundary", "record0", "record1", "record2", "record3", "record4"]);
 });
 

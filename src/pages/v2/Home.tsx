@@ -7,11 +7,13 @@ import { elapsedTimeText, parseV2Time } from "../../lib/functions/date";
 import { useOutletContext } from "react-router-dom";
 import { ObservatoryButton, ObservatoryExplore, ObservatoryShelf } from "../../components/layout/Observatory";
 import { HomeVideoPreview } from "../../components/layout/HomeVideoPreview";
+import { HomeDebutHero } from "../../components/layout/HomeDebutHero";
+import { selectDebutEvents } from "../../lib/functions/debut";
 import { Link } from "../../components/Link";
 import { ImageV2 } from "../../components/Image";
 import type { LiveStatusState } from "../../lib/Atom";
 import { HOME_LIMITS, homeCount, homeDate, selectHomeVideos, type HomeVideo } from "../../lib/functions/homeV2";
-import { naver } from "../../lib/functions/platforms";
+import { naver, youtubeThumbnailImageProps } from "../../lib/functions/platforms";
 import type { useObservatoryData } from "../../lib/hooks/useObservatoryData";
 import type { StellarV2State } from "../../lib/types";
 
@@ -23,14 +25,18 @@ export default function Home() {
 		return () => window.clearInterval(timer);
 	}, []);
 	const data = useMemo(() => selectHomeVideos(videos.data || [], now), [videos.data, now]);
-	if (videos.isPending) return <HomeState title="별의 소식을 불러오고 있어요." loading>새로운 영상과 함께 만든 기록을 모으는 중이에요.</HomeState>;
-	if (videos.isError && !videos.data) return <HomeState title="영상 정보를 불러오지 못했어요." onRetry={() => void videos.refetch()}>잠시 후 다시 시도해 주세요.</HomeState>;
+	const debuts = useMemo(() => selectDebutEvents(live.data || [], videos.data || [], now), [live.data, videos.data, now]);
+	const hasHero = debuts.length > 0 || data.hero.length > 0;
+	if (!debuts.length && videos.isPending) return <HomeState title="별의 소식을 불러오고 있어요." loading>새로운 영상과 함께 만든 기록을 모으는 중이에요.</HomeState>;
+	if (!debuts.length && videos.isError && !videos.data) return <HomeState title="영상 정보를 불러오지 못했어요." onRetry={() => void videos.refetch()}>잠시 후 다시 시도해 주세요.</HomeState>;
 	return (
 		<>
-			<ObservatoryExplore hasHero={data.hero.length > 0} />
-			{data.hero.length > 0 && <HomeHero items={data.hero} />}
+			<ObservatoryExplore hasHero={hasHero} heroLabel={debuts.length ? "데뷔 스페셜" : undefined} />
+			{debuts.length > 0 ? <HomeDebutHero events={debuts} now={now} /> : data.hero.length > 0 && <HomeHero items={data.hero} />}
+			{videos.isPending ? <HomeState title="영상 정보를 불러오고 있어요." loading>잠시만 기다려 주세요.</HomeState>
+				: videos.isError && !videos.data ? <HomeState title="영상 정보를 불러오지 못했어요." onRetry={() => void videos.refetch()}>데뷔 소식은 계속 확인할 수 있어요.</HomeState> : (
 			<Box maxW="1440px" mx="auto" pt={{ base: 3, md: 8 }} pb={{ base: 10, md: 16 }} pl={{ base: 4, md: "30px" }} pr={{ base: 4, md: "110px" }}>
-				{!data.hero.length && <Box pt={10} pb={5}>
+				{!hasHero && <Box pt={10} pb={5}>
 					<Text fontSize="11px" letterSpacing=".16em" color="var(--obs-accent)">STELLIVE OBSERVATORY</Text>
 					<Heading as="h1" fontSize={{ base: "26px", md: "38px" }} my={2}>각자의 별, 이어지는 기록.</Heading>
 					<Text color="var(--obs-muted)">새로운 노래부터 함께 만든 기록까지.</Text>
@@ -54,6 +60,7 @@ export default function Home() {
 					</>}
 				</Box>
 			</Box>
+			)}
 		</>
 	);
 }
@@ -126,9 +133,7 @@ function HomeHero({ items }: { items: HomeVideo[] }) {
 					animate={{ opacity: 1, scale: 1, transition: { duration: reduceMotion ? 0 : .85, ease: "easeOut" } }}
 					exit={{ opacity: 0, transition: { duration: reduceMotion ? 0 : .65 } }}>
 					<ImageV2 src={`https://i.ytimg.com/vi/${encodeURIComponent(video.vi)}/maxresdefault.jpg`} alt="" ratio={null} w="100%" h="100%" objectFit="cover" filter="saturate(.7)" loading="eager" isDarkMode
-						imageProps={{ onError: (event) => {
-							if (!event.currentTarget.src.endsWith("/hqdefault.jpg")) event.currentTarget.src = `https://i.ytimg.com/vi/${encodeURIComponent(video.vi)}/hqdefault.jpg`;
-						} }} />
+						imageProps={youtubeThumbnailImageProps} />
 				</Box>
 			</AnimatePresence>
 			{!premiere && !reduceMotion && inView && pageVisible && (
@@ -263,7 +268,7 @@ function HomeVideoCard({ item, showMilestone }: { item: HomeVideo; showMilestone
 	return (
 		<Flex as="article" role="group" direction="column" align="stretch" flex={{ base: "0 0 200px", md: "0 0 228px" }} minW={0} gap={2} fontSize="12px" sx={{ scrollSnapAlign: "start" }}>
 			<Link href={url} isExternal tabIndex={-1} aria-hidden="true" display="block" position="relative" overflow="hidden" borderRadius="12px">
-				<ImageV2 src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`} alt="" loading="lazy" imageProps={{ draggable: false }} w="100%" ratio={16 / 9} objectFit="cover" bg="#1b192c" pointerEvents="none" userSelect="none" isDarkMode />
+				<ImageV2 src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`} alt="" loading="lazy" imageProps={{ ...youtubeThumbnailImageProps, draggable: false }} w="100%" ratio={16 / 9} objectFit="cover" bg="#1b192c" pointerEvents="none" userSelect="none" isDarkMode />
 				<Flex position="absolute" inset={0} align="flex-end" p={3} bg="linear-gradient(transparent 30%, #100b1ee6)" opacity={0} transition="opacity .2s" _groupHover={{ opacity: 1 }} _groupFocusWithin={{ opacity: 1 }} pointerEvents="none">
 					<Text color="#f1edf8">조회수 · {homeCount(milestone ? milestone.views : video.vc)}</Text>
 				</Flex>

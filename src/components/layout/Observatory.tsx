@@ -18,15 +18,18 @@ import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Link } from "../Link";
 import { CAFE_WRITE_URL } from "@/lib/constant";
+import { useObservatoryScroll } from "../../lib/hooks/useObservatoryScroll";
 import { NebulaGlow } from "./space/NebulaGlow";
-import { MdBarChart, MdChevronLeft, MdChevronRight, MdClose, MdEdit, MdGridView, MdHome, MdMenu, MdOpenInNew } from "react-icons/md";
+import { MdArrowUpward, MdBarChart, MdChevronLeft, MdChevronRight, MdClose, MdEdit, MdGridView, MdHome, MdMenu, MdOpenInNew } from "react-icons/md";
 
 export function ObservatoryShell({ children }: { children: ReactNode }) {
 	return (
 		<Box
 			position="relative"
 			isolation="isolate"
-			minH="100svh"
+			display="flex"
+			flexDirection="column"
+			minH="100dvh"
 			bg="#12101f"
 			color="#f1edf8"
 			lineHeight="1.6"
@@ -91,6 +94,25 @@ export function ObservatoryButton({ href, isExternal, primary, ...props }: Obser
 			_active={{ bg: primary ? "#b796de" : "#c1a4ef30", boxShadow: "none" }}
 			{...props}
 		/>
+	);
+}
+
+export function ObservatoryBackToTop() {
+	const { pathname } = useLocation();
+	const { visible, footerOffset } = useObservatoryScroll();
+	if (!visible) return null;
+	return (
+		<ObservatoryButton type="button" aria-label="맨 위로" title="맨 위로" position="fixed" zIndex={95}
+			right={{ base: "calc(16px + env(safe-area-inset-right, 0px))", md: "calc(24px + env(safe-area-inset-right, 0px))" }}
+			bottom={{ base: `max(${footerOffset}px, calc(${pathname.replace(/\/$/, "") === "/counter" ? 97 : 24}px + env(safe-area-inset-bottom, 0px)))`, lg: `max(${footerOffset}px, calc(24px + env(safe-area-inset-bottom, 0px)))` }}
+			boxSize="44px" minH="44px" minW="44px" p={0} bg="#292036eb" borderColor="#c1a4ef55"
+			boxShadow="0 6px 24px #09061266, inset 0 1px 0 #ffffff0d" _hover={{ bg: "#403051", borderColor: "#c1a4ef99" }}
+			onClick={() => {
+				document.getElementById("obs-main")?.focus({ preventScroll: true });
+				window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+			}}>
+			<MdArrowUpward size={21} aria-hidden="true" />
+		</ObservatoryButton>
 	);
 }
 
@@ -171,8 +193,8 @@ export function ObservatoryHeader() {
 		return () => window.removeEventListener("scroll", update);
 	}, [menu.isOpen]);
 	const links = [
-		{ label: "Home", mobileLabel: "홈", description: "새로운 영상과 함께 만든 기록", icon: MdHome, href: "/v2" },
-		{ label: "Counter", mobileLabel: "카운터", description: "멤버별 노래와 조회수", icon: MdBarChart, href: "/v2/counter" },
+		{ label: "Home", mobileLabel: "홈", description: "새로운 영상과 함께 만든 기록", icon: MdHome, href: "/home" },
+		{ label: "Counter", mobileLabel: "카운터", description: "멤버별 노래와 조회수", icon: MdBarChart, href: "/counter" },
 		{ label: "멀티뷰 ↗", mobileLabel: "멀티뷰", description: "여러 방송을 한 화면에서", icon: MdGridView, href: "/multiview", external: true },
 	];
 	return (
@@ -227,7 +249,7 @@ export function ObservatoryHeader() {
 					transition="min-height .2s, padding .2s"
 				>
 					<Link
-						href="/v2"
+						href="/home"
 						isExact
 						fontSize={{ base: "20px", md: "22px" }}
 						fontWeight="700"
@@ -258,7 +280,7 @@ export function ObservatoryHeader() {
 								</ObservatoryButton>
 							))}
 						</HStack>
-						<ObservatoryButton href={CAFE_WRITE_URL} isExternal display={{ base: "none", lg: "inline-flex" }}>
+						<ObservatoryButton href={CAFE_WRITE_URL} isExternal display={{ base: "none", md: "inline-flex" }}>
 							축하 글쓰기 ↗
 						</ObservatoryButton>
 						<Box display={{ base: "block", md: "none" }}>
@@ -337,7 +359,7 @@ export function ObservatoryHeader() {
 	);
 }
 
-export function ObservatoryExplore({ hasHero }: { hasHero: boolean }) {
+export function ObservatoryExplore({ hasHero, heroLabel = "주요 영상" }: { hasHero: boolean; heroLabel?: string }) {
 	const [active, setActive] = useState(hasHero ? "featured" : "recent");
 	useEffect(() => {
 		const ids = [...(hasHero ? ["featured"] : []), "recent", "milestones", "live"];
@@ -354,7 +376,7 @@ export function ObservatoryExplore({ hasHero }: { hasHero: boolean }) {
 		return () => window.removeEventListener("scroll", update);
 	}, [hasHero]);
 	const items = [
-		...(hasHero ? [["featured", "주요 영상"]] : []),
+		...(hasHero ? [["featured", heroLabel]] : []),
 		["recent", "새 영상"],
 		["milestones", "기록"],
 		["live", "라이브"],
@@ -421,6 +443,7 @@ export function ObservatoryFooter() {
 	return (
 		<Flex
 			as="footer"
+			id="obs-footer"
 			position="relative"
 			px={{ base: 4, md: "30px" }}
 			py={7}

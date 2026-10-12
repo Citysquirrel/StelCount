@@ -1,4 +1,5 @@
 import { Thumbnails } from "../types";
+import type { SyntheticEvent } from "react";
 
 export interface ParamsObject {
 	part: (
@@ -67,4 +68,24 @@ export const generateThumbnails = (videoId: string): Thumbnails => {
 
 export const generateStandardThumbnail = (videoId: string) => {
 	return `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`;
+};
+
+function fallbackYoutubeThumbnail(image: HTMLImageElement) {
+	const url = new URL(image.src);
+	if (url.hostname !== "i.ytimg.com") return;
+	const match = url.pathname.match(/^(\/vi\/[^/]+\/)(maxresdefault|sddefault|hqdefault|mqdefault|default)\.jpg$/);
+	if (!match) return;
+	const qualities = ["maxresdefault", "sddefault", "hqdefault", "mqdefault", "default"];
+	const next = qualities[qualities.indexOf(match[2]) + 1];
+	if (!next) return;
+	url.pathname = `${match[1]}${next}.jpg`;
+	image.src = url.toString();
+}
+
+export const youtubeThumbnailImageProps = {
+	onLoad: ({ currentTarget }: SyntheticEvent<HTMLImageElement>) => {
+		// 고해상도 요청도 120×90 기본 이미지로 성공할 수 있다.
+		if (currentTarget.naturalWidth === 120 && currentTarget.naturalHeight === 90) fallbackYoutubeThumbnail(currentTarget);
+	},
+	onError: ({ currentTarget }: SyntheticEvent<HTMLImageElement>) => fallbackYoutubeThumbnail(currentTarget),
 };

@@ -1,12 +1,16 @@
 import Fuse from "fuse.js";
 import Inko from "inko";
-import type { StellarGroupV2, StellarV2State, TagV2, YoutubeMusicDataV2 } from "../types";
+import type { CounterSort, StellarGroupV2, StellarV2State, TagV2, YoutubeMusicDataV2 } from "../types";
 import { getChosung, normalizeKeyword } from "./search";
 
 const inko = new Inko();
 
-export type CounterSort = "newest" | "oldest" | "remaining-asc" | "remaining-desc";
 export type CounterKind = "all" | "cover" | "original" | "other";
+
+export function resolveCounterSort(urlSort?: unknown, savedSort?: unknown): CounterSort {
+	const sorts: CounterSort[] = ["recommended", "newest", "oldest", "remaining-asc", "remaining-desc"];
+	return sorts.find((sort) => sort === urlSort) || sorts.find((sort) => sort === savedSort) || "recommended";
+}
 
 export function counterValue(value?: string | null) {
 	if (!value?.trim()) return null;
@@ -20,7 +24,7 @@ export function counterGoal(value?: string | null) {
 	let step = 10_000;
 	while (count >= step * 10) step *= 10;
 	const target = (Math.floor(count / step) + 1) * step;
-	return { count, target, remaining: target - count };
+	return { count, target, remaining: target - count, step };
 }
 
 export function counterGroupLabel(group: StellarGroupV2) {
@@ -28,6 +32,28 @@ export function counterGroupLabel(group: StellarGroupV2) {
 	const numbering = group.nur?.trim();
 	const generation = numbering && /^\d+$/.test(numbering) ? `${numbering}기` : numbering;
 	return generation ? `${generation} · ${name}` : name;
+}
+
+export function orderCounterGroups<T extends { name: string }>(groups: T[], savedOrder: unknown): T[] {
+	if (!Array.isArray(savedOrder)) return groups;
+	const remaining = new Map(groups.map((group) => [group.name, group]));
+	const ordered: T[] = [];
+	for (const name of savedOrder) {
+		const group = typeof name === "string" ? remaining.get(name) : undefined;
+		if (!group) continue;
+		ordered.push(group);
+		remaining.delete(name);
+	}
+	return [...ordered, ...remaining.values()];
+}
+
+export function moveCounterGroup(order: string[], name: string, offset: -1 | 1) {
+	const from = order.indexOf(name);
+	const to = from + offset;
+	if (from < 0 || to < 0 || to >= order.length) return order;
+	const next = [...order];
+	next.splice(to, 0, ...next.splice(from, 1));
+	return next;
 }
 
 export function counterProfileImage(member: StellarV2State) {
@@ -93,6 +119,23 @@ export function selectCounterVideos(videos: YoutubeMusicDataV2[], filters: {
 		const newest = (b.pa || 0) - (a.pa || 0) || a.vi.localeCompare(b.vi);
 		if (filters.sort === "newest") return newest;
 		if (filters.sort === "oldest") return (a.pa || 0) - (b.pa || 0) || a.vi.localeCompare(b.vi);
+		if (filters.sort === "recommended") {
+			const priority = (video: YoutubeMusicDataV2) => video.lbc === "live" ? 0 : video.lbc === "upcoming" ? 1 : 2;
+			const premiereOrder = priority(a) - priority(b);
+			if (premiereOrder) return premiereOrder;
+			if (priority(a) < 2) return (a.sst || Number.MAX_SAFE_INTEGER) - (b.sst || Number.MAX_SAFE_INTEGER) || newest;
+			const distance = (video: YoutubeMusicDataV2) => {
+				const goal = counterGoal(video.vc);
+				if (!goal) return null;
+				const sinceMilestone = goal.count % goal.step;
+				// 구버전처럼 막 달성한 구간도 우선하되 0회는 달성으로 취급하지 않는다.
+				return goal.count >= goal.step && sinceMilestone <= goal.remaining * .2 ? sinceMilestone : goal.remaining;
+			};
+			const left = distance(a);
+			const right = distance(b);
+			if (left === null || right === null) return left === right ? newest : left === null ? 1 : -1;
+			return left - right || newest;
+		}
 		const remaining = (video: YoutubeMusicDataV2) => video.lbc === "live" || video.lbc === "upcoming" ? null : counterGoal(video.vc)?.remaining ?? null;
 		const left = remaining(a);
 		const right = remaining(b);

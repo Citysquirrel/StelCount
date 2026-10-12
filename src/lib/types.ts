@@ -19,12 +19,16 @@ export interface HomeVideoData {
 	unit?: number[];
 }
 
+export type CounterSort = "recommended" | "newest" | "oldest" | "remaining-asc" | "remaining-desc";
+
 export interface UserSettingStorage {
 	isAutoScrollOn?: boolean;
 	homeStellar?: string;
 	isFilterOn?: string;
 	sortBy?: number;
 	sortDirection?: number;
+	counterSort?: CounterSort;
+	counterGroupOrder?: string[];
 	chatToLeft?: boolean;
 	listOpenerWidth?: string;
 	customStreams?: CustomStreamsForUS[];

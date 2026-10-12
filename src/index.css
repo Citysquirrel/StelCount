@@ -1,3 +1,22 @@
+html {
+	min-height: 100%;
+	background-color: #12101f;
+}
+
+body,
+#root {
+	min-height: 100vh;
+	min-height: 100dvh;
+}
+
+html:has([data-observatory]),
+body:has([data-observatory]),
+#root:has([data-observatory]) {
+	background-color: #12101f;
+	color: #f1edf8;
+	color-scheme: dark;
+}
+
 ::-webkit-scrollbar {
 	width: 8px;
 	height: 8px;
