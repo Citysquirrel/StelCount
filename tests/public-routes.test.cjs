@@ -34,8 +34,8 @@ test("기본 Home과 Counter 경로는 새 화면과 공통 레이아웃으로 �
 	assert.equal(pages.has("./pages/Counter"), false);
 });
 
-test("루트와 기존 v2 링크는 쿼리·해시를 보존하고 기본 경로로 대체 이동한다", () => {
-	for (const [pathname, target] of [["/", "/home"], ["/v2", "/home"], ["/v2/counter", "/counter"]]) {
+test("루트는 쿼리·해시를 보존하고 기본 홈 경로로 대체 이동한다", () => {
+	for (const [pathname, target] of [["/", "/home"]]) {
 		location = { search: "?member=uni&kind=cover&q=별", hash: "#records" };
 		const element = matchRoutes(routes, pathname).at(-1).route.element;
 		const redirect = element.type(element.props);
@@ -43,6 +43,12 @@ test("루트와 기존 v2 링크는 쿼리·해시를 보존하고 기본 경로
 		assert.equal(redirect.props.to.search, location.search);
 		assert.equal(redirect.props.to.hash, location.hash);
 		assert.equal(redirect.props.replace, true);
+	}
+});
+
+test("v2 및 구버전 공개 경로는 제공하지 않고 없는 페이지로 처리한다", () => {
+	for (const pathname of ["/v2", "/v2/", "/v2/home", "/v2/counter", "/legacy", "/legacy/home", "/legacy/counter"]) {
+		assert.equal(matchRoutes(routes, pathname).at(-1).route.element.type, pages.get("./pages/NotExist"));
 	}
 });
 

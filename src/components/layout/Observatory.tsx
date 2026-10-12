@@ -16,11 +16,13 @@ import {
 } from "@chakra-ui/react";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useRecoilValue } from "recoil";
+import { isAdminState } from "../../lib/Atom";
 import { Link } from "../Link";
 import { CAFE_WRITE_URL } from "@/lib/constant";
 import { useObservatoryScroll } from "../../lib/hooks/useObservatoryScroll";
 import { NebulaGlow } from "./space/NebulaGlow";
-import { MdArrowUpward, MdBarChart, MdChevronLeft, MdChevronRight, MdClose, MdEdit, MdGridView, MdHome, MdMenu, MdOpenInNew } from "react-icons/md";
+import { MdArrowUpward, MdBarChart, MdChevronLeft, MdChevronRight, MdClose, MdEdit, MdGridView, MdHome, MdMenu, MdOpenInNew, MdSettings } from "react-icons/md";
 
 export function ObservatoryShell({ children }: { children: ReactNode }) {
 	return (
@@ -169,6 +171,7 @@ export function ObservatoryBackground() {
 
 export function ObservatoryHeader() {
 	const { pathname } = useLocation();
+	const isAdmin = useRecoilValue(isAdminState);
 	const [compact, setCompact] = useState(false);
 	const [hidden, setHidden] = useState(false);
 	const headerRef = useRef<HTMLElement>(null);
@@ -196,6 +199,7 @@ export function ObservatoryHeader() {
 		{ label: "Home", mobileLabel: "홈", description: "새로운 영상과 함께 만든 기록", icon: MdHome, href: "/home" },
 		{ label: "Counter", mobileLabel: "카운터", description: "멤버별 노래와 조회수", icon: MdBarChart, href: "/counter" },
 		{ label: "멀티뷰 ↗", mobileLabel: "멀티뷰", description: "여러 방송을 한 화면에서", icon: MdGridView, href: "/multiview", external: true },
+		...(isAdmin ? [{ label: "관리자", mobileLabel: "관리자", description: "사이트 관리", icon: MdSettings, href: "/admin" }] : []),
 	];
 	return (
 		<>

@@ -2,7 +2,9 @@ import type { LiveStatusState } from "../Atom";
 import type { StellarV2State, YoutubeMusicDataV2 } from "../types";
 import { convertKstInputToUtc, toDateTimeInputValue } from "./date";
 
-export const DEBUT_EVENT_DAYS = 7;
+const DEBUT_COHORT_DAYS = 7;
+const DEBUT_VIDEO_DAYS = 7;
+const DEBUT_EVENT_DURATION = 60 * 60 * 1000;
 
 export function debutColor(...colors: (string | undefined)[]) {
 	const color = colors.find(value => value && /^#?[0-9a-f]{6}$/i.test(value));
@@ -72,8 +74,8 @@ export function selectDebutEvents(
 		} catch {
 			continue;
 		}
-		const endsAt = debutAt + DEBUT_EVENT_DAYS * 86400000;
-		if (!Number.isFinite(debutAt) || debutAt <= 0 || now >= endsAt) continue;
+		if (!Number.isFinite(debutAt) || debutAt <= 0) continue;
+		const videoEndsAt = debutAt + DEBUT_VIDEO_DAYS * 86400000;
 		const member = members.find((candidate) => candidate.uid === profile.uuid);
 		const releaseAt = (video: YoutubeMusicDataV2) => {
 			const timestamp = video.lbc === "upcoming" || video.lbc === "live" ? video.sst || video.pa : video.pa;
@@ -82,11 +84,31 @@ export function selectDebutEvents(
 		const video = member?.ym
 			.filter(
 				(candidate) =>
-					candidate.ia !== false && candidate.t !== "replay" && candidate.vi && releaseAt(candidate) < endsAt,
+					candidate.ia !== false && candidate.t !== "replay" && candidate.vi && releaseAt(candidate) < videoEndsAt,
 			)
 			.sort((a, b) => releaseAt(a) - releaseAt(b) || a.vi.localeCompare(b.vi))[0];
 		events.set(profile.uuid, { profile, debutAt, member, video });
 	}
-	return [...events.values()].sort((a, b) => a.debutAt - b.debutAt || a.profile.uuid.localeCompare(b.profile.uuid));
+	const sorted = [...events.values()].sort((a, b) => a.debutAt - b.debutAt || a.profile.uuid.localeCompare(b.profile.uuid));
+	const last = sorted.at(-1);
+	if (!last) return [];
+	// 과거 기수는 제외하되 이번 데뷔 일정의 멤버들은 마지막 방송까지 함께 유지한다.
+	const cohort = sorted.filter(event => event.debutAt >= last.debutAt - DEBUT_COHORT_DAYS * 86400000);
+	const endsAt = last.debutAt + DEBUT_EVENT_DURATION;
+	if (now < endsAt) return cohort;
+	const stillLive = cohort.some(({ profile, debutAt }) => {
+		if (debutAt !== last.debutAt || !profile.openLive) return false;
+		if (!profile.openDate) return true;
+		let openedAt: number;
+		try {
+			const date = profile.openDate.replace(" ", "T");
+			openedAt = Date.parse(/(?:Z|[+-]\d{2}:?\d{2})$/i.test(date) ? date : convertKstInputToUtc(date));
+		} catch {
+			return true;
+		}
+		// 종료 기준 이후 새로 시작한 일반 방송으로 스페셜이 재노출되지 않게 한다.
+		return !Number.isFinite(openedAt) || openedAt < endsAt;
+	});
+	return stillLive ? cohort : [];
 }
 

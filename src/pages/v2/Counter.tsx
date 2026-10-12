@@ -12,7 +12,7 @@ import { CustomModal } from "../../components/Modal";
 import { ObservatoryButton } from "../../components/layout/Observatory";
 import { USER_SETTING_STORAGE } from "../../lib/constant";
 import { elapsedTimeText, parseV2Time } from "../../lib/functions/date";
-import { numberToLocaleString } from "../../lib/functions/etc";
+import { avatarFallbackColor, numberToLocaleString } from "../../lib/functions/etc";
 import { HOME_LIMITS, homeCount, homeDate, recentMilestone } from "../../lib/functions/homeV2";
 import { counterCategoryTagIds, counterChannels, counterGoal, counterGroupLabel, counterProfileImage, counterTagKey, counterValue, moveCounterGroup, orderCounterGroups, resolveCounterSort, selectCounterVideos, type CounterKind } from "../../lib/functions/counterV2";
 import type { DefaultResponseData } from "../../lib/functions/fetch";
@@ -305,7 +305,7 @@ function CounterMembers({ groups, selectedId, selectedGroup, onSelect, hasCustom
 									fontSize={{ base: "11px", lg: "12px" }} boxShadow="none" backdropFilter="none"
 									fontWeight={member.uid === selectedId ? "600" : "400"} color={member.uid === selectedId ? "#f3edf9" : "#a99ebc"}
 									bg={member.uid === selectedId ? "#c1a4ef12" : "transparent"} borderColor="transparent" _hover={{ bg: "#ffffff08", color: "#f3edf9" }}>
-									<Avatar src={naver.chzzk.profileImageUrl(counterProfileImage(member), 40)} name={member.n} boxSize={{ base: "26px", lg: "24px" }} flexShrink={0} bg="#382a4e" color="#dfcef6" />
+									<Avatar src={naver.chzzk.profileImageUrl(counterProfileImage(member), 40)} name={member.n} getInitials={() => ""} boxSize={{ base: "26px", lg: "24px" }} flexShrink={0} bg={avatarFallbackColor(member.uid)} />
 									<Text noOfLines={1} minW={0} maxW="100%">{member.n}</Text>
 									{member.uid === selectedId && <Box position="absolute" left={{ lg: "-1px" }} bottom={{ base: "0", lg: "auto" }} w={{ base: "16px", lg: "2px" }} h={{ base: "2px", lg: "16px" }} borderRadius="full" bg="var(--obs-accent)" aria-hidden="true" />}
 								</ObservatoryButton>
@@ -406,7 +406,7 @@ function CounterProfile({ member, isLive, homeMember, isHome, onSetHome }: {
 	return (
 		<Box as="section" aria-label="선택한 멤버 정보" pt={{ base: 2, md: 3 }} pb={{ base: 8, md: 10 }}>
 			<Flex align="center" gap={4}>
-				<Avatar src={naver.chzzk.profileImageUrl(counterProfileImage(member), 120)} name={member.n} boxSize={{ base: "60px", md: "72px" }} bg="#382a4e" color="#dfcef6" />
+				<Avatar src={naver.chzzk.profileImageUrl(counterProfileImage(member), 120)} name={member.n} getInitials={() => ""} boxSize={{ base: "60px", md: "72px" }} bg={avatarFallbackColor(member.uid)} />
 				<Box minW={0}>
 					<Text color="var(--obs-accent)" fontSize="11px">{member.gps?.map(counterGroupLabel).join(" / ") || "미분류"}</Text>
 					<Heading as="h1" fontSize={{ base: "26px", md: "34px" }} letterSpacing="-.04em" fontWeight="500" mt={1}>{member.n}</Heading>

@@ -1,5 +1,10 @@
 import { Thumbnails } from "../types";
 
+export function avatarFallbackColor(id: string) {
+	const hue = Array.from(id).reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 0) % 360;
+	return `hsl(${hue}, 65%, 80%)`;
+}
+
 export function stringNullCheck(str: string | null | undefined) {
 	if (str === null || str === undefined) {
 		return "";

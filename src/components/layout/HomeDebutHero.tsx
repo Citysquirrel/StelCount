@@ -5,6 +5,7 @@ import { MdArrowForward, MdAutoAwesome, MdPlayArrow, MdSchedule, MdSensors } fro
 import { debutColor, debutPvSegment, type DebutEvent } from "../../lib/functions/debut";
 import { homeDate } from "../../lib/functions/homeV2";
 import { formatUtcToKst } from "../../lib/functions/date";
+import { avatarFallbackColor } from "../../lib/functions/etc";
 import { generateStandardThumbnail, naver, youtube, youtubeThumbnailImageProps } from "../../lib/functions/platforms";
 import { ImageV2 } from "../Image";
 import { Link } from "../Link";
@@ -34,6 +35,8 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 	const pv = debutPvSegment(profile.name, member?.n, profile.channelName);
 	const image = profile.channelImageUrl || member?.pi;
 	const channel = profile.chzzkId || member?.czi;
+	const isLive = !!profile.openLive;
+	const channelHref = isLive ? naver.chzzk.liveUrl(channel) : naver.chzzk.channelUrl(channel);
 	const remainingMinutes = Math.max(0, Math.ceil((debutAt - now) / 60000));
 	const beforeDebut = now < debutAt;
 	const countdown = remainingMinutes >= 1440 ? `D-${Math.ceil(remainingMinutes / 1440)}` : remainingMinutes >= 60 ? `${Math.floor(remainingMinutes / 60)}시간 ${remainingMinutes % 60}분 후` : `${remainingMinutes}분 후`;
@@ -48,16 +51,20 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 				<Box className="debut-flow" position="absolute" inset="-45px" backgroundImage={`radial-gradient(circle, #fff 0 1px, transparent 1.6px), radial-gradient(circle, ${accent} 0 1.2px, transparent 2px), radial-gradient(circle, #ffffff99 0 .6px, transparent 1.2px)`} backgroundSize="47px 43px, 71px 67px, 29px 37px" backgroundPosition="0 0, 19px 27px, 11px 9px" animation="debut-stardust-flow 12s linear infinite" sx={{ animationPlayState: "paused" }} />
 			</Box>
 		</Box>
-		<Avatar position="relative" name={name} src={naver.chzzk.profileImageUrl(image || undefined, 240)} boxSize={{ base: "128px", md: "176px" }} bg="#30243e" color="#dfcef6" border="2px solid" borderColor="var(--debut-accent)" />
+		<Avatar position="relative" name={name} getInitials={() => ""} src={naver.chzzk.profileImageUrl(image || undefined, 240)} boxSize={{ base: "128px", md: "176px" }} bg={avatarFallbackColor(profile.uuid)} border="2px solid" borderColor="var(--debut-accent)" />
 		<Box position="absolute" top={4} right={5} color="#eadbfc" aria-hidden="true"><MdAutoAwesome size={25} /></Box>
 	</Box>;
 	return (
 		<Box as="section" ref={heroRef} id="obs-featured" aria-label="데뷔 스페셜" position="relative" overflow="hidden" bg="#171322"
 			sx={{
 				"--debut-accent": accent,
+				"@keyframes debut-live-pulse": {
+					"0%": { transform: "scale(1)", opacity: .7 },
+					"75%, 100%": { transform: "scale(2.6)", opacity: 0 },
+				},
 				"@keyframes debut-member-shimmer": {
-					"0%, 60%, 100%": { textShadow: "0 0 3px transparent" },
-					"78%": { textShadow: "0 0 8px var(--member-glow), 0 0 18px var(--member-glow)" },
+					from: { backgroundPosition: "200% center" },
+					to: { backgroundPosition: "-40% center" },
 				},
 				"@keyframes debut-nebula-flow": {
 					from: { transform: "translateX(-6%) scale(.95)", opacity: .55 },
@@ -75,6 +82,7 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 				},
 				"@media (prefers-reduced-motion: reduce)": {
 					"& .debut-flow, & .debut-member-name": { animation: "none" },
+					"& .debut-live-dot::after": { animation: "none", opacity: 0 },
 					"& .debut-portrait, & .debut-galaxy": { transition: "none" },
 				},
 			}}>
@@ -88,14 +96,17 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 				<Flex direction={{ base: "column", lg: "row" }} gap={{ base: 7, lg: 10 }} align={{ base: "stretch", lg: "center" }}>
 					<Box flex={1} minW={0}>
 						<Text color="#d0c1e3" fontSize={{ base: "15px", md: "18px" }} mb={3}>{beforeDebut ? "새로운 별을 만날 시간" : "우리의 하늘에 새로운 별이 떴어요"}</Text>
-						<Heading as="h1" fontSize={{ base: "38px", md: "56px" }} fontWeight="500" letterSpacing="-.04em" lineHeight="1.2">{name}</Heading>
+						<Flex align="center" gap={3} wrap="wrap">
+							<Heading as="h1" fontSize={{ base: "38px", md: "56px" }} fontWeight="500" letterSpacing="-.04em" lineHeight="1.2">{name}</Heading>
+							{isLive && <Text as="span" aria-label="치지직 방송 중" fontSize="11px" fontWeight="600" letterSpacing=".08em" px={3} py={1} borderRadius="full" color="#85f3c8" bg="#6af3bb1a" border="1px solid #69dfb755">● LIVE</Text>}
+						</Flex>
 						<Flex mt={5} gap={3} align="center" wrap="wrap">
 							<Text px={3} py={1} borderRadius="full" bg="#c1a4ef1c" border="1px solid #c1a4ef44" fontSize="13px" color="#eadbfc">{beforeDebut ? countdown : "데뷔를 축하해요"}</Text>
 							<Text fontSize="13px" color="#c7bbd9">{homeDate(debutAt / 1000)} · {beforeDebut ? "데뷔 예정" : "데뷔"}</Text>
 						</Flex>
 						<Text mt={5} color="#b4aacb" fontSize="14px" lineHeight="1.9">{beforeDebut ? "처음 만나는 순간부터, 함께 빛날 모든 날까지." : "이제 막 시작된 이야기에 함께해 주세요."}</Text>
 						<Flex mt={6} gap={3} wrap="wrap">
-							{channel && <ObservatoryButton href={naver.chzzk.channelUrl(channel)} isExternal rightIcon={<MdArrowForward />} primary>치지직 채널 보기</ObservatoryButton>}
+							{channelHref && <ObservatoryButton href={channelHref} isExternal rightIcon={isLive ? <MdSensors /> : <MdArrowForward />} primary>{isLive ? "지금 방송 보러가기" : "치지직 채널 보기"}</ObservatoryButton>}
 						</Flex>
 					</Box>
 					<Box w={{ base: "100%", lg: "44%" }} flexShrink={0}>
@@ -110,7 +121,7 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 								<Text mt={2} fontSize="12px" color="#b4aacb">{videoUpcoming ? `${homeDate(video.sst)} · YouTube에서 알림 받기` : "YouTube에서 함께 듣기 ↗"}</Text>
 							</Box>
 						</Link> : <Stack align="center" justify="center" minH={{ base: "220px", lg: "300px" }} spacing={5}>
-							{channel ? <Link href={naver.chzzk.channelUrl(channel)!} isExternal aria-label={`${name} 치지직 채널 보기`} display="block" borderRadius="full" _hover={{ textDecoration: "none" }}>{portrait}</Link> : portrait}
+							{channelHref ? <Link href={channelHref} isExternal aria-label={`${name} ${isLive ? "지금 방송 보러가기" : "치지직 채널 보기"}`} display="block" borderRadius="full" _hover={{ textDecoration: "none" }}>{portrait}</Link> : portrait}
 							<Text color="#b4aacb" fontSize="13px">{beforeDebut ? "곧, 여기서 만나요." : "새로운 시작을 함께 응원해 주세요."}</Text>
 						</Stack>}
 					</Box>
@@ -127,10 +138,17 @@ export function HomeDebutHero({ events, now }: { events: DebutEvent[]; now: numb
 							const schedule = formatUtcToKst(date, "text").slice(5, 16).replace("-", ".");
 							return <Box as="li" key={item.uuid} position="relative" flexShrink={0} pr={index < events.length - 1 ? { base: 6, md: 9 } : 0}
 								_before={index < events.length - 1 ? { content: '""', position: "absolute", bg: "#c1a4ef26", left: "4px", top: "4px", w: "100%", h: "1px" } : undefined}>
-								<Button variant="unstyled" aria-pressed={selected} aria-label={`${label}, ${homeDate(scheduledAt / 1000)} 데뷔`} onClick={() => setSelectedId(item.uuid)} position="relative" display="flex" flexDirection="column" alignItems="flex-start" justifyContent="center" h="auto" minH="60px" minW={0} pt={4} pb={1} px={0} borderRadius="2px" color={color || (selected ? "#f3edf9" : "#a99abf")} fontWeight="400" _hover={{ color: color || "#f3edf9" }}>
-									<Box as="span" position="absolute" top="1px" left={0} boxSize="7px" borderRadius="full" bg={selected ? color || "#e3ccff" : color ? `${color}99` : "#675573"} boxShadow={selected ? `0 0 0 3px ${color || "#c1a4ef"}18` : "none"} aria-hidden="true" />
+								<Button variant="unstyled" aria-pressed={selected} aria-label={`${label}, ${homeDate(scheduledAt / 1000)} 데뷔${item.openLive ? ", 치지직 방송 중" : ""}`} title={item.openLive ? "치지직 방송 중" : undefined} onClick={() => setSelectedId(item.uuid)} position="relative" display="flex" flexDirection="column" alignItems="flex-start" justifyContent="center" h="auto" minH="60px" minW={0} pt={4} pb={1} px={0} borderRadius="2px" color={color || (selected ? "#f3edf9" : "#a99abf")} fontWeight="400" _hover={{ color: color || "#f3edf9" }}>
+									<Box as="span" className={item.openLive ? "debut-live-dot" : undefined} position="absolute" top="1px" left={0} boxSize="7px" borderRadius="full" bg={item.openLive ? "#85f3c8" : selected ? color || "#e3ccff" : color ? `${color}99` : "#675573"} boxShadow={item.openLive ? "0 0 8px #85f3c880" : selected ? `0 0 0 3px ${color || "#c1a4ef"}18` : "none"} aria-hidden="true"
+										_after={item.openLive ? { content: '""', position: "absolute", inset: 0, borderRadius: "inherit", border: "1px solid #85f3c8", opacity: 0, animation: reduceMotion ? "none" : "debut-live-pulse 2.8s ease-out infinite", animationPlayState: inView && pageVisible ? "running" : "paused" } : undefined} />
 									<Text as="time" dateTime={date} fontSize="10px" color={selected ? color || "#ccb5e7" : "#9788ad"} letterSpacing=".04em" sx={{ fontVariantNumeric: "tabular-nums" }}>{schedule}</Text>
-									<Text as="span" className="debut-member-name" fontSize="13px" fontWeight={selected ? "500" : "400"} mt={1} animation={selected && !reduceMotion ? "debut-member-shimmer 4.8s ease-in-out infinite" : "none"} sx={{ "--member-glow": color || "#c1a4ef", animationPlayState: inView && pageVisible ? "running" : "paused" }}>{label}</Text>
+									<Text as="span" className="debut-member-name" fontSize="13px" fontWeight={selected ? "500" : "400"} mt={1}
+										textShadow={selected ? `0 0 8px ${color || "#c1a4ef"}99, 0 0 16px ${color || "#c1a4ef"}55` : "none"}
+										animation={selected && !reduceMotion ? "debut-member-shimmer 2.4s linear infinite" : "none"}
+										sx={{
+											...(selected && !reduceMotion ? { backgroundImage: `linear-gradient(110deg, ${color || "#f3edf9"} 35%, #fff 50%, ${color || "#f3edf9"} 65%)`, backgroundSize: "240% 100%", backgroundClip: "text", color: "transparent" } : {}),
+											animationPlayState: inView && pageVisible ? "running" : "paused",
+										}}>{label}</Text>
 								</Button>
 							</Box>;
 						})}

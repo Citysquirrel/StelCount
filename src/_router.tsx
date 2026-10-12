@@ -79,8 +79,6 @@ export const routeObj: RouteObject[] = [
 			},
 		],
 	},
-	{ path: "/v2", element: <PageRedirect to="/home" /> },
-	{ path: "/v2/counter", element: <PageRedirect to="/counter" /> },
 	{ path: "/multiview", element: <MultiView />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/login", element: <Login />, errorElement: <ServerErrorPage isErrorComponent /> },
 	{ path: "/oauth", element: <OAuth />, errorElement: <ServerErrorPage isErrorComponent /> },
