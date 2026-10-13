@@ -175,6 +175,7 @@ export interface StellarGroupV2 {
 
 export interface StellarV2Info {
 	n: string;
+	ns: string;
 	gps: StellarGroupV2[];
 	uid: string;
 	cc: string;
