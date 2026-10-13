@@ -78,7 +78,6 @@ import { createComponentMap } from "../lib/functions/createComponent";
 import { getBrowserInfo, lightenColor } from "../lib/functions/etc";
 import { fetchServer } from "../lib/functions/fetch";
 import { naver } from "../lib/functions/platforms";
-import { useAuth } from "../lib/hooks/useAuth";
 import { useConfirmOnExit } from "../lib/hooks/useConfirmOnExit";
 import { useExtensionCheck } from "../lib/hooks/useExtensionCheck";
 import { useMultiView } from "../lib/hooks/useMultiView";
@@ -817,7 +816,6 @@ function SideMenu({
 	const OPENER_WIDTH = 32;
 	const listRef = useRef<HTMLDivElement>(null);
 	const searchInputRef = useRef<HTMLInputElement>(null);
-	const { isAdmin } = useAuth();
 
 	const [currentMode, setCurrentMode] = useState(0);
 	const [searchInputValue, setSearchInputValue] = useState<string>("");
@@ -1356,43 +1354,6 @@ function SideMenu({
 							p="4px 8px 8px 8px"
 							gap="2px"
 						>
-							{isAdmin ? (
-								<HStack justifyContent={"flex-end"} gap="2px">
-									<Tooltip label="리스트 저장하기">
-										<IconButton
-											boxSize={"24px"}
-											minWidth="auto"
-											padding="0"
-											fontSize={"0.825rem"}
-											variant={"ghost"}
-											icon={<CiExport />}
-											aria-label="export-list"
-											onClick={() => {}}
-											sx={{
-												color: "white",
-												_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-											}}
-										/>
-									</Tooltip>
-									<Tooltip label="리스트 불러오기">
-										<IconButton
-											boxSize={"24px"}
-											minWidth="auto"
-											padding="0"
-											fontSize={"0.825rem"}
-											variant={"ghost"}
-											icon={<CiImport />}
-											aria-label="import-list"
-											onClick={() => {}}
-											sx={{
-												color: "white",
-												_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
-											}}
-										/>
-									</Tooltip>
-								</HStack>
-							) : null}
-
 							<InputGroup gap="4px">
 								<Input
 									ref={searchInputRef}

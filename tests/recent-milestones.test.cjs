@@ -43,17 +43,17 @@ test("기존 달성 단위 필터를 유지하고 서버의 자잘한 단위는 
 	assert.equal(recentMilestone([record("101000", seconds), milestone], now), milestone);
 });
 
-test("본편과 연결 영상의 최신 기록을 각각 유지하고 오래된 전체 이력을 노출하지 않는다", () => {
+test("본편의 최신 기록만 유지하고 연결 영상과 오래된 전체 이력을 노출하지 않는다", () => {
 	const main = record("100000", seconds - 3600);
 	const detail = record("200000", seconds - 7200);
 	const data = selectHomeVideos([{ uid: "member", ym: [video("main", {
 		st: [record("50000", seconds - 10 * day), main],
 		dt: [{ t: "뮤직비디오", vi: "detail", st: [detail] }],
 	})] }], now);
-	assert.equal(data.milestones.length, 2);
+	assert.equal(data.milestones.length, 1);
 	assert.equal(data.milestones[0].milestone.record, main);
-	assert.equal(data.milestones[1].milestone.record, detail);
-	assert.equal(data.milestones[1].milestone.source, "뮤직비디오");
+	assert.equal(data.milestones[0].milestone.videoId, "main");
+	assert.equal(data.milestones[0].milestone.source, "Main");
 });
 
 test("최초공개 안내는 캐러셀 개수 제한과 무관하게 유지하고 종료·비활성 영상을 제외한다", () => {

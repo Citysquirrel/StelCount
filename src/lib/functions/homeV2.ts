@@ -52,7 +52,6 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 		}
 		const sources = [
 			{ source: "Main", videoId: video.vi, views: video.vc, records: video.st },
-			...video.dt.map((detail) => ({ source: detail.t, videoId: detail.vi, views: detail.vc, records: detail.st })),
 		];
 		let heroMilestone: HomeVideo["milestone"];
 		for (const source of sources) {

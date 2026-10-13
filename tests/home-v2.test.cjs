@@ -84,20 +84,49 @@ test("갱신 시각이 아닌 실제 달성 시각으로 기간과 순서를 판
 	assert.deepEqual(ids(result.milestones), ["valid"]);
 });
 
-test("본편과 연결 영상의 기록·조회수·출처를 분리한다", () => {
+test("연결 영상의 기록이 더 최신이어도 본편의 기록·조회수·출처만 표시한다", () => {
 	const result = select([
 		video("main", {
-			vc: "150001",
-			st: [{ u: "150000", at: seconds - 100 }],
+			vc: "200001",
+			st: [{ u: "200000", at: seconds - 100 }],
 			dt: [{ t: "music", vi: "music-id", vc: "100001", st: [{ u: "100000", at: seconds - 10 }] }],
 		}),
 	]);
-	assert.equal(result.milestones.length, 2);
-	assert.equal(result.milestones[0].milestone.videoId, "music-id");
-	assert.equal(result.milestones[0].milestone.views, "100001");
-	assert.equal(result.milestones[1].milestone.source, "Main");
+	assert.equal(result.milestones.length, 1);
+	assert.equal(result.milestones[0].milestone.videoId, "main");
+	assert.equal(result.milestones[0].milestone.views, "200001");
+	assert.equal(result.milestones[0].milestone.source, "Main");
+	assert.equal(result.milestones[0].milestone.record.u, "200000");
 	assert.equal(result.hero.length, 1);
-	assert.equal(result.hero[0].milestone.source, "music");
+	assert.equal(result.hero[0].milestone.videoId, "main");
+	assert.equal(result.hero[0].milestone.source, "Main");
+});
+
+test("연결 영상만 달성한 경우 마일스톤과 달성 히어로에 표시하지 않는다", () => {
+	const result = select([
+		video("main", {
+			pa: seconds - 100 * day,
+			dt: [{ t: "music", vi: "music-id", st: [{ u: "100000", at: seconds - 10 }] }],
+		}),
+	]);
+	assert.equal(result.milestones.length, 0);
+	assert.equal(result.hero.length, 0);
+});
+
+test("연결 영상만 달성한 새 영상은 달성 배지 없이 유지한다", () => {
+	const result = select([
+		video("release", {
+			pa: seconds - day,
+			dt: [{ t: "music", vi: "music-id", st: [{ u: "100000", at: seconds - 10 }] }],
+		}),
+	]);
+	assert.equal(result.milestones.length, 0);
+	assert.deepEqual(ids(result.recent), ["release"]);
+	assert.deepEqual(ids(result.hero), ["release"]);
+	for (const item of [result.recent[0], result.hero[0]]) {
+		assert.equal(item.milestone, undefined);
+		assert.deepEqual(Array.from(item.labels), ["새 영상"]);
+	}
 });
 
 test("60일·5일 경계는 포함하고 미래 기록과 비활성 영상은 제외한다", () => {
