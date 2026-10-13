@@ -9,6 +9,22 @@ body,
 	min-height: 100dvh;
 }
 
+body {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+input,
+textarea,
+[contenteditable=""],
+[contenteditable="true"],
+[contenteditable="plaintext-only"],
+pre,
+code {
+	-webkit-user-select: text;
+	user-select: text;
+}
+
 html:has([data-observatory]),
 body:has([data-observatory]),
 #root:has([data-observatory]) {

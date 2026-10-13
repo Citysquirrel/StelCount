@@ -19,6 +19,20 @@ const breakpoints = {
 	"2xl": "1440px",
 };
 
-const theme = extendTheme({ config, fonts, breakpoints });
+const theme = extendTheme({
+	config,
+	fonts,
+	breakpoints,
+	components: {
+		Avatar: {
+			baseStyle: {
+				container: {
+					// 실제 이미지가 표시될 때만 fallback 배경을 제거한다.
+					"&:has(> .chakra-avatar__img)": { bg: "transparent" },
+				},
+			},
+		},
+	},
+});
 
 export default theme;

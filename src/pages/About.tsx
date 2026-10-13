@@ -5,7 +5,7 @@ import useBackgroundColor from "../lib/hooks/useBackgroundColor";
 export function About() {
 	useBackgroundColor("blue.50");
 	return (
-		<Stack padding="12px" minHeight="100%">
+		<Stack padding="12px" minHeight="100%" userSelect="text">
 			<Spacing size={32} />
 			<Section heading="ABOUT" fontSize="large" fontWeight={"500"}>
 				<Text>우리들의 별들을 위해 조회수 달성을 축하해주세요!</Text>
