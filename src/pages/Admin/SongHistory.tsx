@@ -38,6 +38,7 @@ import {
 	NumberInput,
 	NumberInputField,
 	NumberInputStepper,
+	Select,
 	Spacer,
 	Stack,
 	Switch,
@@ -85,7 +86,7 @@ export function SongHistoryComponent() {
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filterSungAt, setFilterSungAt] = useState<string[]>([]);
-	const [sort, setSort] = useState();
+	const [sort, setSort] = useState<string>("");
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -160,8 +161,27 @@ export function SongHistoryComponent() {
 					normalizeKeyword(songbookData?.a || "").includes(normalizedQuery);
 				return matchSearch;
 			})
-			.sort((a, b) => (b.id || 0) - (a.id || 0));
-	}, [historyData, searchQuery, songbookMap]);
+			.sort((a, b) => {
+				switch (sort) {
+					case "sungAt_desc": {
+						const dateCompare = (b.sungAt || "").localeCompare(a.sungAt || "");
+						if (dateCompare !== 0) return dateCompare;
+						return (b.start || 0) - (a.start || 0);
+					}
+					case "sungAt_asc": {
+						const dateCompare = (a.sungAt || "").localeCompare(b.sungAt || "");
+						if (dateCompare !== 0) return dateCompare;
+						return (a.start || 0) - (b.start || 0);
+					}
+					case "id_desc":
+						return (b.id || 0) - (a.id || 0);
+					case "id_asc":
+						return (a.id || 0) - (b.id || 0);
+					default:
+						return 0;
+				}
+			});
+	}, [historyData, searchQuery, songbookMap, sort]);
 
 	// sungAt과 youtubeId가 일치하지 않는 개체가 있는 경우를 위한 set
 	const invalidSungAtSet = useMemo(() => {
@@ -576,6 +596,12 @@ export function SongHistoryComponent() {
 					>
 						<NumberInputField />
 					</NumberInput>
+					<Select placeholder="정렬" size="sm" value={sort} onChange={(e) => setSort(e.target.value)}>
+						<option value="sungAt_desc">날짜 내림차순</option>
+						<option value="sungAt_asc">날짜 오름차순</option>
+						<option value="id_desc">ID 내림차순</option>
+						<option value="id_asc">ID 오름차순</option>
+					</Select>
 				</Flex>
 				<Flex flex={1} justify="flex-end" gap={2}>
 					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewHistory}>
