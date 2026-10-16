@@ -15,7 +15,7 @@ import {
 	Text,
 	useDisclosure,
 } from "@chakra-ui/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import {
 	MdArrowDownward,
@@ -44,6 +44,7 @@ import { USER_SETTING_STORAGE } from "../../lib/constant";
 import { elapsedTimeText, parseV2Time } from "../../lib/functions/date";
 import { avatarFallbackColor, numberToLocaleString } from "../../lib/functions/etc";
 import { HOME_LIMITS, homeCount, homeDate, recentMilestone } from "../../lib/functions/homeV2";
+import { stellarSymbol } from "../../lib/functions/stellarSymbol";
 import {
 	counterCategoryTagIds,
 	counterChannels,
@@ -339,6 +340,10 @@ export default function Counter() {
 										{availableTags.map((tag) => {
 											const key = counterTagKey(tag);
 											const active = tags.includes(key);
+											const colorScheme = tag.cc?.trim() || "gray";
+											const tint = colorScheme === "gray"
+												? "var(--chakra-colors-gray-400)"
+												: `var(--chakra-colors-${colorScheme}-300, var(--chakra-colors-gray-400))`;
 											return (
 												<ObservatoryButton
 													key={key}
@@ -352,8 +357,18 @@ export default function Counter() {
 														setParams(next, { replace: true });
 													}}
 													leftIcon={active ? <MdCheck /> : undefined}
-													bg={active ? "#c1a4ef24" : "transparent"}
-													borderColor={active ? "#c1a4ef60" : "#c1a4ef20"}
+													colorScheme={colorScheme}
+													// 중첩 CSS 함수를 손상시키는 Chakra의 sx 변수 파서를 우회한다.
+													style={{ "--counter-tag-color": `color-mix(in srgb, ${tint} 75%, var(--chakra-colors-gray-500))` } as CSSProperties}
+													color="var(--counter-tag-color)"
+													bg={`color-mix(in srgb, var(--counter-tag-color) ${active ? 12 : 4}%, transparent)`}
+													borderColor={`color-mix(in srgb, var(--counter-tag-color) ${active ? 36 : 16}%, transparent)`}
+													_hover={{
+														bg: `color-mix(in srgb, var(--counter-tag-color) ${active ? 16 : 8}%, transparent)`,
+														borderColor: "color-mix(in srgb, var(--counter-tag-color) 40%, transparent)",
+													}}
+													_active={{ bg: "color-mix(in srgb, var(--counter-tag-color) 20%, transparent)", boxShadow: "none" }}
+													minH={{ base: "42px", md: "34px" }}
 													fontSize="11px"
 													px={3}
 													py={1}
@@ -909,8 +924,34 @@ function CounterProfile({
 }) {
 	const channels = counterChannels(member);
 	const followers = counterValue(member.cfc);
+	const symbol = stellarSymbol(member.n);
 	return (
-		<Box as="section" aria-label="선택한 멤버 정보" pt={{ base: 2, md: 3 }} pb={{ base: 8, md: 10 }}>
+		<Box
+			as="section"
+			aria-label="선택한 멤버 정보"
+			position="relative"
+			isolation="isolate"
+			pt={{ base: 2, md: 3 }}
+			pb={{ base: 8, md: 10 }}
+		>
+			{symbol && (
+				<Box
+					aria-hidden="true"
+					position="absolute"
+					inset={0}
+					zIndex={-1}
+					pointerEvents="none"
+					backgroundImage={`url("${symbol}")`}
+					backgroundRepeat="no-repeat"
+					backgroundPosition="right center"
+					backgroundSize={{ base: "240px", md: "380px", xl: "440px" }}
+					opacity={{ base: 0.08, md: 0.12 }}
+					sx={{
+						maskImage: "linear-gradient(to right, transparent, #000 65%), linear-gradient(to bottom, transparent, #000 15%, #000 75%, transparent)",
+						maskComposite: "intersect",
+					}}
+				/>
+			)}
 			<Flex align="center" gap={4}>
 				<Avatar
 					src={naver.chzzk.profileImageUrl(counterProfileImage(member), 120)}

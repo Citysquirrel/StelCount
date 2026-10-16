@@ -13,6 +13,7 @@ import { Link } from "../../components/Link";
 import { ImageV2 } from "../../components/Image";
 import type { LiveStatusState } from "../../lib/Atom";
 import { HOME_LIMITS, homeCount, homeDate, selectHomeVideos, type HomeVideo } from "../../lib/functions/homeV2";
+import { stellarSymbol } from "../../lib/functions/stellarSymbol";
 import { naver, youtubeThumbnailImageProps } from "../../lib/functions/platforms";
 import type { useObservatoryData } from "../../lib/hooks/useObservatoryData";
 import type { StellarV2State } from "../../lib/types";
@@ -261,6 +262,7 @@ function HomeElapsedTime({ timestamp, suffix = "달성" }: { timestamp: number; 
 
 function HomeVideoCard({ item, showMilestone }: { item: HomeVideo; showMilestone?: boolean }) {
 	const { video, member } = item;
+	const symbol = stellarSymbol(member.n);
 	const milestone = showMilestone ? item.milestone : undefined;
 	const videoId = milestone?.videoId || video.vi;
 	const url = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
@@ -273,23 +275,32 @@ function HomeVideoCard({ item, showMilestone }: { item: HomeVideo; showMilestone
 					<Text color="#f1edf8">조회수 · {homeCount(milestone ? milestone.views : video.vc)}</Text>
 				</Flex>
 			</Link>
-			<Text color="var(--obs-muted)" isTruncated>{member.n}</Text>
-			<Link href={url} isExternal title={title} _hover={{ color: "var(--obs-accent)", textDecoration: "none" }}>
-				<Heading as="h3" fontSize="15px" fontWeight="600" lineHeight="1.5" h="3em" noOfLines={2} overflowWrap="anywhere">{title}</Heading>
-			</Link>
-			<Flex gap={1} minH="28px" align="center" wrap="wrap">
-				{milestone && <HomeBadge gold>{homeCount(milestone.record.u)} 달성</HomeBadge>}
-				{video.tg?.map((tag) => <HomeBadge key={tag.i ?? tag.n} colorScheme={tag.cc}>{tag.n}</HomeBadge>)}
-				{showMilestone && item.labels.includes("새 영상") && <HomeBadge>새 영상</HomeBadge>}
+			<Flex direction="column" flex={1} minW={0} gap={2} position="relative" isolation="isolate">
+				{symbol && <Box
+					aria-hidden="true" position="absolute" inset={0} zIndex={-1} pointerEvents="none"
+					backgroundImage={`url("${symbol}")`} backgroundRepeat="no-repeat"
+					backgroundPosition="right -16px bottom -12px" backgroundSize={{ base: "130px", md: "150px" }}
+					opacity={0.1} borderRadius="10px"
+					sx={{ maskImage: "linear-gradient(125deg, transparent 15%, #000 85%)" }}
+				/>}
+				<Text color="var(--obs-muted)" isTruncated>{member.n}</Text>
+				<Link href={url} isExternal title={title} _hover={{ color: "var(--obs-accent)", textDecoration: "none" }}>
+					<Heading as="h3" fontSize="15px" fontWeight="600" lineHeight="1.5" h="3em" noOfLines={2} overflowWrap="anywhere">{title}</Heading>
+				</Link>
+				<Flex gap={1} minH="28px" align="center" wrap="wrap">
+					{milestone && <HomeBadge gold>{homeCount(milestone.record.u)} 달성</HomeBadge>}
+					{video.tg?.map((tag) => <HomeBadge key={tag.i ?? tag.n} colorScheme={tag.cc}>{tag.n}</HomeBadge>)}
+					{showMilestone && item.labels.includes("새 영상") && <HomeBadge>새 영상</HomeBadge>}
+				</Flex>
+				<Box color="var(--obs-muted)" minH={milestone ? "20px" : "40px"} mt="auto">
+					{milestone ? <HomeElapsedTime timestamp={milestone.record.at} /> : (
+						<Stack spacing={0}>
+							<Text>{homeDate(video.pa)} 게시</Text>
+							{!!video.pa && <HomeElapsedTime timestamp={video.pa} suffix="" />}
+						</Stack>
+					)}
+				</Box>
 			</Flex>
-			<Box color="var(--obs-muted)" minH={milestone ? "20px" : "40px"} mt="auto">
-				{milestone ? <HomeElapsedTime timestamp={milestone.record.at} /> : (
-					<Stack spacing={0}>
-						<Text>{homeDate(video.pa)} 게시</Text>
-						{!!video.pa && <HomeElapsedTime timestamp={video.pa} suffix="" />}
-					</Stack>
-				)}
-			</Box>
 		</Flex>
 	);
 }

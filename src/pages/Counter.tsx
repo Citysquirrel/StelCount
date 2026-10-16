@@ -59,6 +59,7 @@ import {
 } from "../lib/functions/etc";
 import { generateStandardThumbnail, naver, youtube, youtube as youtubeAPI } from "../lib/functions/platforms";
 import useBackgroundColor from "../lib/hooks/useBackgroundColor";
+import { stellarSymbol } from "../lib/functions/stellarSymbol";
 import { useResponsive } from "../lib/hooks/useResponsive";
 import {
 	StatisticsV2,
@@ -68,21 +69,6 @@ import {
 	VideoDetailV2,
 	YoutubeMusicDataV2,
 } from "../lib/types";
-
-const stellarSymbols = {
-	스텔라이브: "/images/symbol/symbol_stellive.svg",
-	"아이리 칸나": "/images/symbol/symbol_kanna.png",
-	"아야츠노 유니": "/images/symbol/symbol_yuni.png",
-	"아라하시 타비": "/images/symbol/symbol_tabi.png",
-	"네네코 마시로": "/images/symbol/symbol_mashiro.png",
-	"시라유키 히나": "/images/symbol/symbol_hina.png",
-	"아카네 리제": "/images/symbol/symbol_lize.png",
-	"텐코 시부키": "/images/symbol/symbol_shibuki.svg",
-	"하나코 나나": "/images/symbol/symbol_nana.svg",
-	"아오쿠모 린": "/images/symbol/symbol_rin.svg",
-	"유즈하 리코": "/images/symbol/symbol_riko.svg",
-	"사키하네 후야": "/images/symbol/symbol_huya.png",
-};
 
 const customTagColorScheme = {
 	Cover: "teal",
@@ -114,6 +100,7 @@ export function Counter() {
 	const [isLegacyView, setIsLegacyView] = useState(true);
 
 	const currentStellar: StellarV2State | undefined = data.find((s) => s.uid === currentUuid);
+	const currentSymbol = stellarSymbol(currentStellar?.n || "");
 	const currentYoutubeData = modYoutubeData(
 		currentStellar?.yi || "",
 		currentStellar?.ysc || "",
@@ -264,7 +251,7 @@ export function Counter() {
 		<Stack
 			direction={isMobile() ? "column-reverse" : "row"}
 			transition=".3s background-color"
-			backgroundImage={`url(${stellarSymbols[currentStellar?.n || ""]})`}
+			backgroundImage={currentSymbol ? `url("${currentSymbol}")` : undefined}
 			backgroundRepeat={"no-repeat"}
 			backgroundPosition={"bottom 64px right 24px"}
 			backgroundSize={"128px"}
@@ -317,7 +304,7 @@ export function Counter() {
 													leftIcon={
 														<Image
 															boxSize="24px"
-															src={stellar.n === "스텔라이브" ? stellarSymbols.스텔라이브 : stellar.pi}
+														src={stellar.n === "스텔라이브" ? stellarSymbol(stellar.n) : stellar.pi}
 															borderRadius={"full"}
 														/>
 													}
@@ -378,7 +365,7 @@ export function Counter() {
 							alignItems={"center"}
 							spacing={"4"}
 							flexWrap={"wrap"}
-							backgroundImage={`url(${stellarSymbols[currentStellar?.n || ""]})`}
+							backgroundImage={currentSymbol ? `url("${currentSymbol}")` : undefined}
 							backgroundRepeat={"no-repeat"}
 							backgroundPosition={"top 50% right 12px"}
 							backgroundSize={
