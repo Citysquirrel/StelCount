@@ -13,7 +13,7 @@ import { Link } from "../../components/Link";
 import { ImageV2 } from "../../components/Image";
 import type { LiveStatusState } from "../../lib/Atom";
 import { HOME_LIMITS, homeCount, homeDate, selectHomeVideos, type HomeVideo } from "../../lib/functions/homeV2";
-import { stellarSymbol } from "../../lib/functions/stellarSymbol";
+import { stellarSymbol, stellarSymbolOpacity } from "../../lib/functions/stellarSymbol";
 import { naver, youtubeThumbnailImageProps } from "../../lib/functions/platforms";
 import type { useObservatoryData } from "../../lib/hooks/useObservatoryData";
 import type { StellarV2State } from "../../lib/types";
@@ -280,7 +280,7 @@ function HomeVideoCard({ item, showMilestone }: { item: HomeVideo; showMilestone
 					aria-hidden="true" position="absolute" inset={0} zIndex={-1} pointerEvents="none"
 					backgroundImage={`url("${symbol}")`} backgroundRepeat="no-repeat"
 					backgroundPosition="right -16px bottom -12px" backgroundSize={{ base: "130px", md: "150px" }}
-					opacity={0.1} borderRadius="10px"
+					opacity={stellarSymbolOpacity(member.n, 0.1)} borderRadius="10px"
 					sx={{ maskImage: "linear-gradient(125deg, transparent 15%, #000 85%)" }}
 				/>}
 				<Text color="var(--obs-muted)" isTruncated>{member.n}</Text>

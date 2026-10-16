@@ -34,3 +34,8 @@ export function stellarSymbol(name: string) {
 	return symbols.get(symbolNames[name])?.url;
 }
 
+export function stellarSymbolOpacity(name: string, opacity: number) {
+	const needsContrast = symbolNames[name] === "lize" || symbolNames[name] === "mashiro";
+	return Math.min(1, opacity * (needsContrast ? 2.5 : 1));
+}
+

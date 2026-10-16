@@ -44,7 +44,7 @@ import { USER_SETTING_STORAGE } from "../../lib/constant";
 import { elapsedTimeText, parseV2Time } from "../../lib/functions/date";
 import { avatarFallbackColor, numberToLocaleString } from "../../lib/functions/etc";
 import { HOME_LIMITS, homeCount, homeDate, recentMilestone } from "../../lib/functions/homeV2";
-import { stellarSymbol } from "../../lib/functions/stellarSymbol";
+import { stellarSymbol, stellarSymbolOpacity } from "../../lib/functions/stellarSymbol";
 import {
 	counterCategoryTagIds,
 	counterChannels,
@@ -945,7 +945,7 @@ function CounterProfile({
 					backgroundRepeat="no-repeat"
 					backgroundPosition="right center"
 					backgroundSize={{ base: "240px", md: "380px", xl: "440px" }}
-					opacity={{ base: 0.08, md: 0.12 }}
+					opacity={{ base: stellarSymbolOpacity(member.n, 0.08), md: stellarSymbolOpacity(member.n, 0.12) }}
 					sx={{
 						maskImage: "linear-gradient(to right, transparent, #000 65%), linear-gradient(to bottom, transparent, #000 15%, #000 75%, transparent)",
 						maskComposite: "intersect",
