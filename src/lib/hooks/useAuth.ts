@@ -1,9 +1,17 @@
 import { useRecoilState } from "recoil";
 import { isAdminState, isLoginState } from "../Atom";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { fetchServer } from "../functions/fetch";
 
+export const AuthContext = createContext<ReturnType<typeof useAuthController> | null>(null);
+
 export function useAuth() {
+	const auth = useContext(AuthContext);
+	if (!auth) throw new Error("useAuth must be used within AuthProvider");
+	return auth;
+}
+
+export function useAuthController() {
 	const [isLogin, setIsLogin] = useRecoilState(isLoginState);
 	const [isAdmin, setIsAdmin] = useRecoilState(isAdminState);
 	const [isLoading, setIsLoading] = useState(true);

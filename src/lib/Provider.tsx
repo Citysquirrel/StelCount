@@ -1,9 +1,10 @@
 import { ChakraProvider } from "@chakra-ui/react";
 import { RecoilRoot } from "recoil";
 import theme from "./theme";
-import { Suspense } from "react";
+import { PropsWithChildren, Suspense } from "react";
 import { Loading } from "../components/Loading";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthContext, useAuthController } from "./hooks/useAuth";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -15,6 +16,11 @@ const queryClient = new QueryClient({
 	},
 });
 
+function AuthProvider({ children }: PropsWithChildren) {
+	const auth = useAuthController();
+	return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+}
+
 export function MainProvider({ children }) {
 	return (
 		<QueryClientProvider client={queryClient}>
@@ -23,7 +29,9 @@ export function MainProvider({ children }) {
 				toastOptions={{ defaultOptions: { position: "bottom", duration: 3000, isClosable: true } }}
 			>
 				<RecoilRoot>
-					<Suspense fallback={<Loading options={{ mode: "fullscreen" }} />}>{children}</Suspense>
+					<AuthProvider>
+						<Suspense fallback={<Loading options={{ mode: "fullscreen" }} />}>{children}</Suspense>
+					</AuthProvider>
 				</RecoilRoot>
 			</ChakraProvider>
 		</QueryClientProvider>
