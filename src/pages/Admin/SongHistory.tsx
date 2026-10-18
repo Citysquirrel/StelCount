@@ -75,9 +75,7 @@ interface SongHistory extends SongHistoryType {
 }
 
 //? id, sungAt, youtubeVideoId, start, end, memo, hamkubby_id, historyId, priority, isActive
-//TODO: historyId, hamkubby_id는 필수값. 대부분의 값에 대해 필터기능
-//TODO: 기본적으로 sungAt 순서에 따라 최신순 정렬, 같은 sungAt 끼리 묶어 리스트업
-//TODO: id 정렬 추가
+
 export function SongHistoryComponent() {
 	const [historyData, setHistoryData] = useState<SongHistory[]>([]);
 	const TABLE_HEIGHT_SONG_HISTORY = "table-height_song-history";
@@ -85,8 +83,7 @@ export function SongHistoryComponent() {
 
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
-	const [filterSungAt, setFilterSungAt] = useState<string[]>([]);
-	const [sort, setSort] = useState<string>("");
+	const [sort, setSort] = useState<string>("sungAt_desc");
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
