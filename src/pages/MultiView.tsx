@@ -658,18 +658,21 @@ export function MultiView() {
 						)}
 					</HStack>
 					{isInnerChatOpen ? (
-						<Box position="relative" userSelect={"none"} overflow="hidden">
+						<Box
+							display="flex"
+							flexDirection="column"
+							width="350px"
+							height="100dvh"
+							flexShrink={0}
+							userSelect={"none"}
+							overflow="hidden"
+						>
 							{/* 채팅 컨트롤러 */}
 							<HStack
 								flexDir={"row-reverse"}
-								position="absolute"
-								top={"6px"}
-								left={"4px"}
-								// width="280px"
-								justifyContent={"center"}
-								// backgroundColor={"#141517"}
-								borderRadius={".5rem"}
-								padding="4px 12px"
+								flexShrink={0}
+								backgroundColor={"#141517"}
+								padding="2px 6px"
 								zIndex={1}
 								gap="2px"
 							>
@@ -698,11 +701,6 @@ export function MultiView() {
 										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
 									}}
 								/>
-								{/* <Stack>
-								<Text color={COLOR_CHZZK} fontWeight={"bold"}>
-									{chatStream.name}
-								</Text>
-							</Stack> */}
 								{data.length > 0 ? (
 									<Menu>
 										<MenuButton
@@ -770,14 +768,18 @@ export function MultiView() {
 										_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
 									}}
 								/>
+								<Text ml={2} flex={1} minWidth={0} color={COLOR_CHZZK} fontSize="sm" fontWeight="bold" isTruncated>
+									{chatStream.name}
+								</Text>
 							</HStack>
 							{/* 채팅 IFRAME 시작 */}
 							<Box
 								as="iframe"
 								ref={chatRef}
 								src={`${naver.chzzk.liveChatUrl(chatStream.streamId)}`}
-								width="350px"
-								height="100dvh"
+								width="100%"
+								flex={1}
+								minHeight={0}
 								scrolling="no"
 								frameBorder={"0"}
 							/>
