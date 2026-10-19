@@ -35,7 +35,7 @@ export function stellarSymbol(name: string) {
 }
 
 export function stellarSymbolOpacity(name: string, opacity: number) {
-	const needsContrast = symbolNames[name] === "lize" || symbolNames[name] === "mashiro";
+	const needsContrast = symbolNames[name] === "lize" || symbolNames[name] === "mashiro" || symbolNames[name] === "toa";
 	return Math.min(1, opacity * (needsContrast ? 2.5 : 1));
 }
 
