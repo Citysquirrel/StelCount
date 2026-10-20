@@ -22,7 +22,19 @@ import { Link } from "../Link";
 import { CAFE_WRITE_URL } from "@/lib/constant";
 import { useObservatoryScroll } from "../../lib/hooks/useObservatoryScroll";
 import { NebulaGlow } from "./space/NebulaGlow";
-import { MdArrowUpward, MdBarChart, MdChevronLeft, MdChevronRight, MdClose, MdEdit, MdGridView, MdHome, MdMenu, MdOpenInNew, MdSettings } from "react-icons/md";
+import {
+	MdArrowUpward,
+	MdBarChart,
+	MdChevronLeft,
+	MdChevronRight,
+	MdClose,
+	MdEdit,
+	MdGridView,
+	MdHome,
+	MdMenu,
+	MdOpenInNew,
+	MdSettings,
+} from "react-icons/md";
 
 export function ObservatoryShell({ children }: { children: ReactNode }) {
 	return (
@@ -92,7 +104,11 @@ export function ObservatoryButton({ href, isExternal, primary, ...props }: Obser
 			backdropFilter="blur(12px)"
 			boxShadow={primary ? "0 4px 18px #9c70ce26, inset 0 1px 0 #ffffff40" : "inset 0 1px 0 #ffffff08"}
 			transition="background .2s, border-color .2s, box-shadow .2s"
-			_hover={{ bg: primary ? "linear-gradient(135deg, #decbf8, #c09be9)" : "#c1a4ef1f", borderColor: "#c1a4ef70", textDecoration: "none" }}
+			_hover={{
+				bg: primary ? "linear-gradient(135deg, #decbf8, #c09be9)" : "#c1a4ef1f",
+				borderColor: "#c1a4ef70",
+				textDecoration: "none",
+			}}
 			_active={{ bg: primary ? "#b796de" : "#c1a4ef30", boxShadow: "none" }}
 			{...props}
 		/>
@@ -104,15 +120,36 @@ export function ObservatoryBackToTop() {
 	const { visible, footerOffset } = useObservatoryScroll();
 	if (!visible) return null;
 	return (
-		<ObservatoryButton type="button" aria-label="맨 위로" title="맨 위로" position="fixed" zIndex={95}
-			right={{ base: "calc(16px + env(safe-area-inset-right, 0px))", md: "calc(24px + env(safe-area-inset-right, 0px))" }}
-			bottom={{ base: `max(${footerOffset}px, calc(${pathname.replace(/\/$/, "") === "/counter" ? 97 : 24}px + env(safe-area-inset-bottom, 0px)))`, lg: `max(${footerOffset}px, calc(24px + env(safe-area-inset-bottom, 0px)))` }}
-			boxSize="44px" minH="44px" minW="44px" p={0} bg="#292036eb" borderColor="#c1a4ef55"
-			boxShadow="0 6px 24px #09061266, inset 0 1px 0 #ffffff0d" _hover={{ bg: "#403051", borderColor: "#c1a4ef99" }}
+		<ObservatoryButton
+			type="button"
+			aria-label="맨 위로"
+			title="맨 위로"
+			position="fixed"
+			zIndex={95}
+			right={{
+				base: "calc(16px + env(safe-area-inset-right, 0px))",
+				md: "calc(24px + env(safe-area-inset-right, 0px))",
+			}}
+			bottom={{
+				base: `max(${footerOffset}px, calc(${pathname.replace(/\/$/, "") === "/counter" ? 97 : 24}px + env(safe-area-inset-bottom, 0px)))`,
+				lg: `max(${footerOffset}px, calc(24px + env(safe-area-inset-bottom, 0px)))`,
+			}}
+			boxSize="44px"
+			minH="44px"
+			minW="44px"
+			p={0}
+			bg="#292036eb"
+			borderColor="#c1a4ef55"
+			boxShadow="0 6px 24px #09061266, inset 0 1px 0 #ffffff0d"
+			_hover={{ bg: "#403051", borderColor: "#c1a4ef99" }}
 			onClick={() => {
 				document.getElementById("obs-main")?.focus({ preventScroll: true });
-				window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-			}}>
+				window.scrollTo({
+					top: 0,
+					behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+				});
+			}}
+		>
 			<MdArrowUpward size={21} aria-hidden="true" />
 		</ObservatoryButton>
 	);
@@ -197,9 +234,24 @@ export function ObservatoryHeader() {
 	}, [menu.isOpen]);
 	const links = [
 		{ label: "Home", mobileLabel: "홈", description: "새로운 영상과 함께 만든 기록", icon: MdHome, href: "/home" },
-		{ label: "Counter", mobileLabel: "카운터", description: "멤버별 노래와 조회수", icon: MdBarChart, href: "/counter" },
-		{ label: "멀티뷰 ↗", mobileLabel: "멀티뷰", description: "여러 방송을 한 화면에서", icon: MdGridView, href: "/multiview", external: true },
-		...(isAdmin ? [{ label: "관리자", mobileLabel: "관리자", description: "사이트 관리", icon: MdSettings, href: "/admin" }] : []),
+		{
+			label: "Counter",
+			mobileLabel: "카운터",
+			description: "멤버별 노래와 조회수",
+			icon: MdBarChart,
+			href: "/counter",
+		},
+		{
+			label: "멀티뷰 ↗",
+			mobileLabel: "멀티뷰",
+			description: "여러 방송을 한 화면에서",
+			icon: MdGridView,
+			href: "/multiview",
+			external: true,
+		},
+		...(isAdmin
+			? [{ label: "관리자", mobileLabel: "관리자", description: "사이트 관리", icon: MdSettings, href: "/admin" }]
+			: []),
 	];
 	return (
 		<>
@@ -288,7 +340,14 @@ export function ObservatoryHeader() {
 							축하 글쓰기 ↗
 						</ObservatoryButton>
 						<Box display={{ base: "block", md: "none" }}>
-							<Menu isOpen={menu.isOpen} onOpen={menu.onOpen} onClose={menu.onClose} placement="bottom-end" gutter={12} isLazy>
+							<Menu
+								isOpen={menu.isOpen}
+								onOpen={menu.onOpen}
+								onClose={menu.onClose}
+								placement="bottom-end"
+								gutter={12}
+								isLazy
+							>
 								<MenuButton
 									as={Button}
 									aria-label={menu.isOpen ? "메뉴 닫기" : "메뉴 열기"}
@@ -309,50 +368,87 @@ export function ObservatoryHeader() {
 									</Flex>
 								</MenuButton>
 								<Portal>
-								<MenuList bg="#1c162bee" color="#f1edf8" border="1px solid #c1a4ef33" borderRadius="20px"
-									minW={0} w="min(288px, calc(100vw - 32px))" p={2} zIndex={1100}
-									maxH="calc(100dvh - 100px)" overflowY="auto" backdropFilter="blur(28px) saturate(150%)"
-									boxShadow="0 20px 60px #08051280, inset 0 1px 0 #ffffff0a">
-									<Text px={3} pt={2} pb={3} fontSize="10px" letterSpacing=".16em" color="#ad9cc5">둘러보기</Text>
-									{links.map((link) => (
+									<MenuList
+										bg="#1c162bee"
+										color="#f1edf8"
+										border="1px solid #c1a4ef33"
+										borderRadius="20px"
+										minW={0}
+										w="min(288px, calc(100vw - 32px))"
+										p={2}
+										zIndex={1100}
+										maxH="calc(100dvh - 100px)"
+										overflowY="auto"
+										backdropFilter="blur(28px) saturate(150%)"
+										boxShadow="0 20px 60px #08051280, inset 0 1px 0 #ffffff0a"
+									>
+										<Text px={3} pt={2} pb={3} fontSize="10px" letterSpacing=".16em" color="#ad9cc5">
+											둘러보기
+										</Text>
+										{links.map((link) => (
+											<MenuItem
+												key={link.href}
+												as={Link}
+												href={link.href}
+												isExternal={link.external}
+												aria-current={pathname === link.href ? "page" : undefined}
+												bg={pathname === link.href ? "#c1a4ef18" : "transparent"}
+												gap={3}
+												px={3}
+												py={3}
+												minH="60px"
+												borderRadius="12px"
+												_hover={{ bg: "#c1a4ef24", textDecoration: "none" }}
+												_focus={{ bg: "#c1a4ef24" }}
+												_focusVisible={{ outline: "2px solid #c1a4ef", outlineOffset: "-2px" }}
+											>
+												<Flex
+													boxSize="34px"
+													flexShrink={0}
+													align="center"
+													justify="center"
+													borderRadius="10px"
+													bg="#c1a4ef12"
+													color="#d3b5f7"
+												>
+													<Box as={link.icon} boxSize="20px" aria-hidden="true" />
+												</Flex>
+												<Box flex={1} minW={0}>
+													<Text fontSize="14px" fontWeight="600">
+														{link.mobileLabel}
+													</Text>
+													<Text fontSize="11px" color="#b4a5c8" mt="2px">
+														{link.description}
+													</Text>
+												</Box>
+												{link.external ? (
+													<MdOpenInNew size={15} aria-hidden="true" />
+												) : pathname === link.href ? (
+													<Box boxSize="5px" borderRadius="full" bg="#d3b5f7" aria-hidden="true" />
+												) : null}
+											</MenuItem>
+										))}
+										<Divider my={2} borderColor="#c1a4ef20" />
 										<MenuItem
-											key={link.href}
 											as={Link}
-											href={link.href}
-											isExternal={link.external}
-											aria-current={pathname === link.href ? "page" : undefined}
-											bg={pathname === link.href ? "#c1a4ef18" : "transparent"}
-											gap={3} px={3} py={3} minH="60px" borderRadius="12px"
+											href={CAFE_WRITE_URL}
+											isExternal
+											bg="transparent"
+											minH="44px"
+											px={3}
+											gap={3}
+											borderRadius="12px"
+											fontSize="13px"
+											color="#d4c5e7"
 											_hover={{ bg: "#c1a4ef24", textDecoration: "none" }}
 											_focus={{ bg: "#c1a4ef24" }}
 											_focusVisible={{ outline: "2px solid #c1a4ef", outlineOffset: "-2px" }}
 										>
-											<Flex boxSize="34px" flexShrink={0} align="center" justify="center" borderRadius="10px" bg="#c1a4ef12" color="#d3b5f7">
-												<Box as={link.icon} boxSize="20px" aria-hidden="true" />
-											</Flex>
-											<Box flex={1} minW={0}>
-												<Text fontSize="14px" fontWeight="600">{link.mobileLabel}</Text>
-												<Text fontSize="11px" color="#b4a5c8" mt="2px">{link.description}</Text>
-											</Box>
-											{link.external ? <MdOpenInNew size={15} aria-hidden="true" /> : pathname === link.href ? <Box boxSize="5px" borderRadius="full" bg="#d3b5f7" aria-hidden="true" /> : null}
+											<MdEdit size={18} aria-hidden="true" />
+											<Text flex={1}>축하 글쓰기</Text>
+											<MdOpenInNew size={15} aria-hidden="true" />
 										</MenuItem>
-									))}
-									<Divider my={2} borderColor="#c1a4ef20" />
-									<MenuItem
-										as={Link}
-										href={CAFE_WRITE_URL}
-										isExternal
-										bg="transparent"
-										minH="44px" px={3} gap={3} borderRadius="12px" fontSize="13px" color="#d4c5e7"
-										_hover={{ bg: "#c1a4ef24", textDecoration: "none" }}
-										_focus={{ bg: "#c1a4ef24" }}
-										_focusVisible={{ outline: "2px solid #c1a4ef", outlineOffset: "-2px" }}
-									>
-										<MdEdit size={18} aria-hidden="true" />
-										<Text flex={1}>축하 글쓰기</Text>
-										<MdOpenInNew size={15} aria-hidden="true" />
-									</MenuItem>
-								</MenuList>
+									</MenuList>
 								</Portal>
 							</Menu>
 						</Box>
@@ -461,7 +557,7 @@ export function ObservatoryFooter() {
 			<Text>Made with love, for Stellive.</Text>
 			<HStack as="nav" aria-label="제작자 정보" spacing={5}>
 				<Text>도시다람쥐</Text>
-				<Link href="https://github.com/citysquirrel" isExternal>
+				<Link href="https://github.com/Citysquirrel/StelCount" isExternal>
 					GitHub ↗
 				</Link>
 				<Link href="mailto:tok1324@naver.com">문의</Link>
