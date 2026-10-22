@@ -466,25 +466,31 @@ export function SongHistoryComponent() {
 	// Mark: - custom selector handler
 	const availableOptions = useMemo(
 		() =>
-			getAllSongbookData.data?.data.filter((item) =>
-				item.tl.toLowerCase().includes(songbookSelectorValue.toLowerCase()),
+			getAllSongbookData.data?.data.filter(
+				(item) => item.ia && item.tl.toLowerCase().includes(songbookSelectorValue.toLowerCase()),
 			) || [],
 		[getAllSongbookData.data?.data, songbookSelectorValue],
 	);
 
+	useEffect(() => {
+		setHighlightedIndex(0);
+	}, [availableOptions]);
+
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSongbookSelectorValue(e.target.value);
 		setIsSelectorOpen(true);
-		setHighlightedIndex(0);
 	};
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+		// 일부 브라우저는 조합 확정 시 isComposing 대신 keyCode 229를 전달한다.
+		if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
+
 		if (!isSelectorOpen && songbookSelectorValue) setIsSelectorOpen(true);
 
 		switch (e.key) {
 			case "ArrowDown":
 				e.preventDefault();
-				setHighlightedIndex((prev) => (prev > availableOptions.length - 1 ? prev : prev + 1));
+				setHighlightedIndex((prev) => Math.max(0, Math.min(prev + 1, availableOptions.length - 1)));
 				break;
 			case "ArrowUp":
 				e.preventDefault();
@@ -492,7 +498,7 @@ export function SongHistoryComponent() {
 				break;
 			case "Enter": {
 				e.preventDefault();
-				const available = availableOptions.find((o, i) => i === highlightedIndex);
+				const available = availableOptions[highlightedIndex];
 				if (isSelectorOpen && available) {
 					setIsSelectorOpen(false);
 					setSongbookSelectorValue("");
@@ -900,7 +906,6 @@ export function SongHistoryComponent() {
 													>
 														{availableOptions.length > 0 ? (
 															availableOptions
-																.filter((sb) => sb.ia)
 																.map((sb, index) => (
 																	<ListItem
 																		key={sb.i}
