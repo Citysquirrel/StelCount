@@ -1724,7 +1724,7 @@ function StreamOrderModal({
 													{position + 1}
 												</Text>
 											)}
-											<Avatar size="xs" name={name} src={stream.channelImageUrl || undefined} />
+											<Avatar size="xs" name={name} src={`${stream.channelImageUrl}?type=f40_40_na` || undefined} />
 											<Text flex={1} minW={0} fontSize="sm" isTruncated title={name}>
 												{name}
 											</Text>
@@ -1853,7 +1853,7 @@ function MenuCard({
 					>
 						<HStack>
 							<Image
-								src={`${channelImageUrl}?type=f60_60_na` || ""}
+								src={`${channelImageUrl}?type=f40_40_na` || ""}
 								objectFit={"cover"}
 								boxSize="24px"
 								borderRadius={"full"}
