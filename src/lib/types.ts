@@ -32,6 +32,7 @@ export interface UserSettingStorage {
 	chatToLeft?: boolean;
 	listOpenerWidth?: string;
 	customStreams?: CustomStreamsForUS[];
+	multiViewStreamOrder?: string[];
 	isCardCompact?: boolean;
 	controllerPos?: string;
 	isFoxUsingFirefox?: boolean;

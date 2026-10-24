@@ -8,6 +8,7 @@ import {
 	Card,
 	CardBody,
 	CloseButton,
+	DarkMode,
 	FormControl,
 	FormLabel,
 	HStack,
@@ -43,18 +44,31 @@ import {
 } from "@chakra-ui/react";
 import Fuse from "fuse.js";
 import Inko from "inko";
-import { Dispatch, Fragment, SetStateAction, createRef, useCallback, useEffect, useRef, useState } from "react";
+import {
+	Dispatch,
+	Fragment,
+	SetStateAction,
+	createRef,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { CiExport, CiImport, CiStreamOff } from "react-icons/ci";
 import { IoHome, IoList, IoPeople, IoReload, IoSettings } from "react-icons/io5";
 import {
 	MdClear,
+	MdArrowDownward,
+	MdArrowUpward,
 	MdKeyboardDoubleArrowRight,
 	MdOpenInNew,
 	MdRefresh,
 	MdSearch,
 	MdStar,
 	MdStarOutline,
+	MdSwapVert,
 } from "react-icons/md";
 import { TbForbid, TbResize } from "react-icons/tb";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -63,6 +77,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { v4 } from "uuid";
 import { Image, ImageV2 } from "../components/Image";
 import { LoadingCircle } from "../components/Loading";
+import { CustomModal } from "../components/Modal";
 import { Spacing } from "../components/Spacing";
 import { nowState } from "../lib/Atom";
 import {
@@ -829,7 +844,8 @@ function SideMenu({
 	});
 	const [searchResult, setSearchResult] = useState<SearchData[]>([]);
 	const [isCardCompact, setIsCardCompact] = useState<boolean>(false);
-	const [filteredData, setFilteredData] = useState<FilteredData[]>([]);
+	const { isOpen: isOrderOpen, onOpen: handleOpenOrder, onClose: handleCloseOrder } = useDisclosure();
+	const streamOrder = userSetting.multiViewStreamOrder || [];
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const configDict: ConfigDict<any>[] = [
@@ -869,55 +885,11 @@ function SideMenu({
 		});
 	};
 
-	// #region 검색 핸들러
-	const handleChangeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value;
-		setSearchInputValue(value);
-
-		const normalizedSearchQuery = normalizeKeyword(value);
-
-		const temp = normalizedSearchQuery
-			? new Fuse(
-					customStreams.map((stream) => {
-						const normalizedTitle = normalizeKeyword(stream.liveTitle || "");
-						const normalizedName = normalizeKeyword(stream.channelName || "");
-						const normalizedCategory = normalizeKeyword(stream.liveCategoryValue || "");
-						return {
-							...stream,
-							searchTitle: normalizedTitle,
-							searchName: normalizedName,
-							searchCategory: normalizedCategory,
-							searchTitleCho: getChosung(normalizedTitle),
-							searchNameCho: getChosung(normalizedName),
-							searchCategoryCho: getChosung(normalizedCategory),
-							searchTitleEng: inko.ko2en(normalizedTitle),
-							searchNameEng: inko.ko2en(normalizedName),
-							searchCategoryEng: inko.ko2en(normalizedCategory),
-						};
-					}),
-					{
-						keys: [
-							"searchTitle",
-							{ name: "searchName", weight: 2.0 },
-							"searchCategory",
-							"searchTitleCho",
-							{ name: "searchNameCho", weight: 2.0 },
-							"searchCategoryCho",
-							"searchTitleEng",
-							{ name: "searchNameEng", weight: 2.0 },
-							"searchCategoryEng",
-						],
-						threshold: 0.4,
-						ignoreLocation: true,
-					},
-				)
-					.search(normalizedSearchQuery)
-					.map((s) => s.item)
-			: customStreams;
-
-		setFilteredData(temp);
-	};
-	// #endregion
+	const normalizedSearchQuery = normalizeKeyword(searchInputValue);
+	const filteredData = useMemo(
+		() => filterMultiViewStreams(customStreams, normalizedSearchQuery),
+		[customStreams, normalizedSearchQuery],
+	);
 
 	const handleOpenRedefine = () => {
 		listRef.current?.scrollTo({ top: 0 });
@@ -949,9 +921,9 @@ function SideMenu({
 
 	const handleCloseMenu = () => {
 		handleClose();
+		handleCloseOrder();
 		setCurrentMode(0);
 		setSearchInputValue("");
-		setFilteredData([]);
 
 		setSelectedStreamer({ name: "", imageUrl: "", streamId: "", platform: "" });
 		setSearchResult([]);
@@ -1083,14 +1055,12 @@ function SideMenu({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const getCurrentStreams = (currentMode: number): any[] => {
+	const getCurrentStreams = (currentMode: number, includeAll = false): FilteredData[] => {
 		switch (currentMode) {
 			case 0:
 				return data.filter((s) => s.graduation == null || new Date(s.graduation) >= new Date());
 			case 1:
-				if (filteredData.length > 0) return filteredData;
-				else return customStreams;
+				return includeAll ? customStreams : filteredData;
 			default:
 				return [];
 		}
@@ -1111,11 +1081,15 @@ function SideMenu({
 	useHotkeys("c", () => {
 		handleToggleSetting();
 	});
+	useHotkeys("s", () => {
+		handleOpenOrder();
+	});
 	useHotkeys("v", () => {
 		handleResize();
 	});
 	useHotkeys("Escape", () => {
-		handleCloseMenu();
+		if (isOrderOpen) handleCloseOrder();
+		else handleCloseMenu();
 	});
 
 	// useWebSocket();
@@ -1159,7 +1133,6 @@ function SideMenu({
 							handleDeleteCustomStream={handleDeleteCustomStream}
 							handleBookmark={handleBookmark}
 							isCompact={isCardCompact}
-							isFiltered={filteredData.length > 0}
 							isBookmarked={isBookmarked}
 							searchInputValue={searchInputValue}
 						/>
@@ -1169,6 +1142,16 @@ function SideMenu({
 
 	return (
 		<>
+			{isOrderOpen && (
+				<StreamOrderModal
+					isOpen={isOrderOpen}
+					onClose={handleCloseOrder}
+					initialMode={currentMode}
+					streamsByMode={[getCurrentStreams(0, true), getCurrentStreams(1, true)]}
+					order={streamOrder}
+					setUserSetting={setUserSetting}
+				/>
+			)}
 			<UserSettingModal
 				isOpen={isSettingOpen}
 				onClose={handleCloseSetting}
@@ -1306,6 +1289,24 @@ function SideMenu({
 							}}
 						/>
 					</Tooltip>
+					<Tooltip label="방송 정렬(S)">
+						<IconButton
+							boxSize="24px"
+							minWidth="auto"
+							padding="0"
+							fontSize="0.825rem"
+							variant="ghost"
+							icon={<MdSwapVert />}
+							aria-label="방송 정렬"
+							onClick={handleOpenOrder}
+							isActive={isOrderOpen}
+							sx={{
+								color: "white",
+								_hover: { backgroundColor: "rgba(255,255,255,0.1)" },
+								_active: { backgroundColor: "rgba(255,255,255,0.5)" },
+							}}
+						/>
+					</Tooltip>
 					<Tooltip label="새로고침(R)">
 						<IconButton
 							boxSize={"24px"}
@@ -1361,7 +1362,7 @@ function SideMenu({
 									ref={searchInputRef}
 									size="sm"
 									value={searchInputValue}
-									onChange={handleChangeSearchInput}
+									onChange={(e) => setSearchInputValue(e.target.value)}
 									onKeyDown={(e) => {
 										if (e.key === "Enter") onSearch();
 										if (e.key === "Escape") searchInputRef.current?.blur();
@@ -1382,7 +1383,6 @@ function SideMenu({
 										}}
 										onClick={() => {
 											setSearchInputValue("");
-											setFilteredData([]);
 										}}
 									>
 										<IconButton
@@ -1502,7 +1502,7 @@ function SideMenu({
 									size="xs"
 									isDisabled={
 										!selectedStreamer.streamId ||
-										currentStreams.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1 ||
+										customStreams.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1 ||
 										data.findIndex((s) => s.chzzkId === selectedStreamer.streamId) !== -1
 									}
 									onClick={handleAddCustomStream}
@@ -1512,13 +1512,281 @@ function SideMenu({
 							</HStack>
 						</Stack>
 					) : null}
-					{/* 여기에 이름이 '즐겨찾기'인 Divider 추가 */}
-					{renderStreams(streamsBookmarked, 2)}
-					{/* 여기에 Divider 추가 */}
-					{renderStreams(streamsOrdinary, 1)}
+					{currentMode === 1 && normalizedSearchQuery && currentStreams.length === 0 ? (
+						<Text fontSize="sm" textAlign="center" color="gray.400" mt={4}>
+							검색어와 일치하는 등록된 방송이 없습니다.
+						</Text>
+					) : null}
+					{renderStreams(sortStreamsByPriority([...streamsBookmarked, ...streamsOrdinary], streamOrder), currentMode)}
 				</Stack>
 			</Stack>
 		</>
+	);
+}
+
+function filterMultiViewStreams(
+	streams: MultiViewData[],
+	normalizedSearchQuery: string,
+	isOnlyName?: boolean,
+): FilteredData[] {
+	if (!normalizedSearchQuery) return streams;
+	const fuse = isOnlyName
+		? new Fuse(
+				streams.map((stream) => {
+					const normalizedName = normalizeKeyword(stream.channelName || "");
+					return {
+						...stream,
+						searchName: normalizedName,
+						searchNameCho: getChosung(normalizedName),
+						searchNameEng: inko.ko2en(normalizedName),
+					};
+				}),
+				{
+					keys: [
+						{ name: "searchName", weight: 2.0 },
+						{ name: "searchNameCho", weight: 2.0 },
+						{ name: "searchNameEng", weight: 2.0 },
+					],
+					threshold: 0.4,
+					ignoreLocation: true,
+				},
+			)
+		: new Fuse(
+				streams.map((stream) => {
+					const normalizedTitle = normalizeKeyword(stream.liveTitle || "");
+					const normalizedName = normalizeKeyword(stream.channelName || "");
+					const normalizedCategory = normalizeKeyword(stream.liveCategoryValue || "");
+					return {
+						...stream,
+						searchTitle: normalizedTitle,
+						searchName: normalizedName,
+						searchCategory: normalizedCategory,
+						searchTitleCho: getChosung(normalizedTitle),
+						searchNameCho: getChosung(normalizedName),
+						searchCategoryCho: getChosung(normalizedCategory),
+						searchTitleEng: inko.ko2en(normalizedTitle),
+						searchNameEng: inko.ko2en(normalizedName),
+						searchCategoryEng: inko.ko2en(normalizedCategory),
+					};
+				}),
+				{
+					keys: [
+						"searchTitle",
+						{ name: "searchName", weight: 2.0 },
+						"searchCategory",
+						"searchTitleCho",
+						{ name: "searchNameCho", weight: 2.0 },
+						"searchCategoryCho",
+						"searchTitleEng",
+						{ name: "searchNameEng", weight: 2.0 },
+						"searchCategoryEng",
+					],
+					threshold: 0.4,
+					ignoreLocation: true,
+				},
+			);
+	return fuse.search(normalizedSearchQuery).map((result) => result.item);
+}
+
+function sortStreamsByPriority<T extends MultiViewData>(streams: T[], order: string[]): T[] {
+	const ranks = new Map(order.map((id, index) => [id, index]));
+	return [...streams].sort((a, b) => (ranks.get(a.chzzkId) ?? order.length) - (ranks.get(b.chzzkId) ?? order.length));
+}
+
+function StreamOrderModal({
+	isOpen,
+	onClose,
+	initialMode,
+	streamsByMode,
+	order,
+	setUserSetting,
+}: {
+	isOpen: boolean;
+	onClose: () => void;
+	initialMode: number;
+	streamsByMode: [MultiViewData[], MultiViewData[]];
+	order: string[];
+	setUserSetting: Dispatch<SetStateAction<UserSettingStorage>>;
+}) {
+	const [mode, setMode] = useState(initialMode);
+	const [searchQuery, setSearchQuery] = useState("");
+	const normalizedSearchQuery = normalizeKeyword(searchQuery);
+	const streams = streamsByMode[mode];
+	const matchingIds = useMemo(
+		() => new Set(filterMultiViewStreams(streams, normalizedSearchQuery).map((stream) => stream.chzzkId)),
+		[streams, normalizedSearchQuery],
+	);
+	const availableStreams = streams.filter((stream) => stream.chzzkId);
+	const streamIds = new Set(availableStreams.map((stream) => stream.chzzkId));
+	const orderedStreams = sortStreamsByPriority(availableStreams, order);
+	const pinnedCount = availableStreams.filter((stream) => order.includes(stream.chzzkId)).length;
+	const filteredStreams = orderedStreams.filter((stream) => matchingIds.has(stream.chzzkId));
+	const filteredPinnedCount = filteredStreams.filter((stream) => order.includes(stream.chzzkId)).length;
+	const updateOrder = (update: (previous: string[]) => string[]) => {
+		setUserSetting((previous) => ({
+			...previous,
+			multiViewStreamOrder: update(previous.multiViewStreamOrder || []),
+		}));
+	};
+	const moveStream = (id: string, direction: -1 | 1) => {
+		updateOrder((previous) => {
+			const visibleOrder = previous.filter((streamId) => streamIds.has(streamId));
+			const targetId = visibleOrder[visibleOrder.indexOf(id) + direction];
+			if (!targetId) return previous;
+			const next = [...previous];
+			const from = next.indexOf(id);
+			const to = next.indexOf(targetId);
+			if (from < 0 || to < 0) return previous;
+			[next[from], next[to]] = [next[to], next[from]];
+			return next;
+		});
+	};
+
+	return (
+		<DarkMode>
+			<CustomModal
+				isOpen={isOpen}
+				onClose={onClose}
+				customProps={{
+					Modal: { scrollBehavior: "inside", size: "md" },
+					ModalContent: { backgroundColor: "gray.900", color: "white", mx: 3 },
+				}}
+				properties={{
+					title: mode === 0 ? "스텔라 방송 정렬" : "사용자 설정 방송 정렬",
+					body: (
+						<Stack spacing={3}>
+							<Stack position="sticky" top={0} bg="gray.900" zIndex={1} pb={2}>
+								<ButtonGroup size="sm" isAttached width="100%" aria-label="정렬할 방송 목록">
+									{["스텔라 방송", "사용자 설정 방송"].map((label, index) => (
+										<Button
+											key={label}
+											flex={1}
+											colorScheme={mode === index ? "blue" : "gray"}
+											aria-pressed={mode === index}
+											onClick={() => {
+												if (mode === index) return;
+												setMode(index);
+												setSearchQuery("");
+											}}
+										>
+											{label}
+										</Button>
+									))}
+								</ButtonGroup>
+								<HStack>
+									<Input
+										size="sm"
+										aria-label="정렬할 방송 검색"
+										placeholder="스트리머 검색"
+										value={searchQuery}
+										onChange={(event) => setSearchQuery(event.target.value)}
+										onKeyDown={(event) => {
+											event.stopPropagation();
+											event.key === "Escape" && setSearchQuery("");
+										}}
+									/>
+									{searchQuery && (
+										<IconButton
+											size="sm"
+											aria-label="정렬 검색어 지우기"
+											icon={<MdClear />}
+											onClick={() => setSearchQuery("")}
+										/>
+									)}
+								</HStack>
+							</Stack>
+
+							{filteredStreams.length === 0 && (
+								<Text color="gray.400">
+									{normalizedSearchQuery ? "검색어와 일치하는 등록된 방송이 없습니다." : "정렬할 방송이 없습니다."}
+								</Text>
+							)}
+							{filteredStreams.map((stream, index) => {
+								const id = stream.chzzkId;
+								const name = stream.channelName || stream.name;
+								const isPinned = order.includes(id);
+								const position = orderedStreams.findIndex((item) => item.chzzkId === id);
+								return (
+									<Fragment key={id}>
+										{index === 0 && isPinned && (
+											<Text fontSize="sm" fontWeight="bold">
+												상단 표시
+											</Text>
+										)}
+										{index === filteredPinnedCount && (
+											<Text fontSize="sm" fontWeight="bold">
+												기본 정렬
+											</Text>
+										)}
+										<HStack spacing={2}>
+											{isPinned && (
+												<Text minW="20px" fontSize="sm" color="blue.200">
+													{position + 1}
+												</Text>
+											)}
+											<Avatar size="xs" name={name} src={stream.channelImageUrl || undefined} />
+											<Text flex={1} minW={0} fontSize="sm" isTruncated title={name}>
+												{name}
+											</Text>
+											{isPinned ? (
+												<HStack spacing={1}>
+													<IconButton
+														size="xs"
+														aria-label={`${name} 위로`}
+														icon={<MdArrowUpward />}
+														isDisabled={position === 0}
+														onClick={() => moveStream(id, -1)}
+													/>
+													<IconButton
+														size="xs"
+														aria-label={`${name} 아래로`}
+														icon={<MdArrowDownward />}
+														isDisabled={position === pinnedCount - 1}
+														onClick={() => moveStream(id, 1)}
+													/>
+													<Button
+														size="xs"
+														aria-label={`${name} 순서 해제`}
+														onClick={() => updateOrder((previous) => previous.filter((value) => value !== id))}
+													>
+														해제
+													</Button>
+												</HStack>
+											) : (
+												<Button
+													size="xs"
+													colorScheme="blue"
+													aria-label={`${name} 상단에 추가`}
+													onClick={() =>
+														updateOrder((previous) => (previous.includes(id) ? previous : [...previous, id]))
+													}
+												>
+													상단에 추가
+												</Button>
+											)}
+										</HStack>
+									</Fragment>
+								);
+							})}
+						</Stack>
+					),
+					footer: (
+						<HStack justifyContent="space-between" width="100%">
+							<Button
+								size="sm"
+								isDisabled={pinnedCount === 0}
+								onClick={() => updateOrder((previous) => previous.filter((id) => !streamIds.has(id)))}
+							>
+								이 탭 순서 초기화
+							</Button>
+							<Button size="sm" colorScheme="blue" onClick={onClose}>
+								완료
+							</Button>
+						</HStack>
+					),
+				}}
+			/>
+		</DarkMode>
 	);
 }
 
@@ -1530,7 +1798,6 @@ function MenuCard({
 	handleDeleteCustomStream,
 	handleBookmark,
 	isCompact,
-	isFiltered,
 	isBookmarked,
 	searchInputValue,
 }: MenuCardProps) {
@@ -1572,7 +1839,7 @@ function MenuCard({
 			<CardBody display={"flex"} padding="12px" color="white" fontSize="1rem" flexDir={"column"} gap="8px">
 				{isBookmarked ? <MenuCardBookmark isBookmarked={isBookmarked} onClick={handleBookmark(uuid)} /> : null}
 				{isSelected ? <MenuCardNumber number={itemIdx + 1} /> : null}
-				{isCustom && !isFiltered ? (
+				{isCustom ? (
 					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
 				) : null}
 				<HStack>
@@ -2043,7 +2310,6 @@ interface MenuCardProps {
 	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
 	handleBookmark: (uuid: string) => () => void;
 	isCompact: boolean;
-	isFiltered: boolean;
 	isBookmarked: boolean;
 	searchInputValue: string;
 }
