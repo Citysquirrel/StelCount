@@ -167,31 +167,6 @@ export function MultiView() {
 		[],
 	);
 
-	const handleStreamsParam = (params: string | null) => {
-		if (!params) return;
-		if (data.length === 0) return;
-
-		const storage: Stream[] = [];
-		const streamIds = params.split(PARAMS_DELIMITER).filter((s) => s);
-		const mergedData = [...data, ...customStreams];
-		for (const streamId of streamIds) {
-			const idx = mergedData.findIndex((s) => s.chzzkId === streamId);
-			if (idx !== -1) {
-				const { channelName, uuid } = mergedData[idx];
-				if (storage.findIndex((stream) => stream.streamId === streamId) === -1) {
-					// 중복검사
-					storage.push({ type: "chzzk", streamId, name: channelName || "", uuid });
-				}
-			} else {
-				if (storage.findIndex((stream) => stream.streamId === streamId) === -1) {
-					// 중복검사
-					storage.push({ type: "chzzk", streamId, name: "", uuid: v4() });
-				}
-			}
-		}
-		setStreams(storage);
-	};
-
 	const handleFrameSize = useCallback(() => {
 		// 프레임이 없을 경우
 		if (len === 0) {
@@ -271,23 +246,10 @@ export function MultiView() {
 	};
 
 	const handleOpenNewWindow = (uuid: string) => () => {
-		setStreams((prev) => {
-			const arr = prev.filter((a) => {
-				if (a.uuid === uuid) {
-					window.open(naver.chzzk.liveUrl(a.streamId), "_blank");
-					return false;
-				}
-				return true;
-			});
-			const value = arr.map((c) => c.streamId).join(PARAMS_DELIMITER);
-
-			setSearchParams((prev) => {
-				const newParams = new URLSearchParams(prev);
-				newParams.set(STREAMS_PARAM_NAME, value);
-				return newParams;
-			});
-			return arr;
-		});
+		const stream = streams.find((stream) => stream.uuid === uuid);
+		if (!stream) return;
+		window.open(naver.chzzk.liveUrl(stream.streamId), "_blank");
+		handleDeleteStream(uuid)();
 	};
 
 	const handleOpenChat = (streamId: string, name: string, openInNewWindow?: boolean) => () => {
@@ -379,25 +341,34 @@ export function MultiView() {
 
 	useEffect(() => {
 		if (chatParam) {
-			// TODO: name에다가 customStream 정보도 필터링해서 넣어야함
-
-			setChatStream({
+			const channel = [...data, ...customStreams].find((stream) => stream.chzzkId === chatParam);
+			setChatStream((previous) => ({
 				streamId: chatParam,
-				name:
-					data.find((s) => s.chzzkId === chatParam)?.channelName ||
-					customStreams.find((s) => s.chzzkId === chatParam)?.name ||
-					"",
-			});
+				name: channel?.channelName || channel?.name || (previous.streamId === chatParam ? previous.name : ""),
+			}));
 			setIsInnerChatOpen(true);
-		} else setIsInnerChatOpen(false);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+		} else {
+			setChatStream({ streamId: "", name: "" });
+			setIsInnerChatOpen(false);
+		}
+	}, [chatParam, data, customStreams]);
 
 	useEffect(() => {
-		if (streamsParam) handleStreamsParam(streamsParam);
-		else setStreams([]);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [data, streamsParam]);
+		const streamIds = [...new Set((streamsParam || "").split(PARAMS_DELIMITER).filter(Boolean))];
+		const mergedData = [...data, ...customStreams];
+		setStreams((previous) =>
+			streamIds.map((streamId) => {
+				const channel = mergedData.find((stream) => stream.chzzkId === streamId);
+				const existing = previous.find((stream) => stream.streamId === streamId);
+				return {
+					type: "chzzk",
+					streamId,
+					name: channel?.channelName || channel?.name || existing?.name || "",
+					uuid: channel?.uuid || existing?.uuid || v4(),
+				};
+			}),
+		);
+	}, [data, customStreams, streamsParam]);
 
 	// #region 확장 프로그램에서 전달받은 데이터 처리
 
@@ -427,8 +398,9 @@ export function MultiView() {
 				if (dataParam === "ext")
 					setSearchParams(
 						(prevParams) => {
-							prevParams.delete("data");
-							return prevParams;
+							const newParams = new URLSearchParams(prevParams);
+							newParams.delete(EXTENSION_DATA_PARAM_NAME);
+							return newParams;
 						},
 						{ replace: true },
 					);
@@ -440,8 +412,7 @@ export function MultiView() {
 		return () => {
 			window.removeEventListener("message", handleMessage);
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [dataParam, setSearchParams, setChannelDataFromExtension, handleOpenExtensionSyncModal]);
 	// #endregion
 
 	useEffect(() => {
