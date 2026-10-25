@@ -759,8 +759,10 @@ export function MultiView() {
 								</Text>
 							</HStack>
 							{/* 채팅 IFRAME 시작 */}
+							{/* 채널 변경 시 iframe을 재생성해 별도 이동 기록이 쌓이지 않도록 한다. */}
 							<Box
 								as="iframe"
+								key={chatStream.streamId}
 								ref={chatRef}
 								src={`${naver.chzzk.liveChatUrl(chatStream.streamId)}`}
 								width="100%"
