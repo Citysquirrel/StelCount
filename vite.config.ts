@@ -23,7 +23,6 @@ export default defineConfig(({ mode }) => {
 			isProd &&
 				visualizer({
 					filename: "./analysis/stats.html", // 분석 결과 파일 경로
-					open: true, // 빌드 완료 시 브라우저에서 자동으로 열기
 					gzipSize: true, // 실제 네트워크 전송 시 압축되는 사이즈로 보여주기
 				}),
 		].filter(Boolean),

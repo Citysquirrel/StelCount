@@ -34,7 +34,6 @@ import {
 	SliderThumb,
 	SliderTrack,
 	Stack,
-	StackDivider,
 	StackProps,
 	Switch,
 	Text,
@@ -100,7 +99,8 @@ import { useResponsive } from "../lib/hooks/useResponsive";
 import { CustomStreamsForUS, LiteralUnion, MultiViewData, UserSettingStorage } from "../lib/types";
 import { ExtensionDataModal } from "./MultiView/ExtensionData";
 import { ExtensionSyncEditor } from "./MultiView/ExtensionSyncEditor";
-import { UserSettingModal } from "./MultiView/UserSetting";
+import { multiViewModalProps } from "./MultiView/modalStyles";
+import { OfflineDisplaySettings, OfflineDisplaySettingsProps, UserSettingModal } from "./MultiView/UserSetting";
 
 const inko = new Inko();
 
@@ -846,6 +846,8 @@ function SideMenu({
 	const [isCardCompact, setIsCardCompact] = useState<boolean>(false);
 	const { isOpen: isOrderOpen, onOpen: handleOpenOrder, onClose: handleCloseOrder } = useDisclosure();
 	const streamOrder = userSetting.multiViewStreamOrder || [];
+	const keepOfflinePinned = userSetting.multiViewKeepOfflinePinned ?? true;
+	const compactOffline = userSetting.multiViewCompactOffline ?? false;
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const configDict: ConfigDict<any>[] = [
@@ -1133,6 +1135,7 @@ function SideMenu({
 							handleDeleteCustomStream={handleDeleteCustomStream}
 							handleBookmark={handleBookmark}
 							isCompact={isCardCompact}
+							isOfflineCompact={compactOffline && !item.openLive}
 							isBookmarked={isBookmarked}
 							searchInputValue={searchInputValue}
 						/>
@@ -1149,6 +1152,8 @@ function SideMenu({
 					initialMode={currentMode}
 					streamsByMode={[getCurrentStreams(0, true), getCurrentStreams(1, true)]}
 					order={streamOrder}
+					keepOfflinePinned={keepOfflinePinned}
+					compactOffline={compactOffline}
 					setUserSetting={setUserSetting}
 				/>
 			)}
@@ -1156,10 +1161,23 @@ function SideMenu({
 				isOpen={isSettingOpen}
 				onClose={handleCloseSetting}
 				body={
-					<Stack spacing={2} paddingBottom="4px" divider={<StackDivider borderColor="gray.600" />}>
-						{configDict.map((config) => {
-							return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
-						})}
+					<Stack spacing={3}>
+						<Text fontSize="sm" fontWeight="bold">
+							화면 설정
+						</Text>
+						<Stack spacing={3} p={3} bg="whiteAlpha.50" borderRadius="md" sx={{ label: { fontSize: "sm" } }}>
+							{configDict.map((config) => {
+								return createConfigComponent(config, configState, setConfigState, handleConfig, setUserSetting);
+							})}
+						</Stack>
+						<Text fontSize="sm" fontWeight="bold">
+							오프라인 방송 표시
+						</Text>
+						<OfflineDisplaySettings
+							keepOfflinePinned={keepOfflinePinned}
+							compactOffline={compactOffline}
+							setUserSetting={setUserSetting}
+						/>
 					</Stack>
 				}
 			/>
@@ -1205,7 +1223,7 @@ function SideMenu({
 					backgroundColor={"rgba(7,7,7,0.9)"}
 					zIndex={1}
 					padding="4px 12px"
-					gap="4px"
+					gap="2px"
 				>
 					<Stack flexGrow={1}>
 						{isLoading ? (
@@ -1517,7 +1535,10 @@ function SideMenu({
 							검색어와 일치하는 등록된 방송이 없습니다.
 						</Text>
 					) : null}
-					{renderStreams(sortStreamsByPriority([...streamsBookmarked, ...streamsOrdinary], streamOrder), currentMode)}
+					{renderStreams(
+						sortStreamsByPriority([...streamsBookmarked, ...streamsOrdinary], streamOrder, keepOfflinePinned),
+						currentMode,
+					)}
 				</Stack>
 			</Stack>
 		</>
@@ -1588,9 +1609,12 @@ function filterMultiViewStreams(
 	return fuse.search(normalizedSearchQuery).map((result) => result.item);
 }
 
-function sortStreamsByPriority<T extends MultiViewData>(streams: T[], order: string[]): T[] {
+function sortStreamsByPriority<T extends MultiViewData>(streams: T[], order: string[], keepOfflinePinned = true): T[] {
 	const ranks = new Map(order.map((id, index) => [id, index]));
-	return [...streams].sort((a, b) => (ranks.get(a.chzzkId) ?? order.length) - (ranks.get(b.chzzkId) ?? order.length));
+	return [...streams].sort((a, b) => {
+		const liveOrder = keepOfflinePinned ? 0 : Number(!!b.openLive) - Number(!!a.openLive);
+		return liveOrder || (ranks.get(a.chzzkId) ?? order.length) - (ranks.get(b.chzzkId) ?? order.length);
+	});
 }
 
 function StreamOrderModal({
@@ -1599,14 +1623,15 @@ function StreamOrderModal({
 	initialMode,
 	streamsByMode,
 	order,
+	keepOfflinePinned,
+	compactOffline,
 	setUserSetting,
-}: {
+}: OfflineDisplaySettingsProps & {
 	isOpen: boolean;
 	onClose: () => void;
 	initialMode: number;
 	streamsByMode: [MultiViewData[], MultiViewData[]];
 	order: string[];
-	setUserSetting: Dispatch<SetStateAction<UserSettingStorage>>;
 }) {
 	const [mode, setMode] = useState(initialMode);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -1648,14 +1673,22 @@ function StreamOrderModal({
 				isOpen={isOpen}
 				onClose={onClose}
 				customProps={{
-					Modal: { scrollBehavior: "inside", size: "md" },
-					ModalContent: { backgroundColor: "gray.900", color: "white", mx: 3 },
+					...multiViewModalProps,
+					ModalContent: { ...multiViewModalProps.ModalContent, height: "min(720px, calc(100dvh - 32px))" },
+					ModalBody: { display: "flex", flexDirection: "column", minH: 0, overflow: "hidden" },
 				}}
 				properties={{
 					title: mode === 0 ? "스텔라 방송 정렬" : "사용자 설정 방송 정렬",
 					body: (
-						<Stack spacing={3}>
-							<Stack position="sticky" top={0} bg="gray.900" zIndex={1} pb={2}>
+						<Stack spacing={3} flex={1} minH={0}>
+							<Box flexShrink={0}>
+								<OfflineDisplaySettings
+									keepOfflinePinned={keepOfflinePinned}
+									compactOffline={compactOffline}
+									setUserSetting={setUserSetting}
+								/>
+							</Box>
+							<Stack flexShrink={0}>
 								<ButtonGroup size="sm" isAttached width="100%" aria-label="정렬할 방송 목록">
 									{["스텔라 방송", "사용자 설정 방송"].map((label, index) => (
 										<Button
@@ -1696,78 +1729,92 @@ function StreamOrderModal({
 								</HStack>
 							</Stack>
 
-							{filteredStreams.length === 0 && (
-								<Text color="gray.400">
-									{normalizedSearchQuery ? "검색어와 일치하는 등록된 방송이 없습니다." : "정렬할 방송이 없습니다."}
-								</Text>
-							)}
-							{filteredStreams.map((stream, index) => {
-								const id = stream.chzzkId;
-								const name = stream.channelName || stream.name;
-								const isPinned = order.includes(id);
-								const position = orderedStreams.findIndex((item) => item.chzzkId === id);
-								return (
-									<Fragment key={id}>
-										{index === 0 && isPinned && (
-											<Text fontSize="sm" fontWeight="bold">
-												상단 표시
-											</Text>
-										)}
-										{index === filteredPinnedCount && (
-											<Text fontSize="sm" fontWeight="bold">
-												기본 정렬
-											</Text>
-										)}
-										<HStack spacing={2}>
-											{isPinned && (
-												<Text minW="20px" fontSize="sm" color="blue.200">
-													{position + 1}
+							<Stack
+								key={`${mode}:${normalizedSearchQuery}`}
+								spacing={3}
+								flex={1}
+								minH={0}
+								overflowY="auto"
+								overscrollBehavior="contain"
+								pr={2}
+								role="region"
+								aria-label="정렬할 스트리머 목록"
+								tabIndex={0}
+								sx={{ scrollbarGutter: "stable", "> *": { flexShrink: 0 } }}
+							>
+								{filteredStreams.length === 0 && (
+									<Text color="gray.400">
+										{normalizedSearchQuery ? "검색어와 일치하는 등록된 방송이 없습니다." : "정렬할 방송이 없습니다."}
+									</Text>
+								)}
+								{filteredStreams.map((stream, index) => {
+									const id = stream.chzzkId;
+									const name = stream.channelName || stream.name;
+									const isPinned = order.includes(id);
+									const position = orderedStreams.findIndex((item) => item.chzzkId === id);
+									return (
+										<Fragment key={id}>
+											{index === 0 && isPinned && (
+												<Text fontSize="sm" fontWeight="bold">
+													상단 표시
 												</Text>
 											)}
-											<Avatar size="xs" name={name} src={`${stream.channelImageUrl}?type=f40_40_na` || undefined} />
-											<Text flex={1} minW={0} fontSize="sm" isTruncated title={name}>
-												{name}
-											</Text>
-											{isPinned ? (
-												<HStack spacing={1}>
-													<IconButton
-														size="xs"
-														aria-label={`${name} 위로`}
-														icon={<MdArrowUpward />}
-														isDisabled={position === 0}
-														onClick={() => moveStream(id, -1)}
-													/>
-													<IconButton
-														size="xs"
-														aria-label={`${name} 아래로`}
-														icon={<MdArrowDownward />}
-														isDisabled={position === pinnedCount - 1}
-														onClick={() => moveStream(id, 1)}
-													/>
+											{index === filteredPinnedCount && (
+												<Text fontSize="sm" fontWeight="bold">
+													기본 정렬
+												</Text>
+											)}
+											<HStack spacing={2}>
+												{isPinned && (
+													<Text minW="20px" fontSize="sm" color="blue.200">
+														{position + 1}
+													</Text>
+												)}
+												<Avatar size="xs" name={name} src={`${stream.channelImageUrl}?type=f40_40_na` || undefined} />
+												<Text flex={1} minW={0} fontSize="sm" isTruncated title={name}>
+													{name}
+												</Text>
+												{isPinned ? (
+													<HStack spacing={1}>
+														<IconButton
+															size="xs"
+															aria-label={`${name} 위로`}
+															icon={<MdArrowUpward />}
+															isDisabled={position === 0}
+															onClick={() => moveStream(id, -1)}
+														/>
+														<IconButton
+															size="xs"
+															aria-label={`${name} 아래로`}
+															icon={<MdArrowDownward />}
+															isDisabled={position === pinnedCount - 1}
+															onClick={() => moveStream(id, 1)}
+														/>
+														<Button
+															size="xs"
+															aria-label={`${name} 순서 해제`}
+															onClick={() => updateOrder((previous) => previous.filter((value) => value !== id))}
+														>
+															해제
+														</Button>
+													</HStack>
+												) : (
 													<Button
 														size="xs"
-														aria-label={`${name} 순서 해제`}
-														onClick={() => updateOrder((previous) => previous.filter((value) => value !== id))}
+														colorScheme="blue"
+														aria-label={`${name} 상단에 추가`}
+														onClick={() =>
+															updateOrder((previous) => (previous.includes(id) ? previous : [...previous, id]))
+														}
 													>
-														해제
+														상단에 추가
 													</Button>
-												</HStack>
-											) : (
-												<Button
-													size="xs"
-													colorScheme="blue"
-													aria-label={`${name} 상단에 추가`}
-													onClick={() =>
-														updateOrder((previous) => (previous.includes(id) ? previous : [...previous, id]))
-													}
-												>
-													상단에 추가
-												</Button>
-											)}
-										</HStack>
-									</Fragment>
-								);
-							})}
+												)}
+											</HStack>
+										</Fragment>
+									);
+								})}
+							</Stack>
 						</Stack>
 					),
 					footer: (
@@ -1798,6 +1845,7 @@ function MenuCard({
 	handleDeleteCustomStream,
 	handleBookmark,
 	isCompact,
+	isOfflineCompact,
 	isBookmarked,
 	searchInputValue,
 }: MenuCardProps) {
@@ -1818,6 +1866,7 @@ function MenuCard({
 	} = item;
 
 	const isSelected = itemIdx !== -1;
+	const compactLayout = isCompact || isOfflineCompact;
 
 	return (
 		<Card
@@ -1842,55 +1891,71 @@ function MenuCard({
 				{isCustom ? (
 					<MenuCardCloseButton onClick={handleDeleteCustomStream(uuid)} aria-label="custom-stream-delete-button" />
 				) : null}
-				<HStack>
-					{isCompact ? null : <MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} adult={adult} />}
+				<HStack pr={isOfflineCompact && (isCustom || isSelected) ? "16px" : undefined}>
+					{compactLayout ? null : <MenuCardImage liveImageUrl={liveImageUrl} openLive={openLive} adult={adult} />}
 
 					<Stack
 						flex="1 0 50%"
+						minW={0}
 						height="100%"
-						direction={isCompact ? "row" : "column"}
-						justifyContent={isCompact ? "space-between" : undefined}
+						direction={compactLayout ? "row" : "column"}
+						justifyContent={compactLayout ? "space-between" : undefined}
+						alignItems={isOfflineCompact ? "center" : undefined}
 					>
-						<HStack>
+						<HStack minW={0}>
 							<Image
 								src={`${channelImageUrl}?type=f40_40_na` || ""}
 								objectFit={"cover"}
 								boxSize="24px"
+								flexShrink={0}
 								borderRadius={"full"}
 								filter={openLive ? undefined : "grayscale(1)"}
 							/>
-							<Text fontSize="0.75em" fontWeight={"bold"} color={openLive ? undefined : "gray.400"}>
+							<Text
+								fontSize="0.75em"
+								fontWeight={"bold"}
+								color={openLive ? undefined : "gray.400"}
+								isTruncated={isOfflineCompact}
+								title={isOfflineCompact ? channelName : undefined}
+							>
 								{highlight(channelName || "", searchInputValue)}
 							</Text>
 						</HStack>
 
-						<Text color={COLOR_CHZZK} fontWeight={"bold"} fontSize={"0.75em"}>
-							{openLive ? highlight(liveCategoryValue || "", searchInputValue) : "　"}
+						<Text
+							color={isOfflineCompact ? "gray.400" : COLOR_CHZZK}
+							fontWeight={"bold"}
+							fontSize={"0.75em"}
+							flexShrink={isOfflineCompact ? 0 : undefined}
+						>
+							{isOfflineCompact ? "오프라인" : openLive ? highlight(liveCategoryValue || "", searchInputValue) : "　"}
 						</Text>
-						{isCompact ? null : (
+						{compactLayout ? null : (
 							<Text color="gray.500" fontSize="0.65em" paddingRight={isCompact ? "12px" : undefined}>
 								{openLive ? modDateText(openDate) + " 시작" : modDateText(closeDate) + " 종료"}
 							</Text>
 						)}
 					</Stack>
 				</HStack>
-				<Stack>
-					<Text
-						fontSize="0.825em"
-						color={openLive ? undefined : "gray.500"}
-						sx={
-							isCompact
-								? {
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										whiteSpace: "nowrap",
-									}
-								: undefined
-						}
-					>
-						{openLive ? highlight(liveTitle || "", searchInputValue) : "방송 종료됨"}
-					</Text>
-				</Stack>
+				{!isOfflineCompact && (
+					<Stack>
+						<Text
+							fontSize="0.825em"
+							color={openLive ? undefined : "gray.500"}
+							sx={
+								isCompact
+									? {
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+										}
+									: undefined
+							}
+						>
+							{openLive ? highlight(liveTitle || "", searchInputValue) : "방송 종료됨"}
+						</Text>
+					</Stack>
+				)}
 			</CardBody>
 		</Card>
 	);
@@ -2117,9 +2182,9 @@ function createConfigComponent(
 					value={value}
 					defaultValue={defaultValue}
 				>
-					<HStack>
+					<HStack flexWrap="wrap" columnGap={3} rowGap={2}>
 						{radioList.map((s, idx) => (
-							<Radio key={idx} value={s.value}>
+							<Radio key={idx} value={s.value} size="sm">
 								{s.name}
 							</Radio>
 						))}
@@ -2310,6 +2375,7 @@ interface MenuCardProps {
 	handleDeleteCustomStream: (uuid: string) => (e: React.MouseEvent<HTMLButtonElement>) => void;
 	handleBookmark: (uuid: string) => () => void;
 	isCompact: boolean;
+	isOfflineCompact: boolean;
 	isBookmarked: boolean;
 	searchInputValue: string;
 }

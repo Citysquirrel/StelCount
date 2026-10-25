@@ -33,6 +33,8 @@ export interface UserSettingStorage {
 	listOpenerWidth?: string;
 	customStreams?: CustomStreamsForUS[];
 	multiViewStreamOrder?: string[];
+	multiViewKeepOfflinePinned?: boolean;
+	multiViewCompactOffline?: boolean;
 	isCardCompact?: boolean;
 	controllerPos?: string;
 	isFoxUsingFirefox?: boolean;
