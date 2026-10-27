@@ -1,7 +1,7 @@
 import { StatisticsV2, StellarV2State, YoutubeMusicDataV2 } from "../types";
 import { sortStatsByUnit, sortStatsByUnitForBigNews } from "./etc";
 
-export const HOME_LIMITS = { recentDays: 60, milestoneDays: 5, shelf: 20 };
+export const HOME_LIMITS = { recentDays: 60, milestoneDays: 5, shelf: 20, milestoneShelf: 40 };
 const HERO_LIMITS = { recentDays: 7, milestoneDays: 5, milestones: 5, total: 8 };
 
 export interface HomeVideo {
@@ -13,12 +13,20 @@ export interface HomeVideo {
 }
 
 export function recentMilestone(records: StatisticsV2[], now = Date.now()) {
-	return records.filter((record) => {
-		const age = now - record.at * 1000;
-		const unit = Number(record.u);
-		return record.at > 0 && age >= 0 && age <= HOME_LIMITS.milestoneDays * 86400000
-			&& Number.isSafeInteger(unit) && unit > 0 && sortStatsByUnit(record.u);
-	}).sort((a, b) => b.at - a.at || Number(b.u) - Number(a.u))[0];
+	return records
+		.filter((record) => {
+			const age = now - record.at * 1000;
+			const unit = Number(record.u);
+			return (
+				record.at > 0 &&
+				age >= 0 &&
+				age <= HOME_LIMITS.milestoneDays * 86400000 &&
+				Number.isSafeInteger(unit) &&
+				unit > 0 &&
+				sortStatsByUnit(record.u)
+			);
+		})
+		.sort((a, b) => b.at - a.at || Number(b.u) - Number(a.u))[0];
 }
 
 export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
@@ -50,13 +58,13 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 			item.eventTime = (video.pa || 0) * 1000;
 			recent.push(item);
 		}
-		const sources = [
-			{ source: "Main", videoId: video.vi, views: video.vc, records: video.st },
-		];
+		const sources = [{ source: "Main", videoId: video.vi, views: video.vc, records: video.st }];
 		let heroMilestone: HomeVideo["milestone"];
 		for (const source of sources) {
 			const records = [...source.records].sort((a, b) => b.at - a.at || Number(b.u) - Number(a.u));
-			const heroRecord = records.find((stat) => sortStatsByUnitForBigNews(stat.u) && within(stat.at, HERO_LIMITS.milestoneDays));
+			const heroRecord = records.find(
+				(stat) => sortStatsByUnitForBigNews(stat.u) && within(stat.at, HERO_LIMITS.milestoneDays),
+			);
 			if (heroRecord && (!heroMilestone || heroRecord.at > heroMilestone.record.at)) {
 				heroMilestone = { source: source.source, videoId: source.videoId, views: source.views, record: heroRecord };
 			}
@@ -76,7 +84,12 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 				eventTime: (video.pa || 0) * 1000,
 			});
 		} else if (heroMilestone) {
-			heroMilestones.push({ ...item, labels: ["조회수 달성"], milestone: heroMilestone, eventTime: heroMilestone.record.at * 1000 });
+			heroMilestones.push({
+				...item,
+				labels: ["조회수 달성"],
+				milestone: heroMilestone,
+				eventTime: heroMilestone.record.at * 1000,
+			});
 		}
 	}
 	const latest = (a: HomeVideo, b: HomeVideo) => b.eventTime - a.eventTime || a.video.vi.localeCompare(b.video.vi);
@@ -93,23 +106,21 @@ export function selectHomeVideos(stellar: StellarV2State[], now = Date.now()) {
 		premiere,
 		hero: [...premiere, ...heroRecent, ...heroMilestones.slice(0, HERO_LIMITS.milestones)].slice(0, HERO_LIMITS.total),
 		recent: recent.slice(0, HOME_LIMITS.shelf),
-		milestones: milestones.slice(0, HOME_LIMITS.shelf),
+		milestones: milestones.slice(0, HOME_LIMITS.milestoneShelf),
 	};
 }
 
 export function homeDate(timestamp?: number) {
 	if (!timestamp) return "일시 미정";
-	return (
-		new Intl.DateTimeFormat("ko-KR", {
-			timeZone: "Asia/Seoul",
-			year: "numeric",
-			month: "2-digit",
-			day: "2-digit",
-			hour: "2-digit",
-			minute: "2-digit",
-			hour12: false,
-		}).format(new Date(timestamp * 1000))
-	);
+	return new Intl.DateTimeFormat("ko-KR", {
+		timeZone: "Asia/Seoul",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+		hour12: false,
+	}).format(new Date(timestamp * 1000));
 }
 
 export function homeCount(value?: string) {

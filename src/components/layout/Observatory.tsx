@@ -460,9 +460,9 @@ export function ObservatoryHeader() {
 }
 
 export function ObservatoryExplore({ hasHero, heroLabel = "주요 영상" }: { hasHero: boolean; heroLabel?: string }) {
-	const [active, setActive] = useState(hasHero ? "featured" : "recent");
+	const [active, setActive] = useState(hasHero ? "featured" : "milestones");
 	useEffect(() => {
-		const ids = [...(hasHero ? ["featured"] : []), "recent", "milestones", "live"];
+		const ids = [...(hasHero ? ["featured"] : []), "milestones", "recent", "live"];
 		const update = () => {
 			let current = ids[0];
 			for (const id of ids) {
@@ -477,8 +477,8 @@ export function ObservatoryExplore({ hasHero, heroLabel = "주요 영상" }: { h
 	}, [hasHero]);
 	const items = [
 		...(hasHero ? [["featured", heroLabel]] : []),
-		["recent", "새 영상"],
 		["milestones", "기록"],
+		["recent", "새 영상"],
 		["live", "라이브"],
 	];
 	return (
