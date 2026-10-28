@@ -4,7 +4,7 @@ import {
 	Select, Spinner, Stack, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr,
 } from "@chakra-ui/react";
 import { FiRefreshCw } from "react-icons/fi";
-import { feedbackCategories, feedbackNotifications, FeedbackListResponse } from "@/lib/feedback";
+import { feedbackCategories, feedbackNotifications, feedbackSources, FeedbackListResponse } from "@/lib/feedback";
 import { formatUtcToKst } from "@/lib/functions/date";
 import { useServerQuery } from "@/lib/hooks/useServerApi";
 import useColor from "@/lib/hooks/useColor";
@@ -12,6 +12,7 @@ import Details from "./Feedback/Details";
 
 export function Feedback() {
 	const [category, setCategory] = useState("");
+	const [sourceSite, setSourceSite] = useState("");
 	const [processed, setProcessed] = useState("");
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(20);
@@ -19,6 +20,7 @@ export function Feedback() {
 	const { borderColor, headerBg, fieldHoverBgColor } = useColor();
 	const params = new URLSearchParams({ page: String(page), limit: String(limit) });
 	if (category) params.set("category", category);
+	if (sourceSite) params.set("sourceSite", sourceSite);
 	if (processed) params.set("isProcessed", processed);
 	const feedbacks = useServerQuery<FeedbackListResponse>({
 		version: "admin",
@@ -42,6 +44,13 @@ export function Feedback() {
 				</Button>
 			</Flex>
 			<Flex gap={3} wrap="wrap" align="end">
+				<FormControl w={{ base: "full", sm: "180px" }}>
+					<FormLabel htmlFor="feedback-source" fontSize="sm">출처 사이트</FormLabel>
+					<Select id="feedback-source" value={sourceSite} onChange={(event) => { setSourceSite(event.target.value); setPage(1); }}>
+						<option value="">전체 사이트</option>
+						{Object.entries(feedbackSources).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+					</Select>
+				</FormControl>
 				<FormControl w={{ base: "full", sm: "180px" }}>
 					<FormLabel htmlFor="feedback-category" fontSize="sm">유형</FormLabel>
 					<Select id="feedback-category" value={category} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
@@ -85,12 +94,13 @@ export function Feedback() {
 						<TableContainer borderWidth="1px" borderColor={borderColor} borderRadius="md">
 							<Table size="sm" aria-label="접수된 피드백 목록">
 								<Thead bg={headerBg}>
-									<Tr><Th>접수 시각 (KST)</Th><Th>유형</Th><Th>내용</Th><Th>처리 상태</Th><Th>Discord 알림</Th><Th>관리</Th></Tr>
+									<Tr><Th>접수 시각 (KST)</Th><Th>출처 사이트</Th><Th>유형</Th><Th>내용</Th><Th>처리 상태</Th><Th>Discord 알림</Th><Th>관리</Th></Tr>
 								</Thead>
 								<Tbody>
 									{feedbacks.data.data.map((feedback) => (
 										<Tr key={feedback.id} _hover={{ bg: fieldHoverBgColor }}>
 											<Td>{formatUtcToKst(feedback.createdAt)}</Td>
+											<Td>{feedbackSources[feedback.sourceSite] ?? feedbackSources.unknown}</Td>
 											<Td>{feedbackCategories[feedback.category] ?? feedback.category}</Td>
 											<Td minW="200px" maxW="420px" py={4}>
 												<Text noOfLines={2} whiteSpace="pre-wrap" overflowWrap="anywhere">{feedback.message}</Text>

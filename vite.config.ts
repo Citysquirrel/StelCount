@@ -27,7 +27,21 @@ export default defineConfig(({ mode }) => {
 				}),
 		].filter(Boolean),
 
-		server: {},
+		server: {
+			proxy: {
+				"/api/feedback": {
+					target: "http://127.0.0.1:3477",
+					changeOrigin: true,
+					configure: (proxy) => {
+						proxy.on("proxyReq", (request) => {
+							request.removeHeader("origin");
+							request.removeHeader("cookie");
+							request.removeHeader("authorization");
+						});
+					},
+				},
+			},
+		},
 
 		resolve: {
 			tsconfigPaths: true,

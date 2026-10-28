@@ -4,6 +4,7 @@ import { ImMail4 } from "react-icons/im";
 import { Box, HStack, Image, Text } from "@chakra-ui/react";
 import useColorModeValues from "../lib/hooks/useColorModeValues";
 import { Link } from "./Link";
+import { FeedbackButton } from "./FeedbackButton";
 
 export function Footer() {
 	const values = useColorModeValues();
@@ -12,7 +13,9 @@ export function Footer() {
 			id="footer"
 			sx={{
 				width: "100%",
-				height: "60px",
+				minHeight: "60px",
+				flexWrap: "wrap",
+				padding: "12px",
 				backgroundColor: values.bgFooter,
 				backdropFilter: "blur(1.5px)",
 				alignItems: "center",
@@ -23,6 +26,7 @@ export function Footer() {
 			<Text fontSize={"0.75rem"} fontWeight={"bold"}>
 				도시다람쥐
 			</Text>
+			<FeedbackButton />
 			<Link
 				href="https://github.com/citysquirrel"
 				isExternal

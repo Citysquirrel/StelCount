@@ -5,7 +5,7 @@ import {
 	Spinner, Stack, Text, useToast,
 } from "@chakra-ui/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { feedbackCategories, FeedbackData, feedbackNotifications } from "@/lib/feedback";
+import { feedbackCategories, FeedbackData, feedbackNotifications, feedbackSources } from "@/lib/feedback";
 import { formatUtcToKst } from "@/lib/functions/date";
 import { DefaultResponseData } from "@/lib/functions/fetch";
 import { useServerMutation, useServerQuery } from "@/lib/hooks/useServerApi";
@@ -66,6 +66,7 @@ export default function Details({ id, onClose }: { id: string; onClose: () => vo
 									<Badge mr={2}>{feedbackCategories[feedback.category] ?? feedback.category}</Badge>
 									<Badge colorScheme={feedback.isProcessed ? "green" : "orange"}>{feedback.isProcessed ? "처리 완료" : "미처리"}</Badge>
 									<Text mt={2} fontSize="sm">접수 시각: {formatUtcToKst(feedback.createdAt)} (KST)</Text>
+									<Text fontSize="sm">출처 사이트: {feedbackSources[feedback.sourceSite] ?? feedbackSources.unknown}</Text>
 									<Text fontSize="xs" color="gray.500" overflowWrap="anywhere">ID: {feedback.id}</Text>
 								</Box>
 								<Box borderWidth="1px" borderColor={borderColor} borderRadius="md" p={4}>

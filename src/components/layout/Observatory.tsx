@@ -2,6 +2,7 @@ import {
 	Box,
 	Button,
 	ButtonProps,
+	DarkMode,
 	useDisclosure,
 	Flex,
 	Text,
@@ -19,6 +20,7 @@ import { useLocation } from "react-router-dom";
 import { useRecoilValue } from "recoil";
 import { isAdminState } from "../../lib/Atom";
 import { Link } from "../Link";
+import { FeedbackButton } from "../FeedbackButton";
 import { CAFE_WRITE_URL } from "@/lib/constant";
 import { useObservatoryScroll } from "../../lib/hooks/useObservatoryScroll";
 import { NebulaGlow } from "./space/NebulaGlow";
@@ -555,13 +557,14 @@ export function ObservatoryFooter() {
 			color="var(--obs-muted)"
 		>
 			<Text>Made with love, for Stellive.</Text>
-			<HStack as="nav" aria-label="제작자 정보" spacing={5}>
+			<Flex as="nav" aria-label="제작자 정보" gap={5} wrap="wrap" align="center">
 				<Text>도시다람쥐</Text>
+				<DarkMode><FeedbackButton /></DarkMode>
 				<Link href="https://github.com/Citysquirrel/StelCount" isExternal>
 					GitHub ↗
 				</Link>
 				<Link href="mailto:tok1324@naver.com">문의</Link>
-			</HStack>
+			</Flex>
 		</Flex>
 	);
 }
