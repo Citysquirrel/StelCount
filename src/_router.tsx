@@ -20,6 +20,7 @@ const Stellar = lazy(() => import("./pages/Admin/Stellar").then((m) => ({ defaul
 const Video = lazy(() => import("./pages/Admin/Video").then((m) => ({ default: m.Video })));
 const Songbook = lazy(() => import("./pages/Admin/Songbook").then((m) => ({ default: m.Songbook })));
 const Setting = lazy(() => import("./pages/Admin/Setting").then((m) => ({ default: m.Setting })));
+const Feedback = lazy(() => import("./pages/Admin/Feedback").then((m) => ({ default: m.Feedback })));
 
 function PageRedirect({ to }: { to: string }) {
 	const { search, hash } = useLocation();
@@ -75,6 +76,7 @@ export const routeObj: RouteObject[] = [
 						path: "setting",
 						element: <Setting />,
 					},
+					{ path: "feedback", element: <Feedback /> },
 				],
 			},
 		],

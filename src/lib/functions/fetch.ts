@@ -36,6 +36,8 @@ export interface ServerAPIMap {
 		| "/renew/detail"
 		| "/settings" // GET, POST /settings
 		| "/dashboard"
+		| "/feedbacks"
+		| "/feedback/:id"
 		| "/songbook"
 		| "/songbook/import"
 		| "/songbook/minify"
@@ -103,6 +105,8 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 	const startTime = performance.now();
 	const urlStr = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
 	const method = options?.method || "GET";
+	// 피드백 원문은 개발용 Network Dock에도 복제하지 않는다.
+	const isFeedback = /\/api\/sq\/feedbacks?(?:[/?#]|$)/i.test(urlStr);
 
 	// 로그 통신 시작 알림
 	dispatchNetworkLog({
@@ -110,7 +114,7 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 		url: urlStr,
 		method,
 		status: "pending",
-		reqBody: options?.body,
+		reqBody: isFeedback ? undefined : options?.body,
 		time: new Date().toLocaleTimeString(),
 	});
 
@@ -137,7 +141,7 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 			method,
 			status: res.ok ? "success" : "error", // 4xx, 5xx 에러 보기 쉽게 분리
 			statusCode: res.status,
-			resBody: response.data,
+			resBody: isFeedback ? undefined : response.data,
 			time: new Date().toLocaleTimeString(),
 			duration: Math.round(performance.now() - startTime),
 		});
@@ -154,7 +158,7 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 			method,
 			status: "error",
 			statusCode: err.name === "AbortError" ? 408 : 500,
-			resBody: errorMessage,
+			resBody: isFeedback ? undefined : errorMessage,
 			time: new Date().toLocaleTimeString(),
 			duration: Math.round(performance.now() - startTime),
 		});

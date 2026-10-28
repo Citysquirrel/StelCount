@@ -11,7 +11,7 @@ import {
 	useMediaQuery,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { FiBook, FiHome, FiMenu, FiMusic, FiSettings, FiUsers, FiYoutube } from "react-icons/fi";
+import { FiBook, FiHome, FiMenu, FiMessageSquare, FiMusic, FiSettings, FiUsers, FiYoutube } from "react-icons/fi";
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../lib/hooks/useAuth";
 import { NotExist } from "../NotExist";
@@ -32,6 +32,7 @@ const PAGE_TITLES: Record<string, string> = {
 	"/video": "영상 관리",
 	"/songbook": "노래책 관리",
 	"/song-history": "가창기록 관리",
+	"/feedback": "피드백 관리",
 	"/settings": "시스템 설정",
 };
 
@@ -149,6 +150,7 @@ export function NewAdmin() {
 							/>
 						</VStack>
 					</VStack>
+					<NavItem icon={FiMessageSquare} label="피드백 관리" aria-label="피드백 관리" to={`${ROUTE_NAME}/feedback`} isExpanded={isExpanded} />
 					<NavItem icon={FiSettings} label="설정" to={`${ROUTE_NAME}/setting`} isExpanded={isExpanded} />
 				</VStack>
 				<VStack spacing={2} align="stretch" mt={"auto"} mb={2} px={isExpanded ? 4 : 2} justifySelf={"flex-end"}>
