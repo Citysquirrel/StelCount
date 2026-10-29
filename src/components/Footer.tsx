@@ -23,10 +23,10 @@ export function Footer() {
 			}}
 			spacing={"4"}
 		>
+			<FeedbackButton />
 			<Text fontSize={"0.75rem"} fontWeight={"bold"}>
 				도시다람쥐
 			</Text>
-			<FeedbackButton />
 			<Link
 				href="https://github.com/citysquirrel"
 				isExternal

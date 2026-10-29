@@ -1,10 +1,33 @@
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import {
-	Alert, AlertIcon, Box, Button, Flex, FormControl, FormLabel, Modal, ModalBody,
-	ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay,
-	Select, Stack, Text, Textarea, useColorMode, useMediaQuery,
+	Alert,
+	AlertIcon,
+	Box,
+	Button,
+	Flex,
+	FormControl,
+	FormLabel,
+	Modal,
+	ModalBody,
+	ModalCloseButton,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+	ModalOverlay,
+	Select,
+	Stack,
+	Text,
+	Textarea,
+	useColorMode,
+	useMediaQuery,
 } from "@chakra-ui/react";
-import { feedbackCategories, FEEDBACK_API_URL, FEEDBACK_SITE_KEY, FEEDBACK_SOURCE_SITE, type FeedbackData } from "@/lib/feedback";
+import {
+	feedbackCategories,
+	FEEDBACK_API_URL,
+	FEEDBACK_SITE_KEY,
+	FEEDBACK_SOURCE_SITE,
+	type FeedbackData,
+} from "@/lib/feedback";
 import { loadTurnstile, type Turnstile } from "@/lib/turnstile";
 
 interface FeedbackDialogProps {
@@ -33,8 +56,10 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 	const normalizedMessage = message.replace(/\s+/gu, " ").trim();
 	const characters = Array.from(normalizedMessage);
 	const length = characters.length;
-	const validMessage = length >= 10 && length <= 300
-		&& characters.every((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127);
+	const validMessage =
+		length >= 10 &&
+		length <= 300 &&
+		characters.every((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127);
 	const retrySeconds = Math.max(0, Math.ceil((retryAt - now) / 1000));
 	const refreshVerification = () => {
 		setToken("");
@@ -75,26 +100,29 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 			setVerificationError("보안 인증을 완료하지 못했어요. 다시 인증해 주세요.");
 			return true;
 		};
-		void loadTurnstile().then((turnstile) => {
-			if (!active) return;
-			api = turnstile;
-			widgetId = api.render(widgetContainer, {
-				sitekey: FEEDBACK_SITE_KEY,
-				action: "feedback",
-				language: "ko",
-				size: isNarrow ? "compact" : "flexible",
-				theme: colorMode,
-				callback: (value) => {
-					if (!active) return;
-					setToken(value);
-					setVerificationError("");
-				},
-				"error-callback": verificationFailed,
-				"expired-callback": verificationFailed,
-				"timeout-callback": verificationFailed,
-			});
-			if (widgetId === undefined) verificationFailed();
-		}).catch(verificationFailed);
+		void loadTurnstile()
+			.then((turnstile) => {
+				if (!active) return;
+				api = turnstile;
+				widgetId = api.render(widgetContainer, {
+					sitekey: FEEDBACK_SITE_KEY,
+					action: "feedback",
+					language: "ko",
+					size: isNarrow ? "compact" : "flexible",
+					theme: colorMode,
+					appearance: "always",
+					callback: (value) => {
+						if (!active) return;
+						setToken(value);
+						setVerificationError("");
+					},
+					"error-callback": verificationFailed,
+					"expired-callback": verificationFailed,
+					"timeout-callback": verificationFailed,
+				});
+				if (widgetId === undefined) verificationFailed();
+			})
+			.catch(verificationFailed);
 		return () => {
 			active = false;
 			if (widgetId !== undefined) api?.remove(widgetId);
@@ -117,7 +145,12 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 				credentials: "omit",
 				cache: "no-store",
 				signal: controller.signal,
-				body: JSON.stringify({ category, sourceSite: FEEDBACK_SOURCE_SITE, message: normalizedMessage, turnstileToken: token }),
+				body: JSON.stringify({
+					category,
+					sourceSite: FEEDBACK_SOURCE_SITE,
+					message: normalizedMessage,
+					turnstileToken: token,
+				}),
 			});
 			if (!mountedRef.current) return;
 			if (response.status === 201) {
@@ -136,8 +169,10 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 			} else {
 				const result: unknown = await response.json().catch(() => null);
 				if (!mountedRef.current) return;
-				const serverMessage = result && typeof result === "object" && "message" in result
-					&& typeof result.message === "string" ? result.message : "피드백을 접수하지 못했어요. 잠시 후 다시 시도해 주세요.";
+				const serverMessage =
+					result && typeof result === "object" && "message" in result && typeof result.message === "string"
+						? result.message
+						: "피드백을 접수하지 못했어요. 잠시 후 다시 시도해 주세요.";
 				setError(serverMessage);
 			}
 			refreshVerification();
@@ -153,52 +188,101 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 	};
 
 	return (
-		<Modal isOpen onClose={close} size="lg" scrollBehavior="inside" initialFocusRef={messageRef}
-			finalFocusRef={finalFocusRef} closeOnOverlayClick={!pending} closeOnEsc={!pending}>
+		<Modal
+			isOpen
+			onClose={close}
+			size="lg"
+			scrollBehavior="inside"
+			initialFocusRef={messageRef}
+			finalFocusRef={finalFocusRef}
+			closeOnOverlayClick={!pending}
+			closeOnEsc={!pending}
+		>
 			<ModalOverlay />
 			<ModalContent mx={2}>
 				<ModalHeader>개발자에게 피드백</ModalHeader>
 				<ModalCloseButton isDisabled={pending} />
 				<ModalBody>
 					{sent ? (
-						<Alert status="success" borderRadius="md" role="status"><AlertIcon />피드백이 접수되었어요. 의견 감사합니다!</Alert>
+						<Alert status="success" borderRadius="md" role="status">
+							<AlertIcon />
+							피드백이 접수되었어요. 의견 감사합니다!
+						</Alert>
 					) : (
-						<Stack as="form" id="developer-feedback-form" spacing={4} aria-busy={pending} onSubmit={(event) => void submit(event)}>
+						<Stack
+							as="form"
+							id="developer-feedback-form"
+							spacing={4}
+							aria-busy={pending}
+							onSubmit={(event) => void submit(event)}
+						>
 							<Text fontSize="sm">사이트 오류나 개선 의견을 익명으로 보내주세요.</Text>
 							<FormControl isDisabled={pending}>
 								<FormLabel htmlFor="developer-feedback-category">유형</FormLabel>
-								<Select id="developer-feedback-category" value={category} onChange={(event) => setCategory(event.target.value as FeedbackData["category"])}>
-									{Object.entries(feedbackCategories).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+								<Select
+									id="developer-feedback-category"
+									value={category}
+									onChange={(event) => setCategory(event.target.value as FeedbackData["category"])}
+								>
+									{Object.entries(feedbackCategories).map(([value, label]) => (
+										<option key={value} value={value}>
+											{label}
+										</option>
+									))}
 								</Select>
 							</FormControl>
 							<FormControl isDisabled={pending}>
 								<FormLabel htmlFor="developer-feedback-message">내용</FormLabel>
-								<Textarea ref={messageRef} id="developer-feedback-message" rows={5} value={message}
-									aria-describedby="developer-feedback-hint developer-feedback-count" aria-invalid={message.length > 0 && !validMessage}
+								<Textarea
+									ref={messageRef}
+									id="developer-feedback-message"
+									rows={5}
+									value={message}
+									aria-describedby="developer-feedback-hint developer-feedback-count"
+									aria-invalid={message.length > 0 && !validMessage}
 									placeholder="어느 화면에서 어떤 문제가 있었는지 알려주세요."
-									onChange={(event) => setMessage(event.target.value)} />
+									onChange={(event) => setMessage(event.target.value)}
+								/>
 								<Flex justify="space-between" gap={2} wrap="wrap" mt={2} fontSize="xs">
 									<Text id="developer-feedback-hint">10~300자 · 연속 공백은 한 칸으로 계산</Text>
-									<Text id="developer-feedback-count" color={length > 300 ? "red.400" : undefined}>{length} / 300</Text>
+									<Text id="developer-feedback-count" color={length > 300 ? "red.400" : undefined}>
+										{length} / 300
+									</Text>
 								</Flex>
 							</FormControl>
 							<Text fontSize="xs">개인정보는 적지 말아 주세요. 별도 답변은 제공되지 않아요.</Text>
-							<Box ref={setWidgetContainer} minH="65px" />
+							<Box ref={setWidgetContainer} />
 							{verificationError && (
 								<Alert status="error" borderRadius="md" flexWrap="wrap" gap={2}>
-									<AlertIcon /><Text flex={1}>{verificationError}</Text>
-									<Button size="sm" isDisabled={pending} onClick={refreshVerification}>다시 인증하기</Button>
+									<AlertIcon />
+									<Text flex={1}>{verificationError}</Text>
+									<Button size="sm" isDisabled={pending} onClick={refreshVerification}>
+										다시 인증하기
+									</Button>
 								</Alert>
 							)}
-							{error && <Alert status="error" borderRadius="md"><AlertIcon /><Text>{error}</Text></Alert>}
+							{error && (
+								<Alert status="error" borderRadius="md">
+									<AlertIcon />
+									<Text>{error}</Text>
+								</Alert>
+							)}
 						</Stack>
 					)}
 				</ModalBody>
 				<ModalFooter gap={3} flexWrap="wrap">
-					<Button onClick={close} isDisabled={pending}>닫기</Button>
+					<Button onClick={close} isDisabled={pending}>
+						닫기
+					</Button>
 					{!sent && (
-						<Button type="submit" form="developer-feedback-form" colorScheme="purple" isLoading={pending} loadingText="보내는 중"
-							isDisabled={!validMessage || !token || retrySeconds > 0}>
+						<Button
+							type="submit"
+							form="developer-feedback-form"
+							colorScheme="purple"
+							isLoading={pending}
+							loadingText="보내는 중"
+							isDisabled={!validMessage || !token || retrySeconds > 0}
+						>
 							{retrySeconds > 0 ? `${retrySeconds}초 후 다시 보내기` : "피드백 보내기"}
 						</Button>
 					)}
@@ -207,3 +291,4 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 		</Modal>
 	);
 }
+

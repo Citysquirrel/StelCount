@@ -4,6 +4,7 @@ interface TurnstileOptions {
 	language: "ko";
 	size: "flexible" | "compact";
 	theme: "light" | "dark";
+	appearance: "always" | "execute" | "interaction-only";
 	callback: (token: string) => void;
 	"error-callback": () => boolean;
 	"expired-callback": () => void;
@@ -11,7 +12,6 @@ interface TurnstileOptions {
 }
 
 export interface Turnstile {
-	ready: (callback: () => void) => void;
 	render: (container: HTMLElement, options: TurnstileOptions) => string | undefined;
 	remove: (id: string) => void;
 }
@@ -19,6 +19,7 @@ export interface Turnstile {
 declare global {
 	interface Window {
 		turnstile?: Turnstile;
+		onStelCountTurnstileLoad?: () => void;
 	}
 }
 
@@ -26,28 +27,31 @@ let loading: Promise<Turnstile> | undefined;
 
 export function loadTurnstile(): Promise<Turnstile> {
 	if (loading) return loading;
+	if (window.turnstile) return Promise.resolve(window.turnstile);
 	loading = new Promise<Turnstile>((resolve, reject) => {
 		const script = document.createElement("script");
-		const fail = () => {
+		const cleanup = () => {
 			clearTimeout(timer);
-			script.onload = null;
 			script.onerror = null;
+			delete window.onStelCountTurnstileLoad;
+		};
+		const fail = () => {
+			cleanup();
 			script.remove();
 			reject(new Error("Turnstile could not be loaded"));
 		};
 		const timer = setTimeout(fail, 15000);
-		const ready = () => {
+		window.onStelCountTurnstileLoad = () => {
 			const api = window.turnstile;
-			if (!api) { fail(); return; }
-			api.ready(() => {
-				clearTimeout(timer);
-				resolve(api);
-			});
+			if (!api) {
+				fail();
+				return;
+			}
+			cleanup();
+			resolve(api);
 		};
-		if (window.turnstile) { ready(); return; }
-		script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+		script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onStelCountTurnstileLoad";
 		script.async = true;
-		script.onload = ready;
 		script.onerror = fail;
 		document.head.append(script);
 	}).catch((error: unknown) => {

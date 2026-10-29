@@ -558,12 +558,13 @@ export function ObservatoryFooter() {
 		>
 			<Text>Made with love, for Stellive.</Text>
 			<Flex as="nav" aria-label="제작자 정보" gap={5} wrap="wrap" align="center">
-				<Text>도시다람쥐</Text>
-				<DarkMode><FeedbackButton /></DarkMode>
+				<DarkMode>
+					<FeedbackButton />
+				</DarkMode>
 				<Link href="https://github.com/Citysquirrel/StelCount" isExternal>
 					GitHub ↗
 				</Link>
-				<Link href="mailto:tok1324@naver.com">문의</Link>
+				<Link href="mailto:tok1324@naver.com">메일</Link>
 			</Flex>
 		</Flex>
 	);
