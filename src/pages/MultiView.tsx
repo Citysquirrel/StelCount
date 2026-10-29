@@ -1546,6 +1546,14 @@ function filterMultiViewStreams(
 					const normalizedTitle = normalizeKeyword(stream.liveTitle || "");
 					const normalizedName = normalizeKeyword(stream.channelName || "");
 					const normalizedCategory = normalizeKeyword(stream.liveCategoryValue || "");
+					if (!stream.openLive) {
+						return {
+							...stream,
+							searchName: normalizedName,
+							searchNameCho: getChosung(normalizedName),
+							searchNameEng: inko.ko2en(normalizedName),
+						};
+					}
 					return {
 						...stream,
 						searchTitle: normalizedTitle,
