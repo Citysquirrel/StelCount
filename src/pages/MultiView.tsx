@@ -129,6 +129,7 @@ export function MultiView() {
 		setCustomStreams,
 		isLoading,
 		isCustomLoading,
+		statusCode,
 		refetch,
 		intervalRef,
 		refetchCustom,
@@ -266,7 +267,8 @@ export function MultiView() {
 
 	const handleOpenMenu = () => {
 		setIsMenuOpen(true);
-		// clearInterval(intervalRef.current);
+		clearInterval(intervalRef.current);
+		clearInterval(customIntervalRef.current);
 		refetch(true);
 		refetchCustom(true);
 		intervalRef.current = setInterval(() => {
@@ -488,6 +490,7 @@ export function MultiView() {
 					customIntervalRef={customIntervalRef}
 					isLoading={isLoading}
 					isCustomLoading={isCustomLoading}
+					statusCode={statusCode}
 					streams={streams}
 					userSetting={userSetting}
 					setUserSetting={setUserSetting}
@@ -798,6 +801,7 @@ function SideMenu({
 	customIntervalRef,
 	isLoading,
 	isCustomLoading,
+	statusCode,
 	streams,
 	userSetting,
 	setUserSetting,
@@ -806,6 +810,12 @@ function SideMenu({
 	const OPENER_WIDTH = 32;
 	const listRef = useRef<HTMLDivElement>(null);
 	const searchInputRef = useRef<HTMLInputElement>(null);
+	const failedLists = [
+		statusCode.main !== 200 ? "스텔라 방송" : "",
+		customStreams.length > 0 && statusCode.custom !== 200 ? "사용자 설정 방송" : "",
+	].filter(Boolean);
+	const hasRequestError = failedLists.length > 0;
+	const isRefreshing = isLoading || isCustomLoading;
 
 	const [currentMode, setCurrentMode] = useState(0);
 	const [searchInputValue, setSearchInputValue] = useState<string>("");
@@ -1010,22 +1020,7 @@ function SideMenu({
 			}));
 			setCustomStreams(next);
 
-			//! 첫 데이터 로드
-			const requestBody = next.reduce(
-				(acc, data) => {
-					if (data.chzzkId) {
-						acc[data.uuid] = data.chzzkId;
-					}
-					return acc;
-				},
-				{} as Record<string, string>,
-			);
-			fetchServer("v2", "/multiview", { method: "POST", body: requestBody }).then((res) => {
-				if (res.status === 200) {
-					const data: MultiViewData[] = res.data;
-					setCustomStreams(data.sort((a, b) => Number(!!b.openLive) - Number(!!a.openLive)));
-				}
-			});
+			refetchCustom(true, next);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
@@ -1298,7 +1293,7 @@ function SideMenu({
 							}}
 						/>
 					</Tooltip>
-					<Tooltip label="새로고침(R)">
+					<Tooltip label={hasRequestError ? "방송 정보를 다시 불러오기(R)" : "새로고침(R)"}>
 						<IconButton
 							boxSize={"24px"}
 							minWidth="auto"
@@ -1307,9 +1302,14 @@ function SideMenu({
 							variant={"ghost"}
 							icon={<IoReload />}
 							aria-label="reload"
-							isDisabled={isLoading || isCustomLoading}
+							aria-describedby={hasRequestError ? "multiview-request-error" : undefined}
+							aria-busy={isRefreshing}
+							isDisabled={isRefreshing}
 							onClick={handleRefresh}
-							sx={{ color: "white", ":hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+							sx={{
+								color: hasRequestError ? "orange.200" : "white",
+								":hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+							}}
 						/>
 					</Tooltip>
 					<Tooltip label={isCardCompact ? "카드 크게(V)" : "카드 작게(V)"}>
@@ -1338,6 +1338,24 @@ function SideMenu({
 						/>
 					</Tooltip>
 				</HStack>
+				{hasRequestError && (
+					<Box
+						id="multiview-request-error"
+						role={isRefreshing ? "status" : "alert"}
+						bg="orange.900"
+						color="orange.100"
+						px={3}
+						py={1}
+						fontSize="xs"
+					>
+						<Text>
+							{isRefreshing
+								? "방송 정보를 다시 불러오고 있어요."
+								: `${failedLists.join(" · ")} 정보를 불러오지 못했어요.`}
+						</Text>
+						{!isRefreshing && <Text mt={1}>잠시 후 위 새로고침 버튼(R)으로 다시 시도해 주세요.</Text>}
+					</Box>
+				)}
 				<Stack ref={listRef} gap="8px" padding="8px 12px 24px 12px" overflowY="auto" flex={1}>
 					{currentMode === 1 ? (
 						<Stack
@@ -2335,10 +2353,11 @@ interface SideMenuProps {
 	handleCloseSetting: () => void;
 	handleOpenSetting: () => void;
 	refetch: (isTimer?: boolean) => void;
-	refetchCustom: (isTimer?: boolean) => void;
+	refetchCustom: ReturnType<typeof useMultiView>["refetchCustom"];
 	customIntervalRef: React.MutableRefObject<number | undefined>;
 	isLoading: boolean;
 	isCustomLoading: boolean;
+	statusCode: ReturnType<typeof useMultiView>["statusCode"];
 	streams: Stream[];
 	userSetting: UserSettingStorage;
 	setUserSetting: Dispatch<SetStateAction<UserSettingStorage>>;
