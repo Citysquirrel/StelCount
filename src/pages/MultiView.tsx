@@ -1536,11 +1536,7 @@ function filterMultiViewStreams(
 					};
 				}),
 				{
-					keys: [
-						{ name: "searchName", weight: 2.0 },
-						{ name: "searchNameCho", weight: 2.0 },
-						{ name: "searchNameEng", weight: 2.0 },
-					],
+					keys: ["searchName", "searchNameCho", "searchNameEng"],
 					threshold: 0.4,
 					ignoreLocation: true,
 				},
@@ -1611,7 +1607,7 @@ function StreamOrderModal({
 	const normalizedSearchQuery = normalizeKeyword(searchQuery);
 	const streams = streamsByMode[mode];
 	const matchingIds = useMemo(
-		() => new Set(filterMultiViewStreams(streams, normalizedSearchQuery).map((stream) => stream.chzzkId)),
+		() => new Set(filterMultiViewStreams(streams, normalizedSearchQuery, true).map((stream) => stream.chzzkId)),
 		[streams, normalizedSearchQuery],
 	);
 	const availableStreams = streams.filter((stream) => stream.chzzkId);
