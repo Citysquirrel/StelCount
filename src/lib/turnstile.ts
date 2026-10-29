@@ -9,6 +9,8 @@ interface TurnstileOptions {
 	"error-callback": () => boolean;
 	"expired-callback": () => void;
 	"timeout-callback": () => void;
+	"before-interactive-callback": () => void;
+	"after-interactive-callback": () => void;
 }
 
 export interface Turnstile {

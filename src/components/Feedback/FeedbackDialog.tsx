@@ -46,6 +46,7 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 	const [message, setMessage] = useState("");
 	const [token, setToken] = useState("");
 	const [verificationError, setVerificationError] = useState("");
+	const [interactive, setInteractive] = useState(false);
 	const [widgetVersion, setWidgetVersion] = useState(0);
 	const [error, setError] = useState("");
 	const [pending, setPending] = useState(false);
@@ -61,9 +62,16 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 		length <= 300 &&
 		characters.every((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127);
 	const retrySeconds = Math.max(0, Math.ceil((retryAt - now) / 1000));
+	const verifying = !token && !verificationError;
+	const submitLabel = verificationError
+		? "다시 인증하기"
+		: verifying
+			? interactive ? "보안 인증을 완료해 주세요" : "보안 인증 중"
+			: retrySeconds > 0 ? `${retrySeconds}초 후 다시 보내기` : "피드백 보내기";
 	const refreshVerification = () => {
 		setToken("");
 		setVerificationError("");
+		setInteractive(false);
 		setWidgetVersion((value) => value + 1);
 	};
 	const close = () => {
@@ -94,9 +102,12 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 		let api: Turnstile | undefined;
 		let widgetId: string | undefined;
 		setToken("");
+		setVerificationError("");
+		setInteractive(false);
 		const verificationFailed = () => {
 			if (!active) return true;
 			setToken("");
+			setInteractive(false);
 			setVerificationError("보안 인증을 완료하지 못했어요. 다시 인증해 주세요.");
 			return true;
 		};
@@ -110,15 +121,25 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 					language: "ko",
 					size: isNarrow ? "compact" : "flexible",
 					theme: colorMode,
-					appearance: "always",
+					appearance: "interaction-only",
 					callback: (value) => {
 						if (!active) return;
 						setToken(value);
 						setVerificationError("");
+						setInteractive(false);
 					},
 					"error-callback": verificationFailed,
 					"expired-callback": verificationFailed,
 					"timeout-callback": verificationFailed,
+					"before-interactive-callback": () => {
+						if (!active) return;
+						setToken("");
+						setVerificationError("");
+						setInteractive(true);
+					},
+					"after-interactive-callback": () => {
+						if (active) setInteractive(false);
+					},
 				});
 				if (widgetId === undefined) verificationFailed();
 			})
@@ -250,15 +271,20 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 									</Text>
 								</Flex>
 							</FormControl>
-							<Text fontSize="xs">개인정보는 적지 말아 주세요. 별도 답변은 제공되지 않아요.</Text>
-							<Box ref={setWidgetContainer} />
+							<Box>
+								<Text fontSize="xs">개인정보는 적지 말아 주세요. 별도 답변은 제공되지 않아요.</Text>
+								<Box
+									ref={setWidgetContainer}
+									mt={interactive ? 4 : 0}
+									h={interactive ? "auto" : 0}
+									overflow={interactive ? "visible" : "hidden"}
+									aria-hidden={!interactive}
+								/>
+							</Box>
 							{verificationError && (
 								<Alert status="error" borderRadius="md" flexWrap="wrap" gap={2}>
 									<AlertIcon />
 									<Text flex={1}>{verificationError}</Text>
-									<Button size="sm" isDisabled={pending} onClick={refreshVerification}>
-										다시 인증하기
-									</Button>
 								</Alert>
 							)}
 							{error && (
@@ -276,14 +302,16 @@ export default function FeedbackDialog({ onClose, finalFocusRef, retryAt, onRate
 					</Button>
 					{!sent && (
 						<Button
-							type="submit"
+							type={verificationError ? "button" : "submit"}
 							form="developer-feedback-form"
 							colorScheme="purple"
-							isLoading={pending}
-							loadingText="보내는 중"
-							isDisabled={!validMessage || !token || retrySeconds > 0}
+							isLoading={pending || (verifying && !interactive)}
+							loadingText={pending ? "보내는 중" : "보안 인증 중"}
+							isDisabled={pending || (!verificationError && (!validMessage || !token || retrySeconds > 0))}
+							onClick={verificationError ? refreshVerification : undefined}
+							aria-live="polite"
 						>
-							{retrySeconds > 0 ? `${retrySeconds}초 후 다시 보내기` : "피드백 보내기"}
+							{submitLabel}
 						</Button>
 					)}
 				</ModalFooter>
