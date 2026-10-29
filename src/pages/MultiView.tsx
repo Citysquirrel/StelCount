@@ -1293,7 +1293,7 @@ function SideMenu({
 							}}
 						/>
 					</Tooltip>
-					<Tooltip label={hasRequestError ? "방송 정보를 다시 불러오기(R)" : "새로고침(R)"}>
+					<Tooltip label={"새로고침(R)"}>
 						<IconButton
 							boxSize={"24px"}
 							minWidth="auto"
