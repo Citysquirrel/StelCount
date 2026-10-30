@@ -606,10 +606,6 @@ export function MultiView() {
 						) : (
 							<Stack color="white" justifyContent={"center"} alignItems="center" width="100%" transition="all .3s">
 								<Stack>
-									<Text color="red.500" fontWeight={"bold"}>
-										멀티뷰 서비스는 지속 제공될 예정이나, 예정된 업데이트 사항은 모두 중단합니다.
-										<br />본 사이트에서는 확장 프로그램을 통한 우회 기능을 따로 제공하지 않습니다.
-									</Text>
 									<Text>
 										<Box as="span" fontWeight={"bold"}>
 											좌측 메뉴
