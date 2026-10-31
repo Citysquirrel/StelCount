@@ -20,6 +20,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "r
 import { FiUsers, FiTv, FiVideo, FiPlayCircle } from "react-icons/fi";
 import { IconType } from "react-icons";
 import { useServerQuery } from "@/lib/hooks/useServerApi";
+import { usePlaylistRenewal } from "@/lib/hooks/usePlaylistRenewal";
 
 // 주간 메트릭 데이터 구조 정의 (하루 누적 최종치)
 interface WeeklyMetricData {
@@ -119,7 +120,7 @@ const transformToWeeklyData = (logs: LogData[]): WeeklyMetricData[] => {
 export function Dashboard() {
 	const [data, setData] = useState<WeeklyMetricData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [isPlaylistFetching, setIsPlaylistFetching] = useState(false);
+	const { start: renewPlaylists, canStart: canRenewPlaylists, isStarting: isPlaylistStarting, progress: playlistProgress } = usePlaylistRenewal();
 	const [isDetailFetching, setIsDetailFetching] = useState(false);
 
 	const toast = useToast();
@@ -151,21 +152,6 @@ export function Dashboard() {
 		);
 	}, [data]);
 
-	const renewPlaylists = () => {
-		setIsPlaylistFetching(true);
-		fetchServer("admin", "/renew/playlist", { timeout: 0 })
-			.then((res) => {
-				if (res.status === 200)
-					toast({ description: res.data.msg || "재생목록 갱신에 성공했습니다", status: "success" });
-				else toast({ description: res.data.msg || "재생목록 갱신 중 오류가 발생했습니다", status: "error" });
-			})
-			.catch(() => {
-				toast({ description: "재생목록 갱신 중 서버 에러 발생" });
-			})
-			.finally(() => {
-				setIsPlaylistFetching(false);
-			});
-	};
 	const renewDetails = () => {
 		setIsDetailFetching(true);
 		fetchServer("admin", "/renew/detail", { timeout: 0 })
@@ -228,7 +214,9 @@ export function Dashboard() {
 						onClick={() => {
 							renewPlaylists();
 						}}
-						isDisabled={isPlaylistFetching}
+						isDisabled={!canRenewPlaylists}
+						isLoading={isPlaylistStarting || playlistProgress?.status === "running"}
+						loadingText={isPlaylistStarting ? "갱신 시작 중" : "재생목록 갱신 중"}
 					>
 						재생목록 데이터 갱신
 					</Button>

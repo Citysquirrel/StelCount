@@ -33,6 +33,7 @@ export interface ServerAPIMap {
 	v2: "/maintenance" | "/songbook" | "/multiview" | "/current" | "/tags";
 	admin:
 		| "/renew/playlist"
+		| "/renew/playlist/status"
 		| "/renew/detail"
 		| "/settings" // GET, POST /settings
 		| "/dashboard"

@@ -152,14 +152,14 @@ test("최신 영상은 게시일 순서를 유지하고 작은 달성 기록은 
 	assert.equal(result.hero[1].milestone, undefined);
 });
 
-test("목록은 최대 20개, 히어로는 최대 8개이며 입력 객체를 변경하지 않는다", () => {
-	const input = Array.from({ length: 25 }, (_, i) =>
+test("최근 영상 20개·달성 목록 40개·히어로 8개로 제한하며 입력 객체를 변경하지 않는다", () => {
+	const input = Array.from({ length: 45 }, (_, i) =>
 		video(`v${i}`, { pa: seconds - i, st: [{ u: "100000", at: seconds - i }] }),
 	);
 	const before = JSON.stringify(input);
 	const result = select(input);
 	assert.equal(result.recent.length, 20);
-	assert.equal(result.milestones.length, 20);
+	assert.equal(result.milestones.length, 40);
 	assert.equal(result.hero.length, 8);
 	assert.equal(JSON.stringify(input), before);
 });

@@ -16,6 +16,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../lib/hooks/useAuth";
 import { NotExist } from "../NotExist";
 import { IconType } from "react-icons";
+import { usePlaylistRenewal } from "../../lib/hooks/usePlaylistRenewal";
 
 interface NavItemProps extends StackProps {
 	icon: IconType;
@@ -41,6 +42,11 @@ export function NewAdmin() {
 	const [isExpanded, setIsExpanded] = useState(true);
 	const [isMobile] = useMediaQuery("(max-width: 1280px)");
 	const { isLoading: isAuthLoading, isLogin, isAdmin } = useAuth();
+	const { refresh: refreshPlaylistRenewal } = usePlaylistRenewal();
+
+	useEffect(() => {
+		if (!isAuthLoading && isAdmin) refreshPlaylistRenewal();
+	}, [isAuthLoading, isAdmin, refreshPlaylistRenewal]);
 
 	const subPath = location.pathname.replace(ROUTE_NAME, "") || "/";
 	const currentTitle = PAGE_TITLES[subPath] || "어드민 페이지";
