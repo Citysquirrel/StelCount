@@ -89,10 +89,11 @@ const transformToWeeklyData = (logs: LogData[]): WeeklyMetricData[] => {
 						// 1. JSON 형태 파싱 시도
 						const parsed = JSON.parse(rawValue);
 
-						// 2. 파싱된 값이 null이 아닌 순수 '객체(Object)'일 경우 합산 로직 실행
+						// 방문자는 IP 개수, 호출량은 값의 합계로 집계한다.
 						if (typeof parsed === "object" && parsed !== null) {
-							// eslint-disable-next-line @typescript-eslint/no-explicit-any
-							totalSum = Object.values(parsed).reduce((sum: number, val: any) => sum + Number(val), 0);
+							totalSum = log.key === "visit_counter"
+								? Object.keys(parsed).length
+								: Object.values(parsed).reduce<number>((sum, val) => sum + Number(val), 0);
 						}
 						// 3. 파싱된 값이 단순 숫자(또는 다른 원시 타입)인 경우
 						else {
@@ -238,14 +239,14 @@ export function Dashboard() {
 					주간 트렌드 분석
 				</Heading>
 				<Text color="gray.500" fontSize="sm">
-					이번 주 월요일부터 일요일까지 기록된 하루 누적 최종 데이터 추이입니다.
+					이번 주 월요일부터 일요일까지의 통계입니다. 방문자는 IP별 하루 한 번 집계하며, 여러 날 방문하면 각 날짜에 포함됩니다.
 				</Text>
 			</Box>
 
 			{/* 상단: 주간 총합 통계 카드 */}
 			<SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={5} mb={8}>
 				<StatCard
-					label="주간 총 방문자 수"
+					label="주간 일별 방문자 합계"
 					value={weeklyTotals.visit.toLocaleString()}
 					icon={FiUsers}
 					iconBg="blue.50"
@@ -310,7 +311,7 @@ export function Dashboard() {
 						<Legend verticalAlign="top" height={40} iconType="circle" wrapperStyle={{ paddingBottom: "20px" }} />
 
 						<Line
-							name="방문자 수"
+							name="일별 방문자 수"
 							type="monotone"
 							dataKey="visit_counter"
 							stroke={colors.visit}
