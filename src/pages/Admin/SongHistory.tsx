@@ -690,6 +690,8 @@ export function SongHistoryComponent() {
 											if (!isEditingMode) handleRowClick(virtualRow.index, his.id);
 										}}
 										onMouseDown={() => {
+											if (!isEditingMode) return;
+
 											const isChecked = bulkEditingIndex.includes(his.id || -1);
 											setDraggingType(isChecked ? "uncheck" : "check");
 											setIsDragging(true);
@@ -698,7 +700,10 @@ export function SongHistoryComponent() {
 											if (isEditingMode && isDragging) handleRowClick(virtualRow.index, his.id);
 										}}
 										onMouseUp={() => {
-											if (isDragging) handleRowClick(virtualRow.index, his.id);
+											if (!isEditingMode || !isDragging) return;
+
+											handleRowClick(virtualRow.index, his.id);
+											setIsDragging(false);
 										}}
 										draggable="false"
 									>
@@ -905,30 +910,29 @@ export function SongHistoryComponent() {
 														onMouseDown={(e) => e.preventDefault()}
 													>
 														{availableOptions.length > 0 ? (
-															availableOptions
-																.map((sb, index) => (
-																	<ListItem
-																		key={sb.i}
-																		display="flex"
-																		p={2}
-																		gap={2}
-																		cursor="pointer"
-																		onClick={(e) => {
-																			e.preventDefault();
-																			e.stopPropagation();
-																			setSongbookSelectorValue("");
-																			setEditingHistory((prev) => (prev ? { ...prev, hamkubby_id: sb.i } : prev));
-																			setIsSelectorOpen(false);
-																		}}
-																		bg={index === highlightedIndex ? "blue.50" : "transparent"}
-																		_hover={{ bg: "blue.50" }}
-																	>
-																		<Text color="gray.500" fontSize="xs">
-																			{sb.i}
-																		</Text>
-																		{`${sb.tl} - ${sb.a}`}
-																	</ListItem>
-																))
+															availableOptions.map((sb, index) => (
+																<ListItem
+																	key={sb.i}
+																	display="flex"
+																	p={2}
+																	gap={2}
+																	cursor="pointer"
+																	onClick={(e) => {
+																		e.preventDefault();
+																		e.stopPropagation();
+																		setSongbookSelectorValue("");
+																		setEditingHistory((prev) => (prev ? { ...prev, hamkubby_id: sb.i } : prev));
+																		setIsSelectorOpen(false);
+																	}}
+																	bg={index === highlightedIndex ? "blue.50" : "transparent"}
+																	_hover={{ bg: "blue.50" }}
+																>
+																	<Text color="gray.500" fontSize="xs">
+																		{sb.i}
+																	</Text>
+																	{`${sb.tl} - ${sb.a}`}
+																</ListItem>
+															))
 														) : (
 															<ListItem p={2}>데이터 없음</ListItem>
 														)}
