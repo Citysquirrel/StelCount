@@ -1,5 +1,6 @@
 import { stellarV2State } from "@/lib/Atom";
 import { Tag as TagType } from "@/lib/types";
+import useColor from "@/lib/hooks/useColor";
 import {
 	Avatar,
 	Button,
@@ -27,25 +28,26 @@ interface FilterPanelProps {
 
 export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags }: FilterPanelProps) {
 	const [stellarData] = useRecoilState(stellarV2State);
+	const { bgCard, borderColor, fieldHoverBgColor, mutedColor } = useColor();
 
 	// 상태
 	const [selectedStellar, setSelectedStellar] = useState<(string | number)[]>([]);
 	const [selectedTag, setSelectedTag] = useState<(string | number)[]>([]);
 
 	return (
-		<Flex gap={2}>
+		<Flex gap={2} wrap="wrap">
 			{/* 스텔라 필터 */}
 			<Popover placement="bottom-start">
 				<PopoverTrigger>
-					<Button variant="outline" size="sm">
+					<Button variant="outline" size="sm" borderColor={borderColor} _hover={{ bg: fieldHoverBgColor }}>
 						스텔라 필터
-						<Text as={"span"} fontSize="xs" color="gray" fontWeight={"400"} display="inline-block">
+						<Text as={"span"} fontSize="xs" color={mutedColor} fontWeight={"400"} display="inline-block">
 							{selectedStellar.length > 0 ? `(${selectedStellar.length} 항목 선택됨)` : null}
 						</Text>
 					</Button>
 				</PopoverTrigger>
 
-				<PopoverContent width="320px" _focus={{ boxShadow: "none" }}>
+				<PopoverContent width="320px" maxW="calc(100vw - 32px)" bg={bgCard} borderColor={borderColor} _focus={{ boxShadow: "none" }}>
 					<PopoverArrow />
 
 					<PopoverCloseButton />
@@ -82,9 +84,9 @@ export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags 
 			{/* 태그 필터 */}
 			<Popover placement="bottom-start">
 				<PopoverTrigger>
-					<Button variant="outline" size="sm">
+					<Button variant="outline" size="sm" borderColor={borderColor} _hover={{ bg: fieldHoverBgColor }}>
 						태그 필터
-						<Text as={"span"} fontSize="xs" color="gray" fontWeight={"400"} display="inline-block">
+						<Text as={"span"} fontSize="xs" color={mutedColor} fontWeight={"400"} display="inline-block">
 							{selectedTag.length > 0
 								? selectedTag.includes("none")
 									? "(태그 없음)"
@@ -94,7 +96,7 @@ export default function FilterPanel({ tags = [], onChangeStellars, onChangeTags 
 					</Button>
 				</PopoverTrigger>
 
-				<PopoverContent width="320px" _focus={{ boxShadow: "none" }}>
+				<PopoverContent width="320px" maxW="calc(100vw - 32px)" bg={bgCard} borderColor={borderColor} _focus={{ boxShadow: "none" }}>
 					<PopoverArrow />
 
 					<PopoverCloseButton />

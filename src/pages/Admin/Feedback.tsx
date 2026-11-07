@@ -17,7 +17,7 @@ export function Feedback() {
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(20);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
-	const { borderColor, headerBg, fieldHoverBgColor } = useColor();
+	const { bgCard, borderColor, headerBg, fieldHoverBgColor, mutedColor } = useColor();
 	const params = new URLSearchParams({ page: String(page), limit: String(limit) });
 	if (category) params.set("category", category);
 	if (sourceSite) params.set("sourceSite", sourceSite);
@@ -91,8 +91,8 @@ export function Feedback() {
 					{feedbacks.data.data.length === 0 ? (
 						<Text py={12} textAlign="center" color="gray.500">조회 조건에 해당하는 피드백이 없습니다.</Text>
 					) : (
-						<TableContainer borderWidth="1px" borderColor={borderColor} borderRadius="md">
-							<Table size="sm" aria-label="접수된 피드백 목록">
+						<TableContainer bg={bgCard} borderWidth="1px" borderColor={borderColor} borderRadius="md">
+							<Table size="sm" aria-label="접수된 피드백 목록" sx={{ "th, td": { borderColor }, th: { color: mutedColor } }}>
 								<Thead bg={headerBg}>
 									<Tr><Th>접수 시각 (KST)</Th><Th>출처 사이트</Th><Th>유형</Th><Th>내용</Th><Th>처리 상태</Th><Th>Discord 알림</Th><Th>관리</Th></Tr>
 								</Thead>

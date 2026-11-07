@@ -84,7 +84,7 @@ export function Stellar() {
 
 	// Hooks
 	const toast = useToast();
-	const { bgCard, borderColor, headerBg, fieldHoverBgColor } = useColor();
+	const { bgCard, borderColor, headerBg, fieldHoverBgColor, alternateRowBg } = useColor();
 	const createStellar = useServerMutation<DefaultResponseData<StellarData>, StellarData, "admin">({
 		version: "admin",
 		api: "/stellar",
@@ -305,7 +305,7 @@ export function Stellar() {
 					<Box ref={parentRef} h="384px" overflowY="auto">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
-							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+							{rowVirtualizer.getVirtualItems().map((virtualRow) => {
 								const stellar = stellarData[virtualRow.index];
 								// youtubeId가 여러개인 경우를 대비
 								const youtubeIds = stellar.youtubeId.split(",");
@@ -320,7 +320,7 @@ export function Stellar() {
 										transform={`translateY(${virtualRow.start}px)`}
 										h={`${virtualRow.size}px`}
 										px={4}
-										bg={index % 2 ? "gray.50" : undefined}
+										bg={virtualRow.index % 2 ? alternateRowBg : bgCard}
 										align="center"
 										borderBottom={`1px solid ${borderColor}`}
 										cursor="pointer"

@@ -56,9 +56,13 @@ function selectWeeklyData(response: DefaultResponseData<LogData[]>): DailyMetric
 	const grouped = new Map<string, DailyMetrics>();
 	for (const log of response.data) {
 		if (!log || !log.key || !Object.prototype.hasOwnProperty.call(metrics, log.key)) continue;
-		const match = log.date?.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:T|$)/);
-		if (!match) continue;
-		const date = `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+		const rawDate = log.date?.trim();
+		const isoDate = rawDate?.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:T|$)/);
+		// 서버의 기본 로캘에 따라 M/D/YYYY 형태로 저장된 로그도 처리한다.
+		const localeDate = rawDate?.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+		if (!isoDate && !localeDate) continue;
+		const [year, month, day] = isoDate ? isoDate.slice(1, 4) : [localeDate![3], localeDate![1], localeDate![2]];
+		const date = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 		const timestamp = new Date(`${date}T00:00:00Z`);
 		if (!Number.isFinite(timestamp.getTime()) || timestamp.toISOString().slice(0, 10) !== date) continue;
 		const row = grouped.get(date) ?? emptyDay(date);
@@ -67,6 +71,7 @@ function selectWeeklyData(response: DefaultResponseData<LogData[]>): DailyMetric
 		grouped.set(date, row);
 	}
 	const firstDate = [...grouped.keys()].sort()[0];
+	if (!firstDate && response.data.length) throw new Error("통계 기록의 날짜 또는 지표 형식을 확인할 수 없습니다.");
 	if (!firstDate) return [];
 	// 서버가 선택한 주를 기준으로 채워 클라이언트 시간대에 따라 주가 바뀌지 않게 한다.
 	const monday = new Date(`${firstDate}T00:00:00Z`);

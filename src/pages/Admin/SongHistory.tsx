@@ -108,7 +108,7 @@ export function SongHistoryComponent() {
 
 	// MARK: - Hooks
 	const toast = useToast();
-	const { bgCard, borderColor, headerBg, fieldHoverBgColor } = useColor();
+	const { bgCard, borderColor, headerBg, fieldHoverBgColor, alternateRowBg, selectedRowBg, selectedRowHoverBg, mutedColor } = useColor();
 	const getAllSongbookData = useServerQuery<DefaultResponseData<MinifiedSongData[]>>({
 		version: "admin",
 		api: "/songbook/minify",
@@ -662,7 +662,7 @@ export function SongHistoryComponent() {
 					<Box ref={parentRef} h={`${tableHeight}px`} overflowY="scroll">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
-							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+							{rowVirtualizer.getVirtualItems().map((virtualRow) => {
 								const his = filteredData[virtualRow.index];
 								const isFaded = !his.isActive;
 								const songbookData = songbookMap.get(his.hamkubby_id || -1);
@@ -678,14 +678,14 @@ export function SongHistoryComponent() {
 										transform={`translateY(${virtualRow.start}px)`}
 										h={`${virtualRow.size}px`}
 										px={4}
-										bg={bulkEditingIndex.includes(his.id || -1) ? "orange.100" : index % 2 ? "gray.50" : undefined}
-										opacity={isFaded ? 0.5 : 1}
+										bg={bulkEditingIndex.includes(his.id || -1) ? selectedRowBg : virtualRow.index % 2 ? alternateRowBg : bgCard}
+										color={isFaded ? mutedColor : undefined}
 										textDecoration={isFaded ? "line-through" : "none"}
 										align="center"
 										borderBottom={`1px solid ${borderColor}`}
 										cursor="pointer"
 										userSelect={"none"}
-										_hover={{ bg: bulkEditingIndex.includes(his.id || -1) ? "orange.200" : fieldHoverBgColor }}
+										_hover={{ bg: bulkEditingIndex.includes(his.id || -1) ? selectedRowHoverBg : fieldHoverBgColor }}
 										onClick={() => {
 											if (!isEditingMode) handleRowClick(virtualRow.index, his.id);
 										}}
@@ -742,7 +742,7 @@ export function SongHistoryComponent() {
 													>
 														{songbookData?.g}
 													</Badge>
-													<Text w="240px" color={"gray.500"} fontSize="sm">
+													<Text w="240px" color={mutedColor} fontSize="sm">
 														{songbookData?.a}
 													</Text>
 												</HStack>
@@ -767,7 +767,7 @@ export function SongHistoryComponent() {
 													aria-label="Open History"
 													size="sm"
 													variant={"outline"}
-													colorScheme="blackAlpha"
+													colorScheme="purple"
 													href={youtube.videoUrl(his.youtubeVideoId, his.start)}
 													target="_blank"
 													onClick={(e) => {

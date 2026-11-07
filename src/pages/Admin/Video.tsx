@@ -125,7 +125,7 @@ export function Video() {
 
 	// Hooks
 	const toast = useToast();
-	const { bgCard, borderColor, headerBg, fieldHoverBgColor } = useColor();
+	const { bgCard, borderColor, headerBg, fieldHoverBgColor, alternateRowBg, redColor, mutedColor } = useColor();
 	const getAllVideos = useServerQuery<DefaultResponseData<VideoData[]>>({
 		version: "admin",
 		api: "/videos",
@@ -323,40 +323,35 @@ export function Video() {
 					스텔라들의 영상 데이터를 관리합니다.
 				</Text>
 			</Box>
-			<Flex gap={2}>
-				<InputGroup w="240px" size="sm">
-					<Input
-						placeholder="제목을 검색하세요.."
-						value={searchQuery}
-						onChange={(e) => {
-							setSearchQuery(e.target.value);
-						}}
-						onKeyDown={(e) => {
-							e.key === "Escape" && setSearchQuery("");
-						}}
+			<Flex gap={4} mb={6} flexWrap="wrap" align="center" bg={bgCard} p={4} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`}>
+				<Flex gap={2} wrap="wrap" align="center" flex={{ base: "1 1 100%", xl: "0 1 auto" }} minW={0}>
+					<InputGroup w={{ base: "full", sm: "240px" }} size="sm">
+						<Input
+							aria-label="영상 제목 검색"
+							borderColor={borderColor}
+							focusBorderColor="#c1a4ef"
+							_placeholder={{ color: mutedColor }}
+							placeholder="제목을 검색하세요.."
+							value={searchQuery}
+							onChange={(e) => {
+								setSearchQuery(e.target.value);
+							}}
+							onKeyDown={(e) => {
+								e.key === "Escape" && setSearchQuery("");
+							}}
+						/>
+						{searchQuery.length !== 0 ? (
+							<InputRightElement>
+								<CloseButton size="sm" onClick={() => setSearchQuery("")} />
+							</InputRightElement>
+						) : null}
+					</InputGroup>
+					<FilterPanel
+						tags={getAllTags.data?.data}
+						onChangeStellars={onChangeStellarsFilter}
+						onChangeTags={onChangeTagsFilter}
 					/>
-					{searchQuery.length !== 0 ? (
-						<InputRightElement>
-							<CloseButton size="sm" onClick={() => setSearchQuery("")} />
-						</InputRightElement>
-					) : null}
-				</InputGroup>
-				<FilterPanel
-					tags={getAllTags.data?.data}
-					onChangeStellars={onChangeStellarsFilter}
-					onChangeTags={onChangeTagsFilter}
-				/>
-			</Flex>
-			<Flex
-				gap={4}
-				mb={6}
-				flexWrap="wrap"
-				bg={bgCard}
-				p={4}
-				rounded="xl"
-				shadow="sm"
-				border={`1px solid ${borderColor}`}
-			>
+				</Flex>
 				<Flex justifySelf={"flex-start"} gap={2}>
 					<NumberInput
 						size="sm"
@@ -417,7 +412,7 @@ export function Video() {
 					<Box ref={parentRef} h={`${tableHeight}px`} overflowY="scroll">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
-							{rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+							{rowVirtualizer.getVirtualItems().map((virtualRow) => {
 								const video = filteredData[virtualRow.index];
 								const isFaded = !video.isActive;
 
@@ -431,7 +426,7 @@ export function Video() {
 										transform={`translateY(${virtualRow.start}px)`}
 										h={`${virtualRow.size}px`}
 										px={4}
-										bg={isFaded ? "red.50" : index % 2 ? "gray.50" : undefined}
+										bg={isFaded ? redColor : virtualRow.index % 2 ? alternateRowBg : bgCard}
 										align="center"
 										borderBottom={`1px solid ${borderColor}`}
 										cursor="pointer"
@@ -461,7 +456,7 @@ export function Video() {
 											/>
 										</Flex>
 										{/* 상세 */}
-										<Box flex={1} fontSize="2xs" ml={2} opacity={isFaded ? 0.5 : 1}>
+										<Box flex={1} fontSize="2xs" ml={2} color={isFaded ? mutedColor : undefined}>
 											<Text fontSize="16px" fontWeight={"bold"}>
 												{video.titleAlias ? `${video.titleAlias}` : video.title}
 												{video.titleAlias && (
