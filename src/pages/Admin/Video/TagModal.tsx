@@ -1,3 +1,5 @@
+import { AdminModalContent } from "@/components/Modal";
+import useColor from "@/lib/hooks/useColor";
 import { DefaultResponseData } from "@/lib/functions/fetch";
 import { useServerMutation } from "@/lib/hooks/useServerApi";
 import {
@@ -15,7 +17,6 @@ import {
 	Modal,
 	ModalBody,
 	ModalCloseButton,
-	ModalContent,
 	ModalHeader,
 	ModalOverlay,
 	Select,
@@ -42,6 +43,7 @@ interface TagModalProps {
 }
 
 export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }: TagModalProps) {
+	const { alternateRowBg, borderColor, fieldHoverBgColor, mutedColor } = useColor();
 	const toast = useToast();
 	// api 관리
 	const createTag = useServerMutation<DefaultResponseData<TagType>, TagType, "admin">({
@@ -137,12 +139,12 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 
 	return (
 		<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-			<ModalOverlay />
-			<ModalContent>
+			<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+			<AdminModalContent>
 				<ModalHeader>
 					영상 태그 관리
 					{/* {editingIndex === -1 ? "새 곡 직접 추가" : "노래 상세 정보 수정"} */}
-					{/* <Text fontSize="xs" color="gray" fontWeight="400">
+					{/* <Text fontSize="xs" color={mutedColor} fontWeight="400">
 						{editingSong?.syncId || ""}
 					</Text> */}
 				</ModalHeader>
@@ -155,7 +157,7 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 							<Box animation="fadeIn 0.2s">
 								<HStack justify="space-between" mb={4}>
 									<Heading size="md">태그 목록</Heading>
-									<Button size="sm" leftIcon={<MdAdd />} colorScheme="blue" onClick={handleAddStart}>
+									<Button size="sm" leftIcon={<MdAdd />} colorScheme="purple" onClick={handleAddStart}>
 										추가
 									</Button>
 								</HStack>
@@ -169,14 +171,16 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 											borderWidth="1px"
 											borderRadius="md"
 											justify="space-between"
-											_hover={{ bg: "gray.50" }}
+											bg={alternateRowBg}
+											borderColor={borderColor}
+											_hover={{ bg: fieldHoverBgColor }}
 										>
 											<HStack spacing={1}>
 												{type.isCover && <Text>⭐</Text>}
 												{type.isOriginal && <Text>🎵</Text>}
 												<Tag colorScheme={type.colorCode}>{type.name}</Tag>
 												{type.count && (
-													<Text ml={2} fontSize="xs" color="gray">
+													<Text ml={2} fontSize="xs" color={mutedColor}>
 														Ref: {type.count}
 													</Text>
 												)}
@@ -201,7 +205,7 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 										</HStack>
 									))}
 									{types.length === 0 && (
-										<Text color="gray.500" textAlign="center" py={8}>
+										<Text color={mutedColor} textAlign="center" py={8}>
 											등록된 태그가 없습니다.
 										</Text>
 									)}
@@ -274,7 +278,7 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 										<Button onClick={() => setViewMode("list")} variant="outline">
 											취소
 										</Button>
-										<Button colorScheme="blue" onClick={handleSave}>
+										<Button colorScheme="purple" onClick={handleSave}>
 											저장
 										</Button>
 									</HStack>
@@ -283,7 +287,7 @@ export default function TagModal({ isModalOpen, setIsModalOpen, data, refetch }:
 						)}
 					</Box>
 				</ModalBody>
-			</ModalContent>
+			</AdminModalContent>
 		</Modal>
 	);
 }

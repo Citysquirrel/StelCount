@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import { Box, Input, List, ListItem, useOutsideClick, useColorModeValue, InputProps } from "@chakra-ui/react";
+import { Box, Input, List, ListItem, useOutsideClick, InputProps } from "@chakra-ui/react";
+import useColor from "@/lib/hooks/useColor";
 
 interface MemoInputAutocompleteProps extends InputProps {
 	options: string[];
@@ -22,10 +23,7 @@ export const MemoInputAutocomplete = ({
 
 	const wrapperRef = useRef<HTMLDivElement>(null);
 
-	// 다크/라이트 모드 대응 색상
-	const listBg = useColorModeValue("white", "gray.700");
-	const hoverBg = useColorModeValue("gray.100", "gray.600");
-	const highlightBg = useColorModeValue("blue.50", "blue.900");
+	const { bgCard, borderColor, fieldHoverBgColor } = useColor();
 
 	// 1. 바깥 영역 클릭 시 드롭다운 닫기
 	useOutsideClick({
@@ -100,7 +98,8 @@ export const MemoInputAutocomplete = ({
 					right={0}
 					mt={1}
 					zIndex="popover" // 다른 요소들 위로 뜨도록
-					bg={listBg}
+					bg={bgCard}
+					borderColor={borderColor}
 					borderWidth="1px"
 					borderRadius="md"
 					boxShadow="md"
@@ -113,8 +112,8 @@ export const MemoInputAutocomplete = ({
 							px={4}
 							py={2}
 							cursor="pointer"
-							bg={highlightedIndex === index ? highlightBg : "transparent"}
-							_hover={{ bg: hoverBg }}
+							bg={highlightedIndex === index ? fieldHoverBgColor : "transparent"}
+							_hover={{ bg: fieldHoverBgColor }}
 							onClick={() => handleSelect(option)}
 							// 💡 핵심 팁: mousedown에서 기본 동작을 막지 않으면,
 							// 클릭하는 순간 Input이 블러(blur) 처리되어 onClick이 실행되기도 전에 리스트가 닫히는 버그가 생깁니다.

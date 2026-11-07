@@ -1,3 +1,4 @@
+import { AdminModalContent } from "@/components/Modal";
 import { ImageV2 } from "@/components/Image";
 import { Link } from "@/components/Link";
 import { stellarV2State } from "@/lib/Atom";
@@ -28,7 +29,6 @@ import {
 	Modal,
 	ModalBody,
 	ModalCloseButton,
-	ModalContent,
 	ModalFooter,
 	ModalHeader,
 	ModalOverlay,
@@ -521,8 +521,8 @@ export function Video() {
 
 					{/* 비디오 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
-						<ModalOverlay />
-						<ModalContent>
+						<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+						<AdminModalContent>
 							<ModalHeader pb={1}>
 								<HStack gap={1}>
 									<Text as="span" mr={4}>
@@ -547,7 +547,7 @@ export function Video() {
 										<MdKeyboardArrowDown />
 									</IconButton>
 								</HStack>
-								<Text fontSize="xs" color="gray" fontWeight="400">
+								<Text fontSize="xs" color={mutedColor} fontWeight="400">
 									{editingVideo?.id || ""}
 								</Text>
 							</ModalHeader>
@@ -689,14 +689,14 @@ export function Video() {
 									취소
 								</Button>
 								<Button
-									colorScheme="blue"
+									colorScheme="purple"
 									onClick={handleSaveEdit}
 									disabled={editVideo.isPending || createVideo.isPending}
 								>
 									적용하기
 								</Button>
 							</ModalFooter>
-						</ModalContent>
+						</AdminModalContent>
 					</Modal>
 				</Box>
 			</Stack>

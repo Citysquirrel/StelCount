@@ -1,3 +1,4 @@
+import { AdminModalContent } from "@/components/Modal";
 import { useEffect, useRef, useState } from "react";
 import { DefaultResponseData, fetchServer } from "../../lib/functions/fetch";
 import {
@@ -7,7 +8,6 @@ import {
 	Heading,
 	IconButton,
 	Modal,
-	ModalContent,
 	ModalHeader,
 	ModalOverlay,
 	ModalCloseButton,
@@ -84,7 +84,7 @@ export function Stellar() {
 
 	// Hooks
 	const toast = useToast();
-	const { bgCard, borderColor, headerBg, fieldHoverBgColor, alternateRowBg } = useColor();
+	const { bgCard, borderColor, headerBg, fieldHoverBgColor, alternateRowBg, mutedColor } = useColor();
 	const createStellar = useServerMutation<DefaultResponseData<StellarData>, StellarData, "admin">({
 		version: "admin",
 		api: "/stellar",
@@ -416,11 +416,11 @@ export function Stellar() {
 
 					{/* 스텔라 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl" closeOnOverlayClick={false}>
-						<ModalOverlay />
-						<ModalContent>
+						<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+						<AdminModalContent>
 							<ModalHeader>
 								{editingIndex === -1 ? "새 스텔라 추가" : "스텔라 상세 정보 수정"}
-								<Text fontSize="xs" color="gray" fontWeight="400">
+								<Text fontSize="xs" color={mutedColor} fontWeight="400">
 									{editingStellar?.uuid || ""}
 								</Text>
 							</ModalHeader>
@@ -598,14 +598,14 @@ export function Stellar() {
 									취소
 								</Button>
 								<Button
-									colorScheme="blue"
+									colorScheme="purple"
 									onClick={handleSaveEdit}
 									disabled={editStellar.isPending || createStellar.isPending}
 								>
 									적용하기
 								</Button>
 							</ModalFooter>
-						</ModalContent>
+						</AdminModalContent>
 					</Modal>
 				</Box>
 			</Stack>

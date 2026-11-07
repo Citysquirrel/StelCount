@@ -13,6 +13,7 @@ import {
 	BoxProps,
 } from "@chakra-ui/react";
 import { Tag as TagType } from "@/lib/types";
+import useColor from "@/lib/hooks/useColor";
 
 interface TagInputAutocompleteProps extends InputProps {
 	data: TagType[] | undefined;
@@ -28,6 +29,7 @@ export default function TagInputAutocomplete({
 	wrapperProps,
 	...props
 }: TagInputAutocompleteProps) {
+	const { bgCard, borderColor, fieldHoverBgColor } = useColor();
 	const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
 	const [inputValue, setInputValue] = useState("");
 	const [isOpen, setIsOpen] = useState(false);
@@ -133,7 +135,8 @@ export default function TagInputAutocomplete({
 			<Flex
 				alignItems="center"
 				border="1px solid"
-				borderColor="inherit"
+				borderColor={borderColor}
+				bg="#171320"
 				borderRadius="sm"
 				p={2}
 				cursor="text"
@@ -146,8 +149,8 @@ export default function TagInputAutocomplete({
 				}}
 				onClick={() => inputRef.current?.focus()}
 				_focusWithin={{
-					borderColor: "blue.500",
-					boxShadow: "0 0 0 1px #3182ce",
+					borderColor: "#c1a4ef",
+					boxShadow: "0 0 0 1px #c1a4ef",
 				}}
 			>
 				{/* 선택된 태그 렌더링 */}
@@ -189,22 +192,22 @@ export default function TagInputAutocomplete({
 					left={0}
 					right={0}
 					mt={2}
-					bg="white"
+					bg={bgCard}
 					boxShadow="md"
 					borderRadius="md"
 					maxH="200px"
 					overflowY="auto"
 					zIndex={10}
 					border="1px solid"
-					borderColor="gray.200"
+					borderColor={borderColor}
 				>
 					{availableOptions.map((option, index) => (
 						<ListItem
 							key={option.id}
 							p={3}
 							cursor="pointer"
-							bg={index === highlightedIndex ? "blue.50" : "transparent"}
-							_hover={{ bg: "blue.50" }}
+							bg={index === highlightedIndex ? fieldHoverBgColor : "transparent"}
+							_hover={{ bg: fieldHoverBgColor }}
 							onClick={() => addTag(option)}
 						>
 							<Tag colorScheme={option.colorCode || "gray"}>{option.name}</Tag>

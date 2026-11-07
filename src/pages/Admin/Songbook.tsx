@@ -1,3 +1,4 @@
+import { AdminModalContent } from "@/components/Modal";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
 	Box,
@@ -16,7 +17,6 @@ import {
 	Select,
 	Modal,
 	ModalOverlay,
-	ModalContent,
 	ModalHeader,
 	ModalCloseButton,
 	ModalBody,
@@ -178,7 +178,7 @@ export function Songbook() {
 	const statuses: (ActionStatus | SyncStatus)[] = ["ACTIVE", "DELETED", "DISABLED", "MODIFIED", "NEW", "UNCHANGED"];
 
 	// 테마 색상
-	const { bgCard, borderColor, headerBg, greenColor, yellowColor, fieldHoverBgColor } = useColor();
+	const { bgCard, borderColor, headerBg, greenColor, yellowColor, fieldHoverBgColor, mutedColor } = useColor();
 
 	const parseRawData = (rawData: RawSongData[]): SongData[] => {
 		return rawData.map((song) => {
@@ -948,11 +948,11 @@ export function Songbook() {
 
 			{/* --- [수정/추가 다이얼로그 (모달)] --- */}
 			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="4xl">
-				<ModalOverlay />
-				<ModalContent>
+				<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+				<AdminModalContent>
 					<ModalHeader>
 						{editingIndex === -1 ? "새 곡 직접 추가" : "노래 상세 정보 수정"}
-						<Text fontSize="xs" color="gray" fontWeight="400">
+						<Text fontSize="xs" color={mutedColor} fontWeight="400">
 							{editingSong?.syncId || ""}
 						</Text>
 					</ModalHeader>
@@ -1057,7 +1057,7 @@ export function Songbook() {
 												</Flex>
 											))}
 											{editingSong.synonyms.length === 0 && (
-												<Text fontSize="sm" color="gray.500">
+												<Text fontSize="sm" color={mutedColor}>
 													등록된 별칭이 없습니다.
 												</Text>
 											)}
@@ -1099,7 +1099,7 @@ export function Songbook() {
 								<VStack width={["100%", "100%", "280px"]} align="stretch" p={"12px 4px"}>
 									<VStack
 										border="1px solid"
-										borderColor="#c5c5c5"
+										borderColor={borderColor}
 										borderRadius={"12px"}
 										p={2}
 										height="100%"
@@ -1125,11 +1125,11 @@ export function Songbook() {
 						<Button variant="ghost" mr={3} onClick={() => setIsModalOpen(false)}>
 							취소
 						</Button>
-						<Button colorScheme="blue" onClick={handleSaveEdit}>
+						<Button colorScheme="purple" onClick={handleSaveEdit}>
 							적용하기
 						</Button>
 					</ModalFooter>
-				</ModalContent>
+				</AdminModalContent>
 			</Modal>
 		</Box>
 	);
@@ -1142,6 +1142,7 @@ interface SongHistoryEditorProps {
 
 export default function SongHistoryEditor({ editingSong, setEditingSong }: SongHistoryEditorProps) {
 	const { isOpen, onOpen, onClose } = useDisclosure();
+	const { bgCard, borderColor, alternateRowBg, redColor, fieldHoverBgColor, mutedColor } = useColor();
 
 	// 상태 관리
 	const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -1159,8 +1160,8 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 	// editingSong이 null일 경우 렌더링 방어 (Early Return)
 	if (!editingSong) {
 		return (
-			<Flex w="280px" p={4} justify="center" align="center" borderWidth="1px" borderRadius="md" bg="gray.50">
-				<Text fontSize="sm" color="gray.500">
+			<Flex w="280px" p={4} justify="center" align="center" borderWidth="1px" borderColor={borderColor} borderRadius="md" bg={alternateRowBg}>
+				<Text fontSize="sm" color={mutedColor}>
 					선택된 곡이 없습니다.
 				</Text>
 			</Flex>
@@ -1335,9 +1336,10 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 					borderWidth="1px"
 					borderRadius="md"
 					cursor="pointer"
-					bg={his.isActive ? undefined : "red.100"}
+					bg={his.isActive ? bgCard : redColor}
+					borderColor={borderColor}
 					textDecoration={his.isActive ? undefined : "line-through"}
-					_hover={{ bg: his.isActive ? "gray.100" : "red.200" }}
+					_hover={{ bg: fieldHoverBgColor }}
 					onClick={() => handleClickCard(his, idx)}
 				>
 					<Flex direction="column" gap={1} overflow="hidden">
@@ -1346,7 +1348,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 							<Text fontSize="xs" fontWeight="bold" whiteSpace="nowrap">
 								{formatDateToYYYYMMDD(his.sungAt) || "날짜 미상"}
 							</Text>
-							<Text fontSize="xs" color="gray.500" isTruncated>
+							<Text fontSize="xs" color={mutedColor} isTruncated>
 								{his.youtubeVideoId || "ID 없음"}
 							</Text>
 							<HStack gap={0}>
@@ -1355,7 +1357,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 									icon={<MdOpenInNew />}
 									size="xs"
 									variant="ghost"
-									colorScheme="blue"
+									colorScheme="purple"
 									onClick={(e) => {
 										e.stopPropagation();
 										window.open(youtubeLink(his.youtubeVideoId, his.start), "_blank");
@@ -1390,14 +1392,14 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 			))}
 
 			{/* ➕ 추가 버튼 */}
-			<Button leftIcon={<MdAdd />} size="sm" w="100%" colorScheme="teal" variant="outline" onClick={handleAddHistory}>
+			<Button leftIcon={<MdAdd />} size="sm" w="100%" colorScheme="purple" variant="outline" onClick={handleAddHistory}>
 				새 가창 기록 추가
 			</Button>
 
 			{/* 🛠️ 수정/추가 모달 */}
 			<Modal isOpen={isOpen} onClose={onClose} isCentered size="sm">
-				<ModalOverlay />
-				<ModalContent mx={4}>
+				<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+				<AdminModalContent mx={4}>
 					<ModalHeader fontSize="md">{editIndex === -1 ? "가창 기록 추가" : "가창 기록 수정"}</ModalHeader>
 					<ModalCloseButton />
 
@@ -1426,7 +1428,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 											icon={<MdOpenInNew />}
 											size="xs"
 											variant="ghost"
-											colorScheme="blue"
+											colorScheme="purple"
 											onClick={(e) => {
 												e.stopPropagation();
 												window.open(youtubeLink(modalData.youtubeVideoId, modalData.start), "_blank");
@@ -1442,19 +1444,19 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 								</FormControl>
 
 								{/* ⏱️ 시간 입력 영역 */}
-								<Box p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+								<Box p={3} borderWidth="1px" borderColor={borderColor} borderRadius="md" bg={alternateRowBg}>
 									<Flex alignItems="center" mb={3}>
 										<Text fontSize="sm" fontWeight="bold">
 											재생 구간
 										</Text>
 										<Spacer />
 										<Flex alignItems="center" gap={2}>
-											<Text fontSize="xs" color="gray.500">
+											<Text fontSize="xs" color={mutedColor}>
 												{isTimeFormat ? "시간 포맷" : "초 단위"}
 											</Text>
 											<Switch
 												size="sm"
-												colorScheme="teal"
+												colorScheme="purple"
 												isChecked={isTimeFormat}
 												onChange={(e) => handleToggleFormat(e.target.checked)}
 											/>
@@ -1519,7 +1521,7 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 												<NumberDecrementStepper />
 											</NumberInputStepper>
 										</NumberInput>
-										<Text fontSize="xs" color="gray.500">
+										<Text fontSize="xs" color={mutedColor}>
 											(높을수록 중요, 7로 설정시 ⭐표시)
 										</Text>
 									</FormControl>
@@ -1542,11 +1544,11 @@ export default function SongHistoryEditor({ editingSong, setEditingSong }: SongH
 						<Button variant="ghost" mr={2} onClick={onClose} size="sm">
 							취소
 						</Button>
-						<Button colorScheme="blue" onClick={handleSaveHistory} size="sm" isDisabled={modalData?.sungAt === ""}>
+						<Button colorScheme="purple" onClick={handleSaveHistory} size="sm" isDisabled={modalData?.sungAt === ""}>
 							저장
 						</Button>
 					</ModalFooter>
-				</ModalContent>
+				</AdminModalContent>
 			</Modal>
 		</>
 	);

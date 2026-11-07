@@ -1,3 +1,4 @@
+import { AdminModalContent } from "@/components/Modal";
 import { DefaultResponseData } from "@/lib/functions/fetch";
 import { useServerMutation } from "@/lib/hooks/useServerApi";
 import {
@@ -14,7 +15,6 @@ import {
 	Modal,
 	ModalBody,
 	ModalCloseButton,
-	ModalContent,
 	ModalHeader,
 	ModalOverlay,
 	Text,
@@ -25,6 +25,7 @@ import { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { MdAdd, MdArrowBack, MdDelete, MdEdit } from "react-icons/md";
 import { StellarGroup } from "../Stellar";
+import useColor from "@/lib/hooks/useColor";
 
 type ViewMode = "list" | "add" | "edit";
 
@@ -36,6 +37,7 @@ interface GroupModalProps {
 }
 
 export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch }: GroupModalProps) {
+	const { alternateRowBg, borderColor, fieldHoverBgColor, mutedColor } = useColor();
 	const toast = useToast();
 	// api 관리
 	const createGroup = useServerMutation<DefaultResponseData<StellarGroup>, StellarGroup, "admin">({
@@ -137,12 +139,12 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 
 	return (
 		<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-			<ModalOverlay />
-			<ModalContent>
+			<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+			<AdminModalContent>
 				<ModalHeader>
 					스텔라 그룹 관리
 					{/* {editingIndex === -1 ? "새 곡 직접 추가" : "노래 상세 정보 수정"} */}
-					{/* <Text fontSize="xs" color="gray" fontWeight="400">
+					{/* <Text fontSize="xs" color={mutedColor} fontWeight="400">
 						{editingSong?.syncId || ""}
 					</Text> */}
 				</ModalHeader>
@@ -155,7 +157,7 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 							<Box animation="fadeIn 0.2s">
 								<HStack justify="space-between" mb={4}>
 									<Heading size="md">그룹 목록</Heading>
-									<Button size="sm" leftIcon={<MdAdd />} colorScheme="blue" onClick={handleAddStart}>
+									<Button size="sm" leftIcon={<MdAdd />} colorScheme="purple" onClick={handleAddStart}>
 										추가
 									</Button>
 								</HStack>
@@ -169,7 +171,9 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 											borderWidth="1px"
 											borderRadius="md"
 											justify="space-between"
-											_hover={{ bg: "gray.50" }}
+											bg={alternateRowBg}
+											borderColor={borderColor}
+											_hover={{ bg: fieldHoverBgColor }}
 										>
 											<HStack spacing={1}>
 												<Text fontWeight="medium">{group.name}</Text>
@@ -200,7 +204,7 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 										</HStack>
 									))}
 									{groups.length === 0 && (
-										<Text color="gray.500" textAlign="center" py={8}>
+										<Text color={mutedColor} textAlign="center" py={8}>
 											등록된 그룹이 없습니다.
 										</Text>
 									)}
@@ -280,7 +284,7 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 										<Button onClick={() => setViewMode("list")} variant="outline">
 											취소
 										</Button>
-										<Button colorScheme="blue" onClick={handleSave}>
+										<Button colorScheme="purple" onClick={handleSave}>
 											저장
 										</Button>
 									</HStack>
@@ -289,7 +293,7 @@ export default function GroupModal({ isModalOpen, setIsModalOpen, data, refetch 
 						)}
 					</Box>
 				</ModalBody>
-			</ModalContent>
+			</AdminModalContent>
 		</Modal>
 	);
 }

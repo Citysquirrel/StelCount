@@ -1,3 +1,5 @@
+import { AdminModalContent } from "@/components/Modal";
+import useColor from "@/lib/hooks/useColor";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { formatDateToYYYYMMDD } from "@/lib/functions/etc";
 import VALIDATION from "@/lib/functions/validation";
@@ -16,7 +18,6 @@ import {
 	Modal,
 	ModalBody,
 	ModalCloseButton,
-	ModalContent,
 	ModalFooter,
 	ModalHeader,
 	ModalOverlay,
@@ -50,6 +51,7 @@ export default function BulkUpdateModal({
 	data,
 	onSave,
 }: BulkUpdateModalProps) {
+	const { mutedColor } = useColor();
 	const toast = useToast();
 	const defaultUpdates = {
 		sungAt: "",
@@ -131,11 +133,11 @@ export default function BulkUpdateModal({
 
 	return (
 		<Modal isOpen={isModalOpen} onClose={handleClose}>
-			<ModalOverlay />
-			<ModalContent>
+			<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+			<AdminModalContent>
 				<ModalHeader>
 					묶음 편집
-					<Text fontSize="xs" color="gray" fontWeight="400">
+					<Text fontSize="xs" color={mutedColor} fontWeight="400">
 						{bulkIndex.join(", ")}
 					</Text>
 				</ModalHeader>
@@ -200,11 +202,11 @@ export default function BulkUpdateModal({
 					<Button variant="ghost" mr={3} onClick={handleClose}>
 						취소
 					</Button>
-					<Button colorScheme="blue" onClick={handleSave} disabled={editHistory.isPending || isSungAtEmpty}>
+					<Button colorScheme="purple" onClick={handleSave} disabled={editHistory.isPending || isSungAtEmpty}>
 						적용하기
 					</Button>
 				</ModalFooter>
-			</ModalContent>
+			</AdminModalContent>
 		</Modal>
 	);
 }

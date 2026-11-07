@@ -1,7 +1,8 @@
+import { AdminModalContent } from "@/components/Modal";
 import { useState } from "react";
 import {
 	Alert, AlertIcon, Badge, Box, Button, FormControl, FormLabel, Modal, ModalBody,
-	ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select,
+	ModalCloseButton, ModalFooter, ModalHeader, ModalOverlay, Select,
 	Spinner, Stack, Text, useToast,
 } from "@chakra-ui/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,7 +16,7 @@ export default function Details({ id, onClose }: { id: string; onClose: () => vo
 	const [processed, setProcessed] = useState<boolean | null>(null);
 	const queryClient = useQueryClient();
 	const toast = useToast();
-	const { borderColor } = useColor();
+	const { borderColor, mutedColor } = useColor();
 	const api = `/feedback/${encodeURIComponent(id)}`;
 	const detail = useServerQuery<DefaultResponseData<FeedbackData>>({
 		version: "admin",
@@ -50,8 +51,8 @@ export default function Details({ id, onClose }: { id: string; onClose: () => vo
 
 	return (
 		<Modal isOpen onClose={close} size="xl" scrollBehavior="inside" closeOnOverlayClick={!editFeedback.isPending} closeOnEsc={!editFeedback.isPending}>
-			<ModalOverlay />
-			<ModalContent>
+			<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+			<AdminModalContent>
 				<ModalHeader>피드백 상세</ModalHeader>
 				<ModalCloseButton isDisabled={editFeedback.isPending} />
 				<ModalBody>
@@ -67,7 +68,7 @@ export default function Details({ id, onClose }: { id: string; onClose: () => vo
 									<Badge colorScheme={feedback.isProcessed ? "green" : "orange"}>{feedback.isProcessed ? "처리 완료" : "미처리"}</Badge>
 									<Text mt={2} fontSize="sm">접수 시각: {formatUtcToKst(feedback.createdAt)} (KST)</Text>
 									<Text fontSize="sm">출처 사이트: {feedbackSources[feedback.sourceSite] ?? feedbackSources.unknown}</Text>
-									<Text fontSize="xs" color="gray.500" overflowWrap="anywhere">ID: {feedback.id}</Text>
+									<Text fontSize="xs" color={mutedColor} overflowWrap="anywhere">ID: {feedback.id}</Text>
 								</Box>
 								<Box borderWidth="1px" borderColor={borderColor} borderRadius="md" p={4}>
 									<Text whiteSpace="pre-wrap" overflowWrap="anywhere">{feedback.message}</Text>
@@ -79,7 +80,7 @@ export default function Details({ id, onClose }: { id: string; onClose: () => vo
 									</Select>
 								</FormControl>
 								<Text fontSize="sm">Discord 알림: {feedbackNotifications[feedback.notificationStatus] ?? feedback.notificationStatus}</Text>
-								<Text fontSize="sm" color="gray.500">처리 상태를 바꿔도 알림 전송에는 영향을 주지 않습니다.</Text>
+								<Text fontSize="sm" color={mutedColor}>처리 상태를 바꿔도 알림 전송에는 영향을 주지 않습니다.</Text>
 							</>
 						)}
 						{editFeedback.isError && <Alert status="error"><AlertIcon /><Box>{editFeedback.error.message} 저장 여부가 불확실하면 목록을 새로고침해 확인해 주세요.</Box></Alert>}
@@ -87,13 +88,13 @@ export default function Details({ id, onClose }: { id: string; onClose: () => vo
 				</ModalBody>
 				<ModalFooter gap={3}>
 					<Button onClick={close} isDisabled={editFeedback.isPending}>닫기</Button>
-					<Button colorScheme="blue" isLoading={editFeedback.isPending} loadingText="저장 중"
+					<Button colorScheme="purple" isLoading={editFeedback.isPending} loadingText="저장 중"
 						isDisabled={!feedback || detail.isError || detail.isFetching || isProcessed === feedback.isProcessed}
 						onClick={() => { if (feedback && !editFeedback.isPending) editFeedback.mutate({ id, isProcessed }); }}>
 						저장
 					</Button>
 				</ModalFooter>
-			</ModalContent>
+			</AdminModalContent>
 		</Modal>
 	);
 }

@@ -1,3 +1,4 @@
+import { AdminModalContent } from "@/components/Modal";
 import { CustomLink } from "@/components/Link";
 import { displayPriority } from "@/lib/functions/display";
 import { createHistoryId, formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "@/lib/functions/etc";
@@ -29,7 +30,6 @@ import {
 	Modal,
 	ModalBody,
 	ModalCloseButton,
-	ModalContent,
 	ModalFooter,
 	ModalHeader,
 	ModalOverlay,
@@ -799,8 +799,8 @@ export function SongHistoryComponent() {
 
 					{/* 이력 편집 모달 */}
 					<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="2xl" closeOnEsc={false}>
-						<ModalOverlay />
-						<ModalContent>
+						<ModalOverlay bg="#090612b3" backdropFilter="blur(4px)" />
+						<AdminModalContent>
 							<ModalHeader pb={1}>
 								<HStack gap={1}>
 									<Text as="span" mr={4}>
@@ -825,7 +825,7 @@ export function SongHistoryComponent() {
 										<MdKeyboardArrowDown />
 									</IconButton>
 								</HStack>
-								<Text fontSize="xs" color="gray" fontWeight="400">
+								<Text fontSize="xs" color={mutedColor} fontWeight="400">
 									{editingHistory?.id || ""} - {editingHistory?.historyId || ""}
 								</Text>
 							</ModalHeader>
@@ -858,7 +858,7 @@ export function SongHistoryComponent() {
 															>
 																{getSongbookDataWithHistory.g}
 															</Badge>
-															<Text color={"gray.500"} fontSize="sm">
+															<Text color={mutedColor} fontSize="sm">
 																{getSongbookDataWithHistory.a}
 															</Text>
 														</HStack>
@@ -899,14 +899,14 @@ export function SongHistoryComponent() {
 														left={0}
 														right={0}
 														mt={2}
-														bg="white"
+														bg={bgCard}
 														boxShadow="md"
 														borderRadius="md"
 														maxH="200px"
 														overflowY="auto"
 														zIndex={10}
 														border="1px solid"
-														borderColor="gray.200"
+														borderColor={borderColor}
 														onMouseDown={(e) => e.preventDefault()}
 													>
 														{availableOptions.length > 0 ? (
@@ -924,10 +924,10 @@ export function SongHistoryComponent() {
 																		setEditingHistory((prev) => (prev ? { ...prev, hamkubby_id: sb.i } : prev));
 																		setIsSelectorOpen(false);
 																	}}
-																	bg={index === highlightedIndex ? "blue.50" : "transparent"}
-																	_hover={{ bg: "blue.50" }}
+																	bg={index === highlightedIndex ? fieldHoverBgColor : "transparent"}
+																	_hover={{ bg: fieldHoverBgColor }}
 																>
-																	<Text color="gray.500" fontSize="xs">
+																	<Text color={mutedColor} fontSize="xs">
 																		{sb.i}
 																	</Text>
 																	{`${sb.tl} - ${sb.a}`}
@@ -974,19 +974,19 @@ export function SongHistoryComponent() {
 														</FormControl>
 													</HStack>
 
-													<Box p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+													<Box p={3} borderWidth="1px" borderColor={borderColor} borderRadius="md" bg={alternateRowBg}>
 														<Flex alignItems="center" mb={3}>
 															<Text fontSize="sm" fontWeight="bold">
 																재생 구간
 															</Text>
 															<Spacer />
 															<Flex alignItems="center" gap={2}>
-																<Text fontSize="xs" color="gray.500">
+																<Text fontSize="xs" color={mutedColor}>
 																	{isTimeFormat ? "시간 포맷" : "초 단위"}
 																</Text>
 																<Switch
 																	size="sm"
-																	colorScheme="teal"
+																	colorScheme="purple"
 																	isChecked={isTimeFormat}
 																	onChange={(e) => handleToggleFormat(e.target.checked)}
 																/>
@@ -1052,7 +1052,7 @@ export function SongHistoryComponent() {
 																	<NumberDecrementStepper />
 																</NumberInputStepper>
 															</NumberInput>
-															<Text fontSize="xs" color="gray.500">
+															<Text fontSize="xs" color={mutedColor}>
 																(높을수록 중요, 7로 설정시 ⭐표시)
 															</Text>
 														</FormControl>
@@ -1079,14 +1079,14 @@ export function SongHistoryComponent() {
 									취소
 								</Button>
 								<Button
-									colorScheme="blue"
+									colorScheme="purple"
 									onClick={handleSaveEdit}
 									disabled={editHistory.isPending || createHistory.isPending || !editingHistory?.hamkubby_id}
 								>
 									적용하기
 								</Button>
 							</ModalFooter>
-						</ModalContent>
+						</AdminModalContent>
 					</Modal>
 
 					{/* 묶음 편집 모달 */}
