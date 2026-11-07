@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Collapse, Flex, Icon, IconButton, Portal, Progress, SimpleGrid, Spinner, Text, useColorModeValue } from "@chakra-ui/react";
+import { Badge, Box, Button, Collapse, DarkMode, Flex, Icon, IconButton, Portal, Progress, SimpleGrid, Spinner, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { FiAlertTriangle, FiCheckCircle, FiChevronDown, FiChevronUp, FiMusic, FiX, FiXCircle } from "react-icons/fi";
 import { PlaylistRenewalProgress, usePlaylistRenewal } from "../lib/hooks/usePlaylistRenewal";
@@ -19,9 +19,9 @@ export function PlaylistRenewalPopup() {
 	const { progress, error, isStarting, isChecking, refresh } = usePlaylistRenewal();
 	const [expanded, setExpanded] = useState(false);
 	const [dismissedJob, setDismissedJob] = useState<string | null>(null);
-	const bg = useColorModeValue("white", "gray.800");
-	const border = useColorModeValue("gray.200", "gray.600");
-	const muted = useColorModeValue("gray.600", "gray.300");
+	const bg = "#1b1629";
+	const border = "#3a3351";
+	const muted = "#b4aacb";
 	const running = progress?.status === "running";
 	const visible = isStarting || error || (progress && progress.status !== "idle" && (running || dismissedJob !== progress.jobId));
 	if (!visible) return null;
@@ -33,10 +33,11 @@ export function PlaylistRenewalPopup() {
 	const total = progress?.stage === "fetch_playlists" ? progress.playlistsTotal : progress?.stage === "save_videos" ? progress.itemsTotal : null;
 	const percent = total !== null && total > 0 ? Math.min(100, Math.floor(done / total * 100)) : null;
 	return (
+		<DarkMode>
 		<Portal>
 			<Box as="section" aria-label="재생목록 갱신 진행 상황" position="fixed" right={{ base: 3, md: 6 }}
 				bottom="calc(16px + env(safe-area-inset-bottom, 0px))" w="360px" maxW="calc(100vw - 24px)"
-				zIndex="banner" bg={bg} borderWidth="1px" borderColor={border} rounded="xl" shadow="xl" overflow="hidden">
+				zIndex="banner" bg={bg} color="#f1edf8" borderWidth="1px" borderColor={border} rounded="2xl" shadow="xl" overflow="hidden">
 				<Flex align="center" gap={3} px={4} pt={3} pb={2}>
 					<Icon as={FiMusic} color={`${color}.500`} />
 					<Text flex={1} fontWeight="bold" fontSize="sm">재생목록 갱신</Text>
@@ -84,5 +85,6 @@ export function PlaylistRenewalPopup() {
 				</Box>
 			</Box>
 		</Portal>
+		</DarkMode>
 	);
 }

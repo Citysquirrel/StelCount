@@ -1,10 +1,11 @@
 import { Header } from "./components/Header";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
 import { Container } from "./components/Container";
 import { Footer } from "./components/Footer";
 import { useStellar } from "./lib/hooks/useStellar";
-import { Button, Divider, IconButton, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
+import { Button, DarkMode, Divider, IconButton, Stack, Text, Tooltip, useColorMode } from "@chakra-ui/react";
+import { ObservatoryHeader, ObservatoryShell } from "./components/layout/Observatory";
 import { MdCreate, MdDarkMode, MdHome, MdLightMode, MdSettings } from "react-icons/md";
 import { GrMultiple } from "react-icons/gr";
 import { useRecoilState } from "recoil";
@@ -20,6 +21,7 @@ import { useNow } from "./lib/hooks/useNow";
 import { useHotkeys } from "react-hotkeys-hook";
 
 function App() {
+	const { pathname } = useLocation();
 	const nav = useNavigateEvent();
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [isStellarLoading] = useRecoilState(isStellarLoadingState);
@@ -47,6 +49,16 @@ function App() {
 	const [timeGap, timeText] = elapsedTimeText(new Date(fetchInfo.stellar?.date || "1000-01-01T09:00:00.000Z"), now);
 
 	if (serverError.isError) return <ServerErrorPage />;
+	if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+		return (
+			<DarkMode>
+				<ObservatoryShell>
+					<ObservatoryHeader />
+					<Outlet />
+				</ObservatoryShell>
+			</DarkMode>
+		);
+	}
 	return (
 		<>
 			<Stack backgroundColor={backgroundColor} gap="0" transition="background-color .3s">
