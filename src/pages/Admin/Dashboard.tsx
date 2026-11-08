@@ -19,6 +19,7 @@ const methodStyles: Record<YouTubeMethodUsage["key"], { label: string; color: st
 	playlist_list: { label: "playlists.list", color: "#c1a4ef" },
 };
 const methodKeys = Object.keys(methodStyles) as YouTubeMethodUsage["key"][];
+const visitDualAxisRatio = 5;
 const numberFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 });
 const compactFormat = new Intl.NumberFormat("ko-KR", { notation: "compact" });
 const dayFormat = new Intl.DateTimeFormat("ko-KR", { weekday: "short", timeZone: "UTC" });
@@ -89,6 +90,9 @@ function VisitSection({ siteKey, series }: {
 	const site = visitSites[siteKey];
 	const days = series?.days ?? [];
 	const total = days.reduce((sum, day) => sum + day.requests, 0);
+	const maxRequests = Math.max(0, ...days.map((day) => day.requests));
+	const maxUniqueIps = Math.max(0, ...days.map((day) => day.uniqueIps));
+	const useDualAxis = maxUniqueIps > 0 && maxRequests / maxUniqueIps >= visitDualAxisRatio;
 	return (
 		<MetricSection title={site.label} eyebrow="VISIT CALLS" icon={FiUsers}
 			description="일별 호출 수 · 일별 고유 IP"
@@ -100,10 +104,17 @@ function VisitSection({ siteKey, series }: {
 				<Text fontSize="30px" fontWeight="bold">{days.length ? `${numberFormat.format(total)}회` : "기록 없음"}</Text>
 			</Box>
 			{days.length ? <>
-				<UsageChart label={`${site.label} 일별 호출 수와 고유 IP`} data={days}>
+				{useDualAxis && <Flex justify="space-between" gap={2} mb={2} fontSize="xs">
+					<Text color={site.color}>왼쪽 · 호출 수 (회)</Text>
+					<Text color="#f1edf8">오른쪽 · 고유 IP (개)</Text>
+				</Flex>}
+				<UsageChart label={`${site.label} 일별 호출 수와 고유 IP`} data={days}
+					leftAxisColor={useDualAxis ? site.color : undefined}
+					rightAxis={useDualAxis ? { id: "uniqueIps", color: "#f1edf8" } : undefined}>
 					<Bar dataKey="requests" name="호출 수 (회)" fill={site.color} radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false} />
-					<Line dataKey="uniqueIps" name="고유 IP (개)" stroke="#f1edf8" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} />
+					<Line dataKey="uniqueIps" yAxisId={useDualAxis ? "uniqueIps" : 0} name="고유 IP (개)" stroke="#f1edf8" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} />
 				</UsageChart>
+				{useDualAxis && <Text mt={2} fontSize="xs" color="var(--obs-muted)">두 지표는 서로 다른 눈금을 사용합니다.</Text>}
 				<TableContainer mt={4}>
 					<Table size="sm" variant="unstyled" aria-label={`${site.label} 일별 방문 집계`}>
 						<Thead color="var(--obs-muted)"><Tr><Th px={2}>한국 날짜</Th><Th px={2} isNumeric>호출 수</Th><Th px={2} isNumeric>고유 IP</Th></Tr></Thead>
@@ -220,14 +231,22 @@ function MetricSection({ title, eyebrow, icon: Icon, description, footnote, chil
 	);
 }
 
-function UsageChart({ label, data, children }: { label: string; data: { date: string }[]; children: ReactNode }) {
+function UsageChart({ label, data, children, leftAxisColor = "#b4aacb", rightAxis }: {
+	label: string;
+	data: { date: string }[];
+	children: ReactNode;
+	leftAxisColor?: string;
+	rightAxis?: { id: string; color: string };
+}) {
 	return (
 		<Box h="240px" minW={0} aria-label={label}>
 			<ResponsiveContainer width="100%" height="100%" minWidth={0}>
-				<ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 4, left: -16 }} accessibilityLayer>
+				<ComposedChart data={data} margin={{ top: 10, right: rightAxis ? 0 : 10, bottom: 4, left: rightAxis ? 0 : -16 }} accessibilityLayer>
 					<CartesianGrid strokeDasharray="3 5" vertical={false} stroke="#3a3351" />
 					<XAxis dataKey="date" tickFormatter={(date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`} tick={{ fill: "#b4aacb", fontSize: 11 }} tickLine={false} axisLine={false} tickMargin={12} />
-					<YAxis domain={[0, "auto"]} allowDecimals={false} tickFormatter={(value: number) => compactFormat.format(value)} tick={{ fill: "#b4aacb", fontSize: 11 }} tickLine={false} axisLine={false} />
+					<YAxis yAxisId={0} width={rightAxis ? 44 : 60} domain={[0, "auto"]} allowDecimals={false} tickFormatter={(value: number) => compactFormat.format(value)} tick={{ fill: leftAxisColor, fontSize: 11 }} tickLine={false} axisLine={false} />
+					{rightAxis && <YAxis yAxisId={rightAxis.id} orientation="right" width={44} domain={[0, "auto"]} allowDecimals={false}
+						tickFormatter={(value: number) => compactFormat.format(value)} tick={{ fill: rightAxis.color, fontSize: 11 }} tickLine={false} axisLine={false} />}
 					<Tooltip labelFormatter={(date) => dateLabel(String(date))} formatter={(value, name) => [numberFormat.format(Number(value)), name]} contentStyle={tooltipStyle} cursor={{ stroke: "#645078" }} />
 					<Legend wrapperStyle={{ fontSize: 11, paddingTop: 12 }} />
 					{children}
