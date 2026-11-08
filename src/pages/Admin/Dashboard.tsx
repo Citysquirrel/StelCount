@@ -16,6 +16,7 @@ const methodStyles: Record<YouTubeMethodUsage["key"], { label: string; color: st
 	video_list: { label: "videos.list", color: "#edbc83" },
 	playlist_items: { label: "playlistItems.list", color: "#8fbaf3" },
 	channel_list: { label: "channels.list", color: "#80d5c5" },
+	playlist_list: { label: "playlists.list", color: "#c1a4ef" },
 };
 const methodKeys = Object.keys(methodStyles) as YouTubeMethodUsage["key"][];
 const numberFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 });
@@ -127,7 +128,7 @@ function YouTubeSection({ usage }: { usage: DashboardMetrics["youtubeApi"] }) {
 	return (
 		<MetricSection title="YouTube API 추정 사용량" eyebrow="API USAGE" icon={FiYoutube}
 			description={`${periodLabel(usage)} · 태평양 시간 기준 (${usage.timeZone})`}
-			footnote="전송 시도 기준 추정치로, 실패·재시도도 포함합니다. Cloud Console 확정 사용량이 아니며 다른 서버·서비스 사용량은 포함하지 않습니다. 배포 당일은 배포 이후 기록만 포함하므로 기록이 있어도 하루 전체 집계를 보장하지 않습니다.">
+			footnote="같은 Google 프로젝트를 사용하는 squirrel-server·hamkubby-server·squirrel-webhook의 합계입니다. 실패·재시도를 포함한 전송 시도 기준 추정치이며, Cloud Console 확정 사용량은 아닙니다. 그 외 서비스와 배포 전 누락분은 포함하지 않으며, 기록이 있어도 하루 전체 집계를 보장하지 않습니다.">
 			<Flex gap={3} wrap="wrap" align="center" mt={5}>
 				<Text fontWeight="semibold">오늘 · {today.date} (태평양 시간)</Text>
 				{!today.hasRecords && <Badge colorScheme="gray">기록 없음</Badge>}
@@ -146,6 +147,21 @@ function YouTubeSection({ usage }: { usage: DashboardMetrics["youtubeApi"] }) {
 				<Progress value={Math.min(100, Math.max(0, today.usagePercent))} colorScheme={today.usagePercent >= 100 ? "red" : "purple"} bg="#302641" borderRadius="full" aria-label="오늘 추정 할당량 사용률" aria-valuetext={`${numberFormat.format(today.usagePercent)}%`} />
 			) : <Text fontSize="sm" color="var(--obs-muted)">오늘 기록이 없어 사용률과 잔여량을 확인할 수 없습니다.</Text>}
 			<Text mt={3} fontSize="xs" color="var(--obs-muted)">일일 한도 {numberFormat.format(usage.dailyLimit)} units ({usage.dailyLimitSource === "environment" ? "서버 설정" : "기본값"}) · 태평양 자정 초기화 (서머타임 적용)</Text>
+			<Box mt={6}>
+				<Heading as="h3" fontSize="sm" mb={3}>오늘 서버별 사용량</Heading>
+				{today.sources?.length ? <TableContainer>
+					<Table size="sm" variant="unstyled" aria-label="오늘 서버별 YouTube API 사용량">
+						<Thead color="var(--obs-muted)"><Tr><Th px={2}>서버 / API별 호출</Th><Th px={2} isNumeric>호출 수</Th><Th px={2} isNumeric>추정 units</Th></Tr></Thead>
+						<Tbody>{today.sources.map(source => <Tr key={source.source}>
+							<Td px={2}><Text>{source.source}</Text><Text fontSize="xs" color="var(--obs-muted)" whiteSpace="normal">
+								{source.hasRecords ? source.methods.filter(method => method.requests > 0).map(method => `${method.method} ${numberFormat.format(method.requests)}회`).join(" · ") : "기록 없음"}
+							</Text></Td>
+							<Td px={2} isNumeric>{source.hasRecords ? `${numberFormat.format(source.requests)}회` : "—"}</Td>
+							<Td px={2} isNumeric>{source.hasRecords ? numberFormat.format(source.estimatedQuotaUnits) : "—"}</Td>
+						</Tr>)}</Tbody>
+					</Table>
+				</TableContainer> : <Text fontSize="sm" color="var(--obs-muted)">서버별 내역은 백엔드 반영 후 제공됩니다.</Text>}
+			</Box>
 			<SimpleGrid columns={{ base: 1, xl: 2 }} spacing={6} mt={6}>
 				<Box minW={0}>
 					<Heading as="h3" fontSize="sm" mb={3}>오늘 API별 호출·추정 할당량</Heading>
@@ -153,7 +169,7 @@ function YouTubeSection({ usage }: { usage: DashboardMetrics["youtubeApi"] }) {
 						<Table size="sm" variant="unstyled" aria-label="오늘 YouTube API별 사용량">
 							<Thead color="var(--obs-muted)"><Tr><Th px={2}>API</Th><Th px={2} isNumeric>호출 수</Th><Th px={2} isNumeric>추정 units</Th></Tr></Thead>
 							<Tbody>{today.methods.map((method) => <Tr key={method.key}>
-								<Td px={2}><Text color={methodStyles[method.key].color}>{method.method}</Text><Text fontSize="xs" color="var(--obs-muted)">요청당 {method.unitsPerRequest} unit</Text></Td>
+								<Td px={2}><Text color={methodStyles[method.key]?.color ?? "var(--obs-accent)"}>{method.method}</Text><Text fontSize="xs" color="var(--obs-muted)">요청당 {method.unitsPerRequest} unit</Text></Td>
 								<Td px={2} isNumeric>{today.hasRecords ? `${numberFormat.format(method.requests)}회` : "기록 없음"}</Td>
 								<Td px={2} isNumeric>{today.hasRecords ? numberFormat.format(method.estimatedQuotaUnits) : "—"}</Td>
 							</Tr>)}</Tbody>
