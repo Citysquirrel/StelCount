@@ -1,3 +1,6 @@
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { useAdminLoading } from "@/components/AdminLoading";
+import useColor from "@/lib/hooks/useColor";
 import { useEffect, useState } from "react";
 import { fetchServer } from "../../lib/functions/fetch";
 import {
@@ -10,7 +13,6 @@ import {
 	FormHelperText,
 	Input,
 	Button,
-	useColorModeValue,
 	Flex,
 	useToast,
 	Divider,
@@ -48,16 +50,12 @@ export function Setting() {
 	const [configs, setConfigs] = useState<Record<string, string>>({});
 	const [missingKeysList, setMissingKeysList] = useState<string[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isSaving, setIsSaving] = useState(false);
+	useAdminLoading(isLoading || isSaving, isSaving ? "설정 저장 중" : "설정 로딩 중");
 
 	const toast = useToast();
-	const bgCard = useColorModeValue("white", "gray.700");
-	const borderColor = useColorModeValue("gray.200", "gray.600");
-	const inputBgColor = useColorModeValue("white", "gray.800");
-	const sectionBgColor = useColorModeValue("gray.50", "gray.800");
-	const stickyHeaderBg = useColorModeValue(
-		"rgba(255, 255, 255, 0.85)",
-		"rgba(26, 32, 44, 0.85)", // 다크모드용 반투명 배경
-	);
+	const { bgCard, borderColor, headerBg: sectionBgColor } = useColor();
+	const inputBgColor = bgCard;
 
 	useEffect(() => {
 		fetchServer<SettingResponse>("admin", "/settings")
@@ -109,6 +107,8 @@ export function Setting() {
 
 	// 저장 버튼 핸들러
 	const handleSave = () => {
+		if (isLoading || isSaving) return;
+		setIsSaving(true);
 		fetchServer("admin", "/settings", { method: "POST", body: configs })
 			.then((res) => {
 				toast({
@@ -129,7 +129,7 @@ export function Setting() {
 					isClosable: true,
 					position: "top-right",
 				});
-			});
+			}).finally(() => setIsSaving(false));
 	};
 
 	// 키를 기준으로 두 그룹으로 분리 (렌더링 용도)
@@ -209,35 +209,10 @@ export function Setting() {
 		</VStack>
 	);
 
-	if (isLoading) {
-		return <Box p={6}>설정 데이터를 불러오는 중...</Box>;
-	}
 	return (
-		<Box p={8}>
-			<Flex
-				justify="space-between"
-				align="center"
-				position="sticky"
-				top="0"
-				zIndex={10}
-				bg={stickyHeaderBg}
-				backdropFilter="blur(4px)"
-				mb={6}
-				// mx={{ base: -4, md: -8 }} // 부모 Box의 Padding을 무시하고 꽉 채우기 위함
-				borderBottom={`1px solid ${borderColor}`}
-			>
-				<Box>
-					<Heading size="lg" pb={2}>
-						시스템 환경 설정
-					</Heading>
-					<Text color="gray.500" fontSize="sm">
-						서버 및 클라이언트의 핵심 환경 변수를 관리합니다.
-					</Text>
-				</Box>
-				<Button colorScheme="blue" onClick={handleSave} size="md" px={8}>
-					변경사항 저장
-				</Button>
-			</Flex>
+		<Box>
+			<AdminPageHeader title="시스템 환경 설정" description="서버 및 클라이언트의 환경 변수를 관리합니다."
+				actions={<Button colorScheme="purple" onClick={handleSave} size="sm" isDisabled={isLoading} isLoading={isSaving}>변경사항 저장</Button>} />
 
 			<VStack spacing={8} align="stretch">
 				{/* 그룹 1: 일반 시스템 설정 */}

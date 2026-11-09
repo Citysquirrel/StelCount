@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
 	Alert, AlertIcon, Badge, Box, Button, FormControl, FormLabel, Modal, ModalBody,
 	ModalCloseButton, ModalFooter, ModalHeader, ModalOverlay, Select,
-	Spinner, Stack, Text, useToast,
+	Stack, Text, useToast,
 } from "@chakra-ui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { feedbackCategories, FeedbackData, feedbackNotifications, feedbackSources } from "@/lib/feedback";
@@ -57,7 +57,6 @@ export default function Details({ id, onClose }: { id: string; onClose: () => vo
 				<ModalCloseButton isDisabled={editFeedback.isPending} />
 				<ModalBody>
 					<Stack spacing={4}>
-						{detail.isPending && <Text role="status"><Spinner size="sm" mr={2} />피드백을 불러오는 중입니다.</Text>}
 						{detail.isError && (
 							<Alert status="error"><AlertIcon /><Box flex={1}>{detail.error.message}</Box><Button size="sm" ml={2} isLoading={detail.isFetching} onClick={() => void detail.refetch()}>다시 시도</Button></Alert>
 						)}

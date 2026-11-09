@@ -1,3 +1,6 @@
+import { useAdminLoading } from "@/components/AdminLoading";
+import { AdminTableHeight, useAdminTableHeight } from "@/components/AdminTableHeight";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminModalContent } from "@/components/Modal";
 import { useEffect, useRef, useState } from "react";
 import { DefaultResponseData, fetchServer } from "../../lib/functions/fetch";
@@ -5,7 +8,6 @@ import {
 	Box,
 	Flex,
 	HStack,
-	Heading,
 	IconButton,
 	Modal,
 	ModalHeader,
@@ -73,7 +75,10 @@ export interface StellarGroup {
 }
 
 export function Stellar() {
+	const [tableHeight, setTableHeight] = useAdminTableHeight("stellar");
 	const [stellarData, setStellarData] = useState<StellarData[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	useAdminLoading(isLoading, "스텔라 로딩 중");
 
 	// 모달 (에디터) 상태
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -242,7 +247,9 @@ export function Stellar() {
 	useEffect(() => {
 		fetchServer("admin", "/stellars").then((res) => {
 			setStellarData(res.data.data);
-		});
+		}).catch(() => {
+			toast({ status: "error", description: "스텔라 데이터를 불러오지 못했습니다." });
+		}).finally(() => setIsLoading(false));
 		// fetchServer("v1", "/tags").then(() => {});
 	}, []);
 	// --- [가상화 스크롤 설정] ---
@@ -254,55 +261,40 @@ export function Stellar() {
 	});
 	return (
 		<Box>
-			<Box mb={8}>
-				<Heading size="lg" mb={2}>
-					스텔라 데이터 관리
-				</Heading>
-				<Text color="gray.500" fontSize="sm">
-					스텔라들의 상세 데이터를 관리합니다.
-				</Text>
-			</Box>
-			<Flex
-				gap={4}
-				mb={6}
-				flexWrap="wrap"
-				bg={bgCard}
-				p={4}
-				rounded="xl"
-				shadow="sm"
-				border={`1px solid ${borderColor}`}
-			>
-				<Flex flex={1} justify="flex-end" gap={2}>
+			<AdminPageHeader title="스텔라 데이터 관리" description="스텔라들의 상세 데이터를 관리합니다."
+				actions={<>
 					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewStellar}>
 						추가
 					</Button>
 					<Button size="sm" leftIcon={<FiFolder />} colorScheme="gray" onClick={handleGroupSetting} variant={"outline"}>
 						그룹 관리
 					</Button>
-				</Flex>
-			</Flex>
+				</>}>
+				<AdminTableHeight value={tableHeight} onChange={setTableHeight} />
+			</AdminPageHeader>
 			<Stack>
-				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
+				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflowX="auto" sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}>
+					<Box minW="850px">
 					{/* 테이블 헤더 */}
 					<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
-						<Box w="60px">ID</Box>
-						<Box w="140px">이름</Box>
-						<Box w="120px" textAlign="center">
+						<Box flexShrink={0} w="60px">ID</Box>
+						<Box flexShrink={0} w="140px">이름</Box>
+						<Box flexShrink={0} w="120px" textAlign="center">
 							그룹
 						</Box>
-						<Box w="80px" textAlign="center">
+						<Box flexShrink={0} w="80px" textAlign="center">
 							색상
 						</Box>
-						<Box flex={1} textAlign="center">
+						<Box flex={1} minW={0} textAlign="center">
 							소스
 						</Box>
-						<Box w="60px" textAlign="center">
+						<Box flexShrink={0} w="60px" textAlign="center">
 							작업
 						</Box>
 					</Flex>
 
 					{/* 가상화 컨테이너 */}
-					<Box ref={parentRef} h="384px" overflowY="auto">
+					<Box ref={parentRef} h={`${tableHeight}px`} overflowY="auto">
 						<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 							{/* 가상화된 행 렌더링 */}
 							{rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -327,21 +319,21 @@ export function Stellar() {
 										_hover={{ bg: fieldHoverBgColor }}
 										onClick={() => handleRowClick(virtualRow.index)}
 									>
-										<Box w="60px">{stellar.id}</Box>
+										<Box flexShrink={0} w="60px">{stellar.id}</Box>
 
-										<Box w="140px" textAlign="center">
+										<Box flexShrink={0} w="140px" textAlign="center">
 											{stellar.name}
 											{stellar.nameShort && `(${stellar.nameShort})`}
 										</Box>
-										<Box w="120px" textAlign="center">
+										<Box flexShrink={0} w="120px" textAlign="center">
 											{stellar.groups && stellar.groups[0]?.name}
 										</Box>
-										<Flex w="80px" fontSize="2xs" justifyContent={"center"}>
+										<Flex flexShrink={0} w="80px" fontSize="2xs" justifyContent={"center"}>
 											<CopyText color={`#${stellar.colorCode}`} fontWeight={"bold"}>
 												{stellar.colorCode && `#${stellar.colorCode}`}
 											</CopyText>
 										</Flex>
-										<Box flex={1}>
+										<Box flex={1} minW={0}>
 											<HStack spacing={2} justify={"center"}>
 												{stellar.youtubeId &&
 													youtubeIds.map((id) => (
@@ -388,7 +380,7 @@ export function Stellar() {
 												)}
 											</HStack>
 										</Box>
-										<Flex w="60px" fontSize="2xs" justifyContent={"center"}>
+										<Flex flexShrink={0} w="60px" fontSize="2xs" justifyContent={"center"}>
 											<IconButton
 												aria-label="Delete stellar"
 												size="sm"
@@ -430,9 +422,9 @@ export function Stellar() {
 							{editingStellar && (
 								<ModalBody>
 									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
-										<VStack spacing={4} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
+										<VStack spacing={4} align="stretch" flex={1} minW={0} width={["100%", "100%", "auto"]}>
 											<Flex gap={4}>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">이름</FormLabel>
 													<Input
 														size="sm"
@@ -440,7 +432,7 @@ export function Stellar() {
 														onChange={(e) => setEditingStellar({ ...editingStellar, name: e.target.value })}
 													/>
 												</FormControl>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">짧은 이름</FormLabel>
 													<Input
 														size="sm"
@@ -448,7 +440,7 @@ export function Stellar() {
 														onChange={(e) => setEditingStellar({ ...editingStellar, nameShort: e.target.value })}
 													/>
 												</FormControl>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">그룹</FormLabel>
 													<Select
 														size="sm"
@@ -468,14 +460,14 @@ export function Stellar() {
 														)}
 													</Select>
 												</FormControl>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">그룹(deprecated)</FormLabel>
 													<Text>{editingStellar.group}</Text>
 												</FormControl>
 											</Flex>
 
 											<Flex gap={4}>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">데뷔일</FormLabel>
 													<Input
 														size="sm"
@@ -485,7 +477,7 @@ export function Stellar() {
 														type="datetime-local"
 													/>
 												</FormControl>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">졸업일</FormLabel>
 													<Input
 														size="sm"
@@ -495,7 +487,7 @@ export function Stellar() {
 														type="datetime-local"
 													/>
 												</FormControl>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">
 														색상코드
 														<Box
@@ -513,11 +505,11 @@ export function Stellar() {
 														onChange={(e) => setEditingStellar({ ...editingStellar, colorCode: e.target.value })}
 													/>
 												</FormControl>
-												<Box flex={1}></Box>
+												<Box flex={1} minW={0}></Box>
 											</Flex>
 											<Divider />
 											<Flex gap={4}>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">치지직 ID</FormLabel>
 													<Input
 														size="sm"
@@ -525,12 +517,12 @@ export function Stellar() {
 														onChange={(e) => setEditingStellar({ ...editingStellar, chzzkId: e.target.value })}
 													/>
 												</FormControl>
-												<Box flex={1}></Box>
-												<Box flex={1}></Box>
-												<Box flex={1}></Box>
+												<Box flex={1} minW={0}></Box>
+												<Box flex={1} minW={0}></Box>
+												<Box flex={1} minW={0}></Box>
 											</Flex>
 											<Flex gap={4}>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">유튜브 ID</FormLabel>
 													<Input
 														size="sm"
@@ -538,7 +530,7 @@ export function Stellar() {
 														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeId: e.target.value })}
 													/>
 												</FormControl>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">유튜브 별칭주소</FormLabel>
 													<Input
 														size="sm"
@@ -546,7 +538,7 @@ export function Stellar() {
 														onChange={(e) => setEditingStellar({ ...editingStellar, youtubeCustomUrl: e.target.value })}
 													/>
 												</FormControl>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">플레이리스트 ID</FormLabel>
 													<Input
 														size="sm"
@@ -556,10 +548,10 @@ export function Stellar() {
 														}
 													/>
 												</FormControl>
-												<Box flex={1}></Box>
+												<Box flex={1} minW={0}></Box>
 											</Flex>
 											<Flex gap={2} alignItems={"flex-end"}>
-												<FormControl flex={1}>
+												<FormControl flex={1} minW={0}>
 													<FormLabel fontSize="sm">유튜브 ID 검색</FormLabel>
 													<Input
 														size="sm"
@@ -573,13 +565,13 @@ export function Stellar() {
 														placeholder="별칭을 입력해 ID 찾기"
 													/>
 												</FormControl>
-												<Box flex={1}>
+												<Box flex={1} minW={0}>
 													<Button width="72px" size={"sm"} onClick={handleGetYoutubeId}>
 														검색
 													</Button>
 												</Box>
-												<Box flex={1}></Box>
-												<Box flex={1}></Box>
+												<Box flex={1} minW={0}></Box>
+												<Box flex={1} minW={0}></Box>
 											</Flex>
 											<Divider />
 											<Checkbox
@@ -607,6 +599,7 @@ export function Stellar() {
 							</ModalFooter>
 						</AdminModalContent>
 					</Modal>
+					</Box>
 				</Box>
 			</Stack>
 		</Box>

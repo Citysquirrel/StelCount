@@ -1,3 +1,5 @@
+import { AdminTableHeight, useAdminTableHeight } from "@/components/AdminTableHeight";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminModalContent } from "@/components/Modal";
 import { ImageV2 } from "@/components/Image";
 import { Link } from "@/components/Link";
@@ -32,8 +34,6 @@ import {
 	ModalFooter,
 	ModalHeader,
 	ModalOverlay,
-	NumberInput,
-	NumberInputField,
 	Stack,
 	Tag,
 	Text,
@@ -55,7 +55,6 @@ import DetailsEditor, { AdditionalInputValue } from "./Video/Details";
 import FilterPanel from "./Video/FilterPanel";
 import TagInputAutocomplete from "./Video/TagInput";
 import TagModal from "./Video/TagModal";
-import { useLocalStorage } from "usehooks-ts";
 
 interface VideoData extends Omit<
 	YoutubeMusicData,
@@ -87,8 +86,7 @@ export interface StellarGroup {
 export function Video() {
 	const [videoData, setVideoData] = useState<VideoData[]>([]);
 	const [stellarData] = useRecoilState(stellarV2State);
-	const TABLE_HEIGHT_VIDEO = "table-height_video";
-	const [tableHeight, setTableHeight] = useLocalStorage<number>(TABLE_HEIGHT_VIDEO, 384);
+	const [tableHeight, setTableHeight] = useAdminTableHeight("video");
 
 	const stellarYoutubeChannelIds = stellarData.map((s) => s.yi.split(",")).flat();
 
@@ -315,67 +313,53 @@ export function Video() {
 	});
 	return (
 		<Box>
-			<Box mb={8}>
-				<Heading size="lg" mb={2}>
-					영상 데이터 관리
-				</Heading>
-				<Text color="gray.500" fontSize="sm">
-					스텔라들의 영상 데이터를 관리합니다.
-				</Text>
-			</Box>
-			<Flex gap={4} mb={6} flexWrap="wrap" align="center" bg={bgCard} p={4} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`}>
-				<Flex gap={2} wrap="wrap" align="center" flex={{ base: "1 1 100%", xl: "0 1 auto" }} minW={0}>
-					<InputGroup w={{ base: "full", sm: "240px" }} size="sm">
-						<Input
-							aria-label="영상 제목 검색"
-							borderColor={borderColor}
-							focusBorderColor="#c1a4ef"
-							_placeholder={{ color: mutedColor }}
-							placeholder="제목을 검색하세요.."
-							value={searchQuery}
-							onChange={(e) => {
-								setSearchQuery(e.target.value);
-							}}
-							onKeyDown={(e) => {
-								e.key === "Escape" && setSearchQuery("");
-							}}
-						/>
-						{searchQuery.length !== 0 ? (
-							<InputRightElement>
-								<CloseButton size="sm" onClick={() => setSearchQuery("")} />
-							</InputRightElement>
-						) : null}
-					</InputGroup>
-					<FilterPanel
-						tags={getAllTags.data?.data}
-						onChangeStellars={onChangeStellarsFilter}
-						onChangeTags={onChangeTagsFilter}
-					/>
-				</Flex>
-				<Flex justifySelf={"flex-start"} gap={2}>
-					<NumberInput
-						size="sm"
-						maxW="100px"
-						colorScheme="teal"
-						min={300}
-						max={800}
-						value={tableHeight}
-						onChange={(value) => setTableHeight(Number(value) || 384)}
-					>
-						<NumberInputField />
-					</NumberInput>
-				</Flex>
-				<Flex flex={1} justify="flex-end" gap={2}>
+			<AdminPageHeader title="영상 데이터 관리" description="스텔라들의 영상 데이터를 관리합니다."
+				actions={<>
 					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewVideo} isDisabled>
 						추가
 					</Button>
 					<Button size="sm" leftIcon={<FiFolder />} colorScheme="gray" onClick={handleTagSetting} variant={"outline"}>
 						태그 관리
 					</Button>
+				</>}>
+				<Flex gap={3} align="center" wrap="wrap">
+					<Flex gap={2} wrap="wrap" align="center" flex={{ base: "1 1 100%", xl: "0 1 auto" }} minW={0}>
+						<InputGroup w={{ base: "full", sm: "240px" }} size="sm">
+							<Input
+								aria-label="영상 제목 검색"
+								borderColor={borderColor}
+								focusBorderColor="#c1a4ef"
+								_placeholder={{ color: mutedColor }}
+								placeholder="제목을 검색하세요.."
+								value={searchQuery}
+								onChange={(e) => {
+									setSearchQuery(e.target.value);
+								}}
+								onKeyDown={(e) => {
+									e.key === "Escape" && setSearchQuery("");
+								}}
+							/>
+							{searchQuery.length !== 0 ? (
+								<InputRightElement>
+									<CloseButton size="sm" onClick={() => setSearchQuery("")} />
+								</InputRightElement>
+							) : null}
+						</InputGroup>
+						<FilterPanel
+							tags={getAllTags.data?.data}
+							onChangeStellars={onChangeStellarsFilter}
+							onChangeTags={onChangeTagsFilter}
+						/>
+					</Flex>
+					<Flex gap={2} align="center" wrap="wrap">
+						<AdminTableHeight value={tableHeight} onChange={setTableHeight} />
+					</Flex>
+
 				</Flex>
-			</Flex>
+			</AdminPageHeader>
 			<Stack>
-				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
+				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflowX="auto" sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}>
+					<Box minW="850px">
 					{/* 테이블 헤더 */}
 					<Flex
 						bg={headerBg}
@@ -386,24 +370,24 @@ export function Video() {
 						fontWeight="bold"
 						fontSize="sm"
 					>
-						<Box w="40px">ID</Box>
-						<Box w="54px" textAlign={"center"}>
+						<Box flexShrink={0} w="40px">ID</Box>
+						<Box flexShrink={0} w="54px" textAlign={"center"}>
 							상속
 						</Box>
-						<Box w="100px" textAlign={"center"}>
+						<Box flexShrink={0} w="100px" textAlign={"center"}>
 							썸네일
 						</Box>
-						<Box flex={1} ml={2}>
+						<Box flex={1} minW={0} ml={2}>
 							상세
 						</Box>
-						<Box w="120px" textAlign={"center"}>
+						<Box flexShrink={0} w="120px" textAlign={"center"}>
 							부가 영상
 						</Box>
-						<Box w="60px" textAlign={"center"}>
+						<Box flexShrink={0} w="60px" textAlign={"center"}>
 							조작
 						</Box>
 					</Flex>
-					{filteredData.length === 0 ? (
+					{!getAllVideos.isPending && filteredData.length === 0 ? (
 						<Flex height="240px" justify="center" align="center">
 							<Text color="gray">데이터 없음</Text>
 						</Flex>
@@ -434,9 +418,9 @@ export function Video() {
 										onClick={() => handleRowClick(virtualRow.index, video.id)}
 									>
 										{/* ID */}
-										<Box w="40px">{video.id}</Box>
+										<Box flexShrink={0} w="40px">{video.id}</Box>
 										{/* 상속 */}
-										<Box w="54px" textAlign="center">
+										<Box flexShrink={0} w="54px" textAlign="center">
 											{video.inheritChannelId ? (
 												<Icon as={FiCheckCircle} color="blue.500" boxSize={5} />
 											) : !stellarYoutubeChannelIds.includes(video.channelId) ? (
@@ -444,7 +428,7 @@ export function Video() {
 											) : null}
 										</Box>
 										{/* 썸네일 */}
-										<Flex w="100px" textAlign="center" align={"center"} justify={"center"}>
+										<Flex flexShrink={0} w="100px" textAlign="center" align={"center"} justify={"center"}>
 											<ImageV2
 												src={getThumbnails(video.thumbnails).default?.url || ""}
 												display="block"
@@ -456,8 +440,8 @@ export function Video() {
 											/>
 										</Flex>
 										{/* 상세 */}
-										<Box flex={1} fontSize="2xs" ml={2} color={isFaded ? mutedColor : undefined}>
-											<Text fontSize="16px" fontWeight={"bold"}>
+										<Box flex={1} minW={0} fontSize="2xs" ml={2} color={isFaded ? mutedColor : undefined}>
+											<Text fontSize="16px" fontWeight={"bold"} noOfLines={1}>
 												{video.titleAlias ? `${video.titleAlias}` : video.title}
 												{video.titleAlias && (
 													<Text as="span" display="inline-block" fontSize="12px" color="gray" fontWeight="400">
@@ -465,7 +449,7 @@ export function Video() {
 													</Text>
 												)}
 											</Text>
-											<Text>
+											<Text noOfLines={1}>
 												{video.tags &&
 													video.tags.map((tag) => (
 														<Tag key={tag.id} colorScheme={tag.colorCode ? tag.colorCode : "gray"} mr={1}>
@@ -475,7 +459,7 @@ export function Video() {
 											</Text>
 										</Box>
 										{/* 부가 영상 */}
-										<VStack w="120px" gap={0}>
+										<VStack flexShrink={0} w="120px" gap={0}>
 											{video.details && video.details.length > 0
 												? video.details.map((dt) => (
 														<Link
@@ -493,7 +477,7 @@ export function Video() {
 												: null}
 										</VStack>
 										{/* 조작 */}
-										<Flex w="60px" justify={"center"}>
+										<Flex flexShrink={0} w="60px" justify={"center"}>
 											<IconButton
 												aria-label="Delete video"
 												size="sm"
@@ -557,10 +541,10 @@ export function Video() {
 							{editingVideo && (
 								<ModalBody>
 									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
-										<VStack spacing={2} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
+										<VStack spacing={2} align="stretch" flex={1} minW={0} width={["100%", "100%", "auto"]}>
 											{/* 상단: 제목 및 썸네일, 태그 */}
 											<Flex gap={4}>
-												<VStack flex={1}>
+												<VStack flex={1} minW={0}>
 													<FormControl>
 														<FormLabel fontSize="sm">제목</FormLabel>
 														<Input size="sm" value={editingVideo.title || ""} isDisabled />
@@ -612,7 +596,7 @@ export function Video() {
 													</Card>
 													<Card variant={"outline"} height="fit-content" width="100%">
 														<CardBody display="flex" p={3} flexDirection="row">
-															<VStack flex={1} align={"flex-start"}>
+															<VStack flex={1} minW={0} align={"flex-start"}>
 																<Checkbox
 																	size="sm"
 																	isChecked={editingVideo.isInheritChannelId}
@@ -636,7 +620,7 @@ export function Video() {
 												{/* 기록 */}
 												<Card flex={2} variant={"outline"} height="fit-content">
 													<CardBody display="flex" p={3} flexDirection="row">
-														<Box flex={1}>
+														<Box flex={1} minW={0}>
 															<Heading fontSize="md" fontWeight={"600"}>
 																기록
 															</Heading>
@@ -698,6 +682,7 @@ export function Video() {
 							</ModalFooter>
 						</AdminModalContent>
 					</Modal>
+					</Box>
 				</Box>
 			</Stack>
 		</Box>

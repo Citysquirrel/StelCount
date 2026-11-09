@@ -1,3 +1,5 @@
+import { AdminTableHeight, useAdminTableHeight } from "@/components/AdminTableHeight";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminModalContent } from "@/components/Modal";
 import { CustomLink } from "@/components/Link";
 import { displayPriority } from "@/lib/functions/display";
@@ -19,7 +21,6 @@ import {
 	FormLabel,
 	Grid,
 	HStack,
-	Heading,
 	Icon,
 	IconButton,
 	Input,
@@ -54,7 +55,6 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { FiEdit, FiPlus, FiRefreshCw, FiSettings } from "react-icons/fi";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdOpenInNew } from "react-icons/md";
 import { VscWarning } from "react-icons/vsc";
-import { useLocalStorage } from "usehooks-ts";
 import { DefaultResponseData } from "../../lib/functions/fetch";
 import useColor from "../../lib/hooks/useColor";
 import { Genre } from "./Songbook";
@@ -78,8 +78,7 @@ interface SongHistory extends SongHistoryType {
 
 export function SongHistoryComponent() {
 	const [historyData, setHistoryData] = useState<SongHistory[]>([]);
-	const TABLE_HEIGHT_SONG_HISTORY = "table-height_song-history";
-	const [tableHeight, setTableHeight] = useLocalStorage<number>(TABLE_HEIGHT_SONG_HISTORY, 384);
+	const [tableHeight, setTableHeight] = useAdminTableHeight("song-history");
 
 	// 필터 상태
 	const [searchQuery, setSearchQuery] = useState("");
@@ -541,72 +540,8 @@ export function SongHistoryComponent() {
 
 	return (
 		<Box>
-			<Box mb={8}>
-				<Heading size="lg" mb={2}>
-					가창 기록 관리
-				</Heading>
-				<Text color="gray.500" fontSize="sm">
-					햄쿠비 노래책의 기록을 관리합니다.
-				</Text>
-			</Box>
-			<Flex gap={2}>
-				<InputGroup w="240px" size="sm">
-					<Input
-						placeholder="제목을 검색하세요.."
-						value={searchQuery}
-						onChange={(e) => {
-							setSearchQuery(e.target.value);
-						}}
-						onKeyDown={(e) => {
-							e.key === "Escape" && setSearchQuery("");
-						}}
-					/>
-					{searchQuery.length !== 0 ? (
-						<InputRightElement>
-							<CloseButton onClick={() => setSearchQuery("")} />
-						</InputRightElement>
-					) : null}
-				</InputGroup>
-			</Flex>
-			<Flex
-				gap={4}
-				mb={6}
-				flexWrap="wrap"
-				bg={bgCard}
-				p={4}
-				rounded="xl"
-				shadow="sm"
-				border={`1px solid ${borderColor}`}
-			>
-				<Flex justifySelf={"flex-start"} gap={2}>
-					<IconButton
-						size="sm"
-						colorScheme="blue"
-						aria-label="Refresh Table"
-						onClick={handleRefreshTable}
-						isLoading={getAllHistories.isLoading}
-					>
-						<FiRefreshCw />
-					</IconButton>
-					<NumberInput
-						size="sm"
-						maxW="100px"
-						colorScheme="teal"
-						min={300}
-						max={800}
-						value={tableHeight}
-						onChange={(value) => setTableHeight(Number(value) || 384)}
-					>
-						<NumberInputField />
-					</NumberInput>
-					<Select placeholder="정렬" size="sm" value={sort} onChange={(e) => setSort(e.target.value)}>
-						<option value="sungAt_desc">날짜 내림차순</option>
-						<option value="sungAt_asc">날짜 오름차순</option>
-						<option value="id_desc">ID 내림차순</option>
-						<option value="id_asc">ID 오름차순</option>
-					</Select>
-				</Flex>
-				<Flex flex={1} justify="flex-end" gap={2}>
+			<AdminPageHeader title="가창 기록 관리" description="햄쿠비 노래책의 기록을 관리합니다."
+				actions={<>
 					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewHistory}>
 						추가
 					</Button>
@@ -618,10 +553,49 @@ export function SongHistoryComponent() {
 					>
 						{isEditingMode ? "선택중.." : "다중 선택 모드"}
 					</Button>
+				</>}>
+				<Flex gap={3} align="center" wrap="wrap">
+					<InputGroup w={{ base: "full", sm: "240px" }} size="sm">
+						<Input
+							aria-label="가창 기록 제목 검색" placeholder="제목을 검색하세요.."
+							value={searchQuery}
+							onChange={(e) => {
+								setSearchQuery(e.target.value);
+							}}
+							onKeyDown={(e) => {
+								e.key === "Escape" && setSearchQuery("");
+							}}
+						/>
+						{searchQuery.length !== 0 ? (
+							<InputRightElement>
+								<CloseButton onClick={() => setSearchQuery("")} />
+							</InputRightElement>
+						) : null}
+					</InputGroup>
+					<Flex gap={2} align="center" wrap="wrap">
+						<IconButton
+							size="sm"
+							colorScheme="blue"
+							aria-label="Refresh Table"
+							onClick={handleRefreshTable}
+							isLoading={getAllHistories.isFetching}
+						>
+							<FiRefreshCw />
+						</IconButton>
+						<AdminTableHeight value={tableHeight} onChange={setTableHeight} />
+						<Select aria-label="가창 기록 정렬" w={{ base: "full", sm: "180px" }} placeholder="정렬" size="sm" value={sort} onChange={(e) => setSort(e.target.value)}>
+							<option value="sungAt_desc">날짜 내림차순</option>
+							<option value="sungAt_asc">날짜 오름차순</option>
+							<option value="id_desc">ID 내림차순</option>
+							<option value="id_asc">ID 오름차순</option>
+						</Select>
+					</Flex>
+
 				</Flex>
-			</Flex>
+			</AdminPageHeader>
 			<Stack>
-				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
+				<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflowX="auto" sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}>
+					<Box minW="1050px">
 					{/* 테이블 헤더 */}
 					<Flex
 						bg={headerBg}
@@ -633,27 +607,27 @@ export function SongHistoryComponent() {
 						fontSize="sm"
 					>
 						{/* id, sungAt, youtubeVideoId, start, end, memo, hamkubby_id, historyId, priority, isActive */}
-						<Box w={TABLE_WIDTHS.id}>ID</Box>
-						<Box w={TABLE_WIDTHS.sungAt} textAlign={"center"}>
+						<Box flexShrink={0} w={TABLE_WIDTHS.id}>ID</Box>
+						<Box flexShrink={0} w={TABLE_WIDTHS.sungAt} textAlign={"center"}>
 							날짜
 						</Box>
-						<Box w={TABLE_WIDTHS.videoId} textAlign={"center"}>
+						<Box flexShrink={0} w={TABLE_WIDTHS.videoId} textAlign={"center"}>
 							유튜브 ID
 						</Box>
-						<Box flex={1} ml={2}>
+						<Box flex={1} minW={0} ml={2}>
 							곡 정보 / 메모
 						</Box>
-						<Box w={TABLE_WIDTHS.playbackRange} textAlign={"center"}>
+						<Box flexShrink={0} w={TABLE_WIDTHS.playbackRange} textAlign={"center"}>
 							재생 구간
 						</Box>
-						<Box w={TABLE_WIDTHS.priority} textAlign={"center"}>
+						<Box flexShrink={0} w={TABLE_WIDTHS.priority} textAlign={"center"}>
 							중요도
 						</Box>
-						<Box w={TABLE_WIDTHS.controlPanel} textAlign={"center"}>
+						<Box flexShrink={0} w={TABLE_WIDTHS.controlPanel} textAlign={"center"}>
 							조작
 						</Box>
 					</Flex>
-					{filteredData.length === 0 ? (
+					{!getAllHistories.isPending && filteredData.length === 0 ? (
 						<Flex height="240px" justify="center" align="center">
 							<Text color="gray">데이터 없음</Text>
 						</Flex>
@@ -708,13 +682,13 @@ export function SongHistoryComponent() {
 										draggable="false"
 									>
 										{/* ID */}
-										<Box w={TABLE_WIDTHS.id}>{his.id}</Box>
+										<Box flexShrink={0} w={TABLE_WIDTHS.id}>{his.id}</Box>
 										{/* 날짜 */}
-										<Box w={TABLE_WIDTHS.sungAt} textAlign="center" fontSize="sm">
+										<Box flexShrink={0} w={TABLE_WIDTHS.sungAt} textAlign="center" fontSize="sm">
 											{formatDateToYYYYMMDD(his.sungAt).slice(2) || "날짜 미상"}
 										</Box>
 										{/* 비디오 ID */}
-										<Box w={TABLE_WIDTHS.videoId} textAlign="center" fontSize="sm" position="relative">
+										<Box flexShrink={0} w={TABLE_WIDTHS.videoId} textAlign="center" fontSize="sm" position="relative">
 											{isInvalid ? (
 												<Icon
 													as={VscWarning}
@@ -728,7 +702,7 @@ export function SongHistoryComponent() {
 											{his.youtubeVideoId}
 										</Box>
 										{/* 곡 정보 / 메모 */}
-										<HStack flex={1} ml={2} align={"center"} justify={"flex-start"} gap={"2px"}>
+										<HStack overflow="hidden" flex={1} minW={0} ml={2} align={"center"} justify={"flex-start"} gap={"2px"}>
 											<VStack gap={"2px"}>
 												<Text w="300px" noOfLines={1} fontWeight={"bold"}>
 													{songbookData?.tl}
@@ -742,25 +716,25 @@ export function SongHistoryComponent() {
 													>
 														{songbookData?.g}
 													</Badge>
-													<Text w="240px" color={mutedColor} fontSize="sm">
+													<Text w="240px" color={mutedColor} fontSize="sm" noOfLines={1}>
 														{songbookData?.a}
 													</Text>
 												</HStack>
 											</VStack>
 											<HStack>
-												<Text fontSize="sm">{his.memo ? `📝 ${his.memo}` : ""}</Text>
+												<Text noOfLines={2} fontSize="sm">{his.memo ? `📝 ${his.memo}` : ""}</Text>
 											</HStack>
 										</HStack>
 										{/* 재생 구간 */}
-										<Box w={TABLE_WIDTHS.playbackRange} fontSize="sm" textAlign="center">
+										<Box flexShrink={0} w={TABLE_WIDTHS.playbackRange} fontSize="sm" textAlign="center">
 											{`${formatTime(his.start)}${his.end ? " ~ " + formatTime(his.end) : ""}`}
 										</Box>
 										{/* 중요도 */}
-										<Flex w={TABLE_WIDTHS.priority} justify={"center"} fontSize="sm">
+										<Flex flexShrink={0} w={TABLE_WIDTHS.priority} justify={"center"} fontSize="sm">
 											{displayPriority(his.priority)}
 										</Flex>
 										{/* 조작 */}
-										<Flex w={TABLE_WIDTHS.controlPanel} justify={"center"} gap={"2px"}>
+										<Flex flexShrink={0} w={TABLE_WIDTHS.controlPanel} justify={"center"} gap={"2px"}>
 											{his.youtubeVideoId ? (
 												<IconButton
 													as={CustomLink}
@@ -835,7 +809,7 @@ export function SongHistoryComponent() {
 							{editingHistory && (
 								<ModalBody>
 									<HStack flexDirection={["column", "column", "row"]} align={"stretch"}>
-										<VStack spacing={2} align="stretch" flex={1} width={["100%", "100%", "auto"]}>
+										<VStack spacing={2} align="stretch" flex={1} minW={0} width={["100%", "100%", "auto"]}>
 											{/* 상단: 노래 정보 */}
 											{getSongbookDataWithHistory && (
 												<>
@@ -866,7 +840,7 @@ export function SongHistoryComponent() {
 												</>
 											)}
 
-											<FormControl flex={1} ref={selectorRef}>
+											<FormControl flex={1} minW={0} ref={selectorRef}>
 												<FormLabel fontSize="sm">노래책 연결</FormLabel>
 												<Input
 													size={"sm"}
@@ -946,8 +920,8 @@ export function SongHistoryComponent() {
 											{/* 하단: 이외 수정 가능한 데이터 */}
 											{editingHistory && (
 												<Flex gap={3} flexDir={"column"}>
-													<HStack flex={1}>
-														<FormControl flex={1}>
+													<HStack flex={1} minW={0}>
+														<FormControl flex={1} minW={0}>
 															<FormLabel fontSize="sm">날짜</FormLabel>
 															<Input
 																size="sm"
@@ -957,7 +931,7 @@ export function SongHistoryComponent() {
 															/>
 														</FormControl>
 														<FormControl
-															flex={1}
+															flex={1} minW={0}
 															isInvalid={
 																editingHistory.youtubeVideoId.length > 0 &&
 																!VALIDATION.youtubeId(editingHistory.youtubeVideoId)
@@ -1021,8 +995,8 @@ export function SongHistoryComponent() {
 														</Grid>
 													</Box>
 
-													<HStack flex={1}>
-														<FormControl flex={1}>
+													<HStack flex={1} minW={0}>
+														<FormControl flex={1} minW={0}>
 															<FormLabel fontSize="sm">메모</FormLabel>
 															<Input
 																size="sm"
@@ -1117,6 +1091,7 @@ export function SongHistoryComponent() {
 							setBulkEditingIndex((prev) => prev.sort((a, b) => a - b));
 						}}
 					/>
+					</Box>
 				</Box>
 			</Stack>
 		</Box>

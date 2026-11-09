@@ -1,7 +1,9 @@
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { AdminTableHeight, useAdminTableHeight } from "@/components/AdminTableHeight";
 import { useEffect, useState } from "react";
 import {
 	Alert, AlertIcon, Badge, Box, Button, Flex, FormControl, FormLabel,
-	Select, Spinner, Stack, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr,
+	Select, Stack, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr,
 } from "@chakra-ui/react";
 import { FiRefreshCw } from "react-icons/fi";
 import { feedbackCategories, feedbackNotifications, feedbackSources, FeedbackListResponse } from "@/lib/feedback";
@@ -11,6 +13,7 @@ import useColor from "@/lib/hooks/useColor";
 import Details from "./Feedback/Details";
 
 export function Feedback() {
+	const [tableHeight, setTableHeight] = useAdminTableHeight("feedback");
 	const [category, setCategory] = useState("");
 	const [sourceSite, setSourceSite] = useState("");
 	const [processed, setProcessed] = useState("");
@@ -37,42 +40,43 @@ export function Feedback() {
 
 	return (
 		<Stack spacing={5}>
-			<Flex gap={3} align="center" justify="space-between" wrap="wrap">
-				<Text color="gray.500">접수된 피드백을 확인하고 처리 상태를 관리합니다.</Text>
+			<AdminPageHeader title="피드백 관리" description="접수된 피드백과 처리 상태를 관리합니다." actions={
 				<Button size="sm" leftIcon={<FiRefreshCw />} onClick={() => void feedbacks.refetch()} isLoading={feedbacks.isFetching}>
 					새로고침
 				</Button>
-			</Flex>
-			<Flex gap={3} wrap="wrap" align="end">
-				<FormControl w={{ base: "full", sm: "180px" }}>
-					<FormLabel htmlFor="feedback-source" fontSize="sm">출처 사이트</FormLabel>
-					<Select id="feedback-source" value={sourceSite} onChange={(event) => { setSourceSite(event.target.value); setPage(1); }}>
-						<option value="">전체 사이트</option>
-						{Object.entries(feedbackSources).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-					</Select>
-				</FormControl>
-				<FormControl w={{ base: "full", sm: "180px" }}>
-					<FormLabel htmlFor="feedback-category" fontSize="sm">유형</FormLabel>
-					<Select id="feedback-category" value={category} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
-						<option value="">전체 유형</option>
-						{Object.entries(feedbackCategories).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-					</Select>
-				</FormControl>
-				<FormControl w={{ base: "full", sm: "180px" }}>
-					<FormLabel htmlFor="feedback-processed" fontSize="sm">처리 상태</FormLabel>
-					<Select id="feedback-processed" value={processed} onChange={(event) => { setProcessed(event.target.value); setPage(1); }}>
-						<option value="">전체 상태</option>
-						<option value="false">미처리</option>
-						<option value="true">처리 완료</option>
-					</Select>
-				</FormControl>
-				<FormControl w={{ base: "full", sm: "140px" }}>
-					<FormLabel htmlFor="feedback-limit" fontSize="sm">페이지당 개수</FormLabel>
-					<Select id="feedback-limit" value={limit} onChange={(event) => { setLimit(Number(event.target.value)); setPage(1); }}>
-						{[20, 50, 100].map((value) => <option key={value} value={value}>{value}개</option>)}
-					</Select>
-				</FormControl>
-			</Flex>
+			}>
+				<Flex gap={3} wrap="wrap" align="end">
+					<FormControl w={{ base: "full", sm: "180px" }}>
+						<FormLabel htmlFor="feedback-source" fontSize="sm">출처 사이트</FormLabel>
+						<Select size="sm" id="feedback-source" value={sourceSite} onChange={(event) => { setSourceSite(event.target.value); setPage(1); }}>
+							<option value="">전체 사이트</option>
+							{Object.entries(feedbackSources).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+						</Select>
+					</FormControl>
+					<FormControl w={{ base: "full", sm: "180px" }}>
+						<FormLabel htmlFor="feedback-category" fontSize="sm">유형</FormLabel>
+						<Select size="sm" id="feedback-category" value={category} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
+							<option value="">전체 유형</option>
+							{Object.entries(feedbackCategories).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+						</Select>
+					</FormControl>
+					<FormControl w={{ base: "full", sm: "180px" }}>
+						<FormLabel htmlFor="feedback-processed" fontSize="sm">처리 상태</FormLabel>
+						<Select size="sm" id="feedback-processed" value={processed} onChange={(event) => { setProcessed(event.target.value); setPage(1); }}>
+							<option value="">전체 상태</option>
+							<option value="false">미처리</option>
+							<option value="true">처리 완료</option>
+						</Select>
+					</FormControl>
+					<FormControl w={{ base: "full", sm: "140px" }}>
+						<FormLabel htmlFor="feedback-limit" fontSize="sm">페이지당 개수</FormLabel>
+						<Select size="sm" id="feedback-limit" value={limit} onChange={(event) => { setLimit(Number(event.target.value)); setPage(1); }}>
+							{[20, 50, 100].map((value) => <option key={value} value={value}>{value}개</option>)}
+						</Select>
+					</FormControl>
+				</Flex>
+				<Box mt={3}><AdminTableHeight value={tableHeight} onChange={setTableHeight} /></Box>
+			</AdminPageHeader>
 			{feedbacks.isError && (
 				<Alert status="error" borderRadius="md">
 					<AlertIcon />
@@ -83,17 +87,15 @@ export function Feedback() {
 					<Button size="sm" ml={3} onClick={() => void feedbacks.refetch()} isLoading={feedbacks.isFetching}>다시 시도</Button>
 				</Alert>
 			)}
-			{feedbacks.isPending ? (
-				<Flex py={12} gap={3} justify="center" role="status"><Spinner /><Text>피드백을 불러오는 중입니다.</Text></Flex>
-			) : feedbacks.data && (
+			{feedbacks.data && (
 				<>
 					<Text fontSize="sm" role="status">총 {total?.toLocaleString()}건 · 최신 접수순</Text>
 					{feedbacks.data.data.length === 0 ? (
 						<Text py={12} textAlign="center" color="gray.500">조회 조건에 해당하는 피드백이 없습니다.</Text>
 					) : (
-						<TableContainer bg={bgCard} borderWidth="1px" borderColor={borderColor} borderRadius="md">
-							<Table size="sm" aria-label="접수된 피드백 목록" sx={{ "th, td": { borderColor }, th: { color: mutedColor } }}>
-								<Thead bg={headerBg}>
+						<TableContainer maxH={`${tableHeight}px`} overflowY="auto" sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }} bg={bgCard} borderWidth="1px" borderColor={borderColor} borderRadius="md">
+							<Table minW="1050px" size="sm" aria-label="접수된 피드백 목록" sx={{ "th, td": { borderColor }, th: { color: mutedColor } }}>
+								<Thead position="sticky" top={0} zIndex={1} bg={headerBg}>
 									<Tr><Th>접수 시각 (KST)</Th><Th>출처 사이트</Th><Th>유형</Th><Th>내용</Th><Th>처리 상태</Th><Th>Discord 알림</Th><Th>관리</Th></Tr>
 								</Thead>
 								<Tbody>

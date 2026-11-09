@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import {
 	Badge,
@@ -11,7 +12,6 @@ import {
 	Select,
 	Progress,
 	SimpleGrid,
-	Skeleton,
 	Stack,
 	Table,
 	TableContainer,
@@ -56,10 +56,15 @@ const tooltipStyle = {
 	fontSize: 12,
 };
 
-const visitDateFormat = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" });
+const visitDateFormat = new Intl.DateTimeFormat("en-CA", {
+	timeZone: "Asia/Seoul",
+	year: "numeric",
+	month: "2-digit",
+	day: "2-digit",
+});
 const visitToday = () => {
 	const parts = visitDateFormat.formatToParts(new Date());
-	return ["year", "month", "day"].map(type => parts.find(part => part.type === type)!.value).join("-");
+	return ["year", "month", "day"].map((type) => parts.find((part) => part.type === type)!.value).join("-");
 };
 const visitWeekStart = (today: string) => {
 	const first = new Date(today + "T00:00:00Z");
@@ -73,9 +78,12 @@ export function Dashboard() {
 	useEffect(() => {
 		const button = refreshButtonRef.current;
 		if (!button) return;
-		const observer = new IntersectionObserver(([entry]) => {
-			setShowFloatingRefresh(!entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0));
-		}, { root: button.closest("main") });
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				setShowFloatingRefresh(!entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0));
+			},
+			{ root: button.closest("main") },
+		);
 		observer.observe(button);
 		return () => observer.disconnect();
 	}, []);
@@ -95,33 +103,6 @@ export function Dashboard() {
 
 	return (
 		<Box maxW="1440px" mx="auto">
-			<Flex align="flex-start" justify="space-between" gap={4} wrap="wrap" mb={7}>
-				<Box>
-					<Text fontSize="11px" letterSpacing=".16em" color="var(--obs-accent)">
-						SERVICE OVERVIEW
-					</Text>
-					<Heading as="h1" fontSize={{ base: "26px", md: "32px" }} mt={2} mb={3}>
-						서비스 이용 현황
-					</Heading>
-					<Flex align="center" gap={3} wrap="wrap" fontSize="sm" color="var(--obs-muted)">
-						<Badge bg="#c1a4ef1a" color="var(--obs-accent)" borderRadius="full" px={3} py={1}>
-							{visitQuery ? "방문 기간 지정" : "방문 최근 7일"}
-						</Badge>
-						<Text>방문은 한국 시간 · YouTube 할당량은 미국 태평양 시간</Text>
-					</Flex>
-				</Box>
-				<Box ref={refreshButtonRef}>
-					<ObservatoryButton
-						leftIcon={<FiRefreshCw />}
-						onClick={() => void query.refetch()}
-						isLoading={query.isFetching}
-						loadingText="불러오는 중"
-					>
-						통계 새로고침
-					</ObservatoryButton>
-				</Box>
-			</Flex>
-
 			{showFloatingRefresh && (
 				<IconButton
 					type="button"
@@ -146,61 +127,146 @@ export function Dashboard() {
 				/>
 			)}
 
-			<Box as="form" mb={6} p={4} border="1px solid var(--obs-line)" borderRadius="xl"
-				onSubmit={(event) => {
-					event.preventDefault();
-					const start = dateMode === "date" ? singleDate : startDate;
-					const end = dateMode === "date" ? singleDate : endDate;
-					if (!start || !end || start > end || end > visitToday()) {
-						setDateError("오늘까지의 날짜를 시작일 ≤ 종료일 순서로 선택해 주세요.");
-						return;
-					}
-					if ((Date.parse(end) - Date.parse(start)) / 86_400_000 + 1 > 366) {
-						setDateError("한 번에 최대 366일까지 조회할 수 있습니다.");
-						return;
-					}
-					setDateError("");
-					const params = new URLSearchParams(dateMode === "date" ? [["date", singleDate]] : [["startDate", startDate], ["endDate", endDate]]).toString();
-					if (params === visitQuery) void query.refetch();
-					else setVisitQuery(params);
-				}}>
-				<Flex gap={3} align="flex-end" wrap="wrap">
-					<FormControl w={{ base: "100%", md: "150px" }}>
-						<FormLabel htmlFor="visit-date-mode" fontSize="sm">방문 조회 방식</FormLabel>
-						<Select id="visit-date-mode" value={dateMode} onChange={event => { setDateMode(event.target.value); setDateError(""); }}>
-							<option value="range">날짜 범위</option>
-							<option value="date">특정 날짜</option>
-						</Select>
-					</FormControl>
-					{dateMode === "date" ? (
-						<FormControl w={{ base: "100%", md: "190px" }}>
-							<FormLabel htmlFor="visit-date" fontSize="sm">조회 날짜</FormLabel>
-							<Input id="visit-date" type="date" required min="1000-01-01" max={today} value={singleDate} onChange={event => setSingleDate(event.target.value)} />
+			<AdminPageHeader
+				title="서비스 이용 현황"
+				description={<Badge colorScheme="purple">{visitQuery ? "방문 기간 지정" : "방문 최근 7일"}</Badge>}
+				actions={
+					<Box ref={refreshButtonRef}>
+						<ObservatoryButton
+							leftIcon={<FiRefreshCw />}
+							onClick={() => void query.refetch()}
+							isLoading={query.isFetching}
+							loadingText="불러오는 중"
+						>
+							통계 새로고침
+						</ObservatoryButton>
+					</Box>
+				}
+			>
+				<Box
+					as="form"
+					onSubmit={(event) => {
+						event.preventDefault();
+						const start = dateMode === "date" ? singleDate : startDate;
+						const end = dateMode === "date" ? singleDate : endDate;
+						if (!start || !end || start > end || end > visitToday()) {
+							setDateError("오늘까지의 날짜를 시작일 ≤ 종료일 순서로 선택해 주세요.");
+							return;
+						}
+						if ((Date.parse(end) - Date.parse(start)) / 86_400_000 + 1 > 366) {
+							setDateError("한 번에 최대 366일까지 조회할 수 있습니다.");
+							return;
+						}
+						setDateError("");
+						const params = new URLSearchParams(
+							dateMode === "date"
+								? [["date", singleDate]]
+								: [
+										["startDate", startDate],
+										["endDate", endDate],
+									],
+						).toString();
+						if (params === visitQuery) void query.refetch();
+						else setVisitQuery(params);
+					}}
+				>
+					<Flex gap={3} align="flex-end" wrap="wrap">
+						<FormControl w={{ base: "100%", md: "150px" }}>
+							<FormLabel htmlFor="visit-date-mode" fontSize="sm">
+								방문 조회 방식
+							</FormLabel>
+							<Select
+								size="sm"
+								id="visit-date-mode"
+								value={dateMode}
+								onChange={(event) => {
+									setDateMode(event.target.value);
+									setDateError("");
+								}}
+							>
+								<option value="range">날짜 범위</option>
+								<option value="date">특정 날짜</option>
+							</Select>
 						</FormControl>
-					) : (
-						<>
+						{dateMode === "date" ? (
 							<FormControl w={{ base: "100%", md: "190px" }}>
-								<FormLabel htmlFor="visit-start-date" fontSize="sm">시작일</FormLabel>
-								<Input id="visit-start-date" type="date" required min="1000-01-01" max={today} value={startDate} onChange={event => setStartDate(event.target.value)} />
+								<FormLabel htmlFor="visit-date" fontSize="sm">
+									조회 날짜
+								</FormLabel>
+								<Input
+									size="sm"
+									id="visit-date"
+									type="date"
+									required
+									min="1000-01-01"
+									max={today}
+									value={singleDate}
+									onChange={(event) => setSingleDate(event.target.value)}
+								/>
 							</FormControl>
-							<FormControl w={{ base: "100%", md: "190px" }}>
-								<FormLabel htmlFor="visit-end-date" fontSize="sm">종료일</FormLabel>
-								<Input id="visit-end-date" type="date" required min={startDate || "1000-01-01"} max={today} value={endDate} onChange={event => setEndDate(event.target.value)} />
-							</FormControl>
-						</>
+						) : (
+							<>
+								<FormControl w={{ base: "100%", md: "190px" }}>
+									<FormLabel htmlFor="visit-start-date" fontSize="sm">
+										시작일
+									</FormLabel>
+									<Input
+										size="sm"
+										id="visit-start-date"
+										type="date"
+										required
+										min="1000-01-01"
+										max={today}
+										value={startDate}
+										onChange={(event) => setStartDate(event.target.value)}
+									/>
+								</FormControl>
+								<FormControl w={{ base: "100%", md: "190px" }}>
+									<FormLabel htmlFor="visit-end-date" fontSize="sm">
+										종료일
+									</FormLabel>
+									<Input
+										size="sm"
+										id="visit-end-date"
+										type="date"
+										required
+										min={startDate || "1000-01-01"}
+										max={today}
+										value={endDate}
+										onChange={(event) => setEndDate(event.target.value)}
+									/>
+								</FormControl>
+							</>
+						)}
+						<ObservatoryButton type="submit" isLoading={query.isFetching} loadingText="불러오는 중">
+							조회
+						</ObservatoryButton>
+						<ObservatoryButton
+							type="button"
+							onClick={() => {
+								const current = visitToday();
+								setDateMode("range");
+								setStartDate(visitWeekStart(current));
+								setEndDate(current);
+								setSingleDate(current);
+								setDateError("");
+								if (!visitQuery) void query.refetch();
+								else setVisitQuery("");
+							}}
+						>
+							최근 7일
+						</ObservatoryButton>
+					</Flex>
+					<Text mt={3} fontSize="xs" color="var(--obs-muted)">
+						방문 통계에 적용됩니다. 기본값은 한국 시간 기준 오늘 포함 최근 7일이며, 최대 366일까지 조회할 수 있습니다.
+					</Text>
+					{dateError && (
+						<Text role="alert" mt={2} fontSize="sm" color="#f4accc">
+							{dateError}
+						</Text>
 					)}
-					<ObservatoryButton type="submit" isLoading={query.isFetching} loadingText="불러오는 중">조회</ObservatoryButton>
-					<ObservatoryButton type="button" onClick={() => {
-						const current = visitToday();
-						setDateMode("range"); setStartDate(visitWeekStart(current)); setEndDate(current); setSingleDate(current); setDateError("");
-						if (!visitQuery) void query.refetch();
-						else setVisitQuery("");
-					}}>최근 7일</ObservatoryButton>
-				</Flex>
-				<Text mt={3} fontSize="xs" color="var(--obs-muted)">방문 통계에 적용됩니다. 기본값은 한국 시간 기준 오늘 포함 최근 7일이며, 최대 366일까지 조회할 수 있습니다.</Text>
-				{dateError && <Text role="alert" mt={2} fontSize="sm" color="#f4accc">{dateError}</Text>}
-			</Box>
-
+				</Box>
+			</AdminPageHeader>
 			{query.isError && (
 				<Box role="alert" mb={5} p={4} border="1px solid #f4accc55" bg="#f4accc0d" borderRadius="xl">
 					<Text fontWeight="semibold">통계를 불러오지 못했습니다.</Text>
@@ -214,40 +280,34 @@ export function Dashboard() {
 					)}
 				</Box>
 			)}
-			{query.isPending ? (
-				<Stack spacing={5} role="status" aria-label="대시보드 데이터를 불러오는 중">
-					{[360, 300].map((height) => (
-						<Skeleton key={height} h={`${height}px`} borderRadius="2xl" startColor="#211b30" endColor="#302641" />
-					))}
-				</Stack>
-			) : (
-				metrics && (
-					<Stack spacing={5}>
-						<Box>
-							<Heading as="h2" fontSize="20px">
-								사이트별 방문 호출
-							</Heading>
-							<Text fontSize="sm" color="var(--obs-muted)" mt={2}>
-								{periodLabel(metrics.visits)} · 한국 시간 기준 ({metrics.visits.timeZone})
+			{query.isPending
+				? null
+				: metrics && (
+						<Stack spacing={5}>
+							<Box>
+								<Heading as="h2" fontSize="20px">
+									사이트별 방문 호출
+								</Heading>
+								<Text fontSize="sm" color="var(--obs-muted)" mt={2}>
+									{periodLabel(metrics.visits)} · 한국 시간 기준 ({metrics.visits.timeZone})
+								</Text>
+							</Box>
+							<SimpleGrid columns={{ base: 1, xl: 3 }} spacing={5}>
+								{(Object.keys(visitSites) as (keyof typeof visitSites)[]).map((key) => (
+									<VisitSection
+										key={key}
+										siteKey={key}
+										series={metrics.visits.series.find((series) => series.key === key)}
+									/>
+								))}
+							</SimpleGrid>
+							<YouTubeSection usage={metrics.youtubeApi} />
+							<Text fontSize="xs" color="var(--obs-muted)">
+								저장 완료 데이터는 {numberFormat.format(metrics.persistenceIntervalSeconds / 60)}분 주기로 반영되며,
+								화면도 5분마다 갱신합니다. 저장 오류 시 더 늦어질 수 있습니다.
 							</Text>
-						</Box>
-						<SimpleGrid columns={{ base: 1, xl: 3 }} spacing={5}>
-							{(Object.keys(visitSites) as (keyof typeof visitSites)[]).map((key) => (
-								<VisitSection
-									key={key}
-									siteKey={key}
-									series={metrics.visits.series.find((series) => series.key === key)}
-								/>
-							))}
-						</SimpleGrid>
-						<YouTubeSection usage={metrics.youtubeApi} />
-						<Text fontSize="xs" color="var(--obs-muted)">
-							저장 완료 데이터는 {numberFormat.format(metrics.persistenceIntervalSeconds / 60)}분 주기로 반영되며,
-							화면도 5분마다 갱신합니다. 저장 오류 시 더 늦어질 수 있습니다.
-						</Text>
-					</Stack>
-				)
-			)}
+						</Stack>
+					)}
 		</Box>
 	);
 }
@@ -322,8 +382,8 @@ function VisitSection({
 							두 지표는 서로 다른 눈금을 사용합니다.
 						</Text>
 					)}
-					<TableContainer mt={4}>
-						<Table size="sm" variant="unstyled" aria-label={`${site.label} 일별 방문 집계`}>
+					<TableContainer overflowY="auto" sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }} mt={4}>
+						<Table minW="480px" size="sm" variant="unstyled" aria-label={`${site.label} 일별 방문 집계`}>
 							<Thead color="var(--obs-muted)">
 								<Tr>
 									<Th px={2}>한국 날짜</Th>
@@ -426,8 +486,12 @@ function YouTubeSection({ usage }: { usage: DashboardMetrics["youtubeApi"] }) {
 					오늘 서버별 사용량
 				</Heading>
 				{today.sources?.length ? (
-					<TableContainer>
-						<Table size="sm" variant="unstyled" aria-label="오늘 서버별 YouTube API 사용량">
+					<TableContainer
+						maxH="var(--admin-table-height)"
+						overflowY="auto"
+						sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+					>
+						<Table minW="480px" size="sm" variant="unstyled" aria-label="오늘 서버별 YouTube API 사용량">
 							<Thead color="var(--obs-muted)">
 								<Tr>
 									<Th px={2}>서버 / API별 호출</Th>
@@ -475,8 +539,12 @@ function YouTubeSection({ usage }: { usage: DashboardMetrics["youtubeApi"] }) {
 					<Heading as="h3" fontSize="sm" mb={3}>
 						오늘 API별 호출·추정 할당량
 					</Heading>
-					<TableContainer>
-						<Table size="sm" variant="unstyled" aria-label="오늘 YouTube API별 사용량">
+					<TableContainer
+						maxH="var(--admin-table-height)"
+						overflowY="auto"
+						sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+					>
+						<Table minW="480px" size="sm" variant="unstyled" aria-label="오늘 YouTube API별 사용량">
 							<Thead color="var(--obs-muted)">
 								<Tr>
 									<Th px={2}>API</Th>
@@ -532,8 +600,13 @@ function YouTubeSection({ usage }: { usage: DashboardMetrics["youtubeApi"] }) {
 					)}
 				</Box>
 			</SimpleGrid>
-			<TableContainer mt={5}>
-				<Table size="sm" variant="unstyled" aria-label="YouTube API 일별 기록 상태">
+			<TableContainer
+				maxH="var(--admin-table-height)"
+				overflowY="auto"
+				sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+				mt={5}
+			>
+				<Table minW="480px" size="sm" variant="unstyled" aria-label="YouTube API 일별 기록 상태">
 					<Thead color="var(--obs-muted)">
 						<Tr>
 							<Th>태평양 날짜</Th>
@@ -683,3 +756,4 @@ function EmptyChart() {
 		</Flex>
 	);
 }
+

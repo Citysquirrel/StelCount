@@ -1,7 +1,8 @@
+import { AdminLoadingProvider, AdminPageLoading, useAdminLoading } from "@/components/AdminLoading";
 import { CustomLink } from "@/components/Link";
 import { ObservatoryButton } from "@/components/layout/Observatory";
-import { Box, Flex, HStack, IconButton, Spinner, Text, Tooltip, VStack, useMediaQuery, useToast } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { Box, Drawer, DrawerContent, DrawerOverlay, Flex, HStack, IconButton, Text, Tooltip, VStack, useMediaQuery, useToast } from "@chakra-ui/react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { FiBook, FiHome, FiMenu, FiMessageSquare, FiMusic, FiRefreshCw, FiSettings, FiUsers, FiVideo, FiYoutube } from "react-icons/fi";
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../lib/hooks/useAuth";
@@ -21,8 +22,16 @@ const navigation = [
 ];
 
 export function NewAdmin() {
+	return <AdminLoadingProvider><AdminWorkspace /></AdminLoadingProvider>;
+}
+
+function AdminWorkspace() {
 	const location = useLocation();
 	const [isExpanded, setIsExpanded] = useState(true);
+	const [isMobile] = useMediaQuery("(max-width: 767px)");
+	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+	const menuButtonRef = useRef<HTMLButtonElement>(null);
+	const sidebarExpanded = isMobile || isExpanded;
 	const [isCompact] = useMediaQuery("(max-width: 1279px)");
 	const { isLoading: isAuthLoading, isLogin, isAdmin } = useAuth();
 	const renewal = usePlaylistRenewal();
@@ -36,6 +45,7 @@ export function NewAdmin() {
 	}, [isAuthLoading, isAdmin, refreshPlaylistRenewal]);
 
 	useEffect(() => { setIsExpanded(!isCompact); }, [isCompact]);
+	useEffect(() => { setIsDrawerOpen(false); }, [isMobile, location.pathname]);
 
 	const renewDetails = async () => {
 		if (!isAdmin || detailFetching.current) return;
@@ -55,49 +65,56 @@ export function NewAdmin() {
 		}
 	};
 
-	if (isAuthLoading) return <Flex justify="center" p={12} role="status" aria-label="관리자 인증 확인 중"><Spinner color="var(--obs-accent)" /></Flex>;
+	useAdminLoading(isAuthLoading || isDetailFetching, isAuthLoading ? "관리자 인증 확인 중" : "영상 상세 정보 갱신 중");
+	if (isAuthLoading) return null;
 	if (!isLogin || !isAdmin) return <NotExist />;
 
 	const currentTitle = navigation.find(({ path }) => location.pathname === `/admin/${path}`)?.label || "관리자";
 	const isPlaylistRunning = renewal.isStarting || renewal.progress?.status === "running";
-	return (
-		<Flex position="relative" h={{ base: "calc(100dvh - 64px)", md: "calc(100dvh - 80px)" }} minH={0} overflow="hidden">
-			<Flex as="aside" aria-label="관리자 사이드바" direction="column" w={isExpanded ? { base: "210px", md: "240px" } : "64px"}
+	const sidebar = (
+			<Flex as="aside" aria-label="관리자 사이드바" direction="column" w={isMobile ? "full" : sidebarExpanded ? "240px" : "64px"}
 				flexShrink={0} bg="#171320" borderRight="1px solid var(--obs-line)" overflowY="auto"
-				position={{ base: isExpanded ? "absolute" : "relative", md: "relative" }} zIndex={isExpanded ? 20 : 1} h="full">
-				<Flex minH="72px" align="center" justify={isExpanded ? "space-between" : "center"} px={isExpanded ? 5 : 2}>
-					{isExpanded && <Box><Text fontSize="10px" letterSpacing=".16em" color="var(--obs-accent)">WORKSPACE</Text><Text fontWeight="bold" mt={1}>관리자</Text></Box>}
-					<IconButton aria-label={isExpanded ? "사이드바 접기" : "사이드바 펼치기"} aria-expanded={isExpanded} aria-controls="admin-sidebar-content"
-						icon={<FiMenu />} onClick={() => setIsExpanded(!isExpanded)} variant="ghost" color="var(--obs-muted)" _hover={{ bg: "#c1a4ef1f", color: "#f1edf8" }} />
+				position="relative" h="full">
+				<Flex minH="72px" align="center" justify={sidebarExpanded ? "space-between" : "center"} px={sidebarExpanded ? 5 : 2}>
+					{sidebarExpanded && <Box><Text fontSize="10px" letterSpacing=".16em" color="var(--obs-accent)">WORKSPACE</Text><Text fontWeight="bold" mt={1}>관리자</Text></Box>}
+					<IconButton aria-label={isMobile ? "관리자 메뉴 닫기" : sidebarExpanded ? "사이드바 접기" : "사이드바 펼치기"} aria-expanded={sidebarExpanded} aria-controls="admin-sidebar-content"
+						icon={<FiMenu />} onClick={() => isMobile ? setIsDrawerOpen(false) : setIsExpanded(!isExpanded)} variant="ghost" color="var(--obs-muted)" _hover={{ bg: "#c1a4ef1f", color: "#f1edf8" }} />
 				</Flex>
-				<Flex id="admin-sidebar-content" flex={1} direction="column" px={isExpanded ? 3 : 2} pb={4} gap={6}>
+				<Flex id="admin-sidebar-content" flex={1} direction="column" px={sidebarExpanded ? 3 : 2} pb={4} gap={6}>
 					<VStack as="nav" aria-label="관리자 메뉴" spacing={1} align="stretch">
-						{navigation.map(({ path, label, icon }) => <NavItem key={path} icon={icon} label={label} to={`/admin/${path}`} isExpanded={isExpanded} onClick={() => { if (isCompact) setIsExpanded(false); }} />)}
+						{navigation.map(({ path, label, icon }) => <NavItem key={path} icon={icon} label={label} to={`/admin/${path}`} isExpanded={sidebarExpanded} onClick={() => { setIsDrawerOpen(false); if (isCompact) setIsExpanded(false); }} />)}
 					</VStack>
 					<Box mt="auto" pt={5} borderTop="1px solid var(--obs-line)">
-						{isExpanded && <Text px={3} mb={3} fontSize="10px" letterSpacing=".12em" color="var(--obs-muted)">데이터 갱신</Text>}
+						{sidebarExpanded && <Text px={3} mb={3} fontSize="10px" letterSpacing=".12em" color="var(--obs-muted)">데이터 갱신</Text>}
 						<VStack align="stretch" spacing={2}>
-							<RenewalButton expanded={isExpanded} icon={FiRefreshCw} label="재생목록 데이터 갱신" onClick={renewal.start}
+							<RenewalButton expanded={sidebarExpanded} icon={FiRefreshCw} label="재생목록 데이터 갱신" onClick={renewal.start}
 								isDisabled={!renewal.canStart} isLoading={isPlaylistRunning} loadingText={renewal.isStarting ? "갱신 시작 중" : "재생목록 갱신 중"} />
-							<RenewalButton expanded={isExpanded} icon={FiVideo} label="영상 상세 정보 갱신" onClick={() => void renewDetails()}
+							<RenewalButton expanded={sidebarExpanded} icon={FiVideo} label="영상 상세 정보 갱신" onClick={() => void renewDetails()}
 								isDisabled={isDetailFetching} isLoading={isDetailFetching} loadingText="영상 상세 갱신 중" />
 						</VStack>
-						{isExpanded && <Text role="status" fontSize="11px" color="var(--obs-muted)" mt={3} px={3}>
+						{sidebarExpanded && <Text role="status" fontSize="11px" color="var(--obs-muted)" mt={3} px={3}>
 							{isDetailFetching ? "영상 상세 정보를 갱신하고 있습니다." : isPlaylistRunning ? "재생목록 갱신 진행 상황은 알림에서 확인할 수 있습니다." : renewal.error || "필요할 때 최신 데이터로 갱신합니다."}
 						</Text>}
 					</Box>
-					<NavItem icon={FiSettings} label="구버전 관리자" to="/old-admin" isExpanded={isExpanded} />
+					<NavItem icon={FiSettings} label="구버전 관리자" to="/old-admin" isExpanded={sidebarExpanded} />
 				</Flex>
 			</Flex>
-			{isExpanded && <Box display={{ base: "block", md: "none" }} position="absolute" inset={0} bg="#09061299" zIndex={10} onClick={() => setIsExpanded(false)} aria-hidden />}
+	);
+	return (
+		<Flex position="relative" h={{ base: "calc(100dvh - 64px)", md: "calc(100dvh - 80px)" }} minH={0} overflow="hidden">
+			{isMobile ? <Drawer isOpen={isDrawerOpen} placement="left" onClose={() => setIsDrawerOpen(false)} finalFocusRef={menuButtonRef} size="xs">
+				<DrawerOverlay bg="#090612b3" />
+				<DrawerContent bg="#171320" color="#f1edf8" aria-label="관리자 메뉴" sx={{ "--obs-muted": "#b4aacb", "--obs-accent": "#c1a4ef", "--obs-line": "#3a3351" }}>{sidebar}</DrawerContent>
+			</Drawer> : sidebar}
 			<Flex flex={1} minW={0} direction="column" overflow="hidden">
-				<Flex as="header" minH="64px" px={{ base: 4, md: 8 }} align="center" borderBottom="1px solid var(--obs-line)" gap={3}>
+				<Flex as="header" minH="64px" flexShrink={0} px={{ base: 4, md: 8 }} align="center" borderBottom="1px solid var(--obs-line)" gap={3}>
+					{isMobile && <IconButton ref={menuButtonRef} aria-label="관리자 메뉴 열기" aria-expanded={isDrawerOpen} icon={<FiMenu />} variant="ghost" onClick={() => setIsDrawerOpen(true)} />}
 					<Text fontSize="xs" color="var(--obs-muted)" display={{ base: "none", sm: "block" }}>관리자 /</Text>
 					<Text fontSize="sm" fontWeight="semibold">{currentTitle}</Text>
 					<Text ml="auto" color="var(--obs-accent)" fontSize="10px" letterSpacing=".1em">STELCOUNT</Text>
 				</Flex>
 				<Box as="main" id="obs-main" tabIndex={-1} flex={1} minH={0} overflowY="auto" p={{ base: 4, md: 7, xl: 8 }} _focus={{ outline: "none" }}>
-					<Outlet />
+					<Suspense fallback={<AdminPageLoading />}><Outlet /></Suspense>
 				</Box>
 			</Flex>
 		</Flex>

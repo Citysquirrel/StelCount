@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AdminLoadingPopup } from "./components/AdminLoading";
 import { Header } from "./components/Header";
 import { Outlet, useLocation } from "react-router-dom";
 import { useNavigateEvent } from "./lib/hooks/useNavigateEvent";
@@ -54,7 +56,7 @@ function App() {
 			<DarkMode>
 				<ObservatoryShell>
 					<ObservatoryHeader />
-					<Outlet />
+					<Suspense fallback={<AdminLoadingPopup message="페이지 로딩 중" />}><Outlet /></Suspense>
 				</ObservatoryShell>
 			</DarkMode>
 		);

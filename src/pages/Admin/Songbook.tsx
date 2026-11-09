@@ -1,8 +1,10 @@
+import { AdminTableHeight, useAdminTableHeight } from "@/components/AdminTableHeight";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { useAdminLoading } from "@/components/AdminLoading";
 import { AdminModalContent } from "@/components/Modal";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
 	Box,
-	Heading,
 	Text,
 	Button,
 	Flex,
@@ -10,8 +12,6 @@ import {
 	Badge,
 	HStack,
 	IconButton,
-	Spinner,
-	Center,
 	Icon,
 	Input,
 	Select,
@@ -142,11 +142,13 @@ type RawSongData = Omit<SongData, "synonyms" | "actionStatus" | "syncStatus"> & 
 //DONE:	>> NEW, MODIFIED 항목은 UNCHANGED로 리셋
 
 export function Songbook() {
+	const [tableHeight, setTableHeight] = useAdminTableHeight("songbook");
 	// --- [상태 관리] ---
 	const [songs, setSongs] = useState<SongData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSyncing, setIsSyncing] = useState(false);
 	const [isDBSaving, setIsDBSaving] = useState(false);
+	useAdminLoading(isLoading || isSyncing || isDBSaving, isDBSaving ? "노래책 저장 중" : isSyncing ? "시트 동기화 중" : "노래책 로딩 중");
 	const [searchMode, setSearchMode] = useState<SearchMode>("default");
 
 	// 검색 및 필터 상태
@@ -638,16 +640,10 @@ export function Songbook() {
 
 	return (
 		<Box>
-			{isLoading && (
-				<Center w="100%" h="100%" top={0} left={0} position="absolute" zIndex={123} bg="rgba(255,255,255,0.7)">
-					<Spinner size="xl" />
-				</Center>
-			)}
-			<Heading size="lg" mb={2}>
-				노래책 관리 에디터{" "}
+			<AdminPageHeader title="노래책 관리 에디터" actions={<>
 				{sheetUrlRef.current.length > 0 ? (
 					<IconButton
-						aria-label="sheetUrl"
+						aria-label="구글 시트 열기"
 						icon={<SiGooglesheets />}
 						size="md"
 						variant={"ghost"}
@@ -656,171 +652,160 @@ export function Songbook() {
 						}}
 					/>
 				) : null}
-			</Heading>
-
-			{/* 검색 및 필터 컨트롤 바 */}
-			<Flex
-				gap={4}
-				mb={6}
-				flexWrap="wrap"
-				bg={bgCard}
-				p={4}
-				rounded="xl"
-				shadow="sm"
-				border={`1px solid ${borderColor}`}
-			>
-				<InputGroup w="200px" size="sm">
-					<Input
-						placeholder="제목 또는 가수 부분 검색"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						onKeyDown={(e) => {
-							e.key === "Escape" && setSearchQuery("");
-						}}
-					/>
-					{searchQuery.length !== 0 ? (
-						<InputRightElement>
-							<CloseButton
-								size="sm"
-								onClick={() => {
-									setSearchQuery("");
-								}}
-							/>
-						</InputRightElement>
-					) : null}
-				</InputGroup>
-				<Menu closeOnSelect={false}>
-					<MenuButton as={Button} size="sm" rightIcon={<IoIosArrowDown />} w="120px">
-						{filterGenre.length > 0 ? `${filterGenre.length}개 선택됨` : "모든 장르"}
-					</MenuButton>
-					<MenuList minW="120px">
-						{genres.map((genre) => (
-							<MenuItem key={genre} as="label">
-								<Checkbox
-									size="sm"
-									isChecked={filterGenre.includes(genre)}
-									onChange={() => handleCheckboxChange(genre, "genre")}
-									w="100%"
-								>
-									{genre}
-								</Checkbox>
-							</MenuItem>
-						))}
-					</MenuList>
-				</Menu>
-				<Select
+				<Button
 					size="sm"
-					placeholder="공식 여부"
-					value={filterOfficial}
-					onChange={(e) => setFilterOfficial(e.target.value)}
-					w="120px"
+					leftIcon={<FiRefreshCw />}
+					colorScheme="teal"
+					variant="outline"
+					isDisabled={isLoading} onClick={handleSyncSheet}
+					isLoading={isSyncing}
+					loadingText="동기화 중"
 				>
-					<option value="true">공식 곡만</option>
-					<option value="false">수동 추가 곡만</option>
-				</Select>
-				<Select
-					size="sm"
-					placeholder="가사 여부"
-					value={filterLyric}
-					onChange={(e) => setFilterLyric(e.target.value)}
-					w="120px"
-				>
-					<option value="true">가사 있음</option>
-					<option value="false">가사 없음</option>
-				</Select>
-				<Menu closeOnSelect={false}>
-					<MenuButton size="sm" as={Button} rightIcon={<IoIosArrowDown />} w="120px">
-						{filterStatus.length > 0 ? `${filterStatus.length}개 선택됨` : "모든 상태"}
-					</MenuButton>
-					<MenuList minW="150px">
-						{statuses.map((status) => (
-							<MenuItem key={status} as="label">
-								<Checkbox
-									size="sm"
-									isChecked={filterStatus.includes(status)}
-									onChange={() => handleCheckboxChange(status, "status")}
-									w="100%"
-								>
-									{status}
-								</Checkbox>
-							</MenuItem>
-						))}
-					</MenuList>
-				</Menu>
-				<Button size="sm" leftIcon={<LuClipboardPaste />} colorScheme="teal" onClick={handleSheetFilterModal}>
-					{!isMobile && "시트 붙여넣기"}
+					시트 동기화
+				</Button>
+				<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" isDisabled={isLoading} onClick={handleAddNewSong}>
+					직접 추가
 				</Button>
 				<Button
 					size="sm"
-					colorScheme="orange"
-					onClick={() => {
-						setSearchQuery("");
-						setFilterGenre([]);
-						setFilterOfficial("");
-						setFilterStatus([]);
-						setFilterLyric("");
-						setSearchMode("default");
-					}}
+					leftIcon={<FiSave />}
+					colorScheme="blue"
+					isDisabled={isLoading} onClick={handleSaveDB}
+					isLoading={isDBSaving}
+					loadingText="저장 중"
 				>
-					필터 리셋
+					DB에 최종 저장
 				</Button>
+			</>}>
+				<Flex gap={3} align="center" wrap="wrap">
+					<InputGroup w={{ base: "full", sm: "260px" }} size="sm">
+						<Input
+							aria-label="노래책 제목 또는 가수 검색" placeholder="제목 또는 가수 부분 검색"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							onKeyDown={(e) => {
+								e.key === "Escape" && setSearchQuery("");
+							}}
+						/>
+						{searchQuery.length !== 0 ? (
+							<InputRightElement>
+								<CloseButton
+									size="sm"
+									onClick={() => {
+										setSearchQuery("");
+									}}
+								/>
+							</InputRightElement>
+						) : null}
+					</InputGroup>
+					<Menu closeOnSelect={false}>
+						<MenuButton as={Button} size="sm" rightIcon={<IoIosArrowDown />} w="120px">
+							{filterGenre.length > 0 ? `${filterGenre.length}개 선택됨` : "모든 장르"}
+						</MenuButton>
+						<MenuList minW="120px">
+							{genres.map((genre) => (
+								<MenuItem key={genre} as="label">
+									<Checkbox
+										size="sm"
+										isChecked={filterGenre.includes(genre)}
+										onChange={() => handleCheckboxChange(genre, "genre")}
+										w="100%"
+									>
+										{genre}
+									</Checkbox>
+								</MenuItem>
+							))}
+						</MenuList>
+					</Menu>
+					<Select
+						size="sm"
+						placeholder="공식 여부"
+						value={filterOfficial}
+						onChange={(e) => setFilterOfficial(e.target.value)}
+						w="120px"
+					>
+						<option value="true">공식 곡만</option>
+						<option value="false">수동 추가 곡만</option>
+					</Select>
+					<Select
+						size="sm"
+						placeholder="가사 여부"
+						value={filterLyric}
+						onChange={(e) => setFilterLyric(e.target.value)}
+						w="120px"
+					>
+						<option value="true">가사 있음</option>
+						<option value="false">가사 없음</option>
+					</Select>
+					<Menu closeOnSelect={false}>
+						<MenuButton size="sm" as={Button} rightIcon={<IoIosArrowDown />} w="120px">
+							{filterStatus.length > 0 ? `${filterStatus.length}개 선택됨` : "모든 상태"}
+						</MenuButton>
+						<MenuList minW="150px">
+							{statuses.map((status) => (
+								<MenuItem key={status} as="label">
+									<Checkbox
+										size="sm"
+										isChecked={filterStatus.includes(status)}
+										onChange={() => handleCheckboxChange(status, "status")}
+										w="100%"
+									>
+										{status}
+									</Checkbox>
+								</MenuItem>
+							))}
+						</MenuList>
+					</Menu>
+					<Button size="sm" leftIcon={<LuClipboardPaste />} colorScheme="teal" isDisabled={isLoading} onClick={handleSheetFilterModal}>
+						시트 붙여넣기
+					</Button>
+					<Button
+						size="sm"
+						colorScheme="orange"
+						onClick={() => {
+							setSearchQuery("");
+							setFilterGenre([]);
+							setFilterOfficial("");
+							setFilterStatus([]);
+							setFilterLyric("");
+							setSearchMode("default");
+						}}
+					>
+						필터 리셋
+					</Button>
 
-				<Flex flex={1} justify="flex-end" gap={2}>
-					<Button
-						size="sm"
-						leftIcon={<FiRefreshCw />}
-						colorScheme="teal"
-						variant="outline"
-						onClick={handleSyncSheet}
-						isLoading={isSyncing}
-						loadingText="동기화 중"
-					>
-						{!isMobile && "시트 동기화"}
-					</Button>
-					<Button size="sm" leftIcon={<FiPlus />} colorScheme="teal" onClick={handleAddNewSong}>
-						{!isMobile && "직접 추가"}
-					</Button>
-					<Button
-						size="sm"
-						leftIcon={<FiSave />}
-						colorScheme="blue"
-						onClick={handleSaveDB}
-						isLoading={isDBSaving}
-						loadingText="저장 중"
-					>
-						{!isMobile && "DB에 최종 저장"}
-					</Button>
 				</Flex>
-			</Flex>
-
+				<Box mt={3}><AdminTableHeight value={tableHeight} onChange={setTableHeight} /></Box>
+			</AdminPageHeader>
 			<Text mb={2} color="gray.500" fontSize="sm">
 				검색 결과: {filteredSongs.length} 건
 			</Text>
 
 			{/* 가상화 테이블 영역 */}
-			<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflow="hidden">
+			<Box bg={bgCard} rounded="xl" shadow="sm" border={`1px solid ${borderColor}`} overflowX="auto" sx={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}>
+					<Box minW="850px">
 				{/* 테이블 헤더 */}
 				<Flex bg={headerBg} borderBottom={`1px solid ${borderColor}`} px={4} py={3} fontWeight="bold" fontSize="sm">
-					{!isTablet && <Box w="60px">행</Box>}
-					<Box w="100px">상태</Box>
+					{!isTablet && <Box flexShrink={0} w="60px">행</Box>}
+					<Box flexShrink={0} w="100px">상태</Box>
 					{!isTablet && (
 						<>
-							<Box w="60px" textAlign="center">
+							<Box flexShrink={0} w="60px" textAlign="center">
 								공식
 							</Box>
-							<Box w="60px" textAlign="center">
+							<Box flexShrink={0} w="60px" textAlign="center">
 								가사
 							</Box>
 						</>
 					)}
-					<Box flex={1}>곡 제목 / 아티스트</Box>
-					<Box w="100px" textAlign="center">
+					<Box flex={1} minW={0}>곡 제목 / 아티스트</Box>
+					<Box flexShrink={0} w="100px" textAlign="center">
 						조작
 					</Box>
 				</Flex>
 
 				{/* 가상화 컨테이너 */}
-				<Box ref={parentRef} h="600px" overflowY="auto">
+				<Box ref={parentRef} h={`${tableHeight}px`} overflowY="auto">
 					<Box position="relative" h={`${rowVirtualizer.getTotalSize()}px`} w="100%">
 						{/* 가상화된 행 렌더링 */}
 						{rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -849,7 +834,7 @@ export function Songbook() {
 									_hover={{ bg: fieldHoverBgColor }}
 									onClick={() => handleRowClick(virtualRow.index)}
 								>
-									{!isTablet && <Box w="60px">{song.columnData}</Box>}
+									{!isTablet && <Box flexShrink={0} w="60px">{song.columnData}</Box>}
 									<Stack w="100px" alignItems={"flex-start"}>
 										<Badge
 											colorScheme={
@@ -874,17 +859,17 @@ export function Songbook() {
 									</Stack>
 									{!isTablet && (
 										<>
-											<Box w="60px" textAlign="center">
+											<Box flexShrink={0} w="60px" textAlign="center">
 												{song.isOfficial && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
 											</Box>
-											<Box w="60px" textAlign="center">
+											<Box flexShrink={0} w="60px" textAlign="center">
 												{!!song.lyric && <Icon as={FiCheckCircle} color="blue.500" boxSize={5} />}
 											</Box>
 										</>
 									)}
 
 									<Box
-										flex={1}
+										flex={1} minW={0}
 										opacity={isFaded ? 0.5 : 1}
 										textDecoration={song.actionStatus === "DELETED" ? "line-through" : "none"}
 									>
@@ -903,7 +888,7 @@ export function Songbook() {
 									</Box>
 
 									{/* 조작 버튼 구역 */}
-									<Box w="100px" textAlign="center">
+									<Box flexShrink={0} w="100px" textAlign="center">
 										<HStack spacing={1} justify="center" flexDirection={isMobile ? "column" : undefined}>
 											{song.actionStatus === "ACTIVE" ? null : (
 												<IconButton
@@ -943,6 +928,7 @@ export function Songbook() {
 							);
 						})}
 					</Box>
+				</Box>
 				</Box>
 			</Box>
 
