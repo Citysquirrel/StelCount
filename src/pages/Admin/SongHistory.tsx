@@ -3,6 +3,7 @@ import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminModalContent } from "@/components/Modal";
 import { CustomLink } from "@/components/Link";
 import { displayPriority } from "@/lib/functions/display";
+import { formatUtcToKst } from "@/lib/functions/date";
 import { createHistoryId, formatDateToYYYYMMDD, formatTime, parseTimeToSeconds } from "@/lib/functions/etc";
 import { normalizeKeyword } from "@/lib/functions/normalized";
 import { youtube } from "@/lib/functions/platforms";
@@ -299,8 +300,10 @@ export function SongHistoryComponent() {
 
 	// 버튼 핸들러
 	const handleAddNewHistory = () => {
+		// 방송일은 한국 시간 정오를 기준으로 전환한다.
+		const broadcastDate = new Date(Date.now() - 12 * 60 * 60 * 1000);
 		const newSong: SongHistory = {
-			sungAt: formatDateToYYYYMMDD(new Date().toDateString()),
+			sungAt: formatUtcToKst(broadcastDate.toISOString(), "date"),
 			historyId: createHistoryId(),
 			youtubeVideoId: "",
 			start: 0,
