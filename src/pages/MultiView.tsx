@@ -522,15 +522,28 @@ export function MultiView() {
 								const ref = refs.current[idx];
 								const src = createStreamSrc(type, streamId);
 								const handleRefresh = (isAll?: boolean) => () => {
-									if (isAll) {
-										refs.current.forEach((ref) => {
+									const refreshIframe = (iframe: HTMLIFrameElement | null) => {
+										if (!iframe) return;
+
+										try {
+											if (iframe.contentWindow) {
+												iframe.contentWindow.location.replace(iframe.src);
+											} else {
+												// eslint-disable-next-line no-self-assign
+												iframe.src = iframe.src;
+											}
+										} catch {
 											// eslint-disable-next-line no-self-assign
-											if (ref.current) ref.current.src = ref.current.src;
-										});
+											iframe.src = iframe.src;
+										}
+									};
+
+									if (isAll) {
+										refs.current.forEach((ref) => refreshIframe(ref.current));
 										return;
 									}
-									// eslint-disable-next-line no-self-assign
-									if (ref.current) ref.current.src = ref.current.src;
+
+									refreshIframe(ref.current);
 								};
 
 								if (!src) return <Fragment key={`${idx}-${streamId}`}></Fragment>;
